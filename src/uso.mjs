@@ -4,33 +4,37 @@
 
 import { statusAtual } from "./assinatura.mjs";
 import { lerPerfis, salvarPerfis } from "./perfis.mjs";
+import { planoDe } from "./planos.mjs";
 
-// Cota de analises por mes, conforme o estado da assinatura.
-// A analise por IA e um RECURSO DO PLANO PAGO (custa $ do Claude). No teste gratis
-// a cota e 0 por padrao (recurso aparece, mas pede assinatura). Para dar uma
-// "degustacao" no teste, basta setar LICITA_ANALISES_TESTE=1 (ou mais).
-const LIMITE = {
-  teste: Number(process.env.LICITA_ANALISES_TESTE || 0),
-  ativo: Number(process.env.LICITA_ANALISES_PLANO || 100),
-};
+// Cota mensal de analises no teste gratis (0 por padrao: recurso aparece mas pede
+// assinatura; LICITA_ANALISES_TESTE=1+ libera uma "degustacao").
+const ANALISES_TESTE = Number(process.env.LICITA_ANALISES_TESTE || 0);
 
 export function mesAtual() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// Cota MENSAL conforme o estado/plano. Ativo => cota do plano (basico/pro).
 export function limiteDe(perfil) {
   const s = statusAtual(perfil).status;
-  if (s === "teste") return LIMITE.teste;
-  if (s === "ativo" || s === "admin") return LIMITE.ativo;
+  if (s === "teste") return ANALISES_TESTE;
+  if (s === "ativo" || s === "admin") return planoDe(perfil).analises;
   return 0; // teste_expirado / vencido / inativo: sem cota (painel ja bloqueia o acesso)
+}
+
+// Creditos avulsos (pacotes comprados a mais) nao expiram no virar do mes.
+function avulsasDe(perfil) {
+  return Math.max(0, perfil.analises?.avulsas || 0);
 }
 
 export function usoDe(perfil) {
   const mes = mesAtual();
-  const a = perfil.analises && perfil.analises.mes === mes ? perfil.analises : { mes, usados: 0 };
+  const usados = perfil.analises && perfil.analises.mes === mes ? perfil.analises.usados : 0;
   const limite = limiteDe(perfil);
-  return { mes, usados: a.usados, limite, restantes: Math.max(0, limite - a.usados) };
+  const avulsas = avulsasDe(perfil);
+  const restantesMes = Math.max(0, limite - usados);
+  return { mes, usados, limite, avulsas, restantes: restantesMes + avulsas };
 }
 
 export function podeAnalisar(perfil) {
@@ -57,14 +61,32 @@ export function checarAnalise(perfil) {
   return { ok: false, motivo: "assinatura", uso };
 }
 
-// Registra UMA analise nova (chame apenas em cache miss). Reseta no virar do mes.
+// Registra UMA analise nova (chame apenas em cache miss). Consome primeiro a cota
+// mensal; esgotada, consome creditos avulsos. Os avulsos persistem entre meses.
 export async function registrarAnalise(token) {
   const perfis = await lerPerfis();
   const p = perfis.find((x) => x.token === token);
   if (!p) return null;
   const mes = mesAtual();
-  if (!p.analises || p.analises.mes !== mes) p.analises = { mes, usados: 0 };
-  p.analises.usados += 1;
+  const avulsas = Math.max(0, p.analises?.avulsas || 0);
+  if (!p.analises || p.analises.mes !== mes) p.analises = { mes, usados: 0, avulsas };
+  if (p.analises.usados < limiteDe(p)) {
+    p.analises.usados += 1; // dentro da cota mensal
+  } else if (p.analises.avulsas > 0) {
+    p.analises.avulsas -= 1; // estourou o mes: usa credito avulso
+  }
+  await salvarPerfis(perfis);
+  return usoDe(p);
+}
+
+// Adiciona creditos avulsos (chamado pelo webhook de pagamento de pacote avulso).
+export async function adicionarAvulsas(token, qtd) {
+  const perfis = await lerPerfis();
+  const p = perfis.find((x) => x.token === token);
+  if (!p) return null;
+  const mes = mesAtual();
+  if (!p.analises || p.analises.mes !== mes) p.analises = { mes, usados: p.analises?.usados || 0, avulsas: 0 };
+  p.analises.avulsas = Math.max(0, (p.analises.avulsas || 0) + Number(qtd || 0));
   await salvarPerfis(perfis);
   return usoDe(p);
 }

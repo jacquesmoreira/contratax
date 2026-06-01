@@ -46,8 +46,10 @@ export function statusAtual(perfil) {
   return { status: a.status, temAcesso: true, expiraEm: a.expiraEm, diasRestantes };
 }
 
-// Ativa (ou renova) a assinatura de um cliente por N dias. Uso do admin apos o Pix.
-export async function ativarPorToken(token, dias = 30) {
+// Ativa (ou renova) a assinatura de um cliente num NIVEL (basico/pro) por N dias.
+// Chamado pelo webhook de pagamento (automatico) ou pelo admin. nivel=null mantem
+// o nivel atual (ou basico). Uso retrocompativel: ativarPorToken(token, dias).
+export async function ativarPorToken(token, dias = 30, nivel = null) {
   const perfis = JSON.parse(await readFile(PERFIS, "utf8"));
   const p = perfis.find((x) => x.token === token);
   if (!p) throw new Error(`Token ${token} nao encontrado`);
@@ -55,11 +57,17 @@ export async function ativarPorToken(token, dias = 30) {
     ...(p.assinatura || {}),
     status: "ativo",
     plano: "mensal",
+    nivel: nivel || p.assinatura?.nivel || "basico",
     ativadoEm: new Date().toISOString(),
     expiraEm: new Date(Date.now() + dias * 864e5).toISOString(),
   };
   await writeFile(PERFIS, JSON.stringify(perfis, null, 2), "utf8");
   return p;
+}
+
+// Acucar para o webhook: ativa por nivel (mensalidade recorrente = 30 dias).
+export async function ativarPlano(token, nivel, dias = 30) {
+  return ativarPorToken(token, dias, nivel);
 }
 
 // Lista todos os clientes com o estado da assinatura (para o admin).
