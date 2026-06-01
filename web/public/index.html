@@ -226,6 +226,29 @@ function bannerVencimento(a) {
   const txt = d <= 0 ? "vence hoje" : `vence em <b>${d} dia${d !== 1 ? "s" : ""}</b>`;
   return `<div class="banner-teste" style="background:#fff7ed;border-color:#fed7aa;color:#9a3412">🔔 Sua assinatura ${txt}. Renove o pagamento para não perder o acesso. <a href="/assinar?c=${encodeURIComponent(token)}" style="color:#c2410c">Renovar agora</a></div>`;
 }
+// Atraso em carencia: banner vermelho urgente + popup. Bloqueia apos a carencia.
+function bannerAtrasado(a) {
+  const restamBloqueio = Math.max(0, (a.gracaDias ?? 3) - (a.diasAtraso ?? 0));
+  return `<div class="banner-teste" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c">⚠️ <b>Pagamento em atraso.</b> Não identificamos o pagamento da sua mensalidade. Regularize ${restamBloqueio > 0 ? `em <b>${restamBloqueio} dia${restamBloqueio !== 1 ? "s" : ""}</b>` : "agora"} para não ter o acesso bloqueado. <a href="/assinar?c=${encodeURIComponent(token)}" style="color:#991b1b">Regularizar</a></div>`;
+}
+function popupAtrasado(a) {
+  const chave = "avisoAtraso-" + (a.diasAtraso ?? 0);
+  if (sessionStorage.getItem(chave)) return;
+  sessionStorage.setItem(chave, "1");
+  const restamBloqueio = Math.max(0, (a.gracaDias ?? 3) - (a.diasAtraso ?? 0));
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px";
+  ov.innerHTML = `<div style="background:#fff;border-radius:18px;max-width:400px;width:100%;padding:30px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.3)">
+    <div style="font-size:40px">⚠️</div>
+    <h2 style="font-size:20px;font-weight:800;margin:8px 0 6px;color:#b91c1c">Pagamento em atraso</h2>
+    <p style="color:#475569;font-size:14.5px;margin-bottom:20px">Não identificamos o pagamento da sua mensalidade. ${restamBloqueio > 0 ? `Você tem <b>${restamBloqueio} dia${restamBloqueio !== 1 ? "s" : ""}</b> para regularizar antes do bloqueio.` : "Regularize para reativar o acesso."}</p>
+    <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;background:#dc2626;color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none;margin-bottom:10px">Regularizar pagamento</a>
+    <button id="fechar-atr" style="background:none;border:none;color:#94a3b8;font-weight:600;font-size:14px;cursor:pointer">Agora não</button>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector("#fechar-atr").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
 // Popup (uma vez por sessao) avisando o vencimento proximo.
 function popupVencimento(a) {
   const chave = "avisoVenc-" + a.diasRestantes;
@@ -247,18 +270,17 @@ function popupVencimento(a) {
   ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
 }
 function paywall(a) {
-  const titulo = a.status === "teste_expirado" ? "Seu teste grátis terminou" : a.status === "vencido" ? "Sua assinatura venceu" : "Acesso suspenso";
-  const cob = a.cobranca || {};
+  const titulo = a.status === "teste_expirado" ? "Seu teste grátis terminou"
+    : a.status === "vencido" ? "Aguardando o pagamento"
+    : "Acesso suspenso";
+  const desc = a.status === "vencido"
+    ? "Não identificamos o pagamento da sua mensalidade, por isso o acesso está bloqueado. Assim que o pagamento for confirmado, ele é reativado <b>na hora</b>."
+    : "Continue recebendo as licitações do seu ramo, a análise por IA e a checagem de aptidão.";
   return `<div class="paywall">
     <div class="lock">🔒</div>
     <h2>${titulo}</h2>
-    <div class="desc">Continue recebendo as licitações do seu ramo e a checagem de aptidão por <b>R$ ${esc(cob.preco)}/mês</b>.</div>
-    <div class="como">
-      <div style="font-weight:800;margin-bottom:8px">Como ativar:</div>
-      <div>1. Pague <b>R$ ${esc(cob.preco)}</b> via Pix para a chave:<br><b class="pix">${esc(cob.pix)}</b></div>
-      <div>2. Envie o comprovante para <b>${esc(cob.contato)}</b>.</div>
-      <div>3. Seu acesso é liberado em poucas horas.</div>
-    </div>
+    <div class="desc">${desc}</div>
+    <a href="/assinar?c=${encodeURIComponent(token)}" style="display:inline-block;margin-top:18px;background:var(--indigo);color:#fff;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none">${a.status === "vencido" ? "Regularizar pagamento" : "Ver planos e assinar"} →</a>
   </div>`;
 }
 
@@ -289,10 +311,18 @@ async function carregar() {
     const dados = await (await fetch(`/api/editais?c=${encodeURIComponent(token)}`)).json();
     const perfis = Object.values(dados);
     let banner = acesso.status === "teste" ? bannerTeste(acesso) : "";
-    // Aviso de vencimento: assinatura ativa que vence em ate 7 dias (sobretudo Pix).
-    if (acesso.status === "ativo" && acesso.diasRestantes != null && acesso.diasRestantes <= 7) {
+    // Aviso PROATIVO (vence em ate 7 dias) so para quem paga no Pix/boleto.
+    // No cartao a cobranca renova sozinha, entao nao enchemos o saco.
+    if (acesso.status === "ativo" && acesso.diasRestantes != null && acesso.diasRestantes <= 7
+        && acesso.formaPagamento !== "CREDIT_CARD") {
       banner += bannerVencimento(acesso);
       popupVencimento(acesso);
+    }
+    // Atraso em carencia (cartao recusado OU pix nao pago): aviso urgente. Ainda
+    // acessa, mas sera bloqueado se nao regularizar dentro da carencia.
+    if (acesso.status === "atrasado") {
+      banner += bannerAtrasado(acesso);
+      popupAtrasado(acesso);
     }
     let radarBloco = "";
     try { const rd = await (await fetch(`/api/radar?c=${encodeURIComponent(token)}`)).json(); radarBloco = radarHTML(rd.radar); } catch {}

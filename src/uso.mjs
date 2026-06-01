@@ -19,7 +19,7 @@ export function mesAtual() {
 export function limiteDe(perfil) {
   const s = statusAtual(perfil).status;
   if (s === "teste") return ANALISES_TESTE;
-  if (s === "ativo" || s === "admin") return planoDe(perfil).analises;
+  if (s === "ativo" || s === "admin" || s === "atrasado") return planoDe(perfil).analises; // carencia mantem acesso
   return 0; // teste_expirado / vencido / inativo: sem cota (painel ja bloqueia o acesso)
 }
 
@@ -47,7 +47,7 @@ export function podeAnalisar(perfil) {
 export function checarAnalise(perfil) {
   const st = statusAtual(perfil).status;
   const uso = usoDe(perfil);
-  if (st === "ativo" || st === "admin") {
+  if (st === "ativo" || st === "admin" || st === "atrasado") {
     return uso.restantes > 0
       ? { ok: true, uso }
       : { ok: false, motivo: "limite", uso };

@@ -313,7 +313,7 @@ const servidor = createServer(async (req, res) => {
           if (!ref && pg.subscription) ref = await externalReferenceDaAssinatura(pg.subscription);
           const [tipo, token, id] = String(ref || "").split(":");
           if (tipo === "sub" && token) {
-            await ativarPlano(token, PLANOS[id] ? id : "basico", 30);
+            await ativarPlano(token, PLANOS[id] ? id : "basico", 30, pg.billingType || null);
           } else if (tipo === "avulso" && token) {
             const qtd = AVULSOS[id]?.analises || 0;
             if (qtd) await adicionarAvulsas(token, qtd);

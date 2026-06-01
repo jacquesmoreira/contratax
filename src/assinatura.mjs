@@ -25,31 +25,42 @@ export function novaAssinaturaTeste() {
   };
 }
 
-// Calcula o estado efetivo da assinatura (considerando o vencimento).
+// Carencia (dias) que uma mensalidade paga pode atrasar antes de bloquear o acesso.
+const GRACA_DIAS = Number(process.env.LICITA_GRACA_DIAS || 3);
+
+// Calcula o estado efetivo da assinatura (considerando vencimento e carencia).
 export function statusAtual(perfil) {
   const a = perfil.assinatura;
   if (!a) return { status: "ativo", temAcesso: true, expiraEm: null, diasRestantes: null }; // legado/admin
 
+  const agora = new Date();
   const expira = a.expiraEm ? new Date(a.expiraEm) : null;
-  const diasRestantes = expira ? Math.ceil((expira - new Date()) / 864e5) : null;
-  const vencido = expira ? new Date() > expira : false;
+  const diasRestantes = expira ? Math.ceil((expira - agora) / 864e5) : null;
+  const vencido = expira ? agora > expira : false;
+  const formaPagamento = a.formaPagamento || null;
 
-  if (a.status === "inativo") return { status: "inativo", temAcesso: false, expiraEm: a.expiraEm, diasRestantes };
+  if (a.status === "inativo") return { status: "inativo", temAcesso: false, formaPagamento, expiraEm: a.expiraEm, diasRestantes };
+
   if (vencido) {
-    return {
-      status: a.status === "teste" ? "teste_expirado" : "vencido",
-      temAcesso: false,
-      expiraEm: a.expiraEm,
-      diasRestantes,
-    };
+    // Teste expirado vira paywall direto (sem carencia).
+    if (a.status === "teste") {
+      return { status: "teste_expirado", temAcesso: false, formaPagamento, expiraEm: a.expiraEm, diasRestantes, diasAtraso: 0 };
+    }
+    // Assinatura paga: carencia de GRACA_DIAS (acessa, mas com aviso urgente);
+    // passou a carencia, bloqueia ("aguardando pagamento").
+    const diasAtraso = Math.floor((agora - expira) / 864e5);
+    if (diasAtraso <= GRACA_DIAS) {
+      return { status: "atrasado", temAcesso: true, formaPagamento, expiraEm: a.expiraEm, diasRestantes, diasAtraso, gracaDias: GRACA_DIAS };
+    }
+    return { status: "vencido", temAcesso: false, formaPagamento, expiraEm: a.expiraEm, diasRestantes, diasAtraso };
   }
-  return { status: a.status, temAcesso: true, expiraEm: a.expiraEm, diasRestantes };
+  return { status: a.status, temAcesso: true, formaPagamento, expiraEm: a.expiraEm, diasRestantes };
 }
 
 // Ativa (ou renova) a assinatura de um cliente num NIVEL (basico/pro) por N dias.
 // Chamado pelo webhook de pagamento (automatico) ou pelo admin. nivel=null mantem
 // o nivel atual (ou basico). Uso retrocompativel: ativarPorToken(token, dias).
-export async function ativarPorToken(token, dias = 30, nivel = null) {
+export async function ativarPorToken(token, dias = 30, nivel = null, formaPagamento = null) {
   const perfis = JSON.parse(await readFile(PERFIS, "utf8"));
   const p = perfis.find((x) => x.token === token);
   if (!p) throw new Error(`Token ${token} nao encontrado`);
@@ -58,6 +69,7 @@ export async function ativarPorToken(token, dias = 30, nivel = null) {
     status: "ativo",
     plano: "mensal",
     nivel: nivel || p.assinatura?.nivel || "basico",
+    formaPagamento: formaPagamento || p.assinatura?.formaPagamento || null,
     ativadoEm: new Date().toISOString(),
     expiraEm: new Date(Date.now() + dias * 864e5).toISOString(),
   };
@@ -66,8 +78,9 @@ export async function ativarPorToken(token, dias = 30, nivel = null) {
 }
 
 // Acucar para o webhook: ativa por nivel (mensalidade recorrente = 30 dias).
-export async function ativarPlano(token, nivel, dias = 30) {
-  return ativarPorToken(token, dias, nivel);
+// formaPagamento (CREDIT_CARD / PIX / BOLETO) define se avisamos antes do vencimento.
+export async function ativarPlano(token, nivel, dias = 30, formaPagamento = null) {
+  return ativarPorToken(token, dias, nivel, formaPagamento);
 }
 
 // Lista todos os clientes com o estado da assinatura (para o admin).
