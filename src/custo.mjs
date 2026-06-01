@@ -13,15 +13,13 @@ const LOG = resolve(DIR, "custos-ia.jsonl");
 // Cotacao do dolar (ajuste por env quando quiser precisao). Default conservador.
 const USD_BRL = Number(process.env.LICITA_USD_BRL || 5.4);
 
-// Precos por MILHAO de tokens (USD). Por modelo. Sonnet 4.x e o padrao.
-const PRECOS = {
-  "claude-sonnet-4-6": { in: 3, out: 15, cacheWrite: 3.75, cacheRead: 0.3 },
-  "claude-haiku-4-6":  { in: 0.8, out: 4, cacheWrite: 1.0, cacheRead: 0.08 },
-  _default:            { in: 3, out: 15, cacheWrite: 3.75, cacheRead: 0.3 },
-};
-
+// Precos por MILHAO de tokens (USD), por familia de modelo. Casa por nome (robusto
+// a versoes: "claude-haiku-4-5-...", "claude-sonnet-4-6", etc.).
 function tabela(modelo) {
-  return PRECOS[modelo] || PRECOS._default;
+  const m = (modelo || "").toLowerCase();
+  if (m.includes("haiku")) return { in: 1, out: 5, cacheWrite: 1.25, cacheRead: 0.1 };
+  if (m.includes("opus")) return { in: 15, out: 75, cacheWrite: 18.75, cacheRead: 1.5 };
+  return { in: 3, out: 15, cacheWrite: 3.75, cacheRead: 0.3 }; // sonnet (padrao)
 }
 
 // Calcula o custo (USD e BRL) de uma chamada a partir do objeto usage da API.

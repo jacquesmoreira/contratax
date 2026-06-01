@@ -6,6 +6,10 @@ import { registrarCusto } from "./custo.mjs";
 
 const ENDPOINT = "https://api.anthropic.com/v1/messages";
 const MODELO_PADRAO = process.env.LICITA_MODELO || "claude-sonnet-4-6";
+// Leitura do edital (Camada 3): Haiku entrega a mesma extracao de exigencias por
+// ~1/3 do custo e 2,5x mais rapido (validado em A/B). A conferencia (Camada 4) segue
+// no MODELO_PADRAO (Sonnet) por ser o veredito apto/nao-apto e custar pouco.
+const MODELO_LEITURA = process.env.LICITA_MODELO_LEITURA || "claude-haiku-4-5-20251001";
 const LIMITE_BYTES = 30 * 1024 * 1024; // ~limite pratico de PDF da API
 
 export function temChave() {
@@ -36,7 +40,7 @@ Se algum campo nao constar no edital, use lista vazia ou null. Nao invente exige
 
 // Monta o corpo da requisicao para a API (testavel sem chave).
 // Habilita prompt caching no PDF: barateia reanalises e perguntas de acompanhamento.
-export function montarCorpo(pdfBuffer, { modelo = MODELO_PADRAO } = {}) {
+export function montarCorpo(pdfBuffer, { modelo = MODELO_LEITURA } = {}) {
   if (pdfBuffer.length > LIMITE_BYTES) {
     throw new Error(`PDF grande demais (${(pdfBuffer.length / 1048576).toFixed(1)} MB) para a API`);
   }
@@ -108,3 +112,4 @@ export async function analisarPdf(pdfBuffer, opcoes = {}) {
 }
 
 export const MODELO = MODELO_PADRAO;
+export const MODELO_LEITURA_USADO = MODELO_LEITURA;

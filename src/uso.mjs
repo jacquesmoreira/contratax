@@ -11,7 +11,7 @@ import { lerPerfis, salvarPerfis } from "./perfis.mjs";
 // "degustacao" no teste, basta setar LICITA_ANALISES_TESTE=1 (ou mais).
 const LIMITE = {
   teste: Number(process.env.LICITA_ANALISES_TESTE || 0),
-  ativo: Number(process.env.LICITA_ANALISES_PLANO || 50),
+  ativo: Number(process.env.LICITA_ANALISES_PLANO || 100),
 };
 
 export function mesAtual() {

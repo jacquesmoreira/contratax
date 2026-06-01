@@ -49,7 +49,7 @@ const MODELO_SONNET = process.env.LICITA_MODELO || "claude-sonnet-4-6";
 // Candidatos de Haiku (o id varia por conta/versao). Tenta na ordem ate um funcionar.
 const HAIKU_CANDIDATOS = [...new Set([
   process.argv[3], process.env.LICITA_MODELO_HAIKU,
-  "claude-haiku-4-6", "claude-3-5-haiku-latest", "claude-3-5-haiku-20241022",
+  "claude-haiku-4-5-20251001", "claude-haiku-4-6", "claude-3-5-haiku-latest",
 ].filter(Boolean))];
 
 // Tenta ler com cada candidato de modelo ate um responder (ignora "modelo invalido").
@@ -110,4 +110,23 @@ if (resultados.SONNET?.custo && resultados.HAIKU?.custo) {
   console.log(`Conferencia (~R$0,17 fixa) entra por cima nos dois.`);
   console.log(`Analise completa estimada -> Sonnet ~R$ ${(s + 0.17).toFixed(2)} | Haiku ~R$ ${(h + 0.17).toFixed(2)}`);
   console.log(`\nCompare as exigencias acima: se o Haiku capturou numeros parecidos, vale trocar.`);
+}
+
+// Comparacao QUALITATIVA: mostra o conteudo real extraido por cada modelo.
+function bloco(titulo, arr) {
+  console.log(`  ${titulo}:`);
+  (arr || []).forEach((x) => console.log(`     - ${typeof x === "string" ? x : JSON.stringify(x)}`));
+  if (!arr || !arr.length) console.log("     (vazio)");
+}
+for (const nome of ["SONNET", "HAIKU"]) {
+  const a = resultados[nome]?.analise;
+  if (!a) continue;
+  const e = a.exigenciasHabilitacao || {};
+  console.log(`\n################ ${nome} — conteudo extraido ################`);
+  console.log(`RESUMO: ${a.resumo || "—"}`);
+  bloco("Habilitacao juridica", e.habilitacaoJuridica);
+  bloco("Regularidade fiscal/trabalhista", e.regularidadeFiscalTrabalhista);
+  bloco("Qualificacao tecnica", e.qualificacaoTecnica);
+  bloco("Qualificacao economico-financeira", e.qualificacaoEconomicoFinanceira);
+  bloco("Alertas", a.alertas);
 }
