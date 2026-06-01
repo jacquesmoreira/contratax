@@ -23,8 +23,11 @@ import { consultarCNPJ } from "../src/cnpj.mjs";
 import { autenticarUsuario, convidarMembro, removerMembro, listarMembros } from "../src/equipe.mjs";
 import { lerPerfis, salvarPerfis, PERFIS } from "../src/perfis.mjs";
 import { monitorar } from "../src/monitor.mjs";
-import { usoDe, registrarAnalise, checarAnalise } from "../src/uso.mjs";
+import { usoDe, registrarAnalise, checarAnalise, adicionarAvulsas } from "../src/uso.mjs";
 import { resumoCustos } from "../src/custo.mjs";
+import { PLANOS, AVULSOS } from "../src/planos.mjs";
+import { ativarPlano } from "../src/assinatura.mjs";
+import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura } from "../src/asaas.mjs";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(AQUI, "..");
@@ -248,6 +251,78 @@ const servidor = createServer(async (req, res) => {
     if (rota === "/api/custos") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       return json(res, 200, (await resumoCustos()) || { chamadas: 0 });
+    }
+
+    // Catalogo de planos e pacotes avulsos (para a pagina de assinar).
+    if (rota === "/api/planos") {
+      return json(res, 200, {
+        planos: Object.values(PLANOS),
+        avulsos: Object.values(AVULSOS),
+        automatico: asaasConfigurado(),
+        cobranca: { pix: cobranca.pix, contato: cobranca.contato },
+      });
+    }
+
+    // Checkout: cria a cobranca no gateway e devolve a URL de pagamento.
+    if (rota === "/api/checkout" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfil = await perfilPorToken(corpo.c || "");
+      if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
+      if (!asaasConfigurado()) {
+        // Sem gateway: cai no Pix concierge (a pagina mostra a chave/contato).
+        return json(res, 200, { automatico: false, cobranca: { pix: cobranca.pix, contato: cobranca.contato } });
+      }
+      try {
+        const clienteId = await obterOuCriarCliente({
+          nome: perfil.razaoSocial || perfil.nome, email: perfil.email, cnpj: perfil.cnpj, clienteId: perfil.asaasClienteId,
+        });
+        if (clienteId && clienteId !== perfil.asaasClienteId) {
+          const perfis = await lerPerfis();
+          const p = perfis.find((x) => x.token === perfil.token);
+          if (p) { p.asaasClienteId = clienteId; await salvarPerfis(perfis); }
+        }
+        let r;
+        if (corpo.tipo === "avulso") {
+          const a = AVULSOS[corpo.id];
+          if (!a) return json(res, 400, { erro: "Pacote invalido" });
+          r = await criarCobrancaAvulsa({ clienteId, valor: precoNumero(a.preco), descricao: `Licita — ${a.nome}`, externalReference: `avulso:${perfil.token}:${a.id}` });
+        } else {
+          const pl = PLANOS[corpo.id];
+          if (!pl) return json(res, 400, { erro: "Plano invalido" });
+          r = await criarAssinatura({ clienteId, valor: precoNumero(pl.preco), descricao: `Licita — Plano ${pl.nome}`, externalReference: `sub:${perfil.token}:${pl.id}` });
+        }
+        if (!r.invoiceUrl) return json(res, 502, { erro: "Gateway nao devolveu a URL de pagamento" });
+        return json(res, 200, { automatico: true, url: r.invoiceUrl });
+      } catch (e) {
+        return json(res, 502, { erro: e.message });
+      }
+    }
+
+    // Webhook do Asaas: ativa a conta automaticamente quando o pagamento confirma.
+    if (rota === "/api/webhook/asaas" && req.method === "POST") {
+      const segredo = process.env.ASAAS_WEBHOOK_TOKEN;
+      if (segredo && req.headers["asaas-access-token"] !== segredo) {
+        return json(res, 401, { erro: "token invalido" });
+      }
+      const corpo = await lerCorpo(req);
+      const evento = corpo.event;
+      const pg = corpo.payment || {};
+      try {
+        if (evento === "PAYMENT_RECEIVED" || evento === "PAYMENT_CONFIRMED") {
+          let ref = pg.externalReference;
+          if (!ref && pg.subscription) ref = await externalReferenceDaAssinatura(pg.subscription);
+          const [tipo, token, id] = String(ref || "").split(":");
+          if (tipo === "sub" && token) {
+            await ativarPlano(token, PLANOS[id] ? id : "basico", 30);
+          } else if (tipo === "avulso" && token) {
+            const qtd = AVULSOS[id]?.analises || 0;
+            if (qtd) await adicionarAvulsas(token, qtd);
+          }
+        }
+      } catch (e) {
+        console.error("[webhook asaas]", e.message);
+      }
+      return json(res, 200, { ok: true }); // sempre 200 para o Asaas nao re-tentar em loop
     }
 
     // Equipe: lista os acessos da empresa (membros, assentos usados/total).
