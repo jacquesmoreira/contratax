@@ -1,0 +1,21 @@
+{
+  "name": "licita",
+  "version": "0.1.0",
+  "description": "Motor de dados para monitoramento de licitacoes publicas via PNCP",
+  "type": "module",
+  "scripts": {
+    "start": "node web/server.mjs",
+    "atualizar": "node scripts/atualizar.mjs",
+    "ingest": "node scripts/ingest.mjs",
+    "ingest-contratos": "node scripts/ingest-contratos.mjs",
+    "buscar": "node scripts/buscar.mjs",
+    "analisar": "node scripts/analisar.mjs",
+    "conferir": "node scripts/conferir.mjs",
+    "digest": "node scripts/digest.mjs",
+    "clientes": "node scripts/clientes.mjs",
+    "ativar": "node scripts/ativar.mjs",
+    "remover": "node scripts/remover.mjs",
+    "web": "node web/server.mjs"
+  },
+  "license": "UNLICENSED"
+}

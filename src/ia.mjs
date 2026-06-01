@@ -1,0 +1,110 @@
+// Camada 3: a IA le o edital (PDF) e extrai resumo + exigencias de habilitacao.
+// Usa a API do Claude (Anthropic) direto via fetch, sem SDK (zero dependencia).
+// A chave vem do ambiente: ANTHROPIC_API_KEY. O modelo pode ser trocado por LICITA_MODELO.
+
+import { registrarCusto } from "./custo.mjs";
+
+const ENDPOINT = "https://api.anthropic.com/v1/messages";
+const MODELO_PADRAO = process.env.LICITA_MODELO || "claude-sonnet-4-6";
+const LIMITE_BYTES = 30 * 1024 * 1024; // ~limite pratico de PDF da API
+
+export function temChave() {
+  return Boolean(process.env.ANTHROPIC_API_KEY);
+}
+
+const INSTRUCAO = `Voce e um especialista em licitacoes publicas brasileiras (Lei 14.133/2021).
+Analise o edital em anexo e extraia as informacoes que uma empresa precisa para decidir
+se participa e se esta apta. Responda SOMENTE com um JSON valido, sem texto fora dele,
+nesta estrutura exata:
+
+{
+  "resumo": "1 a 2 frases em linguagem simples sobre o que a licitacao compra",
+  "objeto": "objeto resumido",
+  "prazoEnvioProposta": "data e hora limite, ou null se nao encontrar",
+  "valorEstimado": "valor total estimado como texto, ou null",
+  "exigenciasHabilitacao": {
+    "habilitacaoJuridica": ["documentos societarios exigidos"],
+    "regularidadeFiscalTrabalhista": ["certidoes fiscais e trabalhistas exigidas"],
+    "qualificacaoTecnica": ["atestados e requisitos tecnicos exigidos"],
+    "qualificacaoEconomicoFinanceira": ["balanco, capital minimo, indices exigidos"]
+  },
+  "alertas": ["pontos de atencao: visita tecnica obrigatoria, garantia, amostra, prazos curtos, etc."],
+  "itensPrincipais": ["principais itens ou lotes da licitacao"]
+}
+
+Se algum campo nao constar no edital, use lista vazia ou null. Nao invente exigencias.`;
+
+// Monta o corpo da requisicao para a API (testavel sem chave).
+// Habilita prompt caching no PDF: barateia reanalises e perguntas de acompanhamento.
+export function montarCorpo(pdfBuffer, { modelo = MODELO_PADRAO } = {}) {
+  if (pdfBuffer.length > LIMITE_BYTES) {
+    throw new Error(`PDF grande demais (${(pdfBuffer.length / 1048576).toFixed(1)} MB) para a API`);
+  }
+  return {
+    model: modelo,
+    max_tokens: 4000,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "document",
+            source: { type: "base64", media_type: "application/pdf", data: pdfBuffer.toString("base64") },
+            cache_control: { type: "ephemeral" },
+          },
+          { type: "text", text: INSTRUCAO },
+        ],
+      },
+    ],
+  };
+}
+
+export function extrairJson(texto) {
+  const limpo = (texto ?? "").replace(/```json\s*|\s*```/g, "").trim();
+  return JSON.parse(limpo);
+}
+
+const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Chamador generico da API do Claude. Recebe o corpo pronto, devolve o texto.
+// Reutilizado pela Camada 3 (le PDF) e pela Camada 4 (confere aptidao).
+// Em caso de limite de taxa (429) ou sobrecarga (529), espera e tenta de novo.
+export async function chamar(corpo, { tentativas = 3, meta = null } = {}) {
+  const chave = process.env.ANTHROPIC_API_KEY;
+  if (!chave) throw new Error("ANTHROPIC_API_KEY nao definida no ambiente");
+
+  for (let tentativa = 1; tentativa <= tentativas; tentativa++) {
+    const r = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        "x-api-key": chave,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(corpo),
+    });
+
+    if (r.ok) {
+      const j = await r.json();
+      // Registra o custo real desta chamada (tokens -> R$), se houver contexto.
+      if (meta && j.usage) { try { await registrarCusto({ usage: j.usage, modelo: corpo.model, ...meta }); } catch {} }
+      return j.content?.find((b) => b.type === "text")?.text ?? "";
+    }
+
+    // Limite de taxa ou sobrecarga: espera o tempo sugerido e tenta de novo.
+    if ((r.status === 429 || r.status === 529) && tentativa < tentativas) {
+      const sugerido = Number(r.headers.get("retry-after")) || 30;
+      await dormir((sugerido + 2) * 1000);
+      continue;
+    }
+
+    throw new Error(`Claude API ${r.status}: ${(await r.text()).slice(0, 300)}`);
+  }
+}
+
+// Camada 3: envia o PDF para a IA e devolve a analise estruturada.
+export async function analisarPdf(pdfBuffer, opcoes = {}) {
+  return extrairJson(await chamar(montarCorpo(pdfBuffer, opcoes), { meta: opcoes.meta }));
+}
+
+export const MODELO = MODELO_PADRAO;

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Licita — Meu painel</title>
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --roxo:#6d28d9;
+    --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8;
+    --linha:#e2e8f0; --fundo:#f8fafc; --branco:#fff;
+    --verde:#059669; --verde-bg:#ecfdf5; --ambar:#d97706; --ambar-bg:#fffbeb;
+    --vermelho:#dc2626; --vermelho-bg:#fef2f2;
+    --raio:16px; --sombra:0 12px 40px rgba(15,23,42,.10); --sombra-sm:0 3px 14px rgba(15,23,42,.05);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--fundo); color:var(--tinta); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:940px; margin:0 auto; padding:0 22px; }
+  a { color:inherit; text-decoration:none; }
+
+  /* Nav */
+  nav { background:#fff; border-bottom:1px solid var(--linha); position:sticky; top:0; z-index:20; }
+  nav .wrap { display:flex; align-items:center; height:60px; gap:18px; }
+  .logo { font-weight:900; font-size:21px; color:var(--indigo); letter-spacing:-.5px; }
+  .logo span { color:var(--cinza-c); }
+  nav .dir { margin-left:auto; display:flex; align-items:center; gap:18px; font-size:14px; font-weight:600; color:var(--cinza); }
+  nav .dir a:hover { color:var(--tinta); }
+  #nav-cliente { color:var(--tinta); font-weight:700; }
+  .sair { color:var(--cinza); }
+
+  /* Cabecalho */
+  .topo { background:linear-gradient(135deg,var(--indigo-d),var(--azul)); color:#fff; padding:30px 0 26px; }
+  .topo h1 { font-size:24px; font-weight:800; letter-spacing:-.5px; }
+  .topo .sub { opacity:.9; font-size:14.5px; margin-top:3px; }
+  .busca-box { margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; }
+  .busca-box input { flex:1; min-width:220px; padding:14px 16px; border-radius:11px; border:none; font-size:15px; font-family:inherit; outline:none; }
+  .busca-box select { padding:0 12px; height:48px; border-radius:11px; border:none; font-size:14px; font-family:inherit; outline:none; background:#fff; cursor:pointer; }
+  .busca-box button { background:#fff; color:var(--indigo); border:none; border-radius:11px; padding:0 24px; height:48px; font-weight:800; font-size:15px; cursor:pointer; font-family:inherit; }
+  .busca-box button:hover { background:#eef2ff; }
+
+  main { padding:26px 0 70px; }
+
+  /* Secao do perfil */
+  .perfil { margin-bottom:30px; }
+  .perfil-cab { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .perfil-nome { font-size:19px; font-weight:800; }
+  .chip { font-size:12.5px; font-weight:700; padding:4px 11px; border-radius:999px; }
+  .chip-uf { background:var(--indigo); color:#fff; }
+  .chip-stat { background:#eef2ff; color:var(--indigo); }
+  .chip-novo { background:var(--verde-bg); color:var(--verde); }
+  .perfil-atualizado { margin-left:auto; font-size:12.5px; color:var(--cinza-c); }
+
+  /* Card */
+  .card { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:17px 19px; margin-bottom:12px; cursor:pointer; box-shadow:var(--sombra-sm); transition:box-shadow .15s, transform .15s, border-color .15s; }
+  .card:hover { box-shadow:var(--sombra); transform:translateY(-2px); border-color:#c7d2fe; }
+  .card-topo { display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .orgao { font-size:12.5px; color:var(--cinza); font-weight:700; }
+  .selo-novo { background:var(--verde); color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; letter-spacing:.5px; }
+  .prazo { margin-left:auto; font-size:12px; font-weight:700; padding:3px 11px; border-radius:999px; }
+  .prazo.urgente { background:var(--vermelho-bg); color:var(--vermelho); }
+  .prazo.medio { background:var(--ambar-bg); color:var(--ambar); }
+  .prazo.tranquilo { background:var(--verde-bg); color:var(--verde); }
+  .objeto { font-size:15px; margin-bottom:12px; }
+  .card-rodape { display:flex; align-items:center; gap:16px; flex-wrap:wrap; font-size:13.5px; }
+  .modalidade { color:var(--cinza-c); }
+  .valor { font-weight:800; }
+  .abrir { margin-left:auto; color:var(--indigo); font-weight:800; }
+
+  /* Estado vazio */
+  .vazio { background:#fff; border:1px dashed var(--cinza-c); border-radius:16px; padding:44px 28px; text-align:center; color:var(--cinza); }
+  .vazio .emoji { font-size:38px; display:block; margin-bottom:12px; }
+  .vazio b { color:var(--tinta); }
+  .vazio a { color:var(--indigo); font-weight:700; }
+
+  /* Banner teste */
+  .banner-teste { background:var(--ambar-bg); color:#92400e; padding:13px 18px; border-radius:12px; margin-bottom:20px; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; }
+  .banner-teste a { margin-left:auto; background:var(--ambar); color:#fff; padding:7px 15px; border-radius:9px; font-weight:700; font-size:13px; white-space:nowrap; }
+
+  /* Paywall */
+  .paywall { max-width:520px; margin:30px auto; background:#fff; border:1px solid var(--linha); border-radius:20px; padding:36px; text-align:center; box-shadow:var(--sombra); }
+  .paywall .lock { font-size:34px; }
+  .paywall h2 { font-size:23px; font-weight:800; margin:8px 0; }
+  .paywall .desc { color:var(--cinza); margin-bottom:22px; }
+  .paywall .como { background:var(--fundo); border-radius:12px; padding:18px; text-align:left; font-size:14.5px; line-height:1.8; }
+  .paywall .pix { color:var(--azul); word-break:break-all; }
+
+  /* Drawer */
+  .fundo-escuro { position:fixed; inset:0; background:rgba(15,23,42,.5); opacity:0; pointer-events:none; transition:opacity .2s; z-index:30; }
+  .fundo-escuro.aberto { opacity:1; pointer-events:auto; }
+  .drawer { position:fixed; top:0; right:0; height:100%; width:min(580px,100%); background:var(--fundo); box-shadow:-10px 0 40px rgba(15,23,42,.25); transform:translateX(100%); transition:transform .25s; z-index:31; overflow-y:auto; }
+  .drawer.aberto { transform:translateX(0); }
+  .drawer-topo { position:sticky; top:0; background:var(--indigo-d); color:#fff; padding:18px 22px; display:flex; align-items:flex-start; gap:12px; z-index:1; }
+  .drawer-topo h2 { font-size:16px; font-weight:700; line-height:1.35; }
+  .fechar { margin-left:auto; background:rgba(255,255,255,.18); border:none; color:#fff; width:32px; height:32px; border-radius:9px; font-size:18px; cursor:pointer; flex-shrink:0; }
+  .drawer-corpo { padding:22px; }
+  .bloco { background:#fff; border:1px solid var(--linha); border-radius:13px; padding:17px 19px; margin-bottom:14px; box-shadow:var(--sombra-sm); }
+  .bloco h3 { font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--cinza-c); margin-bottom:11px; }
+  .linha-info { display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:5px 0; }
+  .linha-info span:first-child { color:var(--cinza); }
+  .botao-ia { width:100%; background:linear-gradient(135deg,var(--roxo),var(--azul)); color:#fff; border:none; padding:15px; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 6px 18px rgba(67,56,202,.3); }
+  .botao-ia:hover { filter:brightness(1.05); }
+  .botao-ia:disabled { background:var(--cinza-c); box-shadow:none; cursor:default; }
+  .veredito { padding:18px; border-radius:13px; margin-bottom:14px; }
+  .veredito h3 { font-size:12px; text-transform:uppercase; letter-spacing:.5px; opacity:.8; margin-bottom:6px; }
+  .veredito .selo { font-size:24px; font-weight:900; }
+  .veredito.apto { background:var(--verde-bg); color:var(--verde); }
+  .veredito.apto_com_pendencias { background:var(--ambar-bg); color:var(--ambar); }
+  .veredito.nao_apto { background:var(--vermelho-bg); color:var(--vermelho); }
+  .veredito p { color:var(--tinta); margin-top:8px; font-size:14px; }
+  ul.itens { list-style:none; }
+  ul.itens li { padding:8px 0; border-bottom:1px solid var(--linha); font-size:13.5px; display:flex; gap:9px; }
+  ul.itens li:last-child { border-bottom:none; }
+  .ic { flex-shrink:0; width:20px; font-weight:900; }
+  .ic.ok { color:var(--verde); } .ic.no { color:var(--vermelho); } .ic.dd { color:var(--ambar); }
+  .alertas li { color:#92400e; }
+  .cat { font-weight:800; font-size:13px; margin:12px 0 4px; }
+  .pendencia { color:var(--vermelho); }
+  .carregando { text-align:center; color:var(--cinza); padding:34px; font-size:14px; }
+  .spinner { display:inline-block; width:18px; height:18px; border:3px solid var(--linha); border-top-color:var(--indigo); border-radius:50%; animation:girar .8s linear infinite; vertical-align:middle; margin-right:8px; }
+  @keyframes girar { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+  <nav><div class="wrap">
+    <a class="logo" href="/">Licita<span>.</span></a>
+    <div class="dir">
+      <span id="nav-cliente"></span>
+      <span id="nav-uso" title="Análises de IA usadas neste mês"></span>
+      <a id="nav-conta" href="#">Minha conta</a>
+      <a id="nav-equipe" href="#">Equipe</a>
+      <a id="nav-docs" href="#">Meus documentos</a>
+      <a class="sair" href="/">Sair</a>
+    </div>
+  </div></nav>
+
+  <header class="topo"><div class="wrap">
+    <h1>Seu painel de licitações</h1>
+    <div class="sub">As oportunidades do seu ramo, e a busca por qualquer produto no Brasil todo.</div>
+    <div class="busca-box">
+      <input id="busca" type="text" placeholder="Buscar qualquer produto ou serviço (ex: computador, merenda, vigilância)..." />
+      <input id="filtro-cidade" type="text" placeholder="Cidade (opcional)" style="max-width:170px" />
+      <select id="filtro-uf"></select>
+      <select id="filtro-mod"></select>
+      <select id="filtro-prazo"></select>
+      <button id="btn-buscar">Buscar</button>
+    </div>
+    <div class="dica-busca" style="font-size:12.5px;color:rgba(255,255,255,.8);margin-top:8px">
+      Dica: use <b>aspas</b> para a busca exata. <b>"material escolar"</b> traz só o que tem essa expressão; sem aspas, traz tudo que cita <i>material</i> ou <i>escolar</i>.
+    </div>
+  </div></header>
+
+  <main class="wrap" id="conteudo"><div class="carregando"><span class="spinner"></span>Carregando o seu painel...</div></main>
+
+  <div class="fundo-escuro" id="fundo"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-topo"><h2 id="drawer-titulo"></h2><button class="fechar" id="btn-fechar">×</button></div>
+    <div class="drawer-corpo" id="drawer-corpo"></div>
+  </aside>
+
+<script>
+const esc = s => (s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const brl = v => (v == null || Number(v) === 0) ? "valor não informado" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+const diasAte = iso => { if (!iso) return null; const d = new Date(iso); return isNaN(d) ? null : Math.ceil((d - new Date()) / 86400000); };
+const dataBR = iso => { if (!iso) return "?"; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString("pt-BR"); };
+function prazoHTML(iso) { const d = diasAte(iso); if (d == null) return ""; const c = d <= 2 ? "urgente" : d <= 7 ? "medio" : "tranquilo"; const t = d < 0 ? "encerrado" : d === 0 ? "encerra hoje" : d === 1 ? "encerra amanhã" : `encerra em ${d} dias`; return `<span class="prazo ${c}">${t}</span>`; }
+
+const store = {};
+function cardHTML(e) {
+  store[e.id] = e;
+  const local = `${esc(e.municipio) ?? "?"}/${esc(e.uf) ?? "?"}`;
+  return `<div class="card" data-id="${esc(e.id)}" data-texto="${esc((local+" "+(e.orgao||"")+" "+(e.objeto||"")).toLowerCase())}">
+    <div class="card-topo"><span class="orgao">${local} · ${esc(e.orgao ?? e.unidade ?? "Órgão público")}</span>
+      ${e.novo ? '<span class="selo-novo">NOVO</span>' : ""}${prazoHTML(e.encerramento)}</div>
+    <div class="objeto">${esc(e.objeto)}</div>
+    <div class="card-rodape"><span class="modalidade">${esc(e.modalidade)}</span>
+      <span class="valor">${brl(e.valorEstimado)}</span><span class="abrir">Ver análise →</span></div>
+  </div>`;
+}
+function perfilHTML(p) {
+  const editais = [...(p.editais ?? [])].sort((a,b) => { const da = diasAte(a.encerramento) ?? 9999, db = diasAte(b.encerramento) ?? 9999; return da !== db ? da - db : (b.novo?1:0)-(a.novo?1:0); });
+  const novos = editais.filter(e => e.novo).length;
+  const at = p.atualizadoEm ? new Date(p.atualizadoEm).toLocaleString("pt-BR") : "?";
+  const cabecalho = `<div class="perfil-cab">
+      <span class="perfil-nome">${esc(p.nome ?? p.id)}</span>
+      ${p.uf ? `<span class="chip chip-uf">${esc(p.uf)}</span>` : ""}
+      <span class="chip chip-stat">${editais.length} editais</span>
+      ${novos ? `<span class="chip chip-novo">${novos} novos</span>` : ""}
+      <span class="perfil-atualizado">atualizado ${at}</span>
+    </div>`;
+  const corpo = editais.length
+    ? editais.map(cardHTML).join("")
+    : `<div class="vazio"><span class="emoji">🔭</span>Nenhum edital do seu ramo está aberto agora.<br>Assim que surgir, aparece aqui e você recebe por e-mail.<br><br><b>Dica:</b> termos mais amplos pegam mais oportunidades (ex: <b>"hospitalar"</b> em vez de "material hospitalar").</div>`;
+  return `<section class="perfil">${cabecalho}${corpo}</section>`;
+}
+
+function radarHTML(lista) {
+  if (!lista || !lista.length) {
+    return `<div style="background:#eef2ff;border-radius:12px;padding:13px 18px;margin-bottom:20px;font-size:13.5px;color:var(--indigo);font-weight:600">🛰️ Radar de renovação: estamos mapeando os contratos do seu ramo que vão vencer, para você se preparar antes da próxima licitação.</div>`;
+  }
+  const itens = lista.map(c => {
+    const d = diasAte(c.vigenciaFim);
+    const quando = d == null ? "" : d <= 31 ? `vence em ${d} dia${d !== 1 ? "s" : ""}` : `vence em ${Math.round(d/30)} meses`;
+    const outros = c.outrosFornecedores > 0
+      ? `<span style="color:var(--cinza-c);font-size:12px">+ ${c.outrosFornecedores} outro${c.outrosFornecedores>1?"s":""} fornecedor${c.outrosFornecedores>1?"es":""} nesta licitação</span>`
+      : "";
+    return `<div class="card" style="cursor:default">
+      <div class="card-topo"><span class="orgao">${esc(c.municipio)}/${esc(c.uf)} · ${esc(c.orgao)}</span><span class="prazo medio">${quando}</span></div>
+      <div class="objeto">${esc((c.objeto||"").slice(0,120))}</div>
+      <div class="card-rodape"><span class="modalidade">Fornecedor principal: <b>${esc(c.fornecedorPrincipal)}</b><br>${outros}</span><span class="valor" title="Valor total da licitação">${brl(c.valorTotal)}</span></div>
+    </div>`;
+  }).join("");
+  return `<section class="perfil"><div class="perfil-cab"><span class="perfil-nome">🛰️ Radar de renovação</span><span class="chip chip-stat">${lista.length} a vencer</span></div>
+    <div style="font-size:13.5px;color:var(--cinza);margin-bottom:12px">Contratos do seu ramo que vão vencer. Uma nova licitação deve sair, prepare-se com antecedência.</div>${itens}<div style="font-size:11px;color:var(--cinza-c);margin-top:4px">Fonte: dados públicos do PNCP.</div></section>`;
+}
+
+function bannerTeste(a) {
+  const d = a.diasRestantes;
+  return `<div class="banner-teste">⏳ Teste grátis: <b>${d} dia${d !== 1 ? "s" : ""} restante${d !== 1 ? "s" : ""}</b>. Assine para não perder o acesso. <a href="#">Quero assinar</a></div>`;
+}
+function paywall(a) {
+  const titulo = a.status === "teste_expirado" ? "Seu teste grátis terminou" : a.status === "vencido" ? "Sua assinatura venceu" : "Acesso suspenso";
+  const cob = a.cobranca || {};
+  return `<div class="paywall">
+    <div class="lock">🔒</div>
+    <h2>${titulo}</h2>
+    <div class="desc">Continue recebendo as licitações do seu ramo e a checagem de aptidão por <b>R$ ${esc(cob.preco)}/mês</b>.</div>
+    <div class="como">
+      <div style="font-weight:800;margin-bottom:8px">Como ativar:</div>
+      <div>1. Pague <b>R$ ${esc(cob.preco)}</b> via Pix para a chave:<br><b class="pix">${esc(cob.pix)}</b></div>
+      <div>2. Envie o comprovante para <b>${esc(cob.contato)}</b>.</div>
+      <div>3. Seu acesso é liberado em poucas horas.</div>
+    </div>
+  </div>`;
+}
+
+async function carregar() {
+  const c = document.getElementById("conteudo");
+  const token = new URLSearchParams(location.search).get("c") || "";
+  if (!token) {
+    c.innerHTML = `<div class="vazio"><span class="emoji">🔑</span>Acesse o seu painel pelo link exclusivo que enviamos.<br><br><a href="/entrar">Entrar com meu e-mail</a></div>`;
+    return;
+  }
+  try {
+    const acesso = await (await fetch(`/api/acesso?c=${encodeURIComponent(token)}`)).json();
+    if (!acesso.encontrado) {
+      c.innerHTML = `<div class="vazio"><span class="emoji">❌</span>Link inválido.<br><br><a href="/entrar">Entrar com meu e-mail</a></div>`;
+      return;
+    }
+    if (acesso.nome) document.getElementById("nav-cliente").textContent = acesso.nome;
+    document.getElementById("nav-docs").href = "/documentos?c=" + encodeURIComponent(token);
+    document.getElementById("nav-equipe").href = "/equipe?c=" + encodeURIComponent(token);
+    document.getElementById("nav-conta").href = "/conta?c=" + encodeURIComponent(token);
+    if (acesso.uso) {
+      const u = acesso.uso, n = document.getElementById("nav-uso");
+      n.textContent = `${u.usados}/${u.limite} análises`;
+      n.style.color = u.restantes === 0 ? "#dc2626" : "var(--cinza-c)";
+    }
+    if (!acesso.temAcesso) { c.innerHTML = paywall(acesso); return; }
+
+    const dados = await (await fetch(`/api/editais?c=${encodeURIComponent(token)}`)).json();
+    const perfis = Object.values(dados);
+    const banner = acesso.status === "teste" ? bannerTeste(acesso) : "";
+    let radarBloco = "";
+    try { const rd = await (await fetch(`/api/radar?c=${encodeURIComponent(token)}`)).json(); radarBloco = radarHTML(rd.radar); } catch {}
+    c.innerHTML = banner + radarBloco + (perfis.length ? perfis.map(perfilHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Seu painel está sendo preparado.</div>`);
+  } catch (e) { c.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`; }
+}
+
+// ---- Drawer de detalhe + analise ----
+const drawer = document.getElementById("drawer"), fundo = document.getElementById("fundo");
+function abrir() { drawer.classList.add("aberto"); fundo.classList.add("aberto"); }
+function fechar() { drawer.classList.remove("aberto"); fundo.classList.remove("aberto"); }
+document.getElementById("btn-fechar").onclick = fechar;
+fundo.onclick = fechar;
+
+const ICON = { atende: ['ok','✓'], valida: ['ok','✓'], nao_atende: ['no','✕'], vencida: ['no','✕'], ausente: ['no','✕'], confirmar: ['dd','?'] };
+function iconHTML(s){ const [cls,ch] = ICON[s] ?? ['dd','·']; return `<span class="ic ${cls}">${ch}</span>`; }
+
+function precoHTML(p) {
+  if (!p) return "";
+  if (!p.stats) return `<div class="bloco"><h3>🏆 Quem ganha no seu ramo</h3><p style="font-size:14px;color:var(--cinza)">Ainda estamos reunindo o histórico de contratos do seu ramo na sua região.</p></div>`;
+  const meses = p.meses || 18;
+  const periodo = meses % 12 === 0
+    ? (meses === 12 ? "no último ano" : `nos últimos ${meses / 12} anos`)
+    : (meses === 18 ? "no último ano e meio" : `nos últimos ${meses} meses`);
+  const ramo = (p.termos && p.termos.length) ? p.termos.join(", ") : "seu ramo";
+  // Frase do escopo: orgao (o mais especifico) > municipio > estado > Brasil.
+  const localFrase = p.escopo === "orgao" ? "neste órgão (" + esc(p.orgao) + ")"
+    : p.escopo === "municipio" ? "em " + esc(p.municipio)
+    : p.escopo === "uf" ? "em " + esc(p.uf)
+    : "no Brasil";
+  const titulo = p.escopo === "orgao" ? "🏆 Quem mais ganha neste órgão" : "🏆 Quem ganha no seu ramo nesta região";
+  return `<div class="bloco"><h3>${titulo}</h3>
+    <div style="font-size:13px;color:var(--cinza);margin-bottom:10px">As empresas que mais venceram contratos do seu ramo ${localFrase} (${p.total} contratos analisados ${periodo}). É contra elas que você joga aqui:</div>
+    <ul class="itens">${p.topFornecedores.map(f => `<li><span class="ic">🏆</span><span style="flex:1">${esc(f.fornecedor)}</span><span style="color:var(--cinza);white-space:nowrap;font-weight:700">${f.qtd} contrato${f.qtd > 1 ? "s" : ""}</span></li>`).join("")}</ul>
+    <div style="font-size:11px;color:var(--cinza-c);margin-top:10px">Ranking ${localFrase}, no ramo do seu cadastro (${esc(ramo)}), nos contratos ${periodo}. Fonte: dados públicos do PNCP — os vencedores de contratos públicos são informação oficial e aberta.</div>
+  </div>`;
+}
+function saudeHTML(saude) {
+  return `<div class="bloco"><h3>Saúde documental da empresa</h3><ul class="itens">${
+    saude.itens.map(i => `<li>${iconHTML(i.situacao)}<span>${esc(i.documento)}${i.validade ? ` (vence ${dataBR(i.validade)})` : ""} — <b>${esc(i.situacao)}</b></span></li>`).join("")
+  }</ul></div>`;
+}
+function analiseHTML(a) {
+  if (!a) return "";
+  const ex = a.exigenciasHabilitacao ?? {};
+  const cat = (titulo, arr) => arr && arr.length ? `<div class="cat">${titulo}</div><ul class="itens">${arr.map(x=>`<li><span class="ic">•</span><span>${esc(x)}</span></li>`).join("")}</ul>` : "";
+  return `<div class="bloco"><h3>Resumo do edital</h3><p style="font-size:14px">${esc(a.resumo)}</p>
+      <div class="linha-info" style="margin-top:10px"><span>Prazo</span><span><b>${esc(a.prazoEnvioProposta) || "?"}</b></span></div>
+      <div class="linha-info"><span>Valor estimado</span><span><b>${esc(a.valorEstimado) || "?"}</b></span></div></div>
+    <div class="bloco"><h3>Exigências de habilitação</h3>
+      ${cat("Jurídica", ex.habilitacaoJuridica)}${cat("Fiscal e trabalhista", ex.regularidadeFiscalTrabalhista)}
+      ${cat("Técnica", ex.qualificacaoTecnica)}${cat("Econômico-financeira", ex.qualificacaoEconomicoFinanceira)}</div>
+    ${a.alertas && a.alertas.length ? `<div class="bloco"><h3>⚠️ Alertas (armadilhas do edital)</h3><ul class="itens alertas">${a.alertas.map(x=>`<li><span class="ic dd">!</span><span>${esc(x)}</span></li>`).join("")}</ul></div>` : ""}`;
+}
+function veredictoHTML(conf) {
+  if (!conf || !conf.aptidao) return "";
+  const a = conf.aptidao;
+  const rotulo = { apto: "APTO", apto_com_pendencias: "APTO COM PENDÊNCIAS", nao_apto: "NÃO APTO" }[a.veredito] ?? a.veredito;
+  return `<div class="veredito ${esc(a.veredito)}"><h3>Veredito de aptidão</h3><div class="selo">${rotulo}</div><p>${esc(a.resumo)}</p></div>
+    <div class="bloco"><h3>Item a item</h3><ul class="itens">${(a.itens||[]).map(it=>`<li>${iconHTML(it.situacao)}<span><b>${esc(it.exigencia)}</b><br><span style="color:var(--cinza)">${esc(it.observacao)}</span></span></li>`).join("")}</ul></div>
+    ${a.pendencias && a.pendencias.length ? `<div class="bloco"><h3>Pendências</h3><ul class="itens">${a.pendencias.map(p=>`<li class="pendencia"><span class="ic no">✕</span><span>${esc(p)}</span></li>`).join("")}</ul></div>` : ""}
+    ${a.proximosPassos && a.proximosPassos.length ? `<div class="bloco"><h3>Próximos passos</h3><ul class="itens">${a.proximosPassos.map(p=>`<li><span class="ic">→</span><span>${esc(p)}</span></li>`).join("")}</ul></div>` : ""}`;
+}
+
+let editalAtual = null;
+async function abrirDrawer(id) {
+  editalAtual = id;
+  const e = store[id] || {};
+  document.getElementById("drawer-titulo").textContent = `${e.municipio ?? ""}/${e.uf ?? ""} — ${(e.objeto||"").slice(0,80)}`;
+  const corpo = document.getElementById("drawer-corpo");
+  corpo.innerHTML = `<div class="carregando"><span class="spinner"></span>Carregando...</div>`;
+  abrir();
+  const token = new URLSearchParams(location.search).get("c") || "";
+  const d = await (await fetch(`/api/edital?id=${encodeURIComponent(id)}&c=${encodeURIComponent(token)}`)).json();
+
+  // Link do portal: usa o do sistema de origem quando o PNCP fornece; senão, cai
+  // para a página oficial do edital no PNCP (que dá acesso à disputa). Todo edital tem.
+  const ed = d.edital;
+  const linkDireto = ed.link || "";
+  const linkPNCP = (ed.orgaoCnpj && ed.ano && ed.sequencial)
+    ? `https://pncp.gov.br/app/editais/${ed.orgaoCnpj}/${ed.ano}/${ed.sequencial}` : "";
+  const portalUrl = linkDireto || linkPNCP;
+  const portalLabel = linkDireto
+    ? "Ir para o portal de lances onde acontece a disputa →"
+    : "Ver o edital e o acesso à disputa no portal PNCP →";
+
+  let html = `<div class="bloco"><h3>Edital</h3>
+    <div class="linha-info"><span>Órgão</span><span style="text-align:right">${esc(ed.orgao)}</span></div>
+    <div class="linha-info"><span>Modalidade</span><span>${esc(ed.modalidade)}</span></div>
+    <div class="linha-info"><span>Valor estimado</span><span>${brl(ed.valorEstimado)}</span></div>
+    <div class="linha-info"><span>Encerra</span><span>${dataBR(ed.encerramento)}</span></div>
+    ${portalUrl ? `<div class="linha-info"><span>Portal</span><span><a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="color:var(--indigo);font-weight:700">abrir →</a></span></div>` : ""}</div>`;
+  html += `<div class="bloco" id="docs-bloco"><h3>📄 Documentos do edital</h3><div class="carregando" style="padding:10px"><span class="spinner"></span>Carregando documentos...</div></div>`;
+  if (portalUrl) html += `<a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--verde);color:#fff;font-weight:700;padding:14px;border-radius:11px;text-decoration:none;margin-bottom:14px">${portalLabel}</a>`;
+  html += precoHTML(d.preco);
+  html += d.temDocumentos
+    ? saudeHTML(d.saude)
+    : `<div class="bloco"><h3>Saúde documental da empresa</h3><p style="font-size:14px;color:var(--cinza)">Você ainda não cadastrou os seus documentos. <a href="/documentos?c=${encodeURIComponent(token)}" style="color:var(--indigo);font-weight:700">Cadastrar agora →</a><br>Com eles, a conferência mostra exatamente o que falta neste edital.</p></div>`;
+
+  if (d.analise || d.conferencia) {
+    html += analiseHTML(d.analise) + veredictoHTML(d.conferencia);
+  } else if (d.temChave) {
+    html += `<button class="botao-ia" id="btn-analisar">🔍 Analisar este edital</button>`;
+  } else {
+    html += `<div class="bloco" style="color:var(--cinza)">Análise indisponível no momento.</div>`;
+  }
+  corpo.innerHTML = html;
+  const btn = document.getElementById("btn-analisar");
+  if (btn) btn.onclick = () => analisar(id);
+
+  // Carrega a lista de documentos do edital (assíncrono, sem travar o drawer).
+  fetch(`/api/edital-arquivos?id=${encodeURIComponent(id)}`).then(r => r.json()).then(dd => {
+    const bloco = document.getElementById("docs-bloco");
+    if (!bloco || editalAtual !== id) return;
+    const docs = dd.documentos || [];
+    if (!docs.length) {
+      bloco.innerHTML = `<h3>📄 Documentos do edital</h3><p style="font-size:13.5px;color:var(--cinza)">Veja os documentos no portal de origem.${portalUrl ? ` <a href="${esc(portalUrl)}" target="_blank" style="color:var(--indigo);font-weight:700">abrir →</a>` : ""}</p>`;
+      return;
+    }
+    bloco.innerHTML = `<h3>📄 Documentos do edital</h3><ul class="itens">` +
+      docs.map(doc => `<li><span class="ic">📎</span><span style="flex:1">${esc(doc.titulo)}<br><span style="color:var(--cinza-c);font-size:12px">${esc(doc.tipo)}</span></span><a href="/api/edital-arquivo?id=${encodeURIComponent(id)}&doc=${doc.indice}" target="_blank" style="color:var(--indigo);font-weight:700;white-space:nowrap">baixar ↓</a></li>`).join("") +
+      `</ul>`;
+  }).catch(() => { const b = document.getElementById("docs-bloco"); if (b) b.innerHTML = `<h3>📄 Documentos do edital</h3><p style="font-size:13.5px;color:var(--cinza)">Não consegui carregar os documentos agora.</p>`; });
+}
+
+async function analisar(id) {
+  const btn = document.getElementById("btn-analisar");
+  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spinner"></span>Lendo o edital (pode levar até 1 min)...`; }
+  try {
+    const tk = new URLSearchParams(location.search).get("c") || "";
+    const r = await fetch(`/api/analisar?id=${encodeURIComponent(id)}&c=${encodeURIComponent(tk)}`, { method: "POST" });
+    const d = await r.json();
+    if (r.status === 402 && d.limiteAtingido) {
+      if (btn) { btn.disabled = false; btn.textContent = "🔍 Analisar este edital"; }
+      alert(d.erro);
+      return;
+    }
+    if (!r.ok) throw new Error(d.erro || "falha");
+    if (d.uso) {
+      const n = document.getElementById("nav-uso");
+      if (n) { n.textContent = `${d.uso.usados}/${d.uso.limite} análises`; n.style.color = d.uso.restantes === 0 ? "#dc2626" : "var(--cinza-c)"; }
+    }
+    if (editalAtual === id) abrirDrawer(id);
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = "🔍 Analisar este edital"; }
+    alert("Não foi possível analisar agora: " + e.message);
+  }
+}
+
+// ---- Busca livre no acervo + filtros ----
+const UFS_P = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+const MODS_P = [["6","Pregão eletrônico"],["8","Dispensa"],["9","Inexigibilidade"],["4","Concorrência"],["12","Credenciamento"],["1","Leilão"]];
+document.getElementById("filtro-uf").innerHTML = '<option value="">Estado: Brasil todo</option>' + UFS_P.map(u=>`<option value="${u}">${u}</option>`).join("");
+document.getElementById("filtro-mod").innerHTML = '<option value="">Tipo: todos</option>' + MODS_P.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+const PRAZOS_P = [["","Prazo: qualquer"],["3","Encerra em 3 dias"],["7","Encerra em 7 dias"],["15","Encerra em 15 dias"],["30","Encerra em 30 dias"]];
+document.getElementById("filtro-prazo").innerHTML = PRAZOS_P.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+
+async function buscarPainel() {
+  const termo = document.getElementById("busca").value.trim();
+  const cidade = document.getElementById("filtro-cidade").value.trim();
+  const uf = document.getElementById("filtro-uf").value;
+  const mod = document.getElementById("filtro-mod").value;
+  const prazo = document.getElementById("filtro-prazo").value;
+  if (!termo && !cidade && !uf && !mod && !prazo) { carregar(); return; }
+  const c = document.getElementById("conteudo");
+  c.innerHTML = `<div class="carregando"><span class="spinner"></span>Buscando no acervo nacional...</div>`;
+  try {
+    const d = await (await fetch("/api/buscar?" + new URLSearchParams({ termo, uf, modalidade: mod, cidade, prazo }))).json();
+    const prazoTxt = prazo ? ` · encerra em até ${prazo} dias` : "";
+    const onde = ([cidade, uf].filter(Boolean).join(" / ") || "Brasil todo") + prazoTxt;
+    let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+      <span style="font-size:18px;font-weight:800">${d.total} resultado${d.total!==1?"s":""}${termo?' para "'+esc(termo)+'"':""}</span>
+      <span style="color:var(--cinza)">em ${esc(onde)}</span>
+      <a href="#" id="voltar-painel" style="margin-left:auto;color:var(--indigo);font-weight:700">← Voltar ao meu painel</a></div>`;
+    html += d.editais.length ? d.editais.map(cardHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Nada encontrado. Tente outro termo, outra cidade ou amplie os filtros.</div>`;
+    c.innerHTML = html;
+    document.getElementById("voltar-painel").onclick = (e) => { e.preventDefault(); document.getElementById("busca").value=""; document.getElementById("filtro-cidade").value=""; document.getElementById("filtro-uf").value=""; document.getElementById("filtro-mod").value=""; document.getElementById("filtro-prazo").value=""; carregar(); };
+  } catch (e) { c.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`; }
+}
+document.getElementById("btn-buscar").onclick = buscarPainel;
+document.getElementById("busca").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(); });
+document.getElementById("filtro-cidade").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(); });
+document.getElementById("filtro-prazo").addEventListener("change", buscarPainel);
+document.getElementById("filtro-uf").addEventListener("change", buscarPainel);
+document.getElementById("filtro-mod").addEventListener("change", buscarPainel);
+
+document.getElementById("conteudo").addEventListener("click", ev => {
+  const card = ev.target.closest(".card");
+  if (card && card.dataset.id) abrirDrawer(card.dataset.id);
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") fechar(); });
+carregar();
+</script>
+</body>
+</html>

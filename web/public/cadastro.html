@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Licita — Criar meu painel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:radial-gradient(1000px 500px at 50% -10%, #eef2ff 0%, var(--fundo) 60%); color:var(--tinta); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card { background:#fff; border:1px solid var(--linha); border-radius:22px; box-shadow:0 20px 60px rgba(15,23,42,.10); width:100%; max-width:520px; padding:38px; }
+  .logo { font-weight:900; font-size:24px; color:var(--indigo); margin-bottom:6px; }
+  .logo span { color:var(--cinza-c); }
+  h1 { font-size:24px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px; }
+  .sub { color:var(--cinza); font-size:15px; margin-bottom:26px; }
+  label { display:block; font-size:12px; font-weight:700; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin:16px 0 6px; }
+  input, select { width:100%; padding:13px 14px; border:1px solid var(--linha); border-radius:11px; font-size:15px; font-family:inherit; outline:none; transition:border-color .12s, box-shadow .12s; }
+  input:focus, select:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+  .dica { font-size:12.5px; color:var(--cinza-c); margin-top:5px; }
+  .btn { width:100%; margin-top:26px; background:var(--indigo); color:#fff; border:none; padding:15px; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .12s, transform .12s; }
+  .btn:hover { background:var(--indigo-d); transform:translateY(-1px); }
+  .btn:disabled { background:var(--cinza-c); cursor:default; transform:none; }
+  .erro { color:#dc2626; font-size:14px; margin-top:14px; text-align:center; }
+  .voltar { display:block; text-align:center; margin-top:18px; font-size:14px; color:var(--cinza); text-decoration:none; }
+  /* sucesso */
+  .sucesso { text-align:center; }
+  .selo { width:68px; height:68px; border-radius:50%; background:var(--verde-bg); color:var(--verde); font-size:34px; display:flex; align-items:center; justify-content:center; margin:0 auto 18px; }
+  .sucesso h1 { font-size:22px; }
+  .destaque { background:var(--verde-bg); color:var(--verde); font-weight:800; font-size:34px; padding:14px; border-radius:14px; margin:18px 0 6px; }
+  .link-box { background:var(--fundo); border:1px dashed var(--cinza-c); border-radius:12px; padding:14px; font-size:14px; word-break:break-all; margin:16px 0; }
+  .aviso { font-size:13px; color:var(--cinza); }
+  .spinner { display:inline-block; width:18px; height:18px; border:3px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:girar .8s linear infinite; vertical-align:middle; margin-right:8px; }
+  @keyframes girar { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="logo">Licita<span>.</span></div>
+    <h1>Crie o seu painel de licitações</h1>
+    <div class="sub">Em 30 segundos, comece a receber as licitações do seu ramo. Sem cartão, sem compromisso.</div>
+
+    <form id="form">
+      <label for="cnpj">CNPJ da empresa</label>
+      <input id="cnpj" type="text" inputmode="numeric" placeholder="00.000.000/0000-00" required />
+      <div class="dica" id="cnpj-status">Validamos na base da Receita e preenchemos a razão social.</div>
+
+      <label for="nome">Razão social</label>
+      <input id="nome" type="text" placeholder="Preenchida automaticamente pelo CNPJ" />
+
+      <label for="email">Seu melhor e-mail</label>
+      <input id="email" type="email" placeholder="voce@suaempresa.com.br" required />
+
+      <label for="senha">Crie uma senha</label>
+      <input id="senha" type="password" placeholder="mínimo 6 caracteres" minlength="6" required />
+
+      <label for="uf">Estado onde você atua</label>
+      <select id="uf"></select>
+
+      <label for="ramo">O que a sua empresa vende</label>
+      <input id="ramo" type="text" placeholder="Ex: limpeza, conservação, asseio" required />
+      <div class="dica">Separe por vírgula para incluir vários termos.</div>
+
+      <button class="btn" type="submit" id="btn">Criar meu painel</button>
+      <div class="erro" id="erro"></div>
+    </form>
+    <a class="voltar" href="/">Voltar para a página inicial</a>
+    <a class="voltar" href="/entrar" style="margin-top:6px">Já tem conta? <b>Entrar</b></a>
+  </div>
+
+<script>
+const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+document.getElementById("uf").innerHTML = '<option value="">Brasil todo</option>' + UFS.map(u=>`<option value="${u}"${u==="SC"?" selected":""}>${u}</option>`).join("");
+
+const cnpjInput = document.getElementById("cnpj");
+const cnpjStatus = document.getElementById("cnpj-status");
+cnpjInput.addEventListener("blur", async () => {
+  const v = cnpjInput.value.replace(/\D/g, "");
+  if (v.length !== 14) return;
+  cnpjStatus.style.color = ""; cnpjStatus.textContent = "Validando na Receita...";
+  try {
+    const d = await (await fetch("/api/cnpj?cnpj=" + v)).json();
+    if (!d.valido) { cnpjStatus.style.color = "#dc2626"; cnpjStatus.textContent = d.erro; return; }
+    cnpjStatus.style.color = "var(--verde)";
+    if (d.razaoSocial) { document.getElementById("nome").value = d.razaoSocial; cnpjStatus.textContent = "CNPJ válido: " + d.razaoSocial; }
+    else cnpjStatus.textContent = "CNPJ aceito" + (d.aviso ? " (" + d.aviso + ")" : "") + ".";
+  } catch { cnpjStatus.textContent = ""; }
+});
+
+document.getElementById("form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const btn = document.getElementById("btn"), erro = document.getElementById("erro");
+  erro.textContent = "";
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Montando seu painel...';
+  const corpo = {
+    cnpj: document.getElementById("cnpj").value,
+    razaoSocial: document.getElementById("nome").value,
+    nome: document.getElementById("nome").value,
+    email: document.getElementById("email").value,
+    senha: document.getElementById("senha").value,
+    uf: document.getElementById("uf").value,
+    ramo: document.getElementById("ramo").value,
+  };
+  try {
+    const r = await fetch("/api/cadastrar", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(corpo) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.erro || "falha");
+    const url = location.origin + d.link;
+    document.getElementById("card").innerHTML = `
+      <div class="sucesso">
+        <div class="selo">✓</div>
+        <h1>Painel criado, ${d.nome}!</h1>
+        <div class="destaque">${d.total} licitações</div>
+        <div class="aviso">já estão esperando por você no seu painel.</div>
+        <div class="link-box"><b>Seu link de acesso:</b><br>${url}</div>
+        <a class="btn" style="display:block;text-decoration:none;text-align:center" href="${d.link}">Abrir meu painel</a>
+        <div class="aviso" style="margin-top:14px">Salve este link. É por ele que você acessa o seu painel.</div>
+      </div>`;
+  } catch (e) {
+    erro.textContent = "Não consegui criar: " + e.message;
+    btn.disabled = false; btn.textContent = "Criar meu painel";
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>Licita — Meus documentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); line-height:1.55; }
+  nav { background:#fff; border-bottom:1px solid var(--linha); }
+  nav .wrap { max-width:720px; margin:0 auto; padding:0 22px; height:60px; display:flex; align-items:center; gap:16px; }
+  .logo { font-weight:900; font-size:21px; color:var(--indigo); }
+  nav a.voltar { margin-left:auto; font-size:14px; font-weight:600; color:var(--cinza); }
+  .wrap { max-width:720px; margin:0 auto; padding:28px 22px 70px; }
+  h1 { font-size:25px; font-weight:800; letter-spacing:-.5px; }
+  .sub { color:var(--cinza); font-size:15px; margin:6px 0 24px; }
+  .card { background:#fff; border:1px solid var(--linha); border-radius:16px; padding:24px; margin-bottom:18px; box-shadow:0 3px 14px rgba(15,23,42,.05); }
+  .card h2 { font-size:16px; font-weight:800; margin-bottom:4px; }
+  .card .dica { color:var(--cinza-c); font-size:13px; margin-bottom:16px; }
+  label { display:block; font-size:12px; font-weight:700; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin:14px 0 6px; }
+  input, select, textarea { width:100%; padding:12px 14px; border:1px solid var(--linha); border-radius:10px; font-size:15px; font-family:inherit; outline:none; }
+  input:focus, select:focus, textarea:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .cert { display:grid; grid-template-columns:1fr 170px; gap:12px; align-items:center; padding:11px 0; border-bottom:1px solid var(--linha); }
+  .cert:last-child { border:none; }
+  .cert .nome { font-size:14.5px; font-weight:600; }
+  .cert .nome small { display:block; color:var(--cinza-c); font-weight:400; font-size:12px; }
+  .btn { width:100%; background:var(--indigo); color:#fff; border:none; padding:15px; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .btn:hover { background:var(--indigo-d); }
+  .msg { text-align:center; margin-top:14px; font-size:14px; font-weight:600; }
+  @media (max-width:560px){ .grid2,.cert{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+  <nav><div class="wrap"><span class="logo">Licita.</span><a class="voltar" id="voltar" href="#">← Voltar ao painel</a></div></nav>
+  <div class="wrap">
+    <h1>Meus documentos</h1>
+    <div class="sub">Cadastre os documentos da sua empresa. É com eles que checamos, em cada edital, se você está apto e o que falta.</div>
+
+    <form id="form">
+      <div class="card">
+        <h2>Dados da empresa</h2>
+        <div class="dica">Usados para conferir exigências de porte e qualificação econômica.</div>
+        <div class="grid2">
+          <div><label for="porte">Porte</label><select id="porte"><option value="ME">Microempresa (ME)</option><option value="EPP">Pequena empresa (EPP)</option><option value="DEMAIS">Demais</option></select></div>
+          <div><label for="capital">Capital social (R$)</label><input id="capital" type="number" placeholder="Ex: 150000" /></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Certidões</h2>
+        <div class="dica">Informe a data de validade de cada uma. Deixe em branco a que você não tem (ela aparece como pendente).</div>
+        <div class="cert"><div class="nome">Certidão Negativa Federal <small>Receita Federal / PGFN</small></div><input type="date" id="federalConjunta" /></div>
+        <div class="cert"><div class="nome">Regularidade do FGTS <small>Caixa</small></div><input type="date" id="fgts" /></div>
+        <div class="cert"><div class="nome">CNDT <small>Débitos Trabalhistas (TST)</small></div><input type="date" id="trabalhistaCNDT" /></div>
+        <div class="cert"><div class="nome">Certidão Estadual <small>Fazenda do seu estado</small></div><input type="date" id="estadual" /></div>
+        <div class="cert"><div class="nome">Certidão Municipal <small>Prefeitura da sua sede</small></div><input type="date" id="municipal" /></div>
+      </div>
+
+      <div class="card">
+        <h2>Atestados de capacidade técnica</h2>
+        <div class="dica">Descreva os serviços/fornecimentos que você já comprovou (um por linha). Ajuda na conferência da qualificação técnica.</div>
+        <textarea id="atestados" rows="4" placeholder="Ex: Serviço de limpeza predial em órgãos públicos, R$ 600 mil/ano"></textarea>
+      </div>
+
+      <button class="btn" type="submit" id="btn">Salvar meus documentos</button>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+
+<script>
+const token = new URLSearchParams(location.search).get("c") || "";
+document.getElementById("voltar").href = "/painel?c=" + encodeURIComponent(token);
+const CERTS = ["federalConjunta","fgts","trabalhistaCNDT","estadual","municipal"];
+
+// Carrega os dados existentes
+fetch("/api/documentos?c=" + encodeURIComponent(token)).then(r=>r.json()).then(d=>{
+  const e = d.empresa || {};
+  if (e.porte) document.getElementById("porte").value = e.porte;
+  if (e.capitalSocial) document.getElementById("capital").value = e.capitalSocial;
+  if (e.atestados) document.getElementById("atestados").value = e.atestados;
+  for (const c of CERTS) if (e.certidoes && e.certidoes[c] && e.certidoes[c].validade) document.getElementById(c).value = e.certidoes[c].validade;
+}).catch(()=>{});
+
+document.getElementById("form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const msg = document.getElementById("msg"), btn = document.getElementById("btn");
+  const certidoes = {};
+  for (const c of CERTS) { const v = document.getElementById(c).value; if (v) certidoes[c] = { validade: v }; }
+  const empresa = {
+    porte: document.getElementById("porte").value,
+    capitalSocial: Number(document.getElementById("capital").value) || null,
+    atestados: document.getElementById("atestados").value.trim(),
+    certidoes,
+  };
+  btn.disabled = true; btn.textContent = "Salvando...";
+  try {
+    const r = await fetch("/api/documentos?c=" + encodeURIComponent(token), { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(empresa) });
+    if (!r.ok) throw new Error((await r.json()).erro || "falha");
+    msg.style.color = "var(--verde)"; msg.textContent = "Documentos salvos. A conferência de aptidão já usa eles.";
+  } catch(e) { msg.style.color = "#dc2626"; msg.textContent = "Erro: " + e.message; }
+  btn.disabled = false; btn.textContent = "Salvar meus documentos";
+});
+</script>
+</body>
+</html>

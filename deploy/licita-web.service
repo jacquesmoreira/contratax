@@ -1,0 +1,16 @@
+[Unit]
+Description=Licita - servidor web
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/licita
+ExecStart=/usr/bin/node web/server.mjs
+Environment=PORT=3000
+Restart=always
+RestartSec=3
+# Ajuste User para um usuario dedicado em producao (ex: licita). root simplifica o 1o deploy.
+User=root
+
+[Install]
+WantedBy=multi-user.target

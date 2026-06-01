@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Licita — Encontre e ganhe as licitações públicas do seu ramo</title>
+<meta name="description" content="Receba todo dia as licitações públicas do Brasil que combinam com a sua empresa e saiba na hora se você está apto a participar. Dados oficiais do PNCP. Teste grátis, sem cartão." />
+<meta name="robots" content="index, follow" />
+<meta name="author" content="Licita" />
+<link rel="canonical" href="https://SEU-DOMINIO.com.br/" />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="pt_BR" />
+<meta property="og:site_name" content="Licita" />
+<meta property="og:title" content="Encontre e ganhe as licitações públicas do seu ramo" />
+<meta property="og:description" content="As licitações do seu ramo, garimpadas e analisadas todo dia. Saiba se você está apto antes de montar a papelada." />
+<meta property="og:url" content="https://SEU-DOMINIO.com.br/" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Encontre e ganhe as licitações públicas do seu ramo" />
+<meta name="twitter:description" content="As licitações do seu ramo, garimpadas e analisadas todo dia. Teste grátis." />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Licita",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "description": "Monitoramento de licitações públicas do Brasil com leitura de editais e conferência de aptidão. Dados oficiais do PNCP.",
+  "offers": { "@type": "Offer", "price": "197.00", "priceCurrency": "BRL" }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --roxo:#6d28d9;
+    --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8;
+    --linha:#e2e8f0; --fundo:#f8fafc; --branco:#fff;
+    --verde:#059669; --verde-bg:#ecfdf5; --ambar:#d97706; --ambar-bg:#fffbeb;
+    --vermelho:#dc2626; --vermelho-bg:#fef2f2;
+    --raio:18px; --sombra:0 12px 40px rgba(15,23,42,.10); --sombra-sm:0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior:smooth; }
+  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--tinta); background:var(--branco); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1080px; margin:0 auto; padding:0 24px; }
+  a { color:inherit; text-decoration:none; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:700; border-radius:12px; padding:13px 24px; cursor:pointer; border:none; font-size:15px; font-family:inherit; transition:transform .12s, box-shadow .12s, background .12s; }
+  .btn-primario { background:var(--indigo); color:#fff; box-shadow:0 6px 20px rgba(67,56,202,.30); }
+  .btn-primario:hover { background:var(--indigo-d); transform:translateY(-2px); box-shadow:0 10px 28px rgba(67,56,202,.40); }
+  .btn-grande { padding:17px 34px; font-size:17px; border-radius:14px; }
+  .btn-fantasma { background:#fff; color:var(--indigo); border:1px solid var(--linha); }
+  .btn-fantasma:hover { border-color:var(--indigo); }
+
+  /* Nav */
+  nav { position:sticky; top:0; z-index:30; background:rgba(255,255,255,.9); backdrop-filter:blur(12px); border-bottom:1px solid var(--linha); }
+  nav .wrap { display:flex; align-items:center; height:66px; gap:16px; }
+  .logo { font-weight:900; font-size:23px; letter-spacing:-.5px; color:var(--indigo); }
+  .logo span { color:var(--cinza-c); }
+  nav .links { margin-left:auto; display:flex; align-items:center; gap:24px; font-size:14.5px; font-weight:600; color:var(--cinza); }
+  nav .links a:hover { color:var(--tinta); }
+
+  /* Hero */
+  .hero { position:relative; overflow:hidden; background:linear-gradient(180deg,#eef2ff 0%, #faf5ff 40%, #fff 100%); padding:64px 0 48px; text-align:center; }
+  .eyebrow { display:inline-flex; align-items:center; gap:9px; background:#fff; border:1px solid var(--linha); color:var(--verde); font-weight:700; font-size:13.5px; padding:7px 16px; border-radius:999px; box-shadow:var(--sombra-sm); margin-bottom:26px; }
+  .ponto { width:9px; height:9px; border-radius:50%; background:var(--verde); box-shadow:0 0 0 0 rgba(5,150,105,.5); animation:pulso 1.8s infinite; }
+  @keyframes pulso { 0%{box-shadow:0 0 0 0 rgba(5,150,105,.5)} 70%{box-shadow:0 0 0 9px rgba(5,150,105,0)} 100%{box-shadow:0 0 0 0 rgba(5,150,105,0)} }
+  h1 { font-size:clamp(34px,5.4vw,58px); font-weight:900; letter-spacing:-1.8px; line-height:1.06; max-width:880px; margin:0 auto; }
+  h1 .grad { background:linear-gradient(110deg,var(--roxo),var(--azul)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .hero .sub { font-size:clamp(16px,2.1vw,20px); color:var(--cinza); max-width:660px; margin:22px auto 0; }
+
+  /* Busca */
+  .busca-card { max-width:740px; margin:38px auto 0; background:#fff; border:1px solid var(--linha); border-radius:22px; box-shadow:var(--sombra); padding:24px; position:relative; }
+  .busca-card::before { content:"Grátis, sem cadastro"; position:absolute; top:-13px; left:50%; transform:translateX(-50%); background:var(--verde); color:#fff; font-size:12px; font-weight:700; padding:4px 14px; border-radius:999px; }
+  .busca-titulo { font-weight:800; font-size:17px; margin-bottom:16px; }
+  .busca-form { display:flex; gap:10px; flex-wrap:wrap; }
+  .campo { flex:1; min-width:140px; display:flex; flex-direction:column; gap:6px; text-align:left; }
+  .campo label { font-size:11.5px; font-weight:700; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.5px; }
+  .campo select, .campo input { padding:14px 15px; border:1.5px solid var(--linha); border-radius:12px; font-size:15px; font-family:inherit; outline:none; transition:border-color .12s, box-shadow .12s; background:#fff; }
+  .campo select:focus, .campo input:focus { border-color:var(--azul); box-shadow:0 0 0 4px rgba(37,99,235,.12); }
+  .busca-form .btn { align-self:flex-end; height:50px; padding:0 28px; }
+
+  /* Trust badges */
+  .trust { display:flex; gap:10px 22px; justify-content:center; flex-wrap:wrap; margin-top:28px; color:var(--cinza); font-size:14px; font-weight:600; }
+  .trust span { display:inline-flex; align-items:center; gap:7px; }
+  .trust .ok { color:var(--verde); font-weight:800; }
+
+  /* Resultados */
+  #resultados { max-width:780px; margin:30px auto 0; }
+  .stat-banner { background:linear-gradient(120deg,var(--roxo),var(--azul)); color:#fff; border-radius:var(--raio); padding:26px 24px; text-align:center; margin-bottom:18px; box-shadow:var(--sombra); }
+  .stat-banner .num { font-size:44px; font-weight:900; letter-spacing:-1.5px; line-height:1; }
+  .stat-banner .txt { opacity:.95; font-size:16px; margin-top:8px; }
+  .res-card { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:16px 18px; margin-bottom:11px; text-align:left; box-shadow:var(--sombra-sm); }
+  .res-card .top { display:flex; gap:8px; align-items:center; margin-bottom:7px; flex-wrap:wrap; }
+  .res-card .org { font-size:12.5px; color:var(--cinza); font-weight:700; }
+  .res-card .pz { margin-left:auto; font-size:12px; font-weight:700; padding:3px 10px; border-radius:999px; }
+  .pz.u { background:var(--vermelho-bg); color:var(--vermelho); } .pz.m { background:var(--ambar-bg); color:var(--ambar); } .pz.t { background:var(--verde-bg); color:var(--verde); }
+  .res-card .obj { font-size:14.5px; margin-bottom:9px; }
+  .res-card .rod { display:flex; gap:14px; font-size:13.5px; align-items:center; }
+  .res-card .val { font-weight:800; color:var(--tinta); }
+  .res-card .mod { color:var(--cinza-c); }
+  .cta-trava { background:linear-gradient(135deg,var(--indigo-d),var(--indigo)); color:#fff; border-radius:var(--raio); padding:32px 26px; text-align:center; margin-top:8px; box-shadow:var(--sombra); }
+  .cta-trava .lock { font-size:30px; }
+  .cta-trava h3 { font-size:23px; font-weight:800; margin:6px 0; }
+  .cta-trava p { opacity:.9; font-size:15px; max-width:460px; margin:0 auto 20px; }
+  .res-vazio { text-align:center; color:var(--cinza); padding:34px; }
+
+  /* Secoes */
+  section.bloco { padding:80px 0; }
+  section.alt { background:var(--fundo); }
+  .titulo-sec { text-align:center; max-width:680px; margin:0 auto 50px; }
+  .tag-sec { display:inline-block; background:#eef2ff; color:var(--indigo); font-weight:800; font-size:13px; letter-spacing:.5px; text-transform:uppercase; padding:6px 14px; border-radius:999px; margin-bottom:16px; }
+  .titulo-sec h2 { font-size:clamp(28px,3.6vw,40px); font-weight:900; letter-spacing:-1.2px; line-height:1.12; }
+  .titulo-sec p { color:var(--cinza); font-size:18px; margin-top:14px; }
+
+  /* Dores */
+  .dores { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .dor { background:#fff; border:1px solid var(--linha); border-radius:var(--raio); padding:28px; box-shadow:var(--sombra-sm); }
+  .dor .ic { width:52px; height:52px; border-radius:14px; background:var(--vermelho-bg); display:flex; align-items:center; justify-content:center; font-size:26px; margin-bottom:16px; }
+  .dor h3 { font-size:18px; font-weight:800; margin-bottom:8px; }
+  .dor p { color:var(--cinza); font-size:15px; }
+
+  /* Diferencial destaque */
+  .dif-wrap { display:grid; grid-template-columns:1.05fr .95fr; gap:48px; align-items:center; }
+  .dif-lista { list-style:none; display:flex; flex-direction:column; gap:22px; }
+  .dif-lista li { display:flex; gap:15px; }
+  .dif-lista .ic { flex-shrink:0; width:48px; height:48px; border-radius:13px; background:#eef2ff; display:flex; align-items:center; justify-content:center; font-size:24px; }
+  .dif-lista h4 { font-size:17px; font-weight:800; margin-bottom:3px; }
+  .dif-lista p { color:var(--cinza); font-size:15px; }
+  /* Mock veredito */
+  .mock { background:#fff; border:1px solid var(--linha); border-radius:20px; box-shadow:var(--sombra); overflow:hidden; }
+  .mock .mhead { background:#0f172a; color:#fff; padding:14px 18px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .mock .mhead .dot { width:11px; height:11px; border-radius:50%; }
+  .mock .veredito { background:var(--vermelho-bg); color:var(--vermelho); padding:20px; text-align:center; border-bottom:1px solid var(--linha); }
+  .mock .veredito .sel { font-size:26px; font-weight:900; }
+  .mock .veredito small { display:block; color:var(--cinza); font-weight:600; margin-top:4px; }
+  .mock .mrow { display:flex; gap:11px; padding:12px 20px; font-size:14px; border-bottom:1px solid var(--linha); }
+  .mock .mrow:last-child { border:none; }
+  .mi-ok { color:var(--verde); font-weight:900; } .mi-no { color:var(--vermelho); font-weight:900; }
+
+  /* Passos */
+  .passos { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  .passo { background:#fff; border:1px solid var(--linha); border-radius:var(--raio); padding:30px; box-shadow:var(--sombra-sm); position:relative; }
+  .passo .n { width:46px; height:46px; border-radius:13px; background:linear-gradient(135deg,var(--roxo),var(--azul)); color:#fff; font-weight:900; font-size:20px; display:flex; align-items:center; justify-content:center; margin-bottom:18px; }
+  .passo h3 { font-size:19px; font-weight:800; margin-bottom:9px; }
+  .passo p { color:var(--cinza); font-size:15px; }
+
+  /* Comparacao */
+  .tabela-comp { max-width:860px; margin:0 auto; border:1px solid var(--linha); border-radius:18px; overflow:hidden; box-shadow:var(--sombra); display:grid; grid-template-columns:1.7fr 1fr 1.2fr; background:#fff; }
+  .tabela-comp > div { padding:16px 18px; border-bottom:1px solid var(--linha); display:flex; align-items:center; font-size:15px; }
+  .tabela-comp .lbl { font-weight:600; }
+  .tabela-comp .th { font-weight:800; background:var(--fundo); }
+  .tabela-comp .th.us { background:linear-gradient(135deg,var(--roxo),var(--azul)); color:#fff; justify-content:center; font-size:18px; }
+  .tabela-comp .col-us { background:#f5f3ff; justify-content:center; font-weight:800; color:var(--indigo); text-align:center; }
+  .tabela-comp .col-them { color:var(--cinza); justify-content:center; text-align:center; font-size:14px; }
+  .tabela-comp .sim { color:var(--verde); font-weight:900; font-size:22px; }
+  .tabela-comp .nao { color:var(--cinza-c); font-weight:900; font-size:20px; }
+  .tabela-comp > div:nth-last-child(-n+3) { border-bottom:none; }
+  @media (max-width:760px) { .tabela-comp { grid-template-columns:1.4fr 1fr 1fr; } .tabela-comp > div { padding:12px 9px; font-size:12.5px; } .tabela-comp .col-them { font-size:11.5px; } }
+
+  /* Preco */
+  .preco-card { max-width:460px; margin:0 auto; background:#fff; border:2px solid var(--indigo); border-radius:24px; padding:38px; text-align:center; box-shadow:var(--sombra); position:relative; }
+  .preco-card .selo-preco { position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:var(--indigo); color:#fff; font-size:12.5px; font-weight:700; padding:5px 16px; border-radius:999px; }
+  .preco-card .valor { font-size:58px; font-weight:900; letter-spacing:-2px; line-height:1; }
+  .preco-card .valor small { font-size:19px; font-weight:600; color:var(--cinza); }
+  .preco-card ul { list-style:none; text-align:left; margin:24px 0; display:flex; flex-direction:column; gap:13px; }
+  .preco-card ul li { display:flex; gap:11px; font-size:15.5px; }
+  .preco-card ul li::before { content:"✓"; color:var(--verde); font-weight:900; }
+
+  /* FAQ */
+  .faq { max-width:740px; margin:0 auto; }
+  .faq details { border:1px solid var(--linha); border-radius:14px; padding:4px 20px; margin-bottom:12px; background:#fff; }
+  .faq summary { font-weight:700; padding:16px 0; cursor:pointer; list-style:none; display:flex; justify-content:space-between; font-size:16px; }
+  .faq summary::after { content:"+"; color:var(--indigo); font-weight:900; font-size:20px; }
+  .faq details[open] summary::after { content:"−"; }
+  .faq p { color:var(--cinza); padding:0 0 18px; font-size:15px; }
+
+  /* CTA final */
+  .cta-final { background:linear-gradient(135deg,var(--indigo-d),var(--roxo)); color:#fff; border-radius:26px; padding:56px 32px; text-align:center; }
+  .cta-final h2 { font-size:clamp(26px,3.4vw,38px); font-weight:900; letter-spacing:-1px; max-width:620px; margin:0 auto 14px; }
+  .cta-final p { opacity:.9; font-size:17px; margin-bottom:28px; }
+  .cta-final .btn { background:#fff; color:var(--indigo); }
+  .cta-final .btn:hover { background:#eef2ff; }
+
+  footer { background:#0f172a; color:#94a3b8; padding:44px 0; text-align:center; font-size:14px; }
+  footer .logo { color:#fff; margin-bottom:10px; }
+
+  @media (max-width:760px) { .dores,.passos,.dif-wrap { grid-template-columns:1fr; } .busca-form .btn { width:100%; } nav .links a:not(.btn) { display:none; } }
+</style>
+</head>
+<body>
+  <nav><div class="wrap">
+    <div class="logo">Licita<span>.</span></div>
+    <div class="links">
+      <a href="#dor">Por que</a>
+      <a href="#como">Como funciona</a>
+      <a href="#preco">Preço</a>
+      <a href="/entrar">Entrar</a>
+      <a href="/cadastro" class="btn btn-primario">Criar conta grátis</a>
+    </div>
+  </div></nav>
+
+  <header class="hero"><div class="wrap">
+    <div class="eyebrow"><span class="ponto"></span> <span id="contador-topo">Dados oficiais do PNCP, atualizados todo dia</span></div>
+    <h1>Existe contrato público do seu ramo aberto agora. <span class="grad">Você só não está vendo.</span></h1>
+    <p class="sub">Todo dia o governo abre milhares de licitações, espalhadas em dezenas de portais diferentes. As do seu ramo passam batido, porque conferir todas na mão é impossível.</p>
+
+    <div class="busca-card">
+      <div class="busca-titulo">Quantas licitações do seu ramo estão abertas agora?</div>
+      <div class="busca-form">
+        <div class="campo">
+          <label for="uf">Estado</label>
+          <select id="uf"></select>
+        </div>
+        <div class="campo" style="flex:2">
+          <label for="termo">O que a sua empresa vende</label>
+          <input id="termo" type="text" placeholder="ex: limpeza, merenda, informática, obras" />
+        </div>
+        <button class="btn btn-primario" id="btn-buscar">Ver agora</button>
+      </div>
+    </div>
+
+    <div class="trust">
+      <span><span class="ok">✓</span> Dados oficiais do PNCP</span>
+      <span><span class="ok">✓</span> Todas as modalidades</span>
+      <span><span class="ok">✓</span> Atualizado todo dia</span>
+      <span><span class="ok">✓</span> Teste grátis, sem cartão</span>
+    </div>
+
+    <div id="resultados"></div>
+  </div></header>
+
+  <!-- Dor -->
+  <section class="bloco" id="dor"><div class="wrap">
+    <div class="titulo-sec">
+      <span class="tag-sec">Soa familiar?</span>
+      <h2>Vender pro governo é uma mina de ouro. E uma dor de cabeça.</h2>
+      <p>Todo dia milhões em contratos são abertos. O problema não é falta de oportunidade, é o que te faz perder ela.</p>
+    </div>
+    <div class="dores">
+      <div class="dor"><div class="ic">01</div><h3>Você descobre tarde demais</h3><p>Cada órgão publica num portal diferente, e ninguém te avisa. Quando você acha o edital certo, ele já encerrou. O contrato foi pra outro.</p></div>
+      <div class="dor"><div class="ic">02</div><h3>Monta a papelada e é inabilitado</h3><p>Você passa horas reunindo a documentação e, no fim, perde por uma certidão vencida ou um atestado que faltava. O trabalho inteiro no lixo.</p></div>
+      <div class="dor"><div class="ic">03</div><h3>O edital é um muro de juridiquês</h3><p>São dezenas de páginas de exigências, e as armadilhas que te desclassificam só aparecem na hora de enviar a proposta.</p></div>
+    </div>
+  </div></section>
+
+  <!-- Diferencial -->
+  <section class="bloco alt"><div class="wrap">
+    <div class="titulo-sec">
+      <span class="tag-sec">O nosso diferencial</span>
+      <h2>Achar o edital é o começo. Saber se você ganha é o que importa.</h2>
+      <p>A gente lê cada edital por você e cruza as exigências com a sua empresa. Em segundos, você sabe se está habilitado, ou o que falta resolver antes de perder tempo.</p>
+    </div>
+    <div class="dif-wrap">
+      <ul class="dif-lista">
+        <li><div class="ic">›</div><div><h4>Lemos o edital por você</h4><p>Resumo claro do que a licitação compra, prazo, valor e as exigências de habilitação, sem juridiquês.</p></div></li>
+        <li><div class="ic">›</div><div><h4>Dizemos se você está apto</h4><p>Cruzamos as exigências do edital com a documentação da sua empresa. Apto ou não apto, item a item.</p></div></li>
+        <li><div class="ic">›</div><div><h4>Revelamos as armadilhas</h4><p>Visita técnica obrigatória, garantia, prazo curto, atestado raro. Tudo destacado antes de você se inscrever.</p></div></li>
+      </ul>
+      <div class="mock">
+        <div class="mhead"><span class="dot" style="background:#f87171"></span><span class="dot" style="background:#fbbf24"></span><span class="dot" style="background:#34d399"></span> &nbsp; Conferência de aptidão</div>
+        <div class="veredito"><div class="sel">NÃO APTO</div><small>4 pontos impedem a sua participação neste edital</small></div>
+        <div class="mrow"><span class="mi-ok">✓</span><span>Regularidade fiscal federal, FGTS e trabalhista em dia</span></div>
+        <div class="mrow"><span class="mi-no">✕</span><span>Certidão municipal vencida desde 01/05</span></div>
+        <div class="mrow"><span class="mi-no">✕</span><span>Atestado técnico incompatível com o objeto</span></div>
+        <div class="mrow"><span class="mi-ok">→</span><span>Próximo passo: renovar a certidão e buscar atestado de obra civil</span></div>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- Inteligencia de preco -->
+  <section class="bloco"><div class="wrap">
+    <div class="titulo-sec">
+      <span class="tag-sec">Inteligência de concorrência</span>
+      <h2>Saiba contra quem você joga, antes de entrar na disputa.</h2>
+      <p>A gente olha os contratos já fechados e mostra quais empresas mais ganham no seu ramo, na sua região. Você entra na disputa sabendo quem é a concorrência.</p>
+    </div>
+    <div class="dif-wrap">
+      <ul class="dif-lista">
+        <li><div class="ic">›</div><div><h4>Quem domina o seu ramo</h4><p>As empresas que mais vencem contratos parecidos na sua região. Os nomes que você vai encontrar na disputa.</p></div></li>
+        <li><div class="ic">›</div><div><h4>Quantos contratos cada um ganhou</h4><p>A frequência de vitórias de cada concorrente. Você sabe quem é forte de verdade.</p></div></li>
+        <li><div class="ic">›</div><div><h4>Faixa de preços praticada</h4><p>A referência do que se cobra em contratos do seu tipo, para calibrar a proposta.</p></div></li>
+      </ul>
+      <div class="mock">
+        <div class="mhead"><span class="dot" style="background:#818cf8"></span> &nbsp; Quem ganha no seu ramo · sua região</div>
+        <div class="mrow"><span style="flex:1"><b>Fornecedor líder do ramo</b></span><span style="font-weight:800;color:var(--indigo);white-space:nowrap">62 contratos</span></div>
+        <div class="mrow"><span style="flex:1"><b>2º colocado</b></span><span style="font-weight:800;color:var(--indigo);white-space:nowrap">41 contratos</span></div>
+        <div class="mrow"><span style="flex:1"><b>3º colocado</b></span><span style="font-weight:800;color:var(--indigo);white-space:nowrap">28 contratos</span></div>
+        <div class="mrow"><span style="flex:1"><b>4º colocado</b></span><span style="font-weight:800;color:var(--indigo);white-space:nowrap">15 contratos</span></div>
+        <div style="padding:14px 20px;font-size:12.5px;color:var(--cinza)">No seu painel, com os nomes reais de cada concorrente.</div>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- Radar de renovacao -->
+  <section class="bloco alt"><div class="wrap">
+    <div class="titulo-sec">
+      <span class="tag-sec">Antes de todo mundo</span>
+      <h2>Saiba das oportunidades antes do edital existir.</h2>
+      <p>Todo contrato público tem prazo. A gente te avisa quando um contrato do seu ramo vai vencer: a nova licitação está chegando, e você se prepara com meses de antecedência.</p>
+    </div>
+    <div class="dif-wrap">
+      <ul class="dif-lista">
+        <li><div class="ic">›</div><div><h4>Veja o que vem por aí</h4><p>Contratos do seu ramo prestes a vencer. Enquanto os outros esperam o edital sair, você já sabe que ele vem.</p></div></li>
+        <li><div class="ic">›</div><div><h4>Conheça o concorrente</h4><p>Quem é o fornecedor atual e por quanto fechou. Você entra sabendo contra quem joga.</p></div></li>
+        <li><div class="ic">›</div><div><h4>Chegue pronto</h4><p>Documentação e proposta preparadas com antecedência. Você sai na frente quando a licitação abre.</p></div></li>
+      </ul>
+      <div class="mock">
+        <div class="mhead"><span class="dot" style="background:#818cf8"></span> &nbsp; Radar de renovação</div>
+        <div style="padding:18px 20px;border-bottom:1px solid var(--linha)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px"><span style="font-size:12.5px;color:var(--cinza);font-weight:700">Prefeitura · SC</span><span class="pz m" style="margin-left:auto">vence em 3 meses</span></div>
+          <div style="font-size:14px;margin-bottom:9px">Serviço de limpeza e conservação predial</div>
+          <div style="font-size:13px;color:var(--cinza)">Fornecedor atual: <b>revelado no seu painel</b> · <b style="color:var(--tinta)">R$ 1,2 milhão/ano</b></div>
+        </div>
+        <div style="padding:14px 20px;font-size:13px;color:var(--cinza)">Uma nova licitação deve sair. Prepare-se antes de todo mundo.</div>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- Comparacao -->
+  <section class="bloco" id="comparar"><div class="wrap">
+    <div class="titulo-sec">
+      <span class="tag-sec">Por que o Licita</span>
+      <h2>Direto ao ponto. Sem vendedor, sem contrato.</h2>
+      <p>A maioria das plataformas foi feita para o consultor especialista. O Licita é para a sua empresa.</p>
+    </div>
+    <div class="tabela-comp">
+      <div class="th"></div>
+      <div class="th us">Licita</div>
+      <div class="th">Plataformas tradicionais</div>
+
+      <div class="lbl">Teste grátis, sem cartão e sem vendedor</div>
+      <div class="col-us"><span class="sim">✓</span></div>
+      <div class="col-them">Exige falar com vendedor</div>
+
+      <div class="lbl">Preço transparente, sem fidelidade</div>
+      <div class="col-us">R$ 197/mês</div>
+      <div class="col-them">Sob consulta / contrato</div>
+
+      <div class="lbl">Busca grátis antes de assinar</div>
+      <div class="col-us"><span class="sim">✓</span></div>
+      <div class="col-them"><span class="nao">✕</span></div>
+
+      <div class="lbl">Diz se você está apto a cada edital</div>
+      <div class="col-us"><span class="sim">✓</span></div>
+      <div class="col-them">Só listam o edital</div>
+
+      <div class="lbl">Mostra quem domina o seu ramo (concorrentes)</div>
+      <div class="col-us"><span class="sim">✓</span></div>
+      <div class="col-them"><span class="nao">✕</span></div>
+
+      <div class="lbl">Avisa de contratos a vencer (antes do edital sair)</div>
+      <div class="col-us"><span class="sim">✓</span></div>
+      <div class="col-them"><span class="nao">✕</span></div>
+
+      <div class="lbl">Resumo do edital sem juridiquês</div>
+      <div class="col-us"><span class="sim">✓</span></div>
+      <div class="col-them">Edital cru</div>
+
+      <div class="lbl">Feito para a pequena empresa</div>
+      <div class="col-us"><span class="sim">✓</span></div>
+      <div class="col-them">Feito para o consultor</div>
+    </div>
+  </div></section>
+
+  <!-- Como funciona -->
+  <section class="bloco" id="como"><div class="wrap">
+    <div class="titulo-sec">
+      <span class="tag-sec">Simples assim</span>
+      <h2>Você cuida do negócio. O Licita garimpa, lê e confere.</h2>
+    </div>
+    <div class="passos">
+      <div class="passo"><div class="n">1</div><h3>Diga o seu ramo</h3><p>Informe o que a sua empresa vende e em quais estados atua. Leva um minuto, sem cartão.</p></div>
+      <div class="passo"><div class="n">2</div><h3>Receba os editais certos</h3><p>Todo dia, as licitações que combinam com você, com prazo e valor, por painel e por e-mail.</p></div>
+      <div class="passo"><div class="n">3</div><h3>Saiba se está apto</h3><p>Abra qualquer edital e veja o resumo, as armadilhas e o veredito: você pode ou não pode ganhar.</p></div>
+    </div>
+  </div></section>
+
+  <!-- Preco -->
+  <section class="bloco alt" id="preco"><div class="wrap">
+    <div class="titulo-sec">
+      <span class="tag-sec">Preço</span>
+      <h2>Um plano, tudo incluso.</h2>
+      <p>Teste 7 dias grátis, <b>sem cartão de crédito</b>. Menos que uma hora de consultor de licitações. Sem fidelidade, cancele quando quiser.</p>
+    </div>
+    <div class="preco-card">
+      <div class="selo-preco">7 dias grátis, sem cartão</div>
+      <div class="valor">R$ 197<small>/mês</small></div>
+      <ul>
+        <li>Todas as licitações do seu ramo, no Brasil todo</li>
+        <li>Alerta diário por e-mail dos editais novos</li>
+        <li>Resumo de cada edital, sem juridiquês</li>
+        <li>Conferência de aptidão ilimitada</li>
+        <li>Prazos e armadilhas destacados</li>
+      </ul>
+      <a href="/cadastro" class="btn btn-primario btn-grande" style="width:100%">Começar teste grátis</a>
+      <div style="margin-top:13px;font-size:13.5px;color:var(--cinza)">Não pedimos cartão de crédito. Você decide se quer continuar no fim dos 7 dias.</div>
+    </div>
+  </div></section>
+
+  <!-- FAQ -->
+  <section class="bloco"><div class="wrap">
+    <div class="titulo-sec"><span class="tag-sec">Dúvidas</span><h2>Perguntas frequentes</h2></div>
+    <div class="faq">
+      <details><summary>De onde vêm os dados?</summary><p>Do PNCP (Portal Nacional de Contratações Públicas), a base oficial e obrigatória por lei para todas as licitações do país. O Licita organiza, lê e cruza esses dados com a sua empresa.</p></details>
+      <details><summary>Preciso de certificado digital?</summary><p>Não para usar o Licita. O envio do lance continua no portal oficial da licitação. O Licita leva você até o edital certo, já sabendo se está apto e do que precisa.</p></details>
+      <details><summary>Funciona para o meu ramo?</summary><p>Sim. O acervo é nacional e cobre todas as modalidades: pregão, dispensa, concorrência, credenciamento e mais. Use a busca no topo para confirmar com o seu próprio ramo, de graça.</p></details>
+      <details><summary>A conferência de aptidão é confiável?</summary><p>Ela lê o edital e aponta as exigências e o que falta na sua empresa, como um apoio à decisão. A palavra final continua sua, mas você ganha horas e evita inscrições sem chance.</p></details>
+    </div>
+  </div></section>
+
+  <!-- CTA final -->
+  <section class="bloco alt"><div class="wrap">
+    <div class="cta-final">
+      <h2>As licitações do seu ramo estão abertas agora.</h2>
+      <p>Crie sua conta grátis e veja em quais você pode ganhar.</p>
+      <a href="/cadastro" class="btn btn-grande">Criar minha conta grátis</a>
+    </div>
+  </div></section>
+
+  <footer><div class="wrap">
+    <div class="logo">Licita<span>.</span></div>
+    <div>As licitações do seu ramo, garimpadas e analisadas todo dia.</div>
+    <div style="margin-top:10px;opacity:.7">Dados públicos do PNCP. Licita não é vinculada ao governo.</div>
+  </div></footer>
+
+<script>
+const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+const selUf = document.getElementById("uf");
+selUf.innerHTML = '<option value="">Brasil todo</option>' + UFS.map(u => `<option value="${u}"${u==="SC"?" selected":""}>${u}</option>`).join("");
+
+const esc = s => (s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const brl = v => (v == null || Number(v) === 0) ? "valor não informado" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+const brlHumano = v => {
+  v = Number(v || 0);
+  if (v >= 1e9) { const n = v/1e9; return `R$ ${n.toLocaleString("pt-BR",{maximumFractionDigits:1})} ${n < 2 ? "bilhão" : "bilhões"}`; }
+  if (v >= 1e6) { const n = v/1e6; return `R$ ${n.toLocaleString("pt-BR",{maximumFractionDigits:1})} ${n < 2 ? "milhão" : "milhões"}`; }
+  if (v >= 1e3) return `R$ ${Math.round(v/1e3).toLocaleString("pt-BR")} mil`;
+  return `R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+};
+const dias = iso => { if (!iso) return null; const d = new Date(iso); return isNaN(d)?null:Math.ceil((d-new Date())/864e5); };
+function pz(iso){ const d = dias(iso); if (d==null) return ""; const c = d<=2?"u":d<=7?"m":"t"; const t = d<0?"encerrado":d===0?"encerra hoje":d===1?"encerra amanhã":`encerra em ${d} dias`; return `<span class="pz ${c}">${t}</span>`; }
+
+// Contador nacional no topo
+fetch("/api/busca-publica").then(r=>r.json()).then(d=>{
+  if (d.total) document.getElementById("contador-topo").textContent = `${d.total.toLocaleString("pt-BR")} licitações abertas agora no Brasil`;
+}).catch(()=>{});
+
+async function buscar() {
+  const uf = selUf.value, termo = document.getElementById("termo").value.trim();
+  const box = document.getElementById("resultados");
+  box.innerHTML = `<div class="res-vazio">Buscando no acervo nacional...</div>`;
+  try {
+    const d = await (await fetch(`/api/busca-publica?uf=${encodeURIComponent(uf)}&termo=${encodeURIComponent(termo)}`)).json();
+    if (!d.total) { box.innerHTML = `<div class="res-vazio">Nenhuma licitação aberta encontrada para "<b>${esc(termo)}</b>"${uf?" em "+uf:""}. Tente um termo mais amplo.</div>`; return; }
+    const ondeUf = uf || "Brasil";
+    const ramo = termo ? `de ${esc(termo)} ` : "";
+    let html = `<div class="stat-banner"><div class="num">${d.total.toLocaleString("pt-BR")}</div><div class="txt">licitações ${ramo}abertas em ${ondeUf}, somando ${brlHumano(d.somaValor)} em oportunidades</div></div>`;
+    html += d.amostra.map(e => `<div class="res-card">
+      <div class="top"><span class="org">${esc(e.municipio)}/${esc(e.uf)} · ${esc(e.orgao)}</span>${pz(e.encerramento)}</div>
+      <div class="obj">${esc((e.objeto||"").slice(0,140))}</div>
+      <div class="rod"><span class="mod">${esc(e.modalidade)}</span><span class="val">${brl(e.valorEstimado)}</span></div>
+    </div>`).join("");
+    if (d.total > d.amostra.length) {
+      const restantes = (d.total - d.amostra.length).toLocaleString("pt-BR");
+      html += `<div class="cta-trava">
+        <h3>Falta você ver outras ${restantes} licitações</h3>
+        <p>Para acessar todas as licitações e editais do seu ramo, e descobrir em cada um se você está apto a participar, faça o seu cadastro gratuito.</p>
+        <a href="/cadastro" class="btn btn-grande" style="background:#fff;color:var(--indigo)">Fazer meu cadastro grátis</a>
+      </div>`;
+    }
+    box.innerHTML = html;
+    box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } catch (e) {
+    box.innerHTML = `<div class="res-vazio">Erro ao buscar: ${esc(e.message)}</div>`;
+  }
+}
+
+document.getElementById("btn-buscar").onclick = buscar;
+document.getElementById("termo").addEventListener("keydown", e => { if (e.key === "Enter") buscar(); });
+</script>
+</body>
+</html>

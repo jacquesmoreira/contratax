@@ -1,0 +1,5 @@
+# Cron do Licita (rodar: crontab -e e colar estas linhas, ajustando o caminho /opt/licita)
+# Atualiza o acervo nacional + matching + limpeza, todo dia as 05:00
+0 5 * * * cd /opt/licita && /usr/bin/node scripts/atualizar.mjs >> data/atualizar.log 2>&1
+# Envia o e-mail diario aos clientes ativos, todo dia as 06:30
+30 6 * * * cd /opt/licita && /usr/bin/node scripts/digest.mjs >> data/digest.log 2>&1

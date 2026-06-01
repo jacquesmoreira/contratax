@@ -1,0 +1,14 @@
+node_modules/
+data/
+*.log
+.env
+
+# Dados de clientes e de execucao (nunca versionar — contem PII)
+perfis.json
+leads.json
+
+# Lixo de recuperacao / temporarios
+*.corrompido
+*.recuperado
+*.bak
+src/_*_tmp.mjs

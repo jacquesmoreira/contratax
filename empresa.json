@@ -1,0 +1,21 @@
+{
+  "id": "empresa-exemplo",
+  "razaoSocial": "Limpa Tudo Servicos LTDA",
+  "cnpj": "00000000000100",
+  "porte": "ME",
+  "cnaes": ["8121-4/00", "8129-0/00"],
+  "capitalSocial": 150000,
+  "patrimonioLiquido": 120000,
+  "temBalancoRegistrado": true,
+  "certidoes": {
+    "federalConjunta": { "status": "valida", "validade": "2026-08-15" },
+    "fgts": { "status": "valida", "validade": "2026-07-01" },
+    "trabalhistaCNDT": { "status": "valida", "validade": "2026-09-10" },
+    "estadual": { "status": "valida", "validade": "2026-06-20" },
+    "municipal": { "status": "vencida", "validade": "2026-05-01" }
+  },
+  "atestadosCapacidadeTecnica": [
+    { "objeto": "Limpeza e conservacao predial em orgaos publicos", "valorAnual": 600000 }
+  ],
+  "registrosProfissionais": []
+}

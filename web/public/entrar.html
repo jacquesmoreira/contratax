@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Licita — Entrar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:radial-gradient(1000px 500px at 50% -10%, #eef2ff 0%, var(--fundo) 60%); color:var(--tinta); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card { background:#fff; border:1px solid var(--linha); border-radius:22px; box-shadow:0 20px 60px rgba(15,23,42,.10); width:100%; max-width:460px; padding:38px; }
+  .logo { font-weight:900; font-size:24px; color:var(--indigo); margin-bottom:6px; }
+  .logo span { color:var(--cinza-c); }
+  h1 { font-size:23px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px; }
+  .sub { color:var(--cinza); font-size:15px; margin-bottom:24px; }
+  label { display:block; font-size:12px; font-weight:700; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin:0 0 6px; }
+  input { width:100%; padding:14px 15px; border:1.5px solid var(--linha); border-radius:12px; font-size:15px; font-family:inherit; outline:none; transition:border-color .12s, box-shadow .12s; }
+  input:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+  .btn { width:100%; margin-top:22px; background:var(--indigo); color:#fff; border:none; padding:15px; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .12s, transform .12s; }
+  .btn:hover { background:var(--indigo-d); transform:translateY(-1px); }
+  .btn:disabled { background:var(--cinza-c); cursor:default; transform:none; }
+  .msg { margin-top:16px; font-size:14px; text-align:center; }
+  .erro { color:#dc2626; }
+  .ok { color:var(--verde); }
+  .rodape { margin-top:20px; text-align:center; font-size:14px; color:var(--cinza); }
+  .rodape a { color:var(--indigo); font-weight:700; text-decoration:none; }
+  .spinner { display:inline-block; width:18px; height:18px; border:3px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:girar .8s linear infinite; vertical-align:middle; margin-right:8px; }
+  @keyframes girar { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Licita<span>.</span></div>
+    <h1>Entrar na sua conta</h1>
+    <div class="sub">Informe o e-mail que você usou no cadastro. Vamos te levar direto ao seu painel.</div>
+
+    <form id="form">
+      <label for="email">Seu e-mail</label>
+      <input id="email" type="email" placeholder="voce@suaempresa.com.br" required autofocus />
+      <label for="senha" style="margin-top:16px">Sua senha</label>
+      <input id="senha" type="password" placeholder="sua senha" required />
+      <button class="btn" type="submit" id="btn">Entrar</button>
+      <div class="msg erro" id="erro"></div>
+    </form>
+
+    <div class="rodape">Ainda não tem conta? <a href="/cadastro">Criar conta grátis</a></div>
+  </div>
+
+<script>
+document.getElementById("form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const btn = document.getElementById("btn"), erro = document.getElementById("erro");
+  erro.textContent = "";
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Entrando...';
+  try {
+    const r = await fetch("/api/entrar", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ email: document.getElementById("email").value, senha: document.getElementById("senha").value }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.erro || "falha");
+    if (d.link) { location.href = d.link; return; }            // leva direto ao painel
+    if (d.enviado) {                                            // produção: link por e-mail
+      document.querySelector(".card").innerHTML = '<div class="logo">Licita<span>.</span></div><h1>Verifique seu e-mail</h1><div class="sub">Enviamos o link de acesso ao seu painel para o seu e-mail. Abra e clique para entrar.</div>';
+    }
+  } catch (e) {
+    erro.textContent = e.message;
+    btn.disabled = false; btn.textContent = "Entrar";
+  }
+});
+</script>
+</body>
+</html>

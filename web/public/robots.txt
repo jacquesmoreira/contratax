@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /painel
+Disallow: /api/
+
+Sitemap: https://SEU-DOMINIO.com.br/sitemap.xml

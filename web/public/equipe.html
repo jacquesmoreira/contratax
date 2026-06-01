@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Licita — Equipe da conta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
+  nav { background:#fff; border-bottom:1px solid var(--linha); }
+  nav .wrap { max-width:880px; margin:0 auto; display:flex; align-items:center; height:60px; gap:18px; padding:0 20px; }
+  .logo { font-weight:900; font-size:20px; color:var(--indigo); text-decoration:none; }
+  .logo span { color:var(--cinza-c); }
+  nav .dir { margin-left:auto; display:flex; gap:18px; font-size:14px; font-weight:600; }
+  nav .dir a { color:var(--cinza); text-decoration:none; }
+  nav .dir a:hover { color:var(--tinta); }
+  .wrap-main { max-width:880px; margin:0 auto; padding:34px 20px 60px; }
+  h1 { font-size:26px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px; }
+  .sub { color:var(--cinza); font-size:15px; margin-bottom:26px; }
+  .card { background:#fff; border:1px solid var(--linha); border-radius:16px; padding:24px; margin-bottom:20px; }
+  .card h2 { font-size:16px; font-weight:800; margin-bottom:4px; }
+  .card .cap { font-size:13.5px; color:var(--cinza); margin-bottom:18px; }
+  .assentos { display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
+  .assentos b { font-size:30px; font-weight:900; color:var(--indigo); }
+  .barra { height:8px; background:var(--linha); border-radius:99px; overflow:hidden; margin:12px 0 6px; }
+  .barra > div { height:100%; background:var(--indigo); border-radius:99px; }
+  .membro { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--linha); }
+  .membro:last-child { border-bottom:none; }
+  .ava { width:38px; height:38px; border-radius:50%; background:#eef2ff; color:var(--indigo); font-weight:800; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .membro .info { flex:1; min-width:0; }
+  .membro .nome { font-weight:700; font-size:15px; }
+  .membro .mail { font-size:13px; color:var(--cinza); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tag { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; padding:3px 9px; border-radius:99px; }
+  .tag.admin { background:var(--verde-bg); color:var(--verde); }
+  .tag.membro { background:#eef2ff; color:var(--indigo); }
+  .rm { background:none; border:none; color:#dc2626; font-weight:700; font-size:13px; cursor:pointer; }
+  label { display:block; font-size:12px; font-weight:700; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin:14px 0 6px; }
+  input { width:100%; padding:12px 13px; border:1px solid var(--linha); border-radius:10px; font-size:15px; font-family:inherit; outline:none; }
+  input:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+  .btn { margin-top:18px; background:var(--indigo); color:#fff; border:none; padding:13px 22px; border-radius:11px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .btn:hover { background:var(--indigo-d); }
+  .btn:disabled { background:var(--cinza-c); cursor:default; }
+  .erro { color:#dc2626; font-size:14px; margin-top:12px; }
+  .ok { color:var(--verde); font-size:14px; margin-top:12px; }
+  .aviso { background:#fffbeb; border:1px solid #fde68a; color:#92400e; border-radius:10px; padding:13px 14px; font-size:13.5px; margin-top:16px; }
+</style>
+</head>
+<body>
+  <nav><div class="wrap">
+    <a class="logo" href="#" id="voltar">Licita<span>.</span></a>
+    <div class="dir">
+      <a href="#" id="link-painel">Painel</a>
+      <a href="#" id="link-docs">Meus documentos</a>
+    </div>
+  </div></nav>
+
+  <div class="wrap-main">
+    <h1>Equipe da conta</h1>
+    <div class="sub">Dê acesso ao seu time. Todos veem as mesmas licitações e documentos da empresa.</div>
+
+    <div class="card" id="card-assentos">
+      <h2>Acessos do seu plano</h2>
+      <div class="cap">Cada pessoa usa um acesso (assento).</div>
+      <div class="assentos"><b id="usados">–</b><span id="de">de –</span></div>
+      <div class="barra"><div id="barra" style="width:0%"></div></div>
+      <div class="cap" id="restam"></div>
+    </div>
+
+    <div class="card">
+      <h2>Pessoas com acesso</h2>
+      <div class="cap">O administrador é quem criou a conta e não pode ser removido.</div>
+      <div id="lista"></div>
+    </div>
+
+    <div class="card" id="card-convite">
+      <h2>Adicionar um acesso</h2>
+      <div class="cap">A pessoa entra com o e-mail e a senha que você definir aqui.</div>
+      <label for="nome">Nome</label>
+      <input id="nome" type="text" placeholder="Nome da pessoa" />
+      <label for="email">E-mail</label>
+      <input id="email" type="email" placeholder="pessoa@suaempresa.com.br" />
+      <label for="senha">Senha de acesso</label>
+      <input id="senha" type="password" placeholder="mínimo 6 caracteres" />
+      <button class="btn" id="btn-add">Dar acesso</button>
+      <div class="erro" id="msg-erro"></div>
+      <div class="ok" id="msg-ok"></div>
+    </div>
+  </div>
+
+<script>
+const token = new URLSearchParams(location.search).get("c") || "";
+const $ = (id) => document.getElementById(id);
+["voltar","link-painel"].forEach((i) => $(i).href = "/painel?c=" + encodeURIComponent(token));
+$("link-docs").href = "/documentos?c=" + encodeURIComponent(token);
+const iniciais = (s) => (s || "?").trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+
+async function carregar() {
+  const d = await (await fetch("/api/equipe?c=" + encodeURIComponent(token))).json();
+  if (d.erro) { $("lista").textContent = d.erro; return; }
+  $("usados").textContent = d.usados;
+  $("de").textContent = "de " + d.assentos + (d.assentos === 1 ? " acesso" : " acessos");
+  $("barra").style.width = Math.min(100, (d.usados / d.assentos) * 100) + "%";
+  const livres = d.assentos - d.usados;
+  $("restam").textContent = livres > 0 ? `${livres} acesso(s) livre(s).` : "Todos os acessos do plano estão em uso.";
+
+  $("lista").innerHTML = d.membros.map((m) => `
+    <div class="membro">
+      <div class="ava">${iniciais(m.nome)}</div>
+      <div class="info">
+        <div class="nome">${m.nome}</div>
+        <div class="mail">${m.email || ""}</div>
+      </div>
+      <span class="tag ${m.papel}">${m.papel === "admin" ? "Admin" : "Membro"}</span>
+      ${m.papel === "admin" ? "" : `<button class="rm" data-id="${m.id}">Remover</button>`}
+    </div>`).join("");
+  document.querySelectorAll(".rm").forEach((b) => b.onclick = () => remover(b.dataset.id));
+
+  // Sem assento livre: mostra aviso de cobrança por acesso extra.
+  $("card-convite").querySelector(".aviso")?.remove();
+  if (livres <= 0) {
+    const a = document.createElement("div");
+    a.className = "aviso";
+    a.innerHTML = `Seu plano já está com todos os acessos em uso. Cada acesso a mais custa <b>R$ ${d.precoAssento}/mês</b>. Fale com o suporte para liberar novos acessos.`;
+    $("card-convite").appendChild(a);
+    $("btn-add").disabled = true;
+  } else {
+    $("btn-add").disabled = false;
+  }
+}
+
+async function remover(id) {
+  if (!confirm("Remover este acesso?")) return;
+  await fetch("/api/equipe/remover?c=" + encodeURIComponent(token), {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
+  });
+  carregar();
+}
+
+$("btn-add").onclick = async () => {
+  $("msg-erro").textContent = ""; $("msg-ok").textContent = "";
+  const corpo = { nome: $("nome").value, email: $("email").value, senha: $("senha").value };
+  $("btn-add").disabled = true;
+  try {
+    const r = await fetch("/api/equipe/convidar?c=" + encodeURIComponent(token), {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.erro || "falha");
+    $("msg-ok").textContent = "Acesso criado para " + d.membro.email + ".";
+    $("nome").value = ""; $("email").value = ""; $("senha").value = "";
+    carregar();
+  } catch (e) {
+    $("msg-erro").textContent = e.message;
+    $("btn-add").disabled = false;
+  }
+};
+
+carregar();
+</script>
+</body>
+</html>
