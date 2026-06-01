@@ -19,10 +19,11 @@ export const PLANOS = {
 
 export const PLANO_PADRAO = "basico";
 
-// Pacotes avulsos (creditos extras de analise, sem recorrencia).
+// Pacotes avulsos (creditos extras de analise, sem recorrencia). Preco por unidade
+// fica de proposito acima do plano, para incentivar o upgrade em vez do avulso.
 export const AVULSOS = {
-  p50: { id: "p50", nome: "Pacote 50 analises", preco: process.env.LICITA_PRECO_AV50 || "97,00", analises: 50 },
-  p150: { id: "p150", nome: "Pacote 150 analises", preco: process.env.LICITA_PRECO_AV150 || "247,00", analises: 150 },
+  p50: { id: "p50", nome: "Pacote 50 analises", preco: process.env.LICITA_PRECO_AV50 || "130,00", analises: 50 },
+  p150: { id: "p150", nome: "Pacote 150 analises", preco: process.env.LICITA_PRECO_AV150 || "330,00", analises: 150 },
 };
 
 // Plano (nivel) efetivo de um perfil. Default = basico para assinaturas antigas.

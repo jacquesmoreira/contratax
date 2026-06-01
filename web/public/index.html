@@ -219,7 +219,32 @@ function radarHTML(lista) {
 
 function bannerTeste(a) {
   const d = a.diasRestantes;
-  return `<div class="banner-teste">⏳ Teste grátis: <b>${d} dia${d !== 1 ? "s" : ""} restante${d !== 1 ? "s" : ""}</b>. Assine para não perder o acesso. <a href="#">Quero assinar</a></div>`;
+  return `<div class="banner-teste">⏳ Teste grátis: <b>${d} dia${d !== 1 ? "s" : ""} restante${d !== 1 ? "s" : ""}</b>. Assine para não perder o acesso. <a href="/assinar?c=${encodeURIComponent(token)}">Quero assinar</a></div>`;
+}
+function bannerVencimento(a) {
+  const d = a.diasRestantes;
+  const txt = d <= 0 ? "vence hoje" : `vence em <b>${d} dia${d !== 1 ? "s" : ""}</b>`;
+  return `<div class="banner-teste" style="background:#fff7ed;border-color:#fed7aa;color:#9a3412">🔔 Sua assinatura ${txt}. Renove o pagamento para não perder o acesso. <a href="/assinar?c=${encodeURIComponent(token)}" style="color:#c2410c">Renovar agora</a></div>`;
+}
+// Popup (uma vez por sessao) avisando o vencimento proximo.
+function popupVencimento(a) {
+  const chave = "avisoVenc-" + a.diasRestantes;
+  if (sessionStorage.getItem(chave)) return;
+  sessionStorage.setItem(chave, "1");
+  const d = a.diasRestantes;
+  const quando = d <= 0 ? "vence hoje" : `vence em ${d} dia${d !== 1 ? "s" : ""}`;
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px";
+  ov.innerHTML = `<div style="background:#fff;border-radius:18px;max-width:400px;width:100%;padding:30px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.3)">
+    <div style="font-size:40px">🔔</div>
+    <h2 style="font-size:20px;font-weight:800;margin:8px 0 6px">Sua assinatura ${quando}</h2>
+    <p style="color:#475569;font-size:14.5px;margin-bottom:20px">Renove o pagamento para continuar com a análise por IA e o monitoramento sem interrupção.</p>
+    <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;background:#4338ca;color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none;margin-bottom:10px">Renovar agora</a>
+    <button id="fechar-venc" style="background:none;border:none;color:#94a3b8;font-weight:600;font-size:14px;cursor:pointer">Agora não</button>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector("#fechar-venc").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
 }
 function paywall(a) {
   const titulo = a.status === "teste_expirado" ? "Seu teste grátis terminou" : a.status === "vencido" ? "Sua assinatura venceu" : "Acesso suspenso";
@@ -263,7 +288,12 @@ async function carregar() {
 
     const dados = await (await fetch(`/api/editais?c=${encodeURIComponent(token)}`)).json();
     const perfis = Object.values(dados);
-    const banner = acesso.status === "teste" ? bannerTeste(acesso) : "";
+    let banner = acesso.status === "teste" ? bannerTeste(acesso) : "";
+    // Aviso de vencimento: assinatura ativa que vence em ate 7 dias (sobretudo Pix).
+    if (acesso.status === "ativo" && acesso.diasRestantes != null && acesso.diasRestantes <= 7) {
+      banner += bannerVencimento(acesso);
+      popupVencimento(acesso);
+    }
     let radarBloco = "";
     try { const rd = await (await fetch(`/api/radar?c=${encodeURIComponent(token)}`)).json(); radarBloco = radarHTML(rd.radar); } catch {}
     c.innerHTML = banner + radarBloco + (perfis.length ? perfis.map(perfilHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Seu painel está sendo preparado.</div>`);
