@@ -3,11 +3,10 @@
 // JSONL. Serve para sabermos o custo REAL por analise e calibrar os limites por dado.
 
 import { appendFile, readFile, mkdir } from "node:fs/promises";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
+import { DATA_DIR } from "./caminhos.mjs";
 
-const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const DIR = resolve(RAIZ, "data");
+const DIR = DATA_DIR;
 const LOG = resolve(DIR, "custos-ia.jsonl");
 
 // Cotacao do dolar (ajuste por env quando quiser precisao). Default conservador.

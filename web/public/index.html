@@ -371,7 +371,7 @@ async function abrirDrawer(id) {
     html += `<div class="bloco" style="border:1px solid var(--linha);background:linear-gradient(180deg,#fff, #f8fafc)">
       <h3>🔒 Análise por IA — recurso do plano</h3>
       <p style="font-size:13.5px;color:var(--cinza);margin:6px 0 12px">A IA lê o edital inteiro e cruza com os seus documentos: diz, em segundos, <b>se você está apto</b> e <b>o que falta</b> para participar. Disponível para assinantes.</p>
-      <a href="/painel?c=${encodeURIComponent(token)}#assinar" id="btn-assinar" style="display:block;text-align:center;background:var(--indigo);color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none">Assinar e liberar a análise →</a>
+      <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;text-align:center;background:var(--indigo);color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none">Assinar e liberar a análise →</a>
     </div>`;
   } else if (d.temChave) {
     html += `<div class="bloco" style="color:var(--cinza)">Você usou as análises do mês. A cota volta no próximo mês.</div>`;
@@ -381,15 +381,6 @@ async function abrirDrawer(id) {
   corpo.innerHTML = html;
   const btn = document.getElementById("btn-analisar");
   if (btn) btn.onclick = () => analisar(id);
-  const btnAssinar = document.getElementById("btn-assinar");
-  if (btnAssinar) btnAssinar.onclick = async (e) => {
-    e.preventDefault();
-    try {
-      const a = await (await fetch(`/api/acesso?c=${encodeURIComponent(token)}`)).json();
-      const c = a.cobranca || {};
-      alert(`Para liberar a análise por IA e todos os recursos do plano:\n\nValor: R$ ${c.preco || "—"}/mês\nPix: ${c.pix || "—"}\n\nApós o pagamento, envie o comprovante para ${c.contato || "—"} que a sua conta é ativada.`);
-    } catch { alert("Não consegui carregar as instruções agora. Tente novamente."); }
-  };
 
   // Carrega a lista de documentos do edital (assíncrono, sem travar o drawer).
   fetch(`/api/edital-arquivos?id=${encodeURIComponent(id)}`).then(r => r.json()).then(dd => {

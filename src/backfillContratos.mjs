@@ -4,13 +4,12 @@
 // WAF do PNCP. Feito para rodar como worker sempre-ligado (ex: Railway).
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import { paginarContratos } from "./pncp.mjs";
 import { upsertContratos, estatisticasContratos } from "./db.mjs";
+import { DATA_DIR } from "./caminhos.mjs";
 
-const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const DIR = resolve(RAIZ, "data");
+const DIR = DATA_DIR;
 const PROG = resolve(DIR, "backfill-contratos.json");
 
 const fmt = (d) => d.toISOString().slice(0, 10).replace(/-/g, "");

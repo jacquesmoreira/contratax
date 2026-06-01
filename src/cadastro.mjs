@@ -3,16 +3,12 @@
 // painel nascer cheio. Sem senha (acesso pelo link exclusivo com o token).
 
 import { readFile, writeFile } from "node:fs/promises";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 import { monitorar } from "./monitor.mjs";
 import { novaAssinaturaTeste } from "./assinatura.mjs";
 import { hashSenha } from "./senha.mjs";
 import { validarFormatoCNPJ, limparCNPJ } from "./cnpj.mjs";
-
-const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const PERFIS = resolve(RAIZ, "perfis.json");
+import { PERFIS } from "./caminhos.mjs";
 
 const slug = (s) =>
   (s || "cliente").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()

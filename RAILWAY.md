@@ -1,27 +1,64 @@
 # Deploy no Railway
 
-O Licita já está quase pronto para o Railway. Pontos para quando formos subir:
+Guia para subir o Licita num host sempre-ligado (Railway). O app é Node puro
+(sem dependências), então o deploy é simples. O ponto crítico é o **volume
+persistente** — sem ele, os dados somem a cada deploy.
 
-## O que o Railway faz sozinho
-- Detecta o Node pelo `package.json` e roda `npm start` (= `node web/server.mjs`).
-- Dá uma URL pública e HTTPS automático.
-- Permite agendar tarefas (cron) para o `atualizar` e o `digest`.
+## 1. Criar o projeto
+1. Suba o repositório para o GitHub (privado).
+2. Em railway.app: **New Project → Deploy from GitHub repo** e escolha o repo.
+3. O Railway detecta o Node pelo `package.json` e roda `npm start`
+   (= `node web/server.mjs`). Node 22.5+ é garantido pelo campo `engines`.
 
-## O que precisa de atenção (eu cuido)
-1. **Volume persistente.** O Railway zera o disco a cada deploy. Os dados graváveis
-   (`perfis.json`, `data/licita.db`, `data/*.json`) precisam ficar num **Volume**
-   montado, senão clientes e acervo somem a cada atualização. Vou tornar o caminho
-   dos dados configurável (`LICITA_DATA_DIR`) e apontar para o volume.
-2. **Variáveis de ambiente** (em Settings → Variables): `ANTHROPIC_API_KEY`,
-   `RESEND_API_KEY`, `LICITA_BASE_URL` (a URL do Railway/domínio), `LICITA_PIX_CHAVE`,
-   `LICITA_CONTATO`, `LICITA_ADMIN_TOKEN`.
-3. **Primeira carga de dados.** Rodar `npm run ingest` (editais) e o
-   `ingest-contratos` no servidor uma vez; depois o cron mantém atualizado.
-4. **Crawl de contratos** é o trabalho pesado (milhões de registros) — roda no
-   Railway por ser sempre-ligado, em background.
+## 2. Volume persistente (OBRIGATÓRIO)
+O disco do Railway zera a cada deploy. Tudo que é gravável precisa ficar num volume.
+1. No serviço, **Settings → Volumes → Add Volume**.
+2. Mount path: **`/data`**.
+3. Nas variáveis (passo 3), aponte os dados para esse volume:
+   - `LICITA_DATA_DIR=/data` (banco `licita.db`, caches, progresso, custos)
+   - `LICITA_PERFIS=/data/perfis.json` (contas dos clientes)
 
-## Passos no dia do deploy
-1. Criar conta em railway.app e um novo projeto (deploy do repositório).
-2. Adicionar um Volume apontando para a pasta de dados.
-3. Preencher as variáveis de ambiente.
-4. Rodar a primeira carga e apontar o domínio.
+> Localmente nada muda: sem essas variáveis, os dados ficam em `data/` e
+> `perfis.json` na raiz, como hoje.
+
+## 3. Variáveis de ambiente (Settings → Variables)
+Essenciais:
+- `ANTHROPIC_API_KEY` — chave da IA (análise dos editais).
+- `LICITA_DATA_DIR=/data` e `LICITA_PERFIS=/data/perfis.json` (volume, passo 2).
+- `LICITA_ADMIN_TOKEN` — um token secreto seu (acesso admin via `?c=...`).
+- `LICITA_BASE_URL` — a URL pública do Railway (ou seu domínio).
+
+Cobrança (página de assinar) e e-mail:
+- `LICITA_PRECO` (ex: `197,00`), `LICITA_PIX_CHAVE`, `LICITA_CONTATO`.
+- `RESEND_API_KEY` — se for enviar os e-mails (digest).
+
+Ajustes opcionais (têm padrão):
+- `LICITA_ANALISES_PLANO=100` (análises/mês do plano), `LICITA_ANALISES_TESTE=0`.
+- `LICITA_MODELO_LEITURA=claude-haiku-4-5-20251001` (leitura barata).
+- `LICITA_TRIAL_DIAS=7`.
+
+## 4. Backfill de contratos (o crawl pesado)
+São milhões de contratos (~163 mil/mês). Como **volumes não são compartilhados
+entre serviços** no Railway, o backfill roda **no mesmo processo do servidor**:
+- Adicione a variável **`LICITA_BACKFILL=1`**.
+- O servidor sobe e, em background, vai preenchendo o acervo mês a mês, com pausa
+  gentil (não toma bloqueio do PNCP) e progresso salvo no volume (retoma sozinho).
+- Opcionais: `LICITA_BACKFILL_MESES=18`, `LICITA_BACKFILL_HORAS=6`.
+
+Enquanto enche, o painel já funciona (mostra o que já entrou). O ranking por
+órgão/cidade e o radar ficam mais ricos conforme o acervo cresce.
+
+## 5. Primeira carga de editais
+Os **editais abertos** (não os contratos) podem ser carregados uma vez:
+- Pelo cron do Railway (Settings → Cron) rodando `npm run atualizar`
+  periodicamente (ex: a cada 6h), que busca novos editais e atualiza o painel.
+
+## 6. Conferir
+- Acesse a URL pública: a landing e o `/cadastro` devem abrir.
+- Crie uma conta de teste e confirme que o painel enche.
+- `?c=SEU_LICITA_ADMIN_TOKEN` dá a visão admin (e libera a análise para testar).
+- Ative um cliente após o Pix: `npm run ativar` (ou o script `ativar.mjs`).
+
+## Resumo do que NÃO versionar (já no .gitignore)
+`.env`, `perfis.json`, `leads.json`, `data/` — dados sensíveis e mutáveis.
+No Railway eles vivem no volume e nas variáveis, não no repositório.

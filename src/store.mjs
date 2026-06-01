@@ -3,12 +3,11 @@
 // Persistencia simples em arquivo JSON (suficiente para o MVP; trocavel por banco depois).
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
+import { DATA_DIR } from "./caminhos.mjs";
 
-const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const ARQUIVO = resolve(RAIZ, "data", "vistos.json");
-const ARQUIVO_RESULTADOS = resolve(RAIZ, "data", "resultados.json");
+const ARQUIVO = resolve(DATA_DIR, "vistos.json");
+const ARQUIVO_RESULTADOS = resolve(DATA_DIR, "resultados.json");
 
 async function lerJSON(caminho, padrao) {
   try {
@@ -68,7 +67,7 @@ export async function carregarResultados() {
   return lerJSON(ARQUIVO_RESULTADOS, {});
 }
 
-const ARQUIVO_ANALISES = resolve(RAIZ, "data", "analises.json");
+const ARQUIVO_ANALISES = resolve(DATA_DIR, "analises.json");
 
 // Guarda a analise de IA de um edital (cache para nao reprocessar nem repagar).
 export async function salvarAnalise(id, analise) {
@@ -83,7 +82,7 @@ export async function carregarAnalise(id) {
   return tudo[id] ?? null;
 }
 
-const ARQUIVO_CONFERENCIAS = resolve(RAIZ, "data", "conferencias.json");
+const ARQUIVO_CONFERENCIAS = resolve(DATA_DIR, "conferencias.json");
 
 // Guarda a conferencia de aptidao de um edital para uma empresa especifica.
 export async function salvarConferencia(editalId, empresaId, dados) {
@@ -98,7 +97,7 @@ export async function carregarConferencia(editalId, empresaId) {
   return tudo[`${editalId}::${empresaId}`] ?? null;
 }
 
-const ARQUIVO_LEADS = resolve(RAIZ, "data", "leads.json");
+const ARQUIVO_LEADS = resolve(DATA_DIR, "leads.json");
 
 // Guarda um interessado capturado pela landing page (e-mail + contexto da busca).
 export async function salvarLead(lead) {

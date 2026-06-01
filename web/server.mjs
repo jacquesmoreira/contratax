@@ -21,7 +21,7 @@ import { listarDocumentos, baixarArquivo } from "../src/documentos.mjs";
 import { verificarSenha } from "../src/senha.mjs";
 import { consultarCNPJ } from "../src/cnpj.mjs";
 import { autenticarUsuario, convidarMembro, removerMembro, listarMembros } from "../src/equipe.mjs";
-import { lerPerfis, salvarPerfis } from "../src/perfis.mjs";
+import { lerPerfis, salvarPerfis, PERFIS } from "../src/perfis.mjs";
 import { monitorar } from "../src/monitor.mjs";
 import { usoDe, registrarAnalise, checarAnalise } from "../src/uso.mjs";
 import { resumoCustos } from "../src/custo.mjs";
@@ -35,6 +35,7 @@ const ENTRAR = resolve(AQUI, "public", "entrar.html");
 const DOCUMENTOS = resolve(AQUI, "public", "documentos.html");
 const EQUIPE = resolve(AQUI, "public", "equipe.html");
 const CONTA = resolve(AQUI, "public", "conta.html");
+const ASSINAR = resolve(AQUI, "public", "assinar.html");
 const PORTA = process.env.PORT || 3000;
 
 function lerCorpo(req) {
@@ -65,12 +66,11 @@ function empresaDoPerfil(perfil) {
 
 // Salva o perfil documental no perfil do cliente (pelo token).
 async function salvarEmpresaPerfil(token, empresa) {
-  const caminho = resolve(RAIZ, "perfis.json");
-  const perfis = JSON.parse(await readFile(caminho, "utf8"));
+  const perfis = JSON.parse(await readFile(PERFIS, "utf8"));
   const p = perfis.find((x) => x.token === token);
   if (!p) return false;
   p.empresa = empresa;
-  await writeFile(caminho, JSON.stringify(perfis, null, 2), "utf8");
+  await writeFile(PERFIS, JSON.stringify(perfis, null, 2), "utf8");
   return true;
 }
 
@@ -78,7 +78,7 @@ const ADMIN = process.env.LICITA_ADMIN_TOKEN || "admin";
 
 // Perfil completo pelo token, lido de perfis.json.
 async function perfilPorToken(token) {
-  const perfis = JSON.parse(await readFile(resolve(RAIZ, "perfis.json"), "utf8"));
+  const perfis = JSON.parse(await readFile(PERFIS, "utf8"));
   return perfis.find((p) => p.token === token) ?? null;
 }
 
@@ -114,7 +114,7 @@ const servidor = createServer(async (req, res) => {
       const r = await consultarCNPJ(url.searchParams.get("cnpj") || "");
       if (r.valido) {
         const limpo = (url.searchParams.get("cnpj") || "").replace(/\D/g, "");
-        const perfis = JSON.parse(await readFile(resolve(RAIZ, "perfis.json"), "utf8"));
+        const perfis = JSON.parse(await readFile(PERFIS, "utf8"));
         if (perfis.some((p) => (p.cnpj || "").replace(/\D/g, "") === limpo)) {
           return json(res, 200, { valido: false, erro: "Já existe uma conta com este CNPJ. Use a página de Entrar ou peça acesso ao administrador da conta." });
         }
@@ -431,6 +431,11 @@ const servidor = createServer(async (req, res) => {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       return res.end(html);
     }
+    if (rota === "/assinar" || rota === "/assinar.html") {
+      const html = await readFile(ASSINAR, "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(html);
+    }
     if (rota === "/painel" || rota === "/index.html") {
       const html = await readFile(INDEX, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
@@ -448,3 +453,17 @@ const servidor = createServer(async (req, res) => {
 servidor.listen(PORTA, () => {
   console.log(`Painel Licita rodando em http://localhost:${PORTA}`);
 });
+
+// Opcional (Railway): roda o backfill continuo de contratos NO MESMO processo,
+// para compartilhar o mesmo volume/banco do servidor (volumes nao sao compartilhados
+// entre servicos no Railway). Ative com LICITA_BACKFILL=1.
+if (process.env.LICITA_BACKFILL) {
+  import("../src/backfillContratos.mjs")
+    .then(({ backfillLoop }) => {
+      const meses = Number(process.env.LICITA_BACKFILL_MESES || 18);
+      const horas = Number(process.env.LICITA_BACKFILL_HORAS || 6);
+      console.log(`[backfill] ativado em background (${meses} meses, a cada ${horas}h)`);
+      return backfillLoop({ meses, intervaloHoras: horas });
+    })
+    .catch((e) => console.error("[backfill] erro:", e.message));
+}

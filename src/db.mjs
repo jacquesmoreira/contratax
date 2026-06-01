@@ -6,9 +6,9 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdirSync } from "node:fs";
 import { normalizar, aplicarFiltro } from "./filtro.mjs";
+import { DATA_DIR } from "./caminhos.mjs";
 
-const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const DIR_DADOS = resolve(RAIZ, "data");
+const DIR_DADOS = DATA_DIR;
 const CAMINHO = resolve(DIR_DADOS, "licita.db");
 
 let db = null;

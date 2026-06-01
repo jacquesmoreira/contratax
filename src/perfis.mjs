@@ -5,11 +5,9 @@
 // login no topo do perfil) para o novo modelo com lista de usuarios.
 
 import { readFile, writeFile } from "node:fs/promises";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { PERFIS } from "./caminhos.mjs";
 
-const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const PERFIS = resolve(RAIZ, "perfis.json");
+export { PERFIS };
 
 export async function lerPerfis() {
   return JSON.parse(await readFile(PERFIS, "utf8"));

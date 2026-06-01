@@ -3,11 +3,7 @@
 // apos o Pix. Automacao (Asaas/Mercado Pago) entra depois, no deploy.
 
 import { readFile, writeFile } from "node:fs/promises";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const PERFIS = resolve(RAIZ, "perfis.json");
+import { PERFIS } from "./caminhos.mjs";
 
 const TRIAL_DIAS = Number(process.env.LICITA_TRIAL_DIAS || 7);
 
