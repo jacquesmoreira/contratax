@@ -23,7 +23,7 @@ import { consultarCNPJ } from "../src/cnpj.mjs";
 import { autenticarUsuario, convidarMembro, removerMembro, listarMembros } from "../src/equipe.mjs";
 import { lerPerfis, salvarPerfis } from "../src/perfis.mjs";
 import { monitorar } from "../src/monitor.mjs";
-import { usoDe, podeAnalisar, registrarAnalise } from "../src/uso.mjs";
+import { usoDe, registrarAnalise, checarAnalise } from "../src/uso.mjs";
 import { resumoCustos } from "../src/custo.mjs";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
@@ -313,6 +313,7 @@ const servidor = createServer(async (req, res) => {
             orgaoCnpj: edital.orgaoCnpj ?? null,
           })
         : null;
+      const liberacao = token === ADMIN ? { ok: true } : (perfil ? checarAnalise(perfil) : { ok: false, motivo: "assinatura" });
       return json(res, 200, {
         edital,
         analise: analiseCache?.analise ?? null,
@@ -321,6 +322,7 @@ const servidor = createServer(async (req, res) => {
         temDocumentos,
         preco,
         uso: perfil ? usoDe(perfil) : null,
+        ia: { liberada: liberacao.ok, motivo: liberacao.motivo ?? null }, // recurso do plano pago
         temChave: temChave(),
       });
     }
@@ -363,14 +365,16 @@ const servidor = createServer(async (req, res) => {
       const tokenA = url.searchParams.get("c") || "";
       const perfilA = await perfilPorToken(tokenA);
       const empresa = perfilA ? empresaDoPerfil(perfilA) : await empresaAtual();
-      // Limite de analises por mes (so para clientes; admin nao tem limite).
-      if (perfilA && !podeAnalisar(perfilA)) {
-        const u = usoDe(perfilA);
-        return json(res, 402, {
-          erro: `Voce usou as ${u.limite} analises do seu plano neste mes. A cota volta no proximo mes, ou faca upgrade para liberar mais.`,
-          limiteAtingido: true,
-          uso: u,
-        });
+      // A analise por IA e recurso do plano pago (custa $ do Claude). So roda para
+      // assinatura ativa (ou degustacao do teste). Admin nao tem trava.
+      if (perfilA) {
+        const lib = checarAnalise(perfilA);
+        if (!lib.ok) {
+          const msg = lib.motivo === "assinatura"
+            ? "A analise por IA faz parte do plano. Assine para liberar a leitura do edital e a conferencia dos seus documentos."
+            : `Voce usou as ${lib.uso.limite} analises do seu plano neste mes. A cota volta no proximo mes.`;
+          return json(res, 402, { erro: msg, motivo: lib.motivo, limiteAtingido: true, uso: lib.uso });
+        }
       }
       try {
         const { aptidao, cache } = await conferir(edital, empresa);

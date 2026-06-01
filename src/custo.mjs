@@ -79,7 +79,7 @@ export async function resumoCustos() {
     analises,
     leiturasEdital: leituras,
     custoMedioPorAnaliseBRL: Number((brlTotal / Math.max(1, analises)).toFixed(4)),
-    cacheHitLeitura: conferencias ? Number((1 - leituras / Math.max(1, conferencias)).toFixed(3)) : null,
+    cacheHitLeitura: conferencias ? Number(Math.max(0, 1 - leituras / Math.max(1, conferencias)).toFixed(3)) : null,
     porEtapa: Object.fromEntries(Object.entries(porEtapa).map(([k, v]) => [k, {
       chamadas: v.chamadas, brl: Number(v.brl.toFixed(2)),
       medioBRL: Number((v.brl / v.chamadas).toFixed(4)),
