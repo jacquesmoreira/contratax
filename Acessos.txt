@@ -1,0 +1,1 @@
+LICITA_ADMIN_TOKEN = ctx-admin-6911
