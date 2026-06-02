@@ -365,6 +365,32 @@ function saudeHTML(saude) {
     saude.itens.map(i => `<li>${iconHTML(i.situacao)}<span>${esc(i.documento)}${i.validade ? ` (vence ${dataBR(i.validade)})` : ""} — <b>${esc(i.situacao)}</b></span></li>`).join("")
   }</ul></div>`;
 }
+function impugnacaoHTML(d) {
+  const i = d.impugnacao;
+  if (i) {
+    if (!i.temPontos) {
+      return `<div class="bloco"><h3>⚖️ Dossiê de impugnação</h3><p style="font-size:14px;color:var(--cinza)">${esc(i.resumo || "Não foram encontradas cláusulas claramente restritivas. O edital parece regular.")}</p></div>`;
+    }
+    const cl = (i.clausulas || []).map(c => `<li style="display:block;padding:8px 0;border-bottom:1px solid var(--linha)"><b>${esc(c.ponto)}</b><br><span style="color:var(--cinza);font-size:13px">${esc(c.porque)}</span><br><span style="font-size:12px;color:var(--cinza-c)">Fundamento: ${esc(c.fundamento)}</span></li>`).join("");
+    return `<div class="bloco"><h3>⚖️ Dossiê de impugnação</h3>
+      <p style="font-size:13px;color:var(--cinza);margin-bottom:8px">${esc(i.resumo)}</p>
+      <ul class="itens" style="display:block">${cl}</ul>
+      <details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;color:var(--indigo)">Ver minuta pronta da impugnação</summary>
+        <pre id="minuta-imp" style="white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.5;background:var(--fundo);border:1px solid var(--linha);border-radius:10px;padding:14px;margin-top:8px">${esc(i.minuta || "")}</pre>
+        <button onclick="copiarMinuta()" style="margin-top:8px;background:var(--indigo);color:#fff;border:none;padding:10px 16px;border-radius:9px;font-weight:700;cursor:pointer;font-family:inherit">Copiar minuta</button>
+      </details>
+      <div style="font-size:11px;color:var(--cinza-c);margin-top:10px">Minuta gerada por IA a partir do edital. Revise com o seu jurídico antes de protocolar.</div>
+    </div>`;
+  }
+  if (d.ia && d.ia.liberada) {
+    return `<button class="botao-ia" id="btn-impugnar" style="background:#7c3aed">⚖️ Gerar dossiê de impugnação</button>`;
+  }
+  return "";
+}
+function copiarMinuta() {
+  const el = document.getElementById("minuta-imp");
+  if (el) navigator.clipboard.writeText(el.textContent).then(() => alert("Minuta copiada. Cole no seu editor e ajuste os campos entre colchetes."));
+}
 function analiseHTML(a) {
   if (!a) return "";
   const ex = a.exigenciasHabilitacao ?? {};
@@ -424,6 +450,7 @@ async function abrirDrawer(id) {
 
   if (d.analise || d.conferencia) {
     html += analiseHTML(d.analise) + veredictoHTML(d.conferencia);
+    html += impugnacaoHTML(d); // dossie de impugnacao (apos a analise)
   } else if (d.temChave && d.ia && d.ia.liberada) {
     html += `<button class="botao-ia" id="btn-analisar">🔍 Analisar este edital</button>`;
   } else if (d.temChave && d.ia && d.ia.motivo === "assinatura") {
@@ -441,6 +468,8 @@ async function abrirDrawer(id) {
   corpo.innerHTML = html;
   const btn = document.getElementById("btn-analisar");
   if (btn) btn.onclick = () => analisar(id);
+  const btnImp = document.getElementById("btn-impugnar");
+  if (btnImp) btnImp.onclick = () => impugnar(id);
 
   // Carrega a lista de documentos do edital (assíncrono, sem travar o drawer).
   fetch(`/api/edital-arquivos?id=${encodeURIComponent(id)}`).then(r => r.json()).then(dd => {
@@ -478,6 +507,26 @@ async function analisar(id) {
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = "🔍 Analisar este edital"; }
     alert("Não foi possível analisar agora: " + e.message);
+  }
+}
+
+async function impugnar(id) {
+  const btn = document.getElementById("btn-impugnar");
+  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spinner"></span>Analisando juridicamente o edital...`; }
+  try {
+    const tk = new URLSearchParams(location.search).get("c") || "";
+    const r = await fetch(`/api/impugnacao?id=${encodeURIComponent(id)}&c=${encodeURIComponent(tk)}`, { method: "POST" });
+    const d = await r.json();
+    if (r.status === 402 && d.limiteAtingido) {
+      if (btn) { btn.disabled = false; btn.textContent = "⚖️ Gerar dossiê de impugnação"; }
+      alert(d.erro); return;
+    }
+    if (!r.ok) throw new Error(d.erro || "falha");
+    if (d.uso) { const n = document.getElementById("nav-uso"); if (n) { n.textContent = `${d.uso.usados}/${d.uso.limite} análises`; n.style.color = d.uso.restantes === 0 ? "#dc2626" : "var(--cinza-c)"; } }
+    if (editalAtual === id) abrirDrawer(id);
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = "⚖️ Gerar dossiê de impugnação"; }
+    alert("Não foi possível gerar agora: " + e.message);
   }
 }
 

@@ -3,7 +3,7 @@
 // Persistencia simples em arquivo JSON (suficiente para o MVP; trocavel por banco depois).
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
 import { DATA_DIR } from "./caminhos.mjs";
 
 const ARQUIVO = resolve(DATA_DIR, "vistos.json");
@@ -95,6 +95,20 @@ export async function salvarConferencia(editalId, empresaId, dados) {
 export async function carregarConferencia(editalId, empresaId) {
   const tudo = await lerJSON(ARQUIVO_CONFERENCIAS, {});
   return tudo[`${editalId}::${empresaId}`] ?? null;
+}
+
+const ARQUIVO_IMPUGNACOES = resolve(DATA_DIR, "impugnacoes.json");
+
+// Dossie de impugnacao de um edital (mesmo para todos: as clausulas restritivas
+// independem da empresa). Cache compartilhado, igual a analise.
+export async function salvarImpugnacao(editalId, dados) {
+  const tudo = await lerJSON(ARQUIVO_IMPUGNACOES, {});
+  tudo[editalId] = { dados, geradaEm: new Date().toISOString() };
+  await gravarJSON(ARQUIVO_IMPUGNACOES, tudo);
+}
+export async function carregarImpugnacao(editalId) {
+  const tudo = await lerJSON(ARQUIVO_IMPUGNACOES, {});
+  return tudo[editalId] ?? null;
 }
 
 const ARQUIVO_LEADS = resolve(DATA_DIR, "leads.json");

@@ -8,7 +8,8 @@ import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead } from "../src/store.mjs";
+import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao } from "../src/store.mjs";
+import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { buscarPorId, buscaPublica, buscarEditais } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
 import { temChave } from "../src/ia.mjs";
@@ -377,6 +378,7 @@ const servidor = createServer(async (req, res) => {
       const temDocumentos = Boolean(perfil?.empresa && Object.keys(perfil.empresa.certidoes || {}).length);
       const analiseCache = await carregarAnalise(id);
       const confCache = await carregarConferencia(id, empresa.id);
+      const impugCache = await carregarImpugnacao(id);
       // Ranking de concorrentes localizado NO EDITAL aberto (cidade/UF do edital),
       // no ramo do cliente. Assim o ranking muda conforme a regiao da licitacao.
       const preco = perfil
@@ -393,6 +395,7 @@ const servidor = createServer(async (req, res) => {
         edital,
         analise: analiseCache?.analise ?? null,
         conferencia: confCache?.dados ?? null,
+        impugnacao: impugCache?.dados ?? null,
         saude: saudeDocumental(empresa),
         temDocumentos,
         preco,
@@ -458,6 +461,33 @@ const servidor = createServer(async (req, res) => {
         if (perfilA && cache === false) uso = await registrarAnalise(tokenA);
         const analiseCache = await carregarAnalise(id);
         return json(res, 200, { analise: analiseCache?.analise ?? null, conferencia: { aptidao }, uso });
+      } catch (e) {
+        return json(res, 502, { erro: e.message });
+      }
+    }
+
+    // Dossie de impugnacao por IA (recurso do plano, igual a analise).
+    if (rota === "/api/impugnacao" && req.method === "POST") {
+      const id = url.searchParams.get("id");
+      const edital = buscarPorId(id);
+      if (!edital) return json(res, 404, { erro: "Edital nao encontrado" });
+      if (!temChave()) return json(res, 400, { erro: "Sem ANTHROPIC_API_KEY configurada" });
+      const tokenA = url.searchParams.get("c") || "";
+      const perfilA = await perfilPorToken(tokenA);
+      if (perfilA) {
+        const lib = checarAnalise(perfilA);
+        if (!lib.ok) {
+          const msg = lib.motivo === "assinatura"
+            ? "O dossie de impugnacao faz parte do plano. Assine para liberar."
+            : `Voce usou as ${lib.uso.limite} analises do seu plano neste mes. A cota volta no proximo mes.`;
+          return json(res, 402, { erro: msg, motivo: lib.motivo, limiteAtingido: true, uso: lib.uso });
+        }
+      }
+      try {
+        const dossie = await gerarImpugnacao(edital);
+        let uso = perfilA ? usoDe(perfilA) : null;
+        if (perfilA && dossie.cache === false) uso = await registrarAnalise(tokenA);
+        return json(res, 200, { impugnacao: dossie, uso });
       } catch (e) {
         return json(res, 502, { erro: e.message });
       }
