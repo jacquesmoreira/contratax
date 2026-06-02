@@ -75,11 +75,11 @@ function empresaDoPerfil(perfil) {
 
 // Salva o perfil documental no perfil do cliente (pelo token).
 async function salvarEmpresaPerfil(token, empresa) {
-  const perfis = JSON.parse(await readFile(PERFIS, "utf8"));
+  const perfis = await lerPerfis();
   const p = perfis.find((x) => x.token === token);
   if (!p) return false;
   p.empresa = empresa;
-  await writeFile(PERFIS, JSON.stringify(perfis, null, 2), "utf8");
+  await salvarPerfis(perfis);
   return true;
 }
 
@@ -87,7 +87,7 @@ const ADMIN = process.env.LICITA_ADMIN_TOKEN || "admin";
 
 // Perfil completo pelo token, lido de perfis.json.
 async function perfilPorToken(token) {
-  const perfis = JSON.parse(await readFile(PERFIS, "utf8"));
+  const perfis = await lerPerfis();
   return perfis.find((p) => p.token === token) ?? null;
 }
 
@@ -123,7 +123,7 @@ const servidor = createServer(async (req, res) => {
       const r = await consultarCNPJ(url.searchParams.get("cnpj") || "");
       if (r.valido) {
         const limpo = (url.searchParams.get("cnpj") || "").replace(/\D/g, "");
-        const perfis = JSON.parse(await readFile(PERFIS, "utf8"));
+        const perfis = await lerPerfis();
         if (perfis.some((p) => (p.cnpj || "").replace(/\D/g, "") === limpo)) {
           return json(res, 200, { valido: false, erro: "Já existe uma conta com este CNPJ. Use a página de Entrar ou peça acesso ao administrador da conta." });
         }
