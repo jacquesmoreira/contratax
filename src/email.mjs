@@ -2,7 +2,7 @@
 // Envio plugavel via Resend (RESEND_API_KEY). Sem chave, so gera o HTML (preview).
 
 const BASE = process.env.LICITA_BASE_URL || "http://localhost:3000";
-const FROM = process.env.LICITA_EMAIL_FROM || "Licita <onboarding@resend.dev>";
+const FROM = process.env.LICITA_EMAIL_FROM || "ContrataX <onboarding@resend.dev>";
 
 export function temEmailKey() {
   return Boolean(process.env.RESEND_API_KEY);
@@ -49,7 +49,7 @@ export function gerarDigest(perfil, editais) {
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:24px 12px;"><tr><td align="center">
     <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;">
       <tr><td style="background:linear-gradient(135deg,#312e81,#2563eb);border-radius:16px 16px 0 0;padding:26px 28px;">
-        <div style="color:#fff;font-size:22px;font-weight:800;">Licita</div>
+        <div style="color:#fff;font-size:22px;font-weight:800;">ContrataX</div>
         <div style="color:#c7d2fe;font-size:14px;margin-top:2px;">Seus editais de hoje, ${perfil.nome}</div>
       </td></tr>
       <tr><td style="background:#fff;padding:24px 28px;">
@@ -62,7 +62,7 @@ export function gerarDigest(perfil, editais) {
         </td></tr></table>
       </td></tr>
       <tr><td style="background:#312e81;border-radius:0 0 16px 16px;padding:20px 28px;text-align:center;">
-        <div style="color:#c7d2fe;font-size:13px;">Dados oficiais do PNCP. Você recebe este resumo porque criou um painel no Licita.</div>
+        <div style="color:#c7d2fe;font-size:13px;">Dados oficiais do PNCP. Você recebe este resumo porque criou um painel no ContrataX.</div>
       </td></tr>
     </table>
   </td></tr></table></body></html>`;
