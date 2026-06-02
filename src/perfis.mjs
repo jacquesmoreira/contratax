@@ -4,16 +4,27 @@
 // Centraliza a leitura/escrita e a migracao de contas antigas (que tinham um unico
 // login no topo do perfil) para o novo modelo com lista de usuarios.
 
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { dirname } from "node:path";
 import { PERFIS } from "./caminhos.mjs";
 
 export { PERFIS };
 
 export async function lerPerfis() {
-  return JSON.parse(await readFile(PERFIS, "utf8"));
+  try {
+    return JSON.parse(await readFile(PERFIS, "utf8"));
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      // Primeira execucao no Railway: cria o arquivo vazio no volume.
+      await salvarPerfis([]);
+      return [];
+    }
+    throw e;
+  }
 }
 
 export async function salvarPerfis(perfis) {
+  await mkdir(dirname(PERFIS), { recursive: true });
   await writeFile(PERFIS, JSON.stringify(perfis, null, 2), "utf8");
 }
 
