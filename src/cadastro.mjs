@@ -2,13 +2,12 @@
 // Gera um token de acesso, grava em perfis.json e ja roda o matching para o
 // painel nascer cheio. Sem senha (acesso pelo link exclusivo com o token).
 
-import { readFile, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import { monitorar } from "./monitor.mjs";
 import { novaAssinaturaTeste } from "./assinatura.mjs";
 import { hashSenha } from "./senha.mjs";
 import { validarFormatoCNPJ, limparCNPJ } from "./cnpj.mjs";
-import { PERFIS } from "./caminhos.mjs";
+import { lerPerfis, salvarPerfis } from "./perfis.mjs";
 
 const slug = (s) =>
   (s || "cliente").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
@@ -22,18 +21,16 @@ export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, c
   if (!senha || senha.length < 6) throw new Error("A senha precisa de ao menos 6 caracteres");
 
   const cnpjLimpo = limparCNPJ(cnpj);
-  const perfis0 = JSON.parse(await readFile(PERFIS, "utf8"));
-  if (perfis0.some((p) => (p.email || "").toLowerCase() === email.trim().toLowerCase())) {
+  const perfis = await lerPerfis();
+  if (perfis.some((p) => (p.email || "").toLowerCase() === email.trim().toLowerCase())) {
     throw new Error("Ja existe uma conta com esse e-mail. Use a pagina de Entrar.");
   }
-  if (perfis0.some((p) => limparCNPJ(p.cnpj || "") === cnpjLimpo)) {
+  if (perfis.some((p) => limparCNPJ(p.cnpj || "") === cnpjLimpo)) {
     throw new Error("Ja existe uma conta com este CNPJ. Peca acesso ao administrador da conta.");
   }
 
   const termos = ramo.split(/[,;]/).map((t) => t.trim()).filter(Boolean);
   if (!termos.length) throw new Error("Informe ao menos uma palavra do seu ramo");
-
-  const perfis = perfis0;
   const token = randomBytes(6).toString("hex");
   const id = `${slug(email.split("@")[0])}-${Date.now().toString(36)}`;
   const agora = new Date().toISOString();
@@ -70,7 +67,7 @@ export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, c
   };
 
   perfis.push(perfil);
-  await writeFile(PERFIS, JSON.stringify(perfis, null, 2), "utf8");
+  await salvarPerfis(perfis);
 
   // Matching imediato (le do banco, instantaneo) para o painel ja ter conteudo.
   const { filtrados } = await monitorar(perfil);

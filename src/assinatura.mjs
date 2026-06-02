@@ -2,8 +2,7 @@
 // Modelo concierge: novo cliente entra em teste gratis; voce ativa manualmente
 // apos o Pix. Automacao (Asaas/Mercado Pago) entra depois, no deploy.
 
-import { readFile, writeFile } from "node:fs/promises";
-import { PERFIS } from "./caminhos.mjs";
+import { lerPerfis, salvarPerfis } from "./perfis.mjs";
 
 const TRIAL_DIAS = Number(process.env.LICITA_TRIAL_DIAS || 7);
 
@@ -61,7 +60,7 @@ export function statusAtual(perfil) {
 // Chamado pelo webhook de pagamento (automatico) ou pelo admin. nivel=null mantem
 // o nivel atual (ou basico). Uso retrocompativel: ativarPorToken(token, dias).
 export async function ativarPorToken(token, dias = 30, nivel = null, formaPagamento = null) {
-  const perfis = JSON.parse(await readFile(PERFIS, "utf8"));
+  const perfis = await lerPerfis();
   const p = perfis.find((x) => x.token === token);
   if (!p) throw new Error(`Token ${token} nao encontrado`);
   p.assinatura = {
@@ -73,7 +72,7 @@ export async function ativarPorToken(token, dias = 30, nivel = null, formaPagame
     ativadoEm: new Date().toISOString(),
     expiraEm: new Date(Date.now() + dias * 864e5).toISOString(),
   };
-  await writeFile(PERFIS, JSON.stringify(perfis, null, 2), "utf8");
+  await salvarPerfis(perfis);
   return p;
 }
 
@@ -85,6 +84,6 @@ export async function ativarPlano(token, nivel, dias = 30, formaPagamento = null
 
 // Lista todos os clientes com o estado da assinatura (para o admin).
 export async function listarClientes() {
-  const perfis = JSON.parse(await readFile(PERFIS, "utf8"));
+  const perfis = await lerPerfis();
   return perfis.map((p) => ({ nome: p.nome, email: p.email ?? null, token: p.token, ...statusAtual(p) }));
 }
