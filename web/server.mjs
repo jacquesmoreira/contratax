@@ -225,6 +225,7 @@ const servidor = createServer(async (req, res) => {
         ramo: (perfil.filtro?.termos ?? []).join(", "),
         excluir: (perfil.filtro?.termosExcluir ?? []).join(", "),
         uf: (perfil.ufs ?? [])[0] ?? "",
+        ufs: perfil.ufs ?? [],
         modalidades: perfil.modalidades ?? [],
         endereco: perfil.endereco ?? "",
         representante: perfil.representante ?? { nome: "", cpf: "", cargo: "" },
@@ -245,7 +246,12 @@ const servidor = createServer(async (req, res) => {
         termos,
         termosExcluir: (corpo.excluir || "").split(/[,;]/).map((s) => s.trim()).filter(Boolean),
       };
-      p.ufs = corpo.uf ? [corpo.uf] : [];
+      // Aceita ufs (array) ou uf (string simples, retrocompativel).
+      if (Array.isArray(corpo.ufs) && corpo.ufs.length > 0) {
+        p.ufs = corpo.ufs.filter(Boolean);
+      } else {
+        p.ufs = corpo.uf ? [corpo.uf] : [];
+      }
       if (Array.isArray(corpo.modalidades) && corpo.modalidades.length) p.modalidades = corpo.modalidades.map(Number);
       if (corpo.endereco !== undefined) p.endereco = String(corpo.endereco || "").trim();
       if (corpo.representante) p.representante = {
@@ -458,10 +464,12 @@ const servidor = createServer(async (req, res) => {
       const impugCache = await carregarImpugnacao(id);
       // Ranking de concorrentes localizado NO EDITAL aberto (cidade/UF do edital),
       // no ramo do cliente. Assim o ranking muda conforme a regiao da licitacao.
+      // Usa a UF do edital (mais relevante) ou a primeira UF do perfil como fallback.
+      const perfilUf = (perfil?.ufs ?? [])[0] ?? null;
       const preco = perfil
         ? precoVencedores({
             termos: perfil.filtro?.termos ?? [],
-            uf: edital.uf ?? (perfil.ufs ?? [])[0] ?? null,
+            uf: edital.uf ?? perfilUf,
             municipio: edital.municipio ?? null,
             orgao: edital.orgao ?? null,
             orgaoCnpj: edital.orgaoCnpj ?? null,

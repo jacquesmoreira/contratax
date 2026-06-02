@@ -40,6 +40,9 @@ export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, c
   const nomeConta = (nome || razaoSocial || email.split("@")[0]).trim();
   const senhaHash = hashSenha(senha);
 
+  // Aceita uf como string simples ou array de UFs (multi-estado).
+  const ufsArr = Array.isArray(uf) ? uf.filter(Boolean) : (uf ? [uf] : []);
+
   const perfil = {
     id,
     nome: nomeConta,
@@ -60,7 +63,7 @@ export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, c
     assentos: 1,
     // Cota de analises de IA do mes (buscas nao contam).
     analises: { mes: agora.slice(0, 7), usados: 0 },
-    ufs: uf ? [uf] : [],
+    ufs: ufsArr,
     modalidades: modalidades?.length ? modalidades : [6, 8, 9, 4],
     filtro: { termos, termosExcluir: [], valorMin: null, valorMax: null },
     assinatura: novaAssinaturaTeste(),

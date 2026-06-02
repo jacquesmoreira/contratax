@@ -35,6 +35,14 @@
   .aviso { font-size:13px; color:var(--cinza); }
   .spinner { display:inline-block; width:18px; height:18px; border:3px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:girar .8s linear infinite; vertical-align:middle; margin-right:8px; }
   @keyframes girar { to { transform:rotate(360deg); } }
+  .cnpj-row { display:flex; gap:8px; }
+  .cnpj-row input { flex:1; }
+  .cnpj-row button { padding:0 16px; background:var(--indigo); color:#fff; border:none; border-radius:11px; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .cnpj-row button:hover { background:var(--indigo-d); }
+  .ufs-wrap { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
+  .uf-chip { padding:7px 12px; border:1.5px solid var(--linha); border-radius:99px; font-size:13px; font-weight:600; cursor:pointer; background:#fff; color:var(--cinza); transition:all .1s; user-select:none; }
+  .uf-chip.sel { background:var(--indigo); color:#fff; border-color:var(--indigo); }
+  .uf-dica { font-size:12.5px; color:var(--cinza-c); margin-top:6px; }
 </style>
 </head>
 <body>
@@ -45,8 +53,11 @@
 
     <form id="form">
       <label for="cnpj">CNPJ da empresa</label>
-      <input id="cnpj" type="text" inputmode="numeric" placeholder="00.000.000/0000-00" required />
-      <div class="dica" id="cnpj-status">Validamos na base da Receita e preenchemos a razão social.</div>
+      <div class="cnpj-row">
+        <input id="cnpj" type="text" inputmode="numeric" placeholder="00.000.000/0000-00" required />
+        <button type="button" id="btn-cnpj">Consultar</button>
+      </div>
+      <div class="dica" id="cnpj-status">Digite o CNPJ e clique em Consultar — preenchemos a razão social.</div>
 
       <label for="nome">Razão social</label>
       <input id="nome" type="text" placeholder="Preenchida automaticamente pelo CNPJ" />
@@ -57,8 +68,9 @@
       <label for="senha">Crie uma senha</label>
       <input id="senha" type="password" placeholder="mínimo 6 caracteres" minlength="6" required />
 
-      <label for="uf">Estado onde você atua</label>
-      <select id="uf"></select>
+      <label>Estados onde você atua</label>
+      <div class="ufs-wrap" id="ufs-chips"></div>
+      <div class="uf-dica">Clique para selecionar um ou mais estados. Deixe em branco para monitorar o Brasil todo.</div>
 
       <label for="ramo">O que a sua empresa vende</label>
       <input id="ramo" type="text" placeholder="Ex: limpeza, conservação, asseio" required />
@@ -73,21 +85,47 @@
 
 <script>
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
-document.getElementById("uf").innerHTML = '<option value="">Brasil todo</option>' + UFS.map(u=>`<option value="${u}"${u==="SC"?" selected":""}>${u}</option>`).join("");
+const selecionados = new Set();
 
+// Chips de estado
+const chipsEl = document.getElementById("ufs-chips");
+UFS.forEach(u => {
+  const chip = document.createElement("span");
+  chip.className = "uf-chip";
+  chip.textContent = u;
+  chip.onclick = () => {
+    if (selecionados.has(u)) { selecionados.delete(u); chip.classList.remove("sel"); }
+    else { selecionados.add(u); chip.classList.add("sel"); }
+  };
+  chipsEl.appendChild(chip);
+});
+
+// Consulta CNPJ
 const cnpjInput = document.getElementById("cnpj");
 const cnpjStatus = document.getElementById("cnpj-status");
-cnpjInput.addEventListener("blur", async () => {
+async function consultarCNPJ() {
   const v = cnpjInput.value.replace(/\D/g, "");
-  if (v.length !== 14) return;
-  cnpjStatus.style.color = ""; cnpjStatus.textContent = "Validando na Receita...";
+  if (v.length !== 14) { cnpjStatus.style.color = "#dc2626"; cnpjStatus.textContent = "CNPJ deve ter 14 dígitos."; return; }
+  cnpjStatus.style.color = "var(--cinza-c)"; cnpjStatus.textContent = "Consultando na Receita Federal...";
+  document.getElementById("btn-cnpj").disabled = true;
   try {
     const d = await (await fetch("/api/cnpj?cnpj=" + v)).json();
     if (!d.valido) { cnpjStatus.style.color = "#dc2626"; cnpjStatus.textContent = d.erro; return; }
     cnpjStatus.style.color = "var(--verde)";
-    if (d.razaoSocial) { document.getElementById("nome").value = d.razaoSocial; cnpjStatus.textContent = "CNPJ válido: " + d.razaoSocial; }
-    else cnpjStatus.textContent = "CNPJ aceito" + (d.aviso ? " (" + d.aviso + ")" : "") + ".";
-  } catch { cnpjStatus.textContent = ""; }
+    if (d.razaoSocial) { document.getElementById("nome").value = d.razaoSocial; cnpjStatus.textContent = "✓ " + d.razaoSocial; }
+    else cnpjStatus.textContent = "✓ CNPJ válido" + (d.aviso ? " (" + d.aviso + ")" : "");
+    // Seleciona o estado da empresa automaticamente se vier da Receita
+    if (d.uf && UFS.includes(d.uf)) {
+      const chip = [...chipsEl.children].find(c => c.textContent === d.uf);
+      if (chip && !selecionados.has(d.uf)) chip.click();
+    }
+  } catch { cnpjStatus.style.color=""; cnpjStatus.textContent = "Não foi possível consultar agora. Continue assim mesmo."; }
+  finally { document.getElementById("btn-cnpj").disabled = false; }
+}
+document.getElementById("btn-cnpj").onclick = consultarCNPJ;
+// Disparo automático ao completar 14 dígitos
+cnpjInput.addEventListener("input", () => {
+  if (cnpjInput.value.replace(/\D/g,"").length === 14) consultarCNPJ();
 });
 
 document.getElementById("form").addEventListener("submit", async (ev) => {
@@ -95,13 +133,14 @@ document.getElementById("form").addEventListener("submit", async (ev) => {
   const btn = document.getElementById("btn"), erro = document.getElementById("erro");
   erro.textContent = "";
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Montando seu painel...';
+  const ufsArr = [...selecionados];
   const corpo = {
     cnpj: document.getElementById("cnpj").value,
     razaoSocial: document.getElementById("nome").value,
     nome: document.getElementById("nome").value,
     email: document.getElementById("email").value,
     senha: document.getElementById("senha").value,
-    uf: document.getElementById("uf").value,
+    uf: ufsArr.length === 1 ? ufsArr[0] : (ufsArr.length > 1 ? ufsArr : ""),
     ramo: document.getElementById("ramo").value,
   };
   try {

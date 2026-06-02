@@ -75,8 +75,9 @@
       <input id="excluir" type="text" placeholder="Ex: veterinário, usado" />
       <div class="dica">Editais que contenham essas palavras não aparecem.</div>
 
-      <label for="uf">Estado onde você atua</label>
-      <select id="uf"></select>
+      <label>Estados onde você atua</label>
+      <div class="mods" id="ufs-chips" style="gap:7px"></div>
+      <div class="dica">Clique para selecionar. Deixe em branco = Brasil todo.</div>
 
       <label>Tipos de licitação</label>
       <div class="mods" id="mods"></div>
@@ -110,6 +111,21 @@ $("link-docs").href = "/documentos?c=" + encodeURIComponent(token);
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const MODS = [[6,"Pregão eletrônico"],[8,"Dispensa"],[9,"Inexigibilidade"],[4,"Concorrência"],[12,"Credenciamento"],[1,"Leilão"]];
+const ufsSelConta = new Set();
+
+// Chips de estado na conta
+const chipsContaEl = $("ufs-chips");
+UFS.forEach(u => {
+  const chip = document.createElement("label");
+  chip.style.cssText = "display:flex;align-items:center;gap:7px;margin:0;text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;color:var(--tinta);background:var(--fundo);border:1.5px solid var(--linha);padding:7px 12px;border-radius:99px;cursor:pointer";
+  chip.dataset.uf = u;
+  chip.textContent = u;
+  chip.onclick = () => {
+    if (ufsSelConta.has(u)) { ufsSelConta.delete(u); chip.style.background="var(--fundo)"; chip.style.borderColor="var(--linha)"; chip.style.color="var(--tinta)"; }
+    else { ufsSelConta.add(u); chip.style.background="var(--indigo)"; chip.style.borderColor="var(--indigo)"; chip.style.color="#fff"; }
+  };
+  chipsContaEl.appendChild(chip);
+});
 
 async function carregar() {
   const d = await (await fetch("/api/perfil?c=" + encodeURIComponent(token))).json();
@@ -118,7 +134,12 @@ async function carregar() {
   $("nome").value = d.nome || "";
   $("ramo").value = d.ramo || "";
   $("excluir").value = d.excluir || "";
-  $("uf").innerHTML = '<option value="">Brasil todo</option>' + UFS.map(u => `<option value="${u}"${u===d.uf?" selected":""}>${u}</option>`).join("");
+  // Marca chips de UF do perfil
+  const ufsAtivas = Array.isArray(d.modalidades) ? [] : []; // reset
+  (d.ufs || (d.uf ? [d.uf] : [])).forEach(u => {
+    const chip = [...chipsContaEl.children].find(c => c.dataset.uf === u);
+    if (chip && !ufsSelConta.has(u)) chip.click();
+  });
   const sel = new Set((d.modalidades || []).map(Number));
   $("mods").innerHTML = MODS.map(([v,l]) => `<label><input type="checkbox" value="${v}"${sel.has(v)?" checked":""}> ${l}</label>`).join("");
   $("endereco").value = d.endereco || "";
@@ -131,11 +152,13 @@ async function carregar() {
 $("salvar").onclick = async () => {
   $("msg-ok").textContent = ""; $("msg-erro").textContent = "";
   const modalidades = [...document.querySelectorAll("#mods input:checked")].map(i => Number(i.value));
+  const ufsArr = [...ufsSelConta];
   const corpo = {
     nome: $("nome").value,
     ramo: $("ramo").value,
     excluir: $("excluir").value,
-    uf: $("uf").value,
+    uf: ufsArr.length === 1 ? ufsArr[0] : (ufsArr.length > 1 ? ufsArr[0] : ""), // compatibilidade backend
+    ufs: ufsArr, // novo campo multi-UF
     modalidades,
     endereco: $("endereco").value,
     representante: { nome: $("rep-nome").value, cpf: $("rep-cpf").value, cargo: $("rep-cargo").value },
