@@ -151,7 +151,7 @@ async function buscarPagina({ dataFinal, modalidade, uf, pagina, tentativas = 3 
 // Gerador que percorre TODAS as paginas de uma modalidade, entregando uma pagina
 // por vez. Permite gravar incrementalmente (resiliente a quedas no meio do crawl).
 // uf = null significa busca nacional (todos os estados de uma vez).
-export async function* paginarEditais({ diasAFrente = 30, modalidade, uf = null } = {}) {
+export async function* paginarEditais({ diasAFrente = 365, modalidade, uf = null } = {}) {
   const dataFinal = fmtData(new Date(Date.now() + diasAFrente * 864e5));
   let pagina = 1;
   let totalPaginas = 1;
@@ -170,7 +170,7 @@ const cacheExecucao = new Map();
 
 // Busca TODOS os editais com proposta em aberto encerrando ate `diasAFrente` dias.
 // Faz a paginacao completa e junta tudo num array unico de editais normalizados.
-export async function buscarTudo({ diasAFrente = 30, modalidades = [6, 8], uf = null, maxPaginas = 100 } = {}) {
+export async function buscarTudo({ diasAFrente = 365, modalidades = [6, 8], uf = null, maxPaginas = 100 } = {}) {
   const dataFinal = fmtData(new Date(Date.now() + diasAFrente * 864e5));
 
   const chave = JSON.stringify({ dataFinal, modalidades: [...modalidades].sort(), uf, maxPaginas });
