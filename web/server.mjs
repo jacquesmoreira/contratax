@@ -155,6 +155,8 @@ const servidor = createServer(async (req, res) => {
     // Busca livre no acervo (painel): qualquer produto + filtros de UF e modalidade.
     if (rota === "/api/buscar") {
       const uf = url.searchParams.get("uf") || null;
+      const ufsParam = url.searchParams.getAll("uf"); // multi-uf: ?uf=SC&uf=SP
+      const ufs = ufsParam.filter(Boolean).length > 1 ? ufsParam.filter(Boolean) : null;
       const termo = url.searchParams.get("termo") || "";
       const cidade = url.searchParams.get("cidade") || "";
       const prazoDias = url.searchParams.get("prazo") || null;
@@ -162,7 +164,7 @@ const servidor = createServer(async (req, res) => {
       const dataAte = url.searchParams.get("dataAte") || null;
       const modParam = url.searchParams.get("modalidade") || "";
       const modalidades = modParam ? [Number(modParam)] : [];
-      return json(res, 200, buscarEditais({ uf, termo, modalidades, cidade, prazoDias, dataDe, dataAte, limite: 60 }));
+      return json(res, 200, buscarEditais({ uf, ufs, termo, modalidades, cidade, prazoDias, dataDe, dataAte, limite: 60 }));
     }
 
     // Lista de editais do cliente (filtrada pelo token ?c=). Token admin ve tudo.

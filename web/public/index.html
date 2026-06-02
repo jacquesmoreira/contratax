@@ -37,11 +37,13 @@
   .topo { background:linear-gradient(135deg,var(--indigo-d),var(--azul)); color:#fff; padding:30px 0 26px; }
   .topo h1 { font-size:24px; font-weight:800; letter-spacing:-.5px; }
   .topo .sub { opacity:.9; font-size:14.5px; margin-top:3px; }
-  .busca-box { margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; }
+  .busca-box { margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
   .busca-box input { flex:1; min-width:220px; padding:14px 16px; border-radius:11px; border:none; font-size:15px; font-family:inherit; outline:none; }
   .busca-box select { padding:0 12px; height:48px; border-radius:11px; border:none; font-size:14px; font-family:inherit; outline:none; background:#fff; cursor:pointer; }
-  .busca-box button { background:#fff; color:var(--indigo); border:none; border-radius:11px; padding:0 24px; height:48px; font-weight:800; font-size:15px; cursor:pointer; font-family:inherit; }
-  .busca-box button:hover { background:#eef2ff; }
+  .busca-box > button { background:#fff; color:var(--indigo); border:none; border-radius:11px; padding:0 24px; height:48px; font-weight:800; font-size:15px; cursor:pointer; font-family:inherit; }
+  .busca-box > button:hover { background:#eef2ff; }
+  .uf-chip-busca { padding:5px 10px; border:1.5px solid var(--linha); border-radius:99px; font-size:12.5px; font-weight:600; cursor:pointer; background:#fff; color:var(--cinza); transition:all .1s; }
+  .uf-chip-busca.sel { background:var(--indigo); color:#fff; border-color:var(--indigo); }
 
   main { padding:26px 0 70px; }
 
@@ -146,7 +148,17 @@
     <div class="busca-box">
       <input id="busca" type="text" placeholder="Buscar qualquer produto ou serviço (ex: computador, merenda, vigilância)..." />
       <input id="filtro-cidade" type="text" placeholder="Cidade (opcional)" style="max-width:170px" />
-      <select id="filtro-uf"></select>
+      <div style="position:relative">
+        <button type="button" id="btn-uf" style="padding:10px 13px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:9px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;min-width:130px;text-align:left" onclick="toggleUfDrop()">Estado: Brasil todo ▾</button>
+        <div id="uf-drop" style="display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:100;background:#fff;border:1px solid var(--linha);border-radius:12px;padding:10px;box-shadow:0 8px 30px rgba(0,0,0,.15);min-width:320px">
+          <div style="font-size:12px;font-weight:700;color:var(--cinza-c);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Selecione os estados (deixe em branco = Brasil todo)</div>
+          <div id="uf-chips-busca" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button onclick="limparUfs()" style="flex:1;padding:7px;border:1px solid var(--linha);border-radius:8px;background:#fff;font-size:13px;cursor:pointer;font-weight:600">Limpar</button>
+            <button onclick="fecharUfDrop()" style="flex:1;padding:7px;border:none;border-radius:8px;background:var(--indigo);color:#fff;font-size:13px;cursor:pointer;font-weight:700">Aplicar</button>
+          </div>
+        </div>
+      </div>
       <select id="filtro-mod"></select>
       <select id="filtro-prazo"></select>
       <button id="btn-buscar">Buscar</button>
@@ -538,7 +550,38 @@ async function impugnar(id) {
 // ---- Busca livre no acervo + filtros ----
 const UFS_P = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const MODS_P = [["6","Pregão eletrônico"],["8","Dispensa"],["9","Inexigibilidade"],["4","Concorrência"],["12","Credenciamento"],["1","Leilão"]];
-document.getElementById("filtro-uf").innerHTML = '<option value="">Estado: Brasil todo</option>' + UFS_P.map(u=>`<option value="${u}">${u}</option>`).join("");
+const ufsSelBusca = new Set();
+
+// Chips multi-estado na busca
+const ufChipsEl = document.getElementById("uf-chips-busca");
+UFS_P.forEach(u => {
+  const chip = document.createElement("span");
+  chip.className = "uf-chip-busca"; chip.textContent = u; chip.dataset.uf = u;
+  chip.onclick = (e) => { e.stopPropagation(); ufsSelBusca.has(u) ? (ufsSelBusca.delete(u), chip.classList.remove("sel")) : (ufsSelBusca.add(u), chip.classList.add("sel")); atualizarBtnUf(); };
+  ufChipsEl.appendChild(chip);
+});
+function atualizarBtnUf() {
+  const btn = document.getElementById("btn-uf");
+  const n = ufsSelBusca.size;
+  btn.textContent = n === 0 ? "Estado: Brasil todo ▾" : n <= 3 ? [...ufsSelBusca].join(", ") + " ▾" : `${n} estados ▾`;
+}
+function toggleUfDrop() {
+  const d = document.getElementById("uf-drop");
+  d.style.display = d.style.display === "none" ? "block" : "none";
+}
+function fecharUfDrop() {
+  document.getElementById("uf-drop").style.display = "none";
+  buscarPainel();
+}
+function limparUfs() {
+  ufsSelBusca.clear();
+  document.querySelectorAll(".uf-chip-busca.sel").forEach(c => c.classList.remove("sel"));
+  atualizarBtnUf();
+}
+// Fecha dropdown ao clicar fora
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#btn-uf") && !e.target.closest("#uf-drop")) document.getElementById("uf-drop").style.display = "none";
+});
 document.getElementById("filtro-mod").innerHTML = '<option value="">Tipo: todos</option>' + MODS_P.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
 const PRAZOS_P = [["","Prazo: qualquer"],["3","Encerra em 3 dias"],["7","Encerra em 7 dias"],["15","Encerra em 15 dias"],["30","Encerra em 30 dias"]];
 document.getElementById("filtro-prazo").innerHTML = PRAZOS_P.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
@@ -546,30 +589,32 @@ document.getElementById("filtro-prazo").innerHTML = PRAZOS_P.map(([v,l])=>`<opti
 async function buscarPainel() {
   const termo = document.getElementById("busca").value.trim();
   const cidade = document.getElementById("filtro-cidade").value.trim();
-  const uf = document.getElementById("filtro-uf").value;
+  const ufsArr = [...ufsSelBusca];
   const mod = document.getElementById("filtro-mod").value;
   const prazo = document.getElementById("filtro-prazo").value;
-  if (!termo && !cidade && !uf && !mod && !prazo) { carregar(); return; }
+  if (!termo && !cidade && !ufsArr.length && !mod && !prazo) { carregar(); return; }
   const c = document.getElementById("conteudo");
   c.innerHTML = `<div class="carregando"><span class="spinner"></span>Buscando no acervo nacional...</div>`;
   try {
-    const d = await (await fetch("/api/buscar?" + new URLSearchParams({ termo, uf, modalidade: mod, cidade, prazo }))).json();
+    const params = new URLSearchParams({ termo, modalidade: mod, cidade, prazo });
+    ufsArr.forEach(u => params.append("uf", u)); // multi-uf: ?uf=SC&uf=SP
+    const d = await (await fetch("/api/buscar?" + params)).json();
     const prazoTxt = prazo ? ` · encerra em até ${prazo} dias` : "";
-    const onde = ([cidade, uf].filter(Boolean).join(" / ") || "Brasil todo") + prazoTxt;
+    const ufsLabel = ufsArr.length ? ufsArr.join(", ") : "Brasil todo";
+    const onde = ([cidade, ufsLabel !== "Brasil todo" ? ufsLabel : ""].filter(Boolean).join(" / ") || "Brasil todo") + prazoTxt;
     let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap">
       <span style="font-size:18px;font-weight:800">${d.total} resultado${d.total!==1?"s":""}${termo?' para "'+esc(termo)+'"':""}</span>
       <span style="color:var(--cinza)">em ${esc(onde)}</span>
       <a href="#" id="voltar-painel" style="margin-left:auto;color:var(--indigo);font-weight:700">← Voltar ao meu painel</a></div>`;
     html += d.editais.length ? d.editais.map(cardHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Nada encontrado. Tente outro termo, outra cidade ou amplie os filtros.</div>`;
     c.innerHTML = html;
-    document.getElementById("voltar-painel").onclick = (e) => { e.preventDefault(); document.getElementById("busca").value=""; document.getElementById("filtro-cidade").value=""; document.getElementById("filtro-uf").value=""; document.getElementById("filtro-mod").value=""; document.getElementById("filtro-prazo").value=""; carregar(); };
+    document.getElementById("voltar-painel").onclick = (e) => { e.preventDefault(); document.getElementById("busca").value=""; document.getElementById("filtro-cidade").value=""; limparUfs(); document.getElementById("filtro-mod").value=""; document.getElementById("filtro-prazo").value=""; carregar(); };
   } catch (e) { c.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`; }
 }
 document.getElementById("btn-buscar").onclick = buscarPainel;
 document.getElementById("busca").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(); });
 document.getElementById("filtro-cidade").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(); });
 document.getElementById("filtro-prazo").addEventListener("change", buscarPainel);
-document.getElementById("filtro-uf").addEventListener("change", buscarPainel);
 document.getElementById("filtro-mod").addEventListener("change", buscarPainel);
 
 document.getElementById("conteudo").addEventListener("click", ev => {

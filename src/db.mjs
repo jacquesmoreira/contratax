@@ -259,8 +259,10 @@ export function buscaPublica({ uf = null, termo = "", limite = 6 } = {}) {
 
 // Busca livre no acervo (usada pelo painel): por termo, UF e modalidade.
 // Devolve a lista de editais (nao so estatisticas), ranqueada por relevancia.
-export function buscarEditais({ uf = null, termo = "", modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, limite = 60 } = {}) {
-  const candidatos = consultar({ ufs: uf ? [uf] : [], modalidades, apenasAbertos: true });
+export function buscarEditais({ uf = null, ufs = null, termo = "", modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, limite = 60 } = {}) {
+  // Aceita ufs (array) ou uf (string simples, retrocompativel).
+  const ufsArr = ufs && ufs.length ? ufs : (uf ? [uf] : []);
+  const candidatos = consultar({ ufs: ufsArr, modalidades, apenasAbertos: true });
   const termos = termo && termo.trim() ? [termo.trim()] : [];
   let casaram = aplicarFiltro(candidatos, { termos });
 
