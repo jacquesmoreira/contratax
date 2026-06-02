@@ -570,6 +570,15 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // Verificacao do Google Search Console.
+    if (/^\/google[\w-]+\.html$/.test(rota)) {
+      try {
+        const buf = await readFile(resolve(AQUI, "public", rota.slice(1)));
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(buf);
+      } catch { /* nao existe: cai no 404 */ }
+    }
+
     // Assets estaticos da marca (svg/png/ico) servidos da pasta public.
     if (/^\/[\w.-]+\.(svg|png|ico)$/.test(rota)) {
       try {
