@@ -1,6 +1,17 @@
 User-agent: *
 Allow: /
+Allow: /cadastro
+Allow: /entrar
+
+# Áreas privadas (acesso por token) e API — não indexar
 Disallow: /painel
+Disallow: /conta
+Disallow: /equipe
+Disallow: /documentos
+Disallow: /declaracoes
+Disallow: /assinar
+Disallow: /admin
+Disallow: /digest
 Disallow: /api/
 
-Sitemap: https://SEU-DOMINIO.com.br/sitemap.xml
+Sitemap: https://contratax.com.br/sitemap.xml

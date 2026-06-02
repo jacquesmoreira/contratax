@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "contratax",
+      "runtimeExecutable": "D:\\node.js\\node.exe",
+      "runtimeArgs": ["web/server.mjs"],
+      "port": 3000
+    }
+  ]
+}
