@@ -120,3 +120,8 @@ export async function salvarLead(lead) {
   await gravarJSON(ARQUIVO_LEADS, lista);
   return lista.length;
 }
+
+// Lista os interessados capturados (para o painel admin).
+export async function carregarLeads() {
+  return lerJSON(ARQUIVO_LEADS, []);
+}

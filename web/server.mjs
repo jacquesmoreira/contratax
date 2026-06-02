@@ -8,10 +8,10 @@ import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao } from "../src/store.mjs";
+import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao, carregarLeads } from "../src/store.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
-import { buscarPorId, buscaPublica, buscarEditais } from "../src/db.mjs";
+import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
 import { temChave } from "../src/ia.mjs";
 import { criarPerfil } from "../src/cadastro.mjs";
@@ -22,12 +22,12 @@ import { radarRenovacao } from "../src/radar.mjs";
 import { listarDocumentos, baixarArquivo } from "../src/documentos.mjs";
 import { verificarSenha } from "../src/senha.mjs";
 import { consultarCNPJ } from "../src/cnpj.mjs";
-import { autenticarUsuario, convidarMembro, removerMembro, listarMembros } from "../src/equipe.mjs";
-import { lerPerfis, salvarPerfis, PERFIS } from "../src/perfis.mjs";
+import { autenticarUsuario, convidarMembro, removerMembro, listarMembros, definirAssentos } from "../src/equipe.mjs";
+import { lerPerfis, salvarPerfis, PERFIS, garantirUsuarios } from "../src/perfis.mjs";
 import { monitorar } from "../src/monitor.mjs";
 import { usoDe, registrarAnalise, checarAnalise, adicionarAvulsas } from "../src/uso.mjs";
 import { resumoCustos } from "../src/custo.mjs";
-import { PLANOS, AVULSOS } from "../src/planos.mjs";
+import { PLANOS, AVULSOS, planoDe } from "../src/planos.mjs";
 import { ativarPlano } from "../src/assinatura.mjs";
 import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura } from "../src/asaas.mjs";
 
@@ -42,6 +42,7 @@ const EQUIPE = resolve(AQUI, "public", "equipe.html");
 const CONTA = resolve(AQUI, "public", "conta.html");
 const ASSINAR = resolve(AQUI, "public", "assinar.html");
 const DECLARACOES = resolve(AQUI, "public", "declaracoes.html");
+const ADMIN_PAGE = resolve(AQUI, "public", "admin.html");
 const PORTA = process.env.PORT || 3000;
 
 function lerCorpo(req) {
@@ -274,6 +275,59 @@ const servidor = createServer(async (req, res) => {
     if (rota === "/api/custos") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       return json(res, 200, (await resumoCustos()) || { chamadas: 0 });
+    }
+
+    // ===== Painel admin (tudo gated por LICITA_ADMIN_TOKEN) =====
+    if (rota === "/api/admin/clientes") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      const perfis = await lerPerfis();
+      const clientes = perfis.map((p) => {
+        garantirUsuarios(p); // so em memoria, para contar a equipe
+        const st = statusAtual(p);
+        return {
+          token: p.token, nome: p.nome, razaoSocial: p.razaoSocial ?? null, email: p.email ?? null,
+          cnpj: p.cnpj ?? null, criadoEm: p.assinatura?.criadoEm ?? null,
+          ramo: (p.filtro?.termos ?? []).join(", "), uf: (p.ufs ?? [])[0] ?? null,
+          status: st.status, diasRestantes: st.diasRestantes, formaPagamento: st.formaPagamento ?? null,
+          nivel: p.assinatura?.nivel ?? null, planoNome: planoDe(p).nome,
+          uso: usoDe(p), equipe: { usados: p.usuarios.length, assentos: p.assentos || 1 },
+        };
+      });
+      const resumo = {
+        total: clientes.length,
+        ativos: clientes.filter((c) => c.status === "ativo").length,
+        teste: clientes.filter((c) => c.status === "teste").length,
+        atrasados: clientes.filter((c) => c.status === "atrasado").length,
+        vencidos: clientes.filter((c) => ["vencido", "teste_expirado"].includes(c.status)).length,
+      };
+      return json(res, 200, { clientes, resumo });
+    }
+    if (rota === "/api/admin/stats") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      let leads = []; try { leads = await carregarLeads(); } catch {}
+      return json(res, 200, { editais: estatisticas(), contratos: estatisticasContratos(), leads });
+    }
+    if (rota === "/api/admin/ativar" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const p = await ativarPlano(corpo.token, corpo.nivel || "basico", Number(corpo.dias) || 30);
+        return json(res, 200, { ok: true, status: statusAtual(p) });
+      } catch (e) { return json(res, 400, { erro: e.message }); }
+    }
+    if (rota === "/api/admin/avulso" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      const uso = await adicionarAvulsas(corpo.token, Number(corpo.qtd) || 0);
+      return json(res, uso ? 200 : 404, uso ? { ok: true, uso } : { erro: "Conta nao encontrada" });
+    }
+    if (rota === "/api/admin/assentos" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const r = await definirAssentos(corpo.token, Number(corpo.n) || 1);
+        return json(res, 200, { ok: true, ...r });
+      } catch (e) { return json(res, 400, { erro: e.message }); }
     }
 
     // Catalogo de planos e pacotes avulsos (para a pagina de assinar).
@@ -575,6 +629,11 @@ const servidor = createServer(async (req, res) => {
     }
     if (rota === "/declaracoes" || rota === "/declaracoes.html") {
       const html = await readFile(DECLARACOES, "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(html);
+    }
+    if (rota === "/admin" || rota === "/admin.html") {
+      const html = await readFile(ADMIN_PAGE, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       return res.end(html);
     }
