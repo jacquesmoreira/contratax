@@ -23,21 +23,25 @@ export function radarRenovacao({ termos = [], uf = null, categorias = [], dentro
     if ((c.objeto || "").length > (g.objeto || "").length) g.objeto = c.objeto;
     if (c.vigenciaFim && (!g.vigenciaFim || c.vigenciaFim < g.vigenciaFim)) g.vigenciaFim = c.vigenciaFim;
     const f = c.fornecedor || "Nao informado";
-    g.fornecedores.set(f, (g.fornecedores.get(f) || 0) + (c.valor || 0));
+    // Rastreia: qtd de contratos ganhos (para ranquear por vitórias) e valor (para total).
+    const reg = g.fornecedores.get(f) || { qtd: 0, valor: 0 };
+    reg.qtd += 1;
+    reg.valor += c.valor || 0;
+    g.fornecedores.set(f, reg);
     g.valorTotal += c.valor || 0;
     grupos.set(chave, g);
   }
 
   const lista = [...grupos.values()].map((g) => {
-    const ranking = [...g.fornecedores.entries()].sort((a, b) => b[1] - a[1]);
-    const [principal, valorPrincipal] = ranking[0] || ["Nao informado", 0];
+    // Ordena por numero de contratos ganhos (quem ganhou mais itens/municipios)
+    const ranking = [...g.fornecedores.entries()]
+      .sort((a, b) => b[1].qtd - a[1].qtd || b[1].valor - a[1].valor);
     return {
       orgao: g.orgao, municipio: g.municipio, uf: g.uf, objeto: g.objeto,
       vigenciaFim: g.vigenciaFim,
-      fornecedorPrincipal: principal,
-      valorPrincipal,
-      outrosFornecedores: Math.max(0, ranking.length - 1),
       valorTotal: g.valorTotal,
+      // Top 3 fornecedores por numero de contratos ganhos (sem valor individual)
+      top3: ranking.slice(0, 3).map(([fornecedor, r]) => ({ fornecedor, qtd: r.qtd })),
     };
   });
   lista.sort((a, b) => (a.vigenciaFim || "").localeCompare(b.vigenciaFim || ""));

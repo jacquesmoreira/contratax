@@ -220,13 +220,16 @@ function radarHTML(lista) {
   const itens = lista.map(c => {
     const d = diasAte(c.vigenciaFim);
     const quando = d == null ? "" : d <= 31 ? `vence em ${d} dia${d !== 1 ? "s" : ""}` : `vence em ${Math.round(d/30)} meses`;
-    const outros = c.outrosFornecedores > 0
-      ? `<span style="color:var(--cinza-c);font-size:12px">+ ${c.outrosFornecedores} outro${c.outrosFornecedores>1?"s":""} fornecedor${c.outrosFornecedores>1?"es":""} nesta licitação</span>`
-      : "";
+    const top3 = (c.top3 || []).map((f, i) =>
+      `<span style="font-size:12.5px;color:var(--cinza)">${i+1}. <b style="color:var(--tinta)">${esc(f.fornecedor)}</b>${f.qtd > 1 ? ` <span style="color:var(--cinza-c)">(${f.qtd}x)</span>` : ""}</span>`
+    ).join(" &nbsp;·&nbsp; ");
     return `<div class="card" style="cursor:default">
       <div class="card-topo"><span class="orgao">${esc(c.municipio)}/${esc(c.uf)} · ${esc(c.orgao)}</span><span class="prazo medio">${quando}</span></div>
       <div class="objeto">${esc((c.objeto||"").slice(0,120))}</div>
-      <div class="card-rodape"><span class="modalidade">Fornecedor principal: <b>${esc(c.fornecedorPrincipal)}</b><br>${outros}</span><span class="valor" title="Valor total da licitação">${brl(c.valorTotal)}</span></div>
+      <div class="card-rodape" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <span style="font-size:12px;font-weight:700;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.3px">Quem ganhou</span>
+        <span>${top3 || '<span style="color:var(--cinza-c);font-size:12.5px">Fornecedor não informado</span>'}</span>
+      </div>
     </div>`;
   }).join("");
   return `<section class="perfil"><div class="perfil-cab"><span class="perfil-nome">🛰️ Radar de renovação</span><span class="chip chip-stat">${lista.length} a vencer</span></div>
