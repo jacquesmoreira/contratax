@@ -273,16 +273,25 @@ const servidor = createServer(async (req, res) => {
     if (rota === "/api/historico") {
       const perfil = await perfilPorToken(url.searchParams.get("c") || "");
       if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
-      const termo = url.searchParams.get("termo") || (perfil.filtro?.termos ?? []).join(" ");
       const uf    = url.searchParams.get("uf") || null;
+      const cidade = url.searchParams.get("cidade") || "";
       const meses = Number(url.searchParams.get("meses") || 12);
       const pag   = Math.max(1, Number(url.searchParams.get("pagina") || 1));
       const porPag = 30;
       const { consultarContratos } = await import("../src/db.mjs");
-      const { aplicarFiltro } = await import("../src/filtro.mjs");
+      const { aplicarFiltro, normalizar } = await import("../src/filtro.mjs");
       const candidatos = consultarContratos({ uf, mesesAtras: meses });
-      const termos = termo.split(/[,\s]+/).map(t => t.trim()).filter(Boolean);
-      const todos = aplicarFiltro(candidatos, { termos }).filter(c => c.valor > 0);
+      // Usa o termo digitado como FRASE (AND entre palavras) ou os termos do perfil.
+      const customTermo = url.searchParams.get("termo");
+      const termos = customTermo
+        ? customTermo.split(",").map(t => t.trim()).filter(Boolean)  // vírgula = OR entre frases; espaço = AND dentro da frase
+        : (perfil.filtro?.termos ?? []);
+      let todos = aplicarFiltro(candidatos, { termos }).filter(c => c.valor > 0);
+      // Filtro por cidade
+      if (cidade.trim()) {
+        const cn = normalizar(cidade.trim());
+        todos = todos.filter(c => normalizar(c.municipio || "").includes(cn));
+      }
       // Ordena do mais recente para o mais antigo
       todos.sort((a, b) => (b.vigenciaInicio || "").localeCompare(a.vigenciaInicio || ""));
       const total = todos.length;

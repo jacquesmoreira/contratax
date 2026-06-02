@@ -66,7 +66,8 @@
     <h1>Histórico de licitações do seu ramo</h1>
     <p>Veja quem ganhou os contratos similares ao seu ramo no último ano — vencedor, valor e órgão contratante.</p>
     <div class="filtros">
-      <input id="busca" type="text" placeholder="Palavra-chave do ramo..." style="flex:1;min-width:200px" />
+      <input id="busca" type="text" placeholder="Palavra-chave do ramo..." style="flex:1;min-width:180px" />
+      <input id="filtro-cidade" type="text" placeholder="Cidade (opcional)" style="width:160px" />
       <select id="filtro-uf"><option value="">Brasil todo</option></select>
       <select id="filtro-meses">
         <option value="3">Últimos 3 meses</option>
@@ -99,7 +100,7 @@ const brl = v => v > 0 ? "R$ " + Number(v).toLocaleString("pt-BR",{minimumFracti
 const dataBR = s => s ? new Date(s).toLocaleDateString("pt-BR") : "—";
 const iniciais = n => (n||"?").trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 
-let pagAtual = 1, totalPag = 1, termoAtivo = "", ufAtiva = "", mesesAtivo = 12;
+let pagAtual = 1, totalPag = 1, termoAtivo = "", ufAtiva = "", cidadeAtiva = "", mesesAtivo = 12;
 
 async function carregar(pag = 1) {
   $("lista").innerHTML = '<div class="spinner-wrap"><div class="spinner-b"></div></div>';
@@ -108,6 +109,7 @@ async function carregar(pag = 1) {
   const p = new URLSearchParams({ c: token, pagina: pag, meses: mesesAtivo });
   if (termoAtivo) p.set("termo", termoAtivo);
   if (ufAtiva) p.set("uf", ufAtiva);
+  if (cidadeAtiva) p.set("cidade", cidadeAtiva);
   const d = await (await fetch("/api/historico?" + p)).json();
   pagAtual = d.pagina; totalPag = d.paginas;
 
@@ -154,6 +156,7 @@ function ir(pag) { carregar(pag); }
 
 function buscar() {
   termoAtivo = $("busca").value.trim();
+  cidadeAtiva = $("filtro-cidade").value.trim();
   ufAtiva = $("filtro-uf").value;
   mesesAtivo = Number($("filtro-meses").value);
   carregar(1);
@@ -169,7 +172,9 @@ $("filtro-meses").onchange = buscar;
   try {
     const p = await (await fetch("/api/perfil?c=" + encodeURIComponent(token))).json();
     if (p.ramo) { $("busca").value = p.ramo; termoAtivo = p.ramo; }
-    if (p.uf) { $("filtro-uf").value = p.uf; ufAtiva = p.uf; }
+    // Pré-seleciona o primeiro estado do perfil (se tiver)
+    const primeiraUf = (p.ufs && p.ufs[0]) || p.uf || "";
+    if (primeiraUf) { $("filtro-uf").value = primeiraUf; ufAtiva = primeiraUf; }
   } catch {}
   carregar(1);
 })();
