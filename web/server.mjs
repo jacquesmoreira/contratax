@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao, carregarLeads } from "../src/store.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
+import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
 import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
 import { temChave } from "../src/ia.mjs";
@@ -579,14 +580,32 @@ const servidor = createServer(async (req, res) => {
       } catch { /* nao existe: cai no 404 */ }
     }
 
+    // ===== SEO programatico: paginas publicas de licitacoes por ramo/estado =====
+    if (rota === "/licitacoes" || rota === "/licitacoes/") {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(paginaHub());
+    }
+    if (rota.startsWith("/licitacoes/")) {
+      const partes = rota.split("/").filter(Boolean); // ["licitacoes", slug, uf?]
+      const html = paginaCategoria(partes[1], partes[2] || null);
+      if (html) {
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(html);
+      }
+      // slug/uf invalido: cai no 404
+    }
+
     // Arquivos de SEO.
     if (rota === "/robots.txt") {
       const txt = await readFile(resolve(AQUI, "public", "robots.txt"), "utf8");
       res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
       return res.end(txt);
     }
+    // Sitemap DINAMICO: paginas-base + todas as paginas de SEO (ramo x estado).
     if (rota === "/sitemap.xml") {
-      const xml = await readFile(resolve(AQUI, "public", "sitemap.xml"), "utf8");
+      const base = ["https://contratax.com.br/", "https://contratax.com.br/cadastro", "https://contratax.com.br/entrar"];
+      const urls = [...base, ...urlsSEO()];
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc><changefreq>daily</changefreq></url>`).join("\n")}\n</urlset>`;
       res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
       return res.end(xml);
     }
