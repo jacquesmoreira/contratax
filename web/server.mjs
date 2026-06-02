@@ -515,6 +515,16 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // Assets estaticos da marca (svg/png/ico) servidos da pasta public.
+    if (/^\/[\w.-]+\.(svg|png|ico)$/.test(rota)) {
+      try {
+        const buf = await readFile(resolve(AQUI, "public", rota.slice(1)));
+        const tipo = rota.endsWith(".svg") ? "image/svg+xml" : rota.endsWith(".png") ? "image/png" : "image/x-icon";
+        res.writeHead(200, { "Content-Type": tipo, "Cache-Control": "public, max-age=86400" });
+        return res.end(buf);
+      } catch { /* nao existe: cai no 404 */ }
+    }
+
     // Arquivos de SEO.
     if (rota === "/robots.txt") {
       const txt = await readFile(resolve(AQUI, "public", "robots.txt"), "utf8");
