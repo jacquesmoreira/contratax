@@ -609,3 +609,15 @@ if (process.env.LICITA_BACKFILL) {
     })
     .catch((e) => console.error("[backfill] erro:", e.message));
 }
+
+// Opcional (Railway): atualiza os EDITAIS no mesmo processo. Carrega o acervo na
+// subida e refaz a cada N horas. Ative com LICITA_ATUALIZAR=1.
+if (process.env.LICITA_ATUALIZAR) {
+  import("../src/atualizador.mjs")
+    .then(({ atualizarLoop }) => {
+      const horas = Number(process.env.LICITA_ATUALIZAR_HORAS || 6);
+      console.log(`[atualizar] ativado em background (a cada ${horas}h)`);
+      return atualizarLoop({ intervaloHoras: horas });
+    })
+    .catch((e) => console.error("[atualizar] erro:", e.message));
+}
