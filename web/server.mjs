@@ -10,6 +10,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao } from "../src/store.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
+import { gerarDeclaracoes } from "../src/declaracoes.mjs";
 import { buscarPorId, buscaPublica, buscarEditais } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
 import { temChave } from "../src/ia.mjs";
@@ -40,6 +41,7 @@ const DOCUMENTOS = resolve(AQUI, "public", "documentos.html");
 const EQUIPE = resolve(AQUI, "public", "equipe.html");
 const CONTA = resolve(AQUI, "public", "conta.html");
 const ASSINAR = resolve(AQUI, "public", "assinar.html");
+const DECLARACOES = resolve(AQUI, "public", "declaracoes.html");
 const PORTA = process.env.PORT || 3000;
 
 function lerCorpo(req) {
@@ -222,6 +224,8 @@ const servidor = createServer(async (req, res) => {
         excluir: (perfil.filtro?.termosExcluir ?? []).join(", "),
         uf: (perfil.ufs ?? [])[0] ?? "",
         modalidades: perfil.modalidades ?? [],
+        endereco: perfil.endereco ?? "",
+        representante: perfil.representante ?? { nome: "", cpf: "", cargo: "" },
       });
     }
     // Perfil do cliente: salvar alteracoes (ramo, uf, modalidades, nome).
@@ -241,11 +245,29 @@ const servidor = createServer(async (req, res) => {
       };
       p.ufs = corpo.uf ? [corpo.uf] : [];
       if (Array.isArray(corpo.modalidades) && corpo.modalidades.length) p.modalidades = corpo.modalidades.map(Number);
+      if (corpo.endereco !== undefined) p.endereco = String(corpo.endereco || "").trim();
+      if (corpo.representante) p.representante = {
+        nome: String(corpo.representante.nome || "").trim(),
+        cpf: String(corpo.representante.cpf || "").trim(),
+        cargo: String(corpo.representante.cargo || "").trim(),
+      };
       await salvarPerfis(perfis);
       // Re-roda o matching para o painel ja refletir o novo ramo.
       let total = 0;
       try { const { filtrados } = await monitorar(p); total = filtrados.length; } catch {}
       return json(res, 200, { ok: true, total });
+    }
+
+    // Declaracoes de habilitacao preenchidas com os dados da empresa.
+    if (rota === "/api/declaracoes") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
+      const declaracoes = gerarDeclaracoes({
+        razaoSocial: perfil.razaoSocial, nome: perfil.nome, cnpj: perfil.cnpj,
+        endereco: perfil.endereco, representante: perfil.representante,
+      });
+      const completo = Boolean(perfil.endereco && perfil.representante?.nome && perfil.representante?.cpf);
+      return json(res, 200, { declaracoes, completo });
     }
 
     // Custo de IA (so admin): resumo de tokens/R$ por analise.
@@ -538,6 +560,11 @@ const servidor = createServer(async (req, res) => {
     }
     if (rota === "/assinar" || rota === "/assinar.html") {
       const html = await readFile(ASSINAR, "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(html);
+    }
+    if (rota === "/declaracoes" || rota === "/declaracoes.html") {
+      const html = await readFile(DECLARACOES, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       return res.end(html);
     }

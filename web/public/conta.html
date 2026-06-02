@@ -78,6 +78,19 @@
 
       <label>Tipos de licitação</label>
       <div class="mods" id="mods"></div>
+    </div>
+
+    <div class="card">
+      <h2>Dados para declarações e documentos</h2>
+      <div class="cap" style="font-size:13.5px;color:var(--cinza);margin-bottom:6px">Usados para preencher automaticamente as declarações de habilitação.</div>
+      <label for="endereco">Endereço completo da empresa</label>
+      <input id="endereco" type="text" placeholder="Rua, nº, bairro, cidade/UF, CEP" />
+      <label for="rep-nome">Representante legal — nome</label>
+      <input id="rep-nome" type="text" placeholder="Nome de quem assina" />
+      <label for="rep-cpf">Representante legal — CPF</label>
+      <input id="rep-cpf" type="text" placeholder="000.000.000-00" />
+      <label for="rep-cargo">Representante legal — cargo</label>
+      <input id="rep-cargo" type="text" placeholder="Ex: sócio administrador" />
 
       <button class="btn" id="salvar">Salvar alterações</button>
       <div class="ok" id="msg-ok"></div>
@@ -106,6 +119,11 @@ async function carregar() {
   $("uf").innerHTML = '<option value="">Brasil todo</option>' + UFS.map(u => `<option value="${u}"${u===d.uf?" selected":""}>${u}</option>`).join("");
   const sel = new Set((d.modalidades || []).map(Number));
   $("mods").innerHTML = MODS.map(([v,l]) => `<label><input type="checkbox" value="${v}"${sel.has(v)?" checked":""}> ${l}</label>`).join("");
+  $("endereco").value = d.endereco || "";
+  const rep = d.representante || {};
+  $("rep-nome").value = rep.nome || "";
+  $("rep-cpf").value = rep.cpf || "";
+  $("rep-cargo").value = rep.cargo || "";
 }
 
 $("salvar").onclick = async () => {
@@ -117,6 +135,8 @@ $("salvar").onclick = async () => {
     excluir: $("excluir").value,
     uf: $("uf").value,
     modalidades,
+    endereco: $("endereco").value,
+    representante: { nome: $("rep-nome").value, cpf: $("rep-cpf").value, cargo: $("rep-cargo").value },
   };
   $("salvar").disabled = true;
   try {
