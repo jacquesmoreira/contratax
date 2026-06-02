@@ -119,26 +119,30 @@ async function carregar(pag = 1) {
   }
 
   $("topo").style.display = "flex";
-  $("count").innerHTML = `<b>${d.total.toLocaleString("pt-BR")}</b> contratos encontrados <span>· página ${d.pagina} de ${d.paginas} · filtro: ${esc(d.termos.join(", ") || "todos")}</span>`;
+  $("count").innerHTML = `<b>${d.total.toLocaleString("pt-BR")}</b> licitações encontradas <span>· página ${d.pagina} de ${d.paginas} · filtro: ${esc(d.termos.join(", ") || "todos")}</span>`;
 
-  $("lista").innerHTML = d.contratos.map(c => `
-    <div class="card">
-      <div class="top">
-        <span class="orgao">${esc(c.municipio || "")}${c.uf ? "/" + c.uf : ""} · ${esc(c.orgao || "")}</span>
-        <span class="data">${dataBR(c.vigenciaInicio)}</span>
-      </div>
-      <div class="obj">${esc((c.objeto || "").slice(0, 160))}</div>
-      <div class="rodape">
-        <div class="venc">
-          <div class="ic">${esc(iniciais(c.fornecedor))}</div>
-          <div class="info">
-            <div class="nome">${esc(c.fornecedor || "Não informado")}</div>
-            <div class="tipo">Vencedor do contrato · vigência até ${dataBR(c.vigenciaFim)}</div>
-          </div>
+  $("lista").innerHTML = d.licitacoes.map(l => {
+    const vs = l.vencedores.map((v, i) => `
+      <div class="venc" style="${i > 0 ? 'margin-top:7px' : ''}">
+        <div class="ic">${esc(iniciais(v.fornecedor))}</div>
+        <div class="info" style="flex:1">
+          <div class="nome">${esc(v.fornecedor)}</div>
+          <div class="tipo">${i === 0 ? "Principal vencedor" : `${i+1}º vencedor`}</div>
         </div>
-        <div class="valor">${brl(c.valor)}</div>
+        <div class="valor" style="font-size:${i===0?'16':'14'}px;opacity:${i===0?1:.75}">${brl(v.valor)}</div>
+      </div>`).join("");
+    const multis = l.qtdContratos > 1
+      ? `<div style="font-size:12px;color:var(--cinza-c);margin-top:8px">Registro de Preços — ${l.qtdContratos} contratos em ${l.qtdContratos} municípios · valor total: <b>${brl(l.valorTotal)}</b></div>` : "";
+    return `<div class="card">
+      <div class="top">
+        <span class="orgao">${esc(l.municipio || "")}${l.uf ? "/" + l.uf : ""} · ${esc(l.orgao || "")}</span>
+        <span class="data">${dataBR(l.data)}</span>
       </div>
-    </div>`).join("");
+      <div class="obj">${esc((l.objeto || "").slice(0, 180))}</div>
+      <div style="margin-top:10px">${vs}</div>
+      ${multis}
+    </div>`;
+  }).join("");
 
   // Paginação
   if (totalPag > 1) {

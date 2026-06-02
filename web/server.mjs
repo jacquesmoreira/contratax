@@ -292,16 +292,37 @@ const servidor = createServer(async (req, res) => {
         const cn = normalizar(cidade.trim());
         todos = todos.filter(c => normalizar(c.municipio || "").includes(cn));
       }
-      // Ordena do mais recente para o mais antigo
-      todos.sort((a, b) => (b.vigenciaInicio || "").localeCompare(a.vigenciaInicio || ""));
-      const total = todos.length;
-      const paginas = Math.ceil(total / porPag);
-      const contratos = todos.slice((pag - 1) * porPag, pag * porPag).map(c => ({
-        id: c.id, orgao: c.orgao, municipio: c.municipio, uf: c.uf,
-        objeto: c.objeto, fornecedor: c.fornecedor, valor: c.valor,
-        vigenciaInicio: c.vigenciaInicio, vigenciaFim: c.vigenciaFim,
+      // Agrupa por licitacao (mesmo objeto aproximado): colapsa contratos do mesmo
+      // Registro de Precos comprado por varias prefeituras. Mostra top 3 vencedores.
+      const grupos = new Map();
+      for (const c of todos) {
+        const chave = normalizar(c.objeto || "").replace(/\s+/g, " ").trim().slice(0, 60);
+        const g = grupos.get(chave) || {
+          objeto: c.objeto, orgao: c.orgao, municipio: c.municipio, uf: c.uf,
+          data: c.vigenciaInicio, vigenciaFim: c.vigenciaFim,
+          valorTotal: 0, qtdContratos: 0, fornecedores: new Map(),
+        };
+        if ((c.objeto || "").length > (g.objeto || "").length) g.objeto = c.objeto;
+        if ((c.vigenciaInicio || "") > (g.data || "")) g.data = c.vigenciaInicio;
+        g.valorTotal += c.valor || 0;
+        g.qtdContratos++;
+        g.fornecedores.set(c.fornecedor || "Não informado",
+          (g.fornecedores.get(c.fornecedor || "Não informado") || 0) + (c.valor || 0));
+        grupos.set(chave, g);
+      }
+      // Ordena do mais recente ao mais antigo
+      const lista = [...grupos.values()].sort((a, b) => (b.data || "").localeCompare(a.data || "")).map(g => ({
+        objeto: g.objeto, orgao: g.orgao, municipio: g.municipio, uf: g.uf,
+        data: g.data, vigenciaFim: g.vigenciaFim,
+        valorTotal: g.valorTotal, qtdContratos: g.qtdContratos,
+        vencedores: [...g.fornecedores.entries()]
+          .sort((a, b) => b[1] - a[1]).slice(0, 3)
+          .map(([fornecedor, valor]) => ({ fornecedor, valor })),
       }));
-      return json(res, 200, { total, paginas, pagina: pag, termos, contratos });
+      const total = lista.length;
+      const paginas = Math.ceil(total / porPag);
+      const licitacoes = lista.slice((pag - 1) * porPag, pag * porPag);
+      return json(res, 200, { total, paginas, pagina: pag, termos, licitacoes });
     }
 
     // Declaracoes de habilitacao preenchidas com os dados da empresa.
