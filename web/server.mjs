@@ -42,6 +42,7 @@ const DOCUMENTOS = resolve(AQUI, "public", "documentos.html");
 const EQUIPE = resolve(AQUI, "public", "equipe.html");
 const CONTA = resolve(AQUI, "public", "conta.html");
 const ASSINAR = resolve(AQUI, "public", "assinar.html");
+const HISTORICO = resolve(AQUI, "public", "historico.html");
 const DECLARACOES = resolve(AQUI, "public", "declaracoes.html");
 const ADMIN_PAGE = resolve(AQUI, "public", "admin.html");
 const PORTA = process.env.PORT || 3000;
@@ -264,6 +265,32 @@ const servidor = createServer(async (req, res) => {
       let total = 0;
       try { const { filtrados } = await monitorar(p); total = filtrados.length; } catch {}
       return json(res, 200, { ok: true, total });
+    }
+
+    // Historico de contratos do ramo do cliente (ultimos 12 meses por padrao).
+    if (rota === "/api/historico") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
+      const termo = url.searchParams.get("termo") || (perfil.filtro?.termos ?? []).join(" ");
+      const uf    = url.searchParams.get("uf") || null;
+      const meses = Number(url.searchParams.get("meses") || 12);
+      const pag   = Math.max(1, Number(url.searchParams.get("pagina") || 1));
+      const porPag = 30;
+      const { consultarContratos } = await import("../src/db.mjs");
+      const { aplicarFiltro } = await import("../src/filtro.mjs");
+      const candidatos = consultarContratos({ uf, mesesAtras: meses });
+      const termos = termo.split(/[,\s]+/).map(t => t.trim()).filter(Boolean);
+      const todos = aplicarFiltro(candidatos, { termos }).filter(c => c.valor > 0);
+      // Ordena do mais recente para o mais antigo
+      todos.sort((a, b) => (b.vigenciaInicio || "").localeCompare(a.vigenciaInicio || ""));
+      const total = todos.length;
+      const paginas = Math.ceil(total / porPag);
+      const contratos = todos.slice((pag - 1) * porPag, pag * porPag).map(c => ({
+        id: c.id, orgao: c.orgao, municipio: c.municipio, uf: c.uf,
+        objeto: c.objeto, fornecedor: c.fornecedor, valor: c.valor,
+        vigenciaInicio: c.vigenciaInicio, vigenciaFim: c.vigenciaFim,
+      }));
+      return json(res, 200, { total, paginas, pagina: pag, termos, contratos });
     }
 
     // Declaracoes de habilitacao preenchidas com os dados da empresa.
@@ -655,6 +682,11 @@ const servidor = createServer(async (req, res) => {
     }
     if (rota === "/conta" || rota === "/conta.html") {
       const html = await readFile(CONTA, "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(html);
+    }
+    if (rota === "/historico" || rota === "/historico.html") {
+      const html = await readFile(HISTORICO, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       return res.end(html);
     }

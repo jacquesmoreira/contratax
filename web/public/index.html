@@ -134,6 +134,7 @@
       <a id="nav-conta" href="#">Minha conta</a>
       <a id="nav-equipe" href="#">Equipe</a>
       <a id="nav-docs" href="#">Meus documentos</a>
+      <a id="nav-historico" href="#">Histórico</a>
       <a id="nav-declaracoes" href="#">Declarações</a>
       <a class="sair" href="/">Sair</a>
     </div>
@@ -303,6 +304,7 @@ async function carregar() {
     document.getElementById("nav-docs").href = "/documentos?c=" + encodeURIComponent(token);
     document.getElementById("nav-equipe").href = "/equipe?c=" + encodeURIComponent(token);
     document.getElementById("nav-conta").href = "/conta?c=" + encodeURIComponent(token);
+    document.getElementById("nav-historico").href = "/historico?c=" + encodeURIComponent(token);
     document.getElementById("nav-declaracoes").href = "/declaracoes?c=" + encodeURIComponent(token);
     if (acesso.uso) {
       const u = acesso.uso, n = document.getElementById("nav-uso");

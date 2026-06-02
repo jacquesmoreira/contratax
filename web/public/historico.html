@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/logo-favicon.png" type="image/png" />
+<title>ContrataX — Histórico de licitações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
+  nav { background:#fff; border-bottom:1px solid var(--linha); }
+  nav .wrap { max-width:1000px; margin:0 auto; display:flex; align-items:center; height:60px; gap:18px; padding:0 20px; }
+  nav .dir { margin-left:auto; font-size:14px; font-weight:600; }
+  nav .dir a { color:var(--cinza); text-decoration:none; margin-left:18px; }
+  .hero { background:linear-gradient(135deg,#0f1e46 0%,#1e3a8a 100%); color:#fff; padding:32px 0 26px; }
+  .hero .wrap { max-width:1000px; margin:0 auto; padding:0 20px; }
+  .hero h1 { font-size:26px; font-weight:800; margin-bottom:6px; }
+  .hero p { opacity:.85; font-size:15px; margin-bottom:20px; }
+  .filtros { display:flex; gap:10px; flex-wrap:wrap; }
+  .filtros input, .filtros select { padding:10px 13px; border:1px solid rgba(255,255,255,.3); border-radius:10px; font-size:14px; font-family:inherit; background:rgba(255,255,255,.15); color:#fff; outline:none; }
+  .filtros input::placeholder { color:rgba(255,255,255,.6); }
+  .filtros input:focus, .filtros select:focus { border-color:#fff; background:rgba(255,255,255,.25); }
+  .filtros select option { background:#1e3a8a; }
+  .filtros button { padding:10px 20px; background:#fff; color:var(--indigo); border:none; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer; }
+  .wrap-main { max-width:1000px; margin:0 auto; padding:24px 20px 60px; }
+  .topo-lista { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+  .topo-lista .count { font-size:15px; font-weight:700; color:var(--tinta); }
+  .topo-lista .count span { color:var(--cinza-c); font-weight:500; }
+  .card { background:#fff; border:1px solid var(--linha); border-radius:12px; padding:16px 18px; margin-bottom:10px; }
+  .card .top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:8px; }
+  .card .orgao { font-size:12.5px; font-weight:700; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.3px; }
+  .card .data { font-size:12px; color:var(--cinza-c); white-space:nowrap; }
+  .card .obj { font-size:15px; font-weight:600; color:var(--tinta); margin-bottom:10px; line-height:1.4; }
+  .card .rodape { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  .card .venc { display:flex; align-items:center; gap:8px; background:var(--fundo); border:1px solid var(--linha); border-radius:99px; padding:6px 12px; }
+  .card .venc .ic { width:28px; height:28px; border-radius:50%; background:#eef2ff; color:var(--indigo); font-size:13px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0; }
+  .card .venc .info { font-size:13px; }
+  .card .venc .nome { font-weight:700; color:var(--tinta); }
+  .card .venc .tipo { font-size:11px; color:var(--cinza-c); }
+  .card .valor { margin-left:auto; font-size:16px; font-weight:900; color:var(--indigo); white-space:nowrap; }
+  .paginacao { display:flex; gap:8px; justify-content:center; margin-top:28px; }
+  .paginacao button { padding:8px 14px; border:1px solid var(--linha); border-radius:9px; background:#fff; font-size:14px; font-weight:600; cursor:pointer; }
+  .paginacao button.ativo { background:var(--indigo); color:#fff; border-color:var(--indigo); }
+  .paginacao button:disabled { opacity:.4; cursor:default; }
+  .vazio { text-align:center; padding:60px 20px; color:var(--cinza); }
+  .vazio .ic { font-size:48px; margin-bottom:14px; }
+  .spinner-wrap { text-align:center; padding:50px; color:var(--cinza); }
+  .spinner-b { display:inline-block; width:24px; height:24px; border:3px solid var(--linha); border-top-color:var(--indigo); border-radius:50%; animation:girar .7s linear infinite; }
+  @keyframes girar { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+  <nav><div class="wrap">
+    <a href="#" id="logo"><img src="/logo-horizontal.png" alt="ContrataX" style="height:30px;display:block" /></a>
+    <div class="dir">
+      <a href="#" id="link-painel">← Painel</a>
+      <a href="#" id="link-docs">Meus documentos</a>
+    </div>
+  </div></nav>
+
+  <div class="hero"><div class="wrap">
+    <h1>Histórico de licitações do seu ramo</h1>
+    <p>Veja quem ganhou os contratos similares ao seu ramo no último ano — vencedor, valor e órgão contratante.</p>
+    <div class="filtros">
+      <input id="busca" type="text" placeholder="Palavra-chave do ramo..." style="flex:1;min-width:200px" />
+      <select id="filtro-uf"><option value="">Brasil todo</option></select>
+      <select id="filtro-meses">
+        <option value="3">Últimos 3 meses</option>
+        <option value="6">Últimos 6 meses</option>
+        <option value="12" selected>Último ano</option>
+      </select>
+      <button id="btn-buscar">Buscar</button>
+    </div>
+  </div></div>
+
+  <div class="wrap-main">
+    <div class="topo-lista" id="topo" style="display:none">
+      <div class="count" id="count"></div>
+    </div>
+    <div id="lista"><div class="spinner-wrap"><div class="spinner-b"></div></div></div>
+    <div class="paginacao" id="paginacao"></div>
+  </div>
+
+<script>
+const token = new URLSearchParams(location.search).get("c") || "";
+const $ = id => document.getElementById(id);
+$("logo").href = $("link-painel").href = "/painel?c=" + encodeURIComponent(token);
+$("link-docs").href = "/documentos?c=" + encodeURIComponent(token);
+
+const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+$("filtro-uf").innerHTML += UFS.map(u => `<option value="${u}">${u}</option>`).join("");
+
+const esc = s => String(s ?? "").replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const brl = v => v > 0 ? "R$ " + Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2}) : "valor não informado";
+const dataBR = s => s ? new Date(s).toLocaleDateString("pt-BR") : "—";
+const iniciais = n => (n||"?").trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+
+let pagAtual = 1, totalPag = 1, termoAtivo = "", ufAtiva = "", mesesAtivo = 12;
+
+async function carregar(pag = 1) {
+  $("lista").innerHTML = '<div class="spinner-wrap"><div class="spinner-b"></div></div>';
+  $("paginacao").innerHTML = "";
+  $("topo").style.display = "none";
+  const p = new URLSearchParams({ c: token, pagina: pag, meses: mesesAtivo });
+  if (termoAtivo) p.set("termo", termoAtivo);
+  if (ufAtiva) p.set("uf", ufAtiva);
+  const d = await (await fetch("/api/historico?" + p)).json();
+  pagAtual = d.pagina; totalPag = d.paginas;
+
+  if (!d.contratos || !d.contratos.length) {
+    $("lista").innerHTML = '<div class="vazio"><div class="ic">📋</div><p>Nenhum contrato encontrado para esse filtro.</p><p style="font-size:14px;margin-top:8px;color:var(--cinza-c)">Tente ampliar o período ou mudar as palavras-chave.</p></div>';
+    return;
+  }
+
+  $("topo").style.display = "flex";
+  $("count").innerHTML = `<b>${d.total.toLocaleString("pt-BR")}</b> contratos encontrados <span>· página ${d.pagina} de ${d.paginas} · filtro: ${esc(d.termos.join(", ") || "todos")}</span>`;
+
+  $("lista").innerHTML = d.contratos.map(c => `
+    <div class="card">
+      <div class="top">
+        <span class="orgao">${esc(c.municipio || "")}${c.uf ? "/" + c.uf : ""} · ${esc(c.orgao || "")}</span>
+        <span class="data">${dataBR(c.vigenciaInicio)}</span>
+      </div>
+      <div class="obj">${esc((c.objeto || "").slice(0, 160))}</div>
+      <div class="rodape">
+        <div class="venc">
+          <div class="ic">${esc(iniciais(c.fornecedor))}</div>
+          <div class="info">
+            <div class="nome">${esc(c.fornecedor || "Não informado")}</div>
+            <div class="tipo">Vencedor do contrato · vigência até ${dataBR(c.vigenciaFim)}</div>
+          </div>
+        </div>
+        <div class="valor">${brl(c.valor)}</div>
+      </div>
+    </div>`).join("");
+
+  // Paginação
+  if (totalPag > 1) {
+    const nums = [];
+    for (let i = Math.max(1, pagAtual-2); i <= Math.min(totalPag, pagAtual+2); i++) nums.push(i);
+    $("paginacao").innerHTML =
+      `<button ${pagAtual===1?"disabled":""} onclick="ir(${pagAtual-1})">← Anterior</button>` +
+      nums.map(n => `<button class="${n===pagAtual?"ativo":""}" onclick="ir(${n})">${n}</button>`).join("") +
+      `<button ${pagAtual===totalPag?"disabled":""} onclick="ir(${pagAtual+1})">Próxima →</button>`;
+  }
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function ir(pag) { carregar(pag); }
+
+function buscar() {
+  termoAtivo = $("busca").value.trim();
+  ufAtiva = $("filtro-uf").value;
+  mesesAtivo = Number($("filtro-meses").value);
+  carregar(1);
+}
+
+$("btn-buscar").onclick = buscar;
+$("busca").onkeydown = e => { if (e.key === "Enter") buscar(); };
+$("filtro-uf").onchange = buscar;
+$("filtro-meses").onchange = buscar;
+
+// Carrega com o ramo do perfil
+(async () => {
+  try {
+    const p = await (await fetch("/api/perfil?c=" + encodeURIComponent(token))).json();
+    if (p.ramo) { $("busca").value = p.ramo; termoAtivo = p.ramo; }
+    if (p.uf) { $("filtro-uf").value = p.uf; ufAtiva = p.uf; }
+  } catch {}
+  carregar(1);
+})();
+</script>
+</body>
+</html>
