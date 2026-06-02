@@ -36,11 +36,11 @@
   <div class="card">
     <div class="logo"><img src="/logo-horizontal.png" alt="ContrataX" style="height:32px;width:auto;display:block" /></div>
     <h1>Entrar na sua conta</h1>
-    <div class="sub">Informe o e-mail que você usou no cadastro. Vamos te levar direto ao seu painel.</div>
+    <div class="sub">Use o e-mail ou o CNPJ da empresa que você usou no cadastro.</div>
 
     <form id="form">
-      <label for="email">Seu e-mail</label>
-      <input id="email" type="email" placeholder="voce@suaempresa.com.br" required autofocus />
+      <label for="email">E-mail ou CNPJ da empresa</label>
+      <input id="email" type="text" placeholder="voce@empresa.com.br ou 00.000.000/0001-00" required autofocus inputmode="email" />
       <label for="senha" style="margin-top:16px">Sua senha</label>
       <input id="senha" type="password" placeholder="sua senha" required />
       <button class="btn" type="submit" id="btn">Entrar</button>

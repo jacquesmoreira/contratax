@@ -106,10 +106,10 @@ const servidor = createServer(async (req, res) => {
     // Login por e-mail e senha.
     if (rota === "/api/entrar" && req.method === "POST") {
       const corpo = await lerCorpo(req);
-      const email = (corpo.email || "").trim().toLowerCase();
+      const email = (corpo.email || corpo.cnpj || "").trim();
       const senha = corpo.senha || "";
-      if (!email) return json(res, 400, { erro: "Informe o seu e-mail" });
-      // Procura o usuario em todas as contas (admin ou membro de equipe).
+      if (!email) return json(res, 400, { erro: "Informe o seu e-mail ou CNPJ" });
+      // Procura por e-mail ou CNPJ em todas as contas (admin ou membro de equipe).
       const r = await autenticarUsuario(email, senha);
       if (!r.ok) {
         const codigo = /incorret/i.test(r.motivo) ? 401 : 404;

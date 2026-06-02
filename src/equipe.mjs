@@ -8,23 +8,44 @@ import { lerPerfis, salvarPerfis, garantirUsuarios, normEmail } from "./perfis.m
 // Preco por acesso adicional (assento extra). Exibido quando o limite e atingido.
 export const PRECO_ASSENTO = process.env.LICITA_PRECO_ASSENTO || "49,00";
 
-// Login: procura o usuario (por e-mail) em todas as contas e confere a senha.
-// Devolve { perfil, usuario } da empresa a que o usuario pertence.
-export async function autenticarUsuario(email, senha) {
-  const alvo = normEmail(email);
-  if (!alvo) return { ok: false, motivo: "Informe o seu e-mail" };
+// Login: aceita e-mail OU CNPJ + senha.
+// Procura em todas as contas e devolve { perfil, usuario }.
+export async function autenticarUsuario(identificador, senha) {
+  const id = (identificador || "").trim();
+  if (!id) return { ok: false, motivo: "Informe o seu e-mail ou CNPJ" };
   const perfis = await lerPerfis();
+  // Detecta se e CNPJ (so digitos, 14 chars) ou e-mail
+  const cnpjLimpo = id.replace(/\D/g, "");
+  const ehCnpj = cnpjLimpo.length === 14 && /^\d{14}$/.test(cnpjLimpo);
+
   for (const p of perfis) {
     garantirUsuarios(p);
-    const u = p.usuarios.find((x) => normEmail(x.email) === alvo);
-    if (!u) continue;
-    // Usuario com senha: exige a senha correta. Legado sem senha: entra so com e-mail.
-    if (u.senhaHash && !verificarSenha(senha, u.senhaHash)) {
-      return { ok: false, motivo: "E-mail ou senha incorretos." };
+    // Busca por CNPJ: acha a empresa e usa o usuario admin
+    if (ehCnpj && (p.cnpj || "").replace(/\D/g, "") === cnpjLimpo) {
+      const u = p.usuarios.find((x) => x.papel === "admin") || p.usuarios[0];
+      if (!u) continue;
+      if (u.senhaHash && !verificarSenha(senha, u.senhaHash)) {
+        return { ok: false, motivo: "CNPJ ou senha incorretos." };
+      }
+      return { ok: true, perfil: p, usuario: u };
     }
-    return { ok: true, perfil: p, usuario: u };
+    // Busca por e-mail: procura em todos os usuarios da empresa
+    if (!ehCnpj) {
+      const alvo = normEmail(id);
+      const u = p.usuarios.find((x) => normEmail(x.email) === alvo);
+      if (!u) continue;
+      if (u.senhaHash && !verificarSenha(senha, u.senhaHash)) {
+        return { ok: false, motivo: "E-mail ou senha incorretos." };
+      }
+      return { ok: true, perfil: p, usuario: u };
+    }
   }
-  return { ok: false, motivo: "Nao encontramos uma conta com esse e-mail. Faca o seu cadastro." };
+  return {
+    ok: false,
+    motivo: ehCnpj
+      ? "Nao encontramos uma conta com esse CNPJ. Faca o seu cadastro."
+      : "Nao encontramos uma conta com esse e-mail. Faca o seu cadastro.",
+  };
 }
 
 // True se o e-mail ja tem acesso em qualquer conta (qualquer empresa).
