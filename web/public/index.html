@@ -171,6 +171,7 @@ const dataBR = iso => { if (!iso) return "?"; const d = new Date(iso); return is
 function prazoHTML(iso) { const d = diasAte(iso); if (d == null) return ""; const c = d <= 2 ? "urgente" : d <= 7 ? "medio" : "tranquilo"; const t = d < 0 ? "encerrado" : d === 0 ? "encerra hoje" : d === 1 ? "encerra amanhã" : `encerra em ${d} dias`; return `<span class="prazo ${c}">${t}</span>`; }
 
 const store = {};
+const token = new URLSearchParams(location.search).get("c") || "";
 function cardHTML(e) {
   store[e.id] = e;
   const local = `${esc(e.municipio) ?? "?"}/${esc(e.uf) ?? "?"}`;
@@ -288,7 +289,6 @@ function paywall(a) {
 
 async function carregar() {
   const c = document.getElementById("conteudo");
-  const token = new URLSearchParams(location.search).get("c") || "";
   if (!token) {
     c.innerHTML = `<div class="vazio"><span class="emoji">🔑</span>Acesse o seu painel pelo link exclusivo que enviamos.<br><br><a href="/entrar">Entrar com meu e-mail</a></div>`;
     return;
