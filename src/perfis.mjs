@@ -15,8 +15,8 @@ export async function lerPerfis() {
     return JSON.parse(await readFile(PERFIS, "utf8"));
   } catch (e) {
     if (e.code === "ENOENT") {
-      // Primeira execucao no Railway: cria o arquivo vazio no volume.
-      await salvarPerfis([]);
+      // Arquivo nao existe ainda (primeiro uso). Retorna lista vazia SEM criar
+      // o arquivo — so salvarPerfis() cria o arquivo quando ha dados reais.
       return [];
     }
     throw e;
