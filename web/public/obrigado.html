@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/logo-favicon.png" type="image/png" />
+<title>Obrigado — ContrataX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root { --indigo:#4338ca; --indigo-d:#312e81; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:radial-gradient(900px 500px at 50% -10%, #eef2ff 0%, var(--fundo) 60%); color:var(--tinta); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card { background:#fff; border:1px solid var(--linha); border-radius:22px; box-shadow:0 30px 80px rgba(15,23,42,.10); width:100%; max-width:520px; padding:42px 38px; text-align:center; }
+  .logo img { height:38px; width:auto; margin:0 auto 26px; display:block; }
+  .ico-wrap { width:88px; height:88px; border-radius:50%; background:var(--verde-bg); border:3px solid #a7f3d0; display:flex; align-items:center; justify-content:center; margin:0 auto 22px; font-size:46px; }
+  h1 { font-size:26px; font-weight:800; letter-spacing:-.5px; margin-bottom:8px; color:var(--tinta); }
+  .sub { color:var(--cinza); font-size:15px; line-height:1.55; margin-bottom:14px; }
+  .status { background:#fef3c7; border:1px solid #fde68a; color:#92400e; padding:11px 16px; border-radius:11px; font-size:13.5px; font-weight:600; margin:18px 0 24px; }
+  .status.pago { background:var(--verde-bg); border-color:#a7f3d0; color:var(--verde); }
+  .acoes { display:flex; flex-direction:column; gap:10px; }
+  .btn { background:var(--indigo); color:#fff; border:none; padding:14px 18px; border-radius:11px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; text-decoration:none; transition:background .12s; }
+  .btn:hover { background:var(--indigo-d); }
+  .btn.sec { background:#fff; color:var(--indigo); border:1.5px solid var(--indigo); }
+  .nota { font-size:12.5px; color:var(--cinza-c); margin-top:18px; line-height:1.55; }
+  .spinner { display:inline-block; width:18px; height:18px; border:3px solid rgba(67,56,202,.25); border-top-color:var(--indigo); border-radius:50%; animation:girar .8s linear infinite; vertical-align:middle; margin-right:8px; }
+  @keyframes girar { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo"><img src="/logo-horizontal.png" alt="ContrataX" /></div>
+    <div class="ico-wrap" id="ico">⏳</div>
+    <h1 id="titulo">Recebemos seu pedido</h1>
+    <div class="sub" id="texto">Estamos confirmando seu pagamento. Em alguns segundos sua conta será liberada automaticamente.</div>
+    <div class="status" id="status"><span class="spinner"></span>Verificando status do pagamento...</div>
+    <div class="acoes">
+      <a class="btn" id="btn-painel" href="#">Ir para o meu painel →</a>
+      <a class="btn sec" id="btn-suporte" href="mailto:contato@contratax.com.br">Algum problema? Falar com a gente</a>
+    </div>
+    <div class="nota">Pode ser que o status no painel demore alguns segundos para atualizar — o sistema libera assim que o gateway confirma.</div>
+  </div>
+
+<script>
+const token = new URLSearchParams(location.search).get("c") || "";
+document.getElementById("btn-painel").href = "/painel?c=" + encodeURIComponent(token);
+
+let tentativas = 0;
+async function checar() {
+  try {
+    const d = await (await fetch("/api/acesso?c=" + encodeURIComponent(token))).json();
+    if (d.status === "ativo") {
+      document.getElementById("ico").textContent = "✓";
+      document.getElementById("ico").style.background = "#ecfdf5";
+      document.getElementById("titulo").textContent = "Pagamento confirmado!";
+      document.getElementById("texto").textContent = "Sua conta está ativa. Bem-vindo ao ContrataX.";
+      const st = document.getElementById("status");
+      st.className = "status pago";
+      st.innerHTML = "✓ Plano " + (d.nivel || "ativo") + " liberado — " + (d.uso?.limite || 100) + " análises este mês";
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+// Polling: a cada 3s, por até 30 tentativas (~90s).
+async function loop() {
+  while (tentativas < 30) {
+    if (await checar()) return;
+    tentativas++;
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  // Após 90s sem confirmação, deixa visível o status sem spinner
+  const st = document.getElementById("status");
+  st.innerHTML = "⏳ Aguardando confirmação do pagamento. O acesso libera automaticamente quando o gateway confirmar.";
+}
+loop();
+</script>
+</body>
+</html>

@@ -44,7 +44,7 @@ export async function obterOuCriarCliente({ nome, email, cnpj, clienteId }) {
 }
 
 // Assinatura mensal recorrente. Devolve a URL de pagamento da 1a cobranca.
-export async function criarAssinatura({ clienteId, valor, descricao, externalReference }) {
+export async function criarAssinatura({ clienteId, valor, descricao, externalReference, successUrl }) {
   const hoje = new Date().toISOString().slice(0, 10);
   const sub = await api("/subscriptions", "POST", {
     customer: clienteId,
@@ -54,6 +54,7 @@ export async function criarAssinatura({ clienteId, valor, descricao, externalRef
     cycle: "MONTHLY",
     description: descricao,
     externalReference,
+    callback: successUrl ? { successUrl, autoRedirect: true } : undefined,
   });
   let invoiceUrl = null;
   try {
@@ -64,7 +65,7 @@ export async function criarAssinatura({ clienteId, valor, descricao, externalRef
 }
 
 // Cobranca avulsa (pacote de analises). Devolve a URL de pagamento.
-export async function criarCobrancaAvulsa({ clienteId, valor, descricao, externalReference }) {
+export async function criarCobrancaAvulsa({ clienteId, valor, descricao, externalReference, successUrl }) {
   const hoje = new Date().toISOString().slice(0, 10);
   const pg = await api("/payments", "POST", {
     customer: clienteId,
@@ -73,6 +74,7 @@ export async function criarCobrancaAvulsa({ clienteId, valor, descricao, externa
     dueDate: hoje,
     description: descricao,
     externalReference,
+    callback: successUrl ? { successUrl, autoRedirect: true } : undefined,
   });
   return { paymentId: pg.id, invoiceUrl: pg.invoiceUrl };
 }

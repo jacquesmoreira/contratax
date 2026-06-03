@@ -596,15 +596,19 @@ const servidor = createServer(async (req, res) => {
           const p = perfis.find((x) => x.token === perfil.token);
           if (p) { p.asaasClienteId = clienteId; await salvarPerfis(perfis); }
         }
+        // URL de retorno: o Asaas redireciona o cliente pra ca apos confirmar o
+        // pagamento (passa por uma pagina /obrigado que mostra status + link painel).
+        const BASE_URL = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
+        const successUrl = `${BASE_URL}/obrigado?c=${perfil.token}`;
         let r;
         if (corpo.tipo === "avulso") {
           const a = AVULSOS[corpo.id];
           if (!a) return json(res, 400, { erro: "Pacote invalido" });
-          r = await criarCobrancaAvulsa({ clienteId, valor: precoNumero(a.preco), descricao: `Licita — ${a.nome}`, externalReference: `avulso:${perfil.token}:${a.id}` });
+          r = await criarCobrancaAvulsa({ clienteId, valor: precoNumero(a.preco), descricao: `ContrataX — ${a.nome}`, externalReference: `avulso:${perfil.token}:${a.id}`, successUrl });
         } else {
           const pl = PLANOS[corpo.id];
           if (!pl) return json(res, 400, { erro: "Plano invalido" });
-          r = await criarAssinatura({ clienteId, valor: precoNumero(pl.preco), descricao: `Licita — Plano ${pl.nome}`, externalReference: `sub:${perfil.token}:${pl.id}` });
+          r = await criarAssinatura({ clienteId, valor: precoNumero(pl.preco), descricao: `ContrataX — Plano ${pl.nome}`, externalReference: `sub:${perfil.token}:${pl.id}`, successUrl });
         }
         if (!r.invoiceUrl) return json(res, 502, { erro: "Gateway nao devolveu a URL de pagamento" });
         return json(res, 200, { automatico: true, url: r.invoiceUrl });
@@ -957,6 +961,11 @@ const servidor = createServer(async (req, res) => {
     }
     if (rota === "/declaracoes" || rota === "/declaracoes.html") {
       const html = await readFile(DECLARACOES, "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(html);
+    }
+    if (rota === "/obrigado" || rota === "/obrigado.html") {
+      const html = await readFile(resolve(AQUI, "public", "obrigado.html"), "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }

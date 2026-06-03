@@ -143,7 +143,18 @@ async function checkout(btn) {
     const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ c: token, tipo: btn.dataset.tipo, id: btn.dataset.id }) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.erro || "falha");
-    if (d.automatico && d.url) { location.href = d.url; return; } // vai pro checkout do Asaas
+    if (d.automatico && d.url) {
+      // Abre o checkout do Asaas em NOVA ABA pra preservar o painel
+      const aba = window.open(d.url, "_blank", "noopener");
+      if (!aba) {
+        // Pop-up bloqueado: cai pra link clicavel manual
+        $("erro").innerHTML = `Seu navegador bloqueou a abertura automática. <a href="${d.url}" target="_blank" style="color:var(--indigo);font-weight:700">Clique aqui para abrir o pagamento</a>`;
+      } else {
+        // Mostra confirmacao + botao "voltar ao painel"
+        $("erro").innerHTML = `<div style="background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;padding:13px 16px;border-radius:10px;font-size:14px;font-weight:600">✓ Página de pagamento aberta em outra aba. Quando pagar, sua conta é ativada automaticamente.</div><a href="/painel?c=${encodeURIComponent(token)}" style="display:inline-block;margin-top:14px;background:var(--indigo);color:#fff;font-weight:700;padding:11px 22px;border-radius:10px;text-decoration:none">← Voltar ao painel</a>`;
+      }
+      return;
+    }
     // Sem gateway configurado: mostra o Pix concierge
     const c = d.cobranca || {};
     $("concierge").style.display = "block";
