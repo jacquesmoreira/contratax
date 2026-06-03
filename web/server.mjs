@@ -21,6 +21,7 @@ import { gerarDigest, enviar, temEmailKey } from "../src/email.mjs";
 import { statusAtual, cobranca } from "../src/assinatura.mjs";
 import { precoVencedores } from "../src/preco.mjs";
 import { precoReferencia } from "../src/precoReferencia.mjs";
+import { csvEditais, csvHistorico, csvRadar, nomeArquivo } from "../src/exportar.mjs";
 import { radarRenovacao } from "../src/radar.mjs";
 import { listarDocumentos, baixarArquivo } from "../src/documentos.mjs";
 import { verificarSenha } from "../src/senha.mjs";
@@ -155,6 +156,92 @@ const servidor = createServer(async (req, res) => {
     }
 
     // Busca livre no acervo (painel): qualquer produto + filtros de UF e modalidade.
+    // Exportacao em CSV (Excel/Google Sheets) das views: editais (busca),
+    // historico (licitacoes fechadas) e radar (contratos vencendo).
+    // Reaproveita os mesmos filtros das rotas /api/*. Limite alto pra exportacao.
+    if (rota === "/api/exportar") {
+      const tipo = url.searchParams.get("tipo") || "editais";
+      const tokenEx = url.searchParams.get("c") || "";
+      const perfilEx = tokenEx ? await perfilPorToken(tokenEx) : null;
+      const nome = nomeArquivo(tipo);
+      let csv = "";
+
+      if (tipo === "editais") {
+        const ufsParam = url.searchParams.getAll("uf").filter(Boolean);
+        const termoQuery = url.searchParams.get("termo") || "";
+        // Se NAO veio termo nem UF na query e o cliente esta logado, usa filtros do perfil.
+        const usarPerfil = !termoQuery && !ufsParam.length && perfilEx;
+        const ufs = usarPerfil ? perfilEx.ufs : (ufsParam.length > 1 ? ufsParam : null);
+        const uf = usarPerfil ? ((perfilEx.ufs ?? [])[0] || null) : (ufsParam[0] || null);
+        const termos = usarPerfil ? (perfilEx.filtro?.termos ?? []) : (termoQuery ? [termoQuery] : []);
+        const modParam = url.searchParams.get("modalidade") || "";
+        const r = buscarEditais({
+          uf, ufs,
+          termos,
+          termo: termoQuery,
+          cidade: url.searchParams.get("cidade") || "",
+          prazoDias: url.searchParams.get("prazo") || null,
+          dataDe: url.searchParams.get("dataDe") || null,
+          dataAte: url.searchParams.get("dataAte") || null,
+          modalidades: modParam ? [Number(modParam)] : (usarPerfil ? (perfilEx.modalidades || []) : []),
+          limite: 1000,
+        });
+        csv = csvEditais(r.editais || []);
+      } else if (tipo === "historico") {
+        // Re-executa a mesma logica de /api/historico (sem paginacao) pra exportar.
+        const ufsHist = url.searchParams.getAll("uf").filter(Boolean);
+        const uf = ufsHist[0] || null;
+        const meses = Number(url.searchParams.get("meses") || 12);
+        const cidade = url.searchParams.get("cidade") || "";
+        const customTermo = url.searchParams.get("termo");
+        const termos = customTermo
+          ? customTermo.split(",").map(t => t.trim()).filter(Boolean)
+          : (perfilEx?.filtro?.termos ?? []);
+        if (!termos.length) return json(res, 400, { erro: "Informe um termo para exportar" });
+        const candidatos = (await import("../src/db.mjs")).consultarContratos({ uf, mesesAtras: meses });
+        const { aplicarFiltro, normalizar } = await import("../src/filtro.mjs");
+        let todos = aplicarFiltro(candidatos, { termos }).filter(c => c.valor > 0);
+        if (cidade.trim()) {
+          const cn = normalizar(cidade.trim());
+          todos = todos.filter(c => normalizar(c.municipio || "").includes(cn));
+        }
+        // Agrupa por objeto aproximado (mesma logica do /api/historico)
+        const grupos = new Map();
+        for (const c of todos) {
+          const ch = `${c.orgao || ""}|${normalizar(c.objeto || "").slice(0, 50)}`;
+          const g = grupos.get(ch) || { orgao: c.orgao, municipio: c.municipio, uf: c.uf, objeto: c.objeto, data: c.vigenciaInicio, fornecedores: new Map(), valorTotal: 0, qtdContratos: 0 };
+          if ((c.objeto || "").length > (g.objeto || "").length) g.objeto = c.objeto;
+          const f = c.fornecedor || "Nao informado";
+          g.fornecedores.set(f, (g.fornecedores.get(f) || 0) + (c.valor || 0));
+          g.valorTotal += c.valor || 0;
+          g.qtdContratos++;
+          grupos.set(ch, g);
+        }
+        const licitacoes = [...grupos.values()].map((g) => {
+          const vencedores = [...g.fornecedores.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([fornecedor, valor]) => ({ fornecedor, valor }));
+          return { ...g, vencedores };
+        }).sort((a, b) => (b.data || "").localeCompare(a.data || ""));
+        csv = csvHistorico(licitacoes);
+      } else if (tipo === "radar") {
+        if (!perfilEx) return json(res, 401, { erro: "Login obrigatorio" });
+        const itens = radarRenovacao({
+          termos: perfilEx.filtro?.termos ?? [],
+          uf: (perfilEx.ufs ?? [])[0] ?? null,
+          limite: 200,
+        });
+        csv = csvRadar(itens);
+      } else {
+        return json(res, 400, { erro: "Tipo invalido (editais, historico ou radar)" });
+      }
+
+      res.writeHead(200, {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${nome}"`,
+        "Cache-Control": "no-store",
+      });
+      return res.end(csv);
+    }
+
     if (rota === "/api/buscar") {
       const uf = url.searchParams.get("uf") || null;
       const ufsParam = url.searchParams.getAll("uf"); // multi-uf: ?uf=SC&uf=SP

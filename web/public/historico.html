@@ -80,7 +80,8 @@
 
   <div class="wrap-main">
     <div class="topo-lista" id="topo" style="display:none">
-      <div class="count" id="count"></div>
+      <div class="count" id="count" style="flex:1"></div>
+      <a href="#" id="btn-export" style="font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none;white-space:nowrap" title="Exportar histórico para Excel/CSV">📊 Excel</a>
     </div>
     <div id="lista"><div class="spinner-wrap"><div class="spinner-b"></div></div></div>
     <div class="paginacao" id="paginacao"></div>
@@ -174,6 +175,16 @@ $("btn-buscar").onclick = buscar;
 $("busca").onkeydown = e => { if (e.key === "Enter") buscar(); };
 $("filtro-uf").onchange = buscar;
 $("filtro-meses").onchange = buscar;
+
+// Exporta o historico atual em CSV (Excel/Google Sheets) respeitando os filtros.
+$("btn-export").onclick = (e) => {
+  e.preventDefault();
+  if (!termoAtivo) { alert("Digite um termo de busca antes de exportar."); return; }
+  const params = new URLSearchParams({ tipo: "historico", c: token, termo: termoAtivo, meses: String(mesesAtivo) });
+  if (ufAtiva) params.set("uf", ufAtiva);
+  if (cidadeAtiva) params.set("cidade", cidadeAtiva);
+  location.href = "/api/exportar?" + params;
+};
 
 // Carrega com o ramo do perfil
 (async () => {

@@ -206,6 +206,7 @@ function perfilHTML(p) {
       <span class="chip chip-stat">${editais.length} editais</span>
       ${novos ? `<span class="chip chip-novo">${novos} novos</span>` : ""}
       <span class="perfil-atualizado">atualizado ${at}</span>
+      ${editais.length ? `<a href="#" onclick="exportar('editais');return false" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Exportar resultado para Excel/CSV">📊 Excel</a>` : ""}
     </div>`;
   const corpo = editais.length
     ? editais.map(cardHTML).join("")
@@ -232,7 +233,11 @@ function radarHTML(lista) {
       </div>
     </div>`;
   }).join("");
-  return `<section class="perfil"><div class="perfil-cab"><span class="perfil-nome">🛰️ Radar de renovação</span><span class="chip chip-stat">${lista.length} a vencer</span></div>
+  return `<section class="perfil"><div class="perfil-cab">
+      <span class="perfil-nome">🛰️ Radar de renovação</span>
+      <span class="chip chip-stat">${lista.length} a vencer</span>
+      <a href="#" onclick="exportar('radar');return false" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none" title="Exportar radar para Excel/CSV">📊 Excel</a>
+    </div>
     <div style="font-size:13.5px;color:var(--cinza);margin-bottom:12px">Contratos do seu ramo que vão vencer. Uma nova licitação deve sair, prepare-se com antecedência.</div>${itens}<div style="font-size:11px;color:var(--cinza-c);margin-top:4px">Fonte: dados públicos do PNCP.</div></section>`;
 }
 
@@ -690,6 +695,7 @@ async function buscarPainel() {
     let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap">
       <span style="font-size:18px;font-weight:800">${d.total} resultado${d.total!==1?"s":""}${termo?' para "'+esc(termo)+'"':""}</span>
       <span style="color:var(--cinza)">em ${esc(onde)}</span>
+      ${d.total ? `<a href="#" onclick="exportarBusca();return false" style="font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none">📊 Excel</a>` : ""}
       <a href="#" id="voltar-painel" style="margin-left:auto;color:var(--indigo);font-weight:700">← Voltar ao meu painel</a></div>`;
     html += d.editais.length ? d.editais.map(cardHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Nada encontrado. Tente outro termo, outra cidade ou amplie os filtros.</div>`;
     c.innerHTML = html;
@@ -697,6 +703,26 @@ async function buscarPainel() {
   } catch (e) { c.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`; }
 }
 document.getElementById("btn-buscar").onclick = buscarPainel;
+
+// Exporta a view atual em CSV (Excel/Google Sheets abrem nativo, UTF-8 com BOM).
+// 'editais' = lista do meu ramo (perfil); 'radar' = renovacao; 'historico' fica
+// na pagina de historico (botao proprio la).
+function exportar(tipo) {
+  const params = new URLSearchParams({ tipo, c: token });
+  location.href = "/api/exportar?" + params;
+}
+// Exporta o resultado da BUSCA respeitando os filtros atuais (termo, UF, cidade, prazo, mod).
+function exportarBusca() {
+  const params = new URLSearchParams({
+    tipo: "editais", c: token,
+    termo: document.getElementById("busca").value.trim(),
+    cidade: document.getElementById("filtro-cidade").value.trim(),
+    modalidade: document.getElementById("filtro-mod").value,
+    prazo: document.getElementById("filtro-prazo").value,
+  });
+  [...ufsSelBusca].forEach(u => params.append("uf", u));
+  location.href = "/api/exportar?" + params;
+}
 document.getElementById("busca").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(); });
 document.getElementById("filtro-cidade").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(); });
 document.getElementById("filtro-prazo").addEventListener("change", buscarPainel);

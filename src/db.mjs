@@ -259,11 +259,12 @@ export function buscaPublica({ uf = null, termo = "", limite = 6 } = {}) {
 
 // Busca livre no acervo (usada pelo painel): por termo, UF e modalidade.
 // Devolve a lista de editais (nao so estatisticas), ranqueada por relevancia.
-export function buscarEditais({ uf = null, ufs = null, termo = "", modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, limite = 60 } = {}) {
+export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termosParam = null, modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, limite = 60 } = {}) {
   // Aceita ufs (array) ou uf (string simples, retrocompativel).
   const ufsArr = ufs && ufs.length ? ufs : (uf ? [uf] : []);
   const candidatos = consultar({ ufs: ufsArr, modalidades, apenasAbertos: true });
-  const termos = termo && termo.trim() ? [termo.trim()] : [];
+  // Aceita termos (array, usado pelo export do painel) ou termo (string, busca livre).
+  const termos = termosParam?.length ? termosParam : (termo && termo.trim() ? [termo.trim()] : []);
   let casaram = aplicarFiltro(candidatos, { termos });
 
   // Filtro por cidade (compara sem acento/caixa; aceita parte do nome).
