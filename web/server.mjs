@@ -22,6 +22,7 @@ import { statusAtual, cobranca } from "../src/assinatura.mjs";
 import { precoVencedores } from "../src/preco.mjs";
 import { precoReferencia } from "../src/precoReferencia.mjs";
 import { csvEditais, csvHistorico, csvRadar, nomeArquivo } from "../src/exportar.mjs";
+import { icsEdital, nomeIcs } from "../src/calendario.mjs";
 import { radarRenovacao } from "../src/radar.mjs";
 import { listarDocumentos, baixarArquivo } from "../src/documentos.mjs";
 import { verificarSenha } from "../src/senha.mjs";
@@ -684,6 +685,25 @@ const servidor = createServer(async (req, res) => {
       } catch (e) {
         res.writeHead(502);
         return res.end("Falha ao baixar: " + e.message);
+      }
+    }
+
+    // Calendario .ics: gera evento do encerramento do edital com lembretes
+    // automaticos (3 dias e 1 hora antes). Aberto a qualquer um (sem token).
+    if (rota === "/api/calendario") {
+      const id = url.searchParams.get("id");
+      const edital = buscarPorId(id);
+      if (!edital) return json(res, 404, { erro: "Edital nao encontrado" });
+      try {
+        const ics = icsEdital(edital);
+        res.writeHead(200, {
+          "Content-Type": "text/calendar; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${nomeIcs(edital)}"`,
+          "Cache-Control": "no-store",
+        });
+        return res.end(ics);
+      } catch (e) {
+        return json(res, 400, { erro: e.message });
       }
     }
 
