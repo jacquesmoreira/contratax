@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/logo-favicon.png" type="image/png" />
+<title>ContrataX — Suas empresas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; --vermelho:#dc2626; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
+  nav { background:#fff; border-bottom:1px solid var(--linha); }
+  nav .wrap { max-width:1000px; margin:0 auto; display:flex; align-items:center; height:60px; gap:18px; padding:0 20px; }
+  .logo { font-weight:900; font-size:20px; color:var(--indigo); text-decoration:none; }
+  nav .dir { margin-left:auto; display:flex; gap:18px; font-size:14px; font-weight:600; }
+  nav .dir a { color:var(--cinza); text-decoration:none; }
+  .wrap-main { max-width:1000px; margin:0 auto; padding:34px 20px 60px; }
+  h1 { font-size:26px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px; }
+  .sub { color:var(--cinza); font-size:15px; margin-bottom:22px; }
+  .resumo { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:16px 20px; margin-bottom:22px; display:flex; gap:24px; flex-wrap:wrap; align-items:center; }
+  .resumo .item { display:flex; flex-direction:column; }
+  .resumo .item b { font-size:22px; font-weight:900; color:var(--indigo); }
+  .resumo .item span { font-size:12px; color:var(--cinza-c); font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
+  .btn { background:var(--indigo); color:#fff; border:none; padding:12px 18px; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer; font-family:inherit; text-decoration:none; display:inline-block; }
+  .btn:hover { background:var(--indigo-d); }
+  .btn.sec { background:#fff; color:var(--indigo); border:1.5px solid var(--indigo); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px; }
+  .card { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:18px; display:flex; flex-direction:column; gap:8px; transition:transform .12s, box-shadow .12s; }
+  .card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(15,23,42,.06); }
+  .card .nome { font-weight:800; font-size:15.5px; color:var(--tinta); }
+  .card .meta { font-size:12.5px; color:var(--cinza-c); font-weight:600; }
+  .card .ramo { font-size:13.5px; color:var(--cinza); margin-top:2px; }
+  .card .ufs { display:flex; gap:5px; flex-wrap:wrap; margin-top:4px; }
+  .card .ufs span { background:#eef2ff; color:var(--indigo); font-size:11px; font-weight:700; padding:3px 7px; border-radius:99px; }
+  .card .acoes { display:flex; gap:8px; margin-top:12px; }
+  .card .acoes a { font-size:13px; font-weight:700; color:var(--indigo); text-decoration:none; }
+  .card .acoes a.rem { color:var(--vermelho); margin-left:auto; }
+  .card.novo { border:2px dashed var(--indigo); background:#eef2ff; align-items:center; justify-content:center; text-align:center; cursor:pointer; min-height:160px; }
+  .card.novo .plus { font-size:36px; color:var(--indigo); font-weight:300; line-height:1; }
+  .card.novo b { color:var(--indigo); font-size:14.5px; }
+  .vazio { background:#fff; border:1px dashed var(--linha); border-radius:14px; padding:40px 22px; text-align:center; color:var(--cinza); }
+
+  /* Modal */
+  .overlay { position:fixed; inset:0; background:rgba(15,23,42,.5); display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
+  .overlay.aberto { display:flex; }
+  .modal { background:#fff; border-radius:18px; padding:28px; max-width:540px; width:100%; max-height:90vh; overflow-y:auto; }
+  .modal h2 { font-size:20px; font-weight:800; margin-bottom:6px; }
+  .modal .sub-modal { color:var(--cinza); font-size:14px; margin-bottom:18px; }
+  label { display:block; font-size:12px; font-weight:700; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin:14px 0 6px; }
+  input, select { width:100%; padding:11px 13px; border:1.5px solid var(--linha); border-radius:10px; font-size:14.5px; font-family:inherit; outline:none; }
+  input:focus, select:focus { border-color:var(--azul); }
+  .chips { display:flex; gap:5px; flex-wrap:wrap; margin-top:4px; }
+  .chip { background:#fff; border:1.5px solid var(--linha); color:var(--cinza); font-size:12.5px; font-weight:700; padding:6px 11px; border-radius:99px; cursor:pointer; user-select:none; }
+  .chip.on { background:var(--indigo); color:#fff; border-color:var(--indigo); }
+  .modal .acoes { display:flex; gap:10px; margin-top:22px; justify-content:flex-end; }
+  .erro { color:var(--vermelho); font-size:13px; margin-top:10px; }
+</style>
+</head>
+<body>
+  <nav><div class="wrap">
+    <a class="logo" href="#" id="logo"><img src="/logo-horizontal.png" alt="ContrataX" style="height:32px;width:auto;display:block" /></a>
+    <div class="dir">
+      <a href="#" id="link-assinar">Plano</a>
+      <a href="/entrar">Sair</a>
+    </div>
+  </div></nav>
+
+  <div class="wrap-main">
+    <h1>Suas empresas</h1>
+    <div class="sub">Gerencie todos os clientes da sua assessoria em um só lugar.</div>
+
+    <div class="resumo" id="resumo"></div>
+
+    <div class="grid" id="lista"><div style="grid-column:1/-1;text-align:center;color:var(--cinza)">Carregando...</div></div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2>Adicionar empresa</h2>
+      <div class="sub-modal">Cadastre o CNPJ e o ramo. Ela aparece aqui na sua gestão e tem painel próprio.</div>
+
+      <label>CNPJ</label>
+      <input id="i-cnpj" placeholder="00.000.000/0001-00" inputmode="numeric" maxlength="18" />
+      <div id="cnpj-msg" style="font-size:13px;color:var(--cinza);margin-top:6px"></div>
+
+      <label>Razão social ou nome</label>
+      <input id="i-nome" placeholder="Empresa do meu cliente" />
+
+      <label>Ramo / palavras-chave</label>
+      <input id="i-ramo" placeholder="material hospitalar, papelaria, manutenção" />
+      <div style="font-size:12px;color:var(--cinza-c);margin-top:4px">Separe palavras-chave por vírgula.</div>
+
+      <label>Estados de atuação</label>
+      <div class="chips" id="i-ufs"></div>
+
+      <div class="erro" id="erro"></div>
+
+      <div class="acoes">
+        <button class="btn sec" id="b-cancelar">Cancelar</button>
+        <button class="btn" id="b-salvar">Adicionar empresa</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const token = new URLSearchParams(location.search).get("c") || "";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
+$("logo").href = "/empresas?c=" + encodeURIComponent(token);
+$("link-assinar").href = "/assinar?c=" + encodeURIComponent(token);
+
+const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+const ufsSel = new Set();
+
+async function carregar() {
+  const r = await fetch("/api/assessoria/empresas?c=" + encodeURIComponent(token));
+  if (!r.ok) {
+    const d = await r.json();
+    $("lista").innerHTML = `<div class="vazio">${esc(d.erro || "Acesso negado.")}</div>`;
+    return;
+  }
+  const d = await r.json();
+
+  $("resumo").innerHTML = `
+    <div class="item"><b>${d.usados}/${d.limite}</b><span>Empresas ativas</span></div>
+    <div class="item"><b>${d.gerente.status.status === "ativo" ? "✓ Ativo" : "✗ " + d.gerente.status.status}</b><span>Sua assinatura</span></div>
+    <button class="btn" onclick="abrirNovo()" style="margin-left:auto" ${d.usados >= d.limite ? "disabled" : ""}>+ Adicionar empresa</button>
+  `;
+
+  if (!d.empresas.length) {
+    $("lista").innerHTML = `<div class="vazio" style="grid-column:1/-1"><b>Você ainda não tem empresas cadastradas.</b><br>Clique em <b>+ Adicionar empresa</b> para começar.</div>`;
+    return;
+  }
+
+  $("lista").innerHTML = d.empresas.map(e => `
+    <div class="card">
+      <div class="nome">${esc(e.razaoSocial || e.nome)}</div>
+      <div class="meta">CNPJ ${esc(e.cnpj || "?")}</div>
+      <div class="ramo">${esc(e.ramo || "—")}</div>
+      <div class="ufs">${(e.ufs || []).map(u => `<span>${esc(u)}</span>`).join("")}</div>
+      <div class="acoes">
+        <a href="/painel?c=${encodeURIComponent(e.token)}" target="_blank">Abrir painel →</a>
+        <a href="#" class="rem" onclick="remover('${e.token}', '${esc((e.razaoSocial||e.nome||'').replace(/'/g,'')).slice(0,40)}');return false">Remover</a>
+      </div>
+    </div>
+  `).join("") + (d.usados < d.limite ? `<div class="card novo" onclick="abrirNovo()"><div class="plus">+</div><b>Adicionar empresa</b><div style="font-size:12.5px;color:var(--cinza);margin-top:4px">${d.limite - d.usados} ${d.limite - d.usados === 1 ? "vaga disponível" : "vagas disponíveis"}</div></div>` : "");
+}
+
+function abrirNovo() {
+  $("i-cnpj").value = ""; $("i-nome").value = ""; $("i-ramo").value = "";
+  ufsSel.clear();
+  $("cnpj-msg").textContent = ""; $("erro").textContent = "";
+  $("i-ufs").innerHTML = UFS.map(u => `<span class="chip" data-uf="${u}" onclick="toggleUf(this)">${u}</span>`).join("");
+  $("overlay").classList.add("aberto");
+}
+
+function fechar() { $("overlay").classList.remove("aberto"); }
+
+function toggleUf(el) {
+  const u = el.dataset.uf;
+  if (ufsSel.has(u)) { ufsSel.delete(u); el.classList.remove("on"); }
+  else { ufsSel.add(u); el.classList.add("on"); }
+}
+
+$("b-cancelar").onclick = fechar;
+$("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) fechar(); });
+
+// Auto-consulta CNPJ ao completar 14 dígitos
+$("i-cnpj").addEventListener("input", async (e) => {
+  const v = e.target.value.replace(/\D/g, "");
+  if (v.length === 14) {
+    $("cnpj-msg").textContent = "Consultando Receita Federal...";
+    try {
+      const r = await fetch("/api/cnpj?cnpj=" + v);
+      const d = await r.json();
+      if (d.valido) {
+        if (!$("i-nome").value) $("i-nome").value = d.razaoSocial || "";
+        if (d.uf && !ufsSel.has(d.uf)) {
+          ufsSel.add(d.uf);
+          const chip = document.querySelector(`[data-uf="${d.uf}"]`);
+          if (chip) chip.classList.add("on");
+        }
+        $("cnpj-msg").textContent = `✓ ${esc(d.razaoSocial || "Empresa válida")}`;
+        $("cnpj-msg").style.color = "var(--verde)";
+      } else {
+        $("cnpj-msg").textContent = "⚠ " + (d.erro || "CNPJ inválido");
+        $("cnpj-msg").style.color = "var(--vermelho)";
+      }
+    } catch { $("cnpj-msg").textContent = "Não foi possível validar agora."; }
+  } else {
+    $("cnpj-msg").textContent = "";
+  }
+});
+
+$("b-salvar").onclick = async () => {
+  $("erro").textContent = "";
+  $("b-salvar").disabled = true; $("b-salvar").textContent = "Salvando...";
+  try {
+    const r = await fetch("/api/assessoria/adicionar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        c: token,
+        cnpj: $("i-cnpj").value,
+        nome: $("i-nome").value,
+        razaoSocial: $("i-nome").value,
+        ramo: $("i-ramo").value,
+        ufs: [...ufsSel],
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.erro || "Falha ao adicionar");
+    fechar();
+    await carregar();
+  } catch (e) {
+    $("erro").textContent = e.message;
+  } finally {
+    $("b-salvar").disabled = false; $("b-salvar").textContent = "Adicionar empresa";
+  }
+};
+
+async function remover(tk, nome) {
+  if (!confirm(`Remover "${nome}" da sua gestão? (a empresa não é apagada, só sai da sua lista)`)) return;
+  const r = await fetch("/api/assessoria/remover", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ c: token, tokenEmpresa: tk }),
+  });
+  if (r.ok) carregar();
+  else alert((await r.json()).erro || "Falha ao remover");
+}
+
+carregar();
+</script>
+</body>
+</html>

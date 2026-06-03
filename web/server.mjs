@@ -23,6 +23,7 @@ import { precoVencedores } from "../src/preco.mjs";
 import { precoReferencia } from "../src/precoReferencia.mjs";
 import { csvEditais, csvHistorico, csvRadar, nomeArquivo } from "../src/exportar.mjs";
 import { icsEdital, nomeIcs } from "../src/calendario.mjs";
+import { ehAssessoria, limiteEmpresas, listarEmpresasGerenciadas, adicionarEmpresa, removerEmpresa } from "../src/assessoria.mjs";
 import { radarRenovacao } from "../src/radar.mjs";
 import { listarDocumentos, baixarArquivo } from "../src/documentos.mjs";
 import { verificarSenha } from "../src/senha.mjs";
@@ -49,6 +50,7 @@ const ASSINAR = resolve(AQUI, "public", "assinar.html");
 const HISTORICO = resolve(AQUI, "public", "historico.html");
 const DECLARACOES = resolve(AQUI, "public", "declaracoes.html");
 const ADMIN_PAGE = resolve(AQUI, "public", "admin.html");
+const EMPRESAS = resolve(AQUI, "public", "empresas.html");
 const PORTA = process.env.PORT || 3000;
 
 function lerCorpo(req) {
@@ -119,7 +121,52 @@ const servidor = createServer(async (req, res) => {
         const codigo = /incorret/i.test(r.motivo) ? 401 : 404;
         return json(res, codigo, { erro: r.motivo });
       }
-      return json(res, 200, { link: `/painel?c=${r.perfil.token}` });
+      // Assessoria: direto pra /empresas (gestao multi-CNPJ)
+      const destino = ehAssessoria(r.perfil) ? `/empresas?c=${r.perfil.token}` : `/painel?c=${r.perfil.token}`;
+      return json(res, 200, { link: destino });
+    }
+
+    // Plano Assessoria: lista as empresas gerenciadas pelo assessor logado.
+    if (rota === "/api/assessoria/empresas") {
+      const tokenAss = url.searchParams.get("c") || "";
+      const gerente = await perfilPorToken(tokenAss);
+      if (!gerente) return json(res, 404, { erro: "Conta nao encontrada" });
+      if (!ehAssessoria(gerente)) return json(res, 403, { erro: "Plano atual nao permite gerenciar varias empresas" });
+      const empresas = await listarEmpresasGerenciadas(tokenAss);
+      return json(res, 200, {
+        gerente: { nome: gerente.nome, plano: gerente.assinatura?.nivel || null, status: statusAtual(gerente) },
+        limite: limiteEmpresas(gerente),
+        usados: empresas.length,
+        empresas: empresas.map((e) => ({
+          token: e.token,
+          nome: e.nome,
+          razaoSocial: e.razaoSocial,
+          cnpj: e.cnpj,
+          ramo: (e.filtro?.termos ?? []).join(", "),
+          ufs: e.ufs ?? [],
+          analises: e.analises ?? { usados: 0 },
+        })),
+      });
+    }
+
+    if (rota === "/api/assessoria/adicionar" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      try {
+        const nova = await adicionarEmpresa(corpo.c || "", corpo);
+        return json(res, 200, { ok: true, token: nova.token, link: `/painel?c=${nova.token}` });
+      } catch (e) {
+        return json(res, 400, { erro: e.message });
+      }
+    }
+
+    if (rota === "/api/assessoria/remover" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      try {
+        await removerEmpresa(corpo.c || "", corpo.tokenEmpresa || "");
+        return json(res, 200, { ok: true });
+      } catch (e) {
+        return json(res, 400, { erro: e.message });
+      }
     }
 
     // Consulta CNPJ (valida na Receita e devolve a razao social) + checa duplicidade.
@@ -884,6 +931,11 @@ const servidor = createServer(async (req, res) => {
     }
     if (rota === "/declaracoes" || rota === "/declaracoes.html") {
       const html = await readFile(DECLARACOES, "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(html);
+    }
+    if (rota === "/empresas" || rota === "/empresas.html") {
+      const html = await readFile(EMPRESAS, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }

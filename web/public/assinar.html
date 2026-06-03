@@ -97,15 +97,33 @@ async function carregar() {
     else if (a.status === "teste_expirado" || a.status === "vencido") { $("selo").style.display = "inline-block"; $("selo").textContent = "Seu acesso expirou — assine para reativar"; }
   } catch {}
 
-  $("planos").innerHTML = DADOS.planos.map((p, i) => `
-    <div class="card ${i === DADOS.planos.length - 1 ? "destaque" : ""}">
-      ${i === DADOS.planos.length - 1 ? '<span class="tag-top">Mais análises</span>' : ""}
+  // Separa planos: clientes finais (1 CNPJ) e assessoria (multi-CNPJ)
+  const planosEmpresa = DADOS.planos.filter(p => !p.assessoria);
+  const planosAssessoria = DADOS.planos.filter(p => p.assessoria);
+
+  const cardPlano = (p, destaque, tag) => `
+    <div class="card ${destaque ? "destaque" : ""}">
+      ${tag ? `<span class="tag-top">${tag}</span>` : ""}
       <div class="pl-nome">${p.nome}</div>
       <div class="preco"><b>R$ ${p.preco}</b><span>/mês</span></div>
-      <div class="pl-cota">${p.analises} análises por mês</div>
-      <ul class="inc">${BENEFICIOS.map(b => `<li>${b}</li>`).join("")}</ul>
+      <div class="pl-cota">${p.empresas && p.empresas > 1 ? `Até ${p.empresas} empresas (CNPJs)<br><span style="font-weight:600;color:var(--cinza)">${p.analises} análises/mês cada</span>` : `${p.analises} análises por mês`}</div>
+      <ul class="inc">${BENEFICIOS.map(b => `<li>${b}</li>`).join("")}${p.assessoria ? '<li style="color:var(--indigo);font-weight:700">Painel único para gerenciar todas as empresas</li>' : ""}</ul>
       <button class="btn" data-tipo="plano" data-id="${p.id}">Assinar ${p.nome}</button>
-    </div>`).join("");
+    </div>`;
+
+  $("planos").innerHTML = planosEmpresa.map((p, i) => cardPlano(p, i === planosEmpresa.length - 1, i === planosEmpresa.length - 1 ? "Mais análises" : null)).join("");
+
+  // Bloco de assessoria (so renderiza se ha planos de assessoria definidos)
+  if (planosAssessoria.length) {
+    const blocoAss = document.createElement("div");
+    blocoAss.innerHTML = `
+      <h2 style="margin-top:42px">Para consultores e assessorias de licitação</h2>
+      <div class="sub" style="margin-bottom:18px">Gerencie vários clientes em um único login. Cada CNPJ tem painel próprio com editais, alertas e análise por IA.</div>
+      <div class="planos" id="planos-ass"></div>
+    `;
+    $("planos").parentNode.insertBefore(blocoAss, $("planos").nextSibling);
+    document.getElementById("planos-ass").innerHTML = planosAssessoria.map((p, i) => cardPlano(p, i === planosAssessoria.length - 1, i === planosAssessoria.length - 1 ? "Recomendado" : "Multi-CNPJ")).join("");
+  }
 
   $("avulsos").innerHTML = DADOS.avulsos.map(a => `
     <div class="avulso">

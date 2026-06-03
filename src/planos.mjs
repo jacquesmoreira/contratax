@@ -8,12 +8,33 @@ export const PLANOS = {
     nome: "Basico",
     preco: process.env.LICITA_PRECO_BASICO || process.env.LICITA_PRECO || "197,00",
     analises: Number(process.env.LICITA_ANALISES_BASICO || 100),
+    empresas: 1, // 1 CNPJ
   },
   pro: {
     id: "pro",
     nome: "Pro",
     preco: process.env.LICITA_PRECO_PRO || "297,00",
     analises: Number(process.env.LICITA_ANALISES_PRO || 250),
+    empresas: 1,
+  },
+  // Planos para CONSULTORES / ASSESSORIAS de licitacao: 1 login que gerencia
+  // varios CNPJs. Cada empresa filha tem seu painel completo (editais, alertas,
+  // analises). Cota de analises eh POR EMPRESA (100/mes cada).
+  assessoria10: {
+    id: "assessoria10",
+    nome: "Assessoria 10",
+    preco: process.env.LICITA_PRECO_ASS10 || "497,00",
+    analises: Number(process.env.LICITA_ANALISES_ASS10 || 100), // por empresa
+    empresas: Number(process.env.LICITA_EMPRESAS_ASS10 || 10),
+    assessoria: true,
+  },
+  assessoria25: {
+    id: "assessoria25",
+    nome: "Assessoria 25",
+    preco: process.env.LICITA_PRECO_ASS25 || "897,00",
+    analises: Number(process.env.LICITA_ANALISES_ASS25 || 100), // por empresa
+    empresas: Number(process.env.LICITA_EMPRESAS_ASS25 || 25),
+    assessoria: true,
   },
 };
 

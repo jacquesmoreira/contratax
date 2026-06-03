@@ -28,9 +28,18 @@ export function novaAssinaturaTeste() {
 const GRACA_DIAS = Number(process.env.LICITA_GRACA_DIAS || 3);
 
 // Calcula o estado efetivo da assinatura (considerando vencimento e carencia).
+// Para empresas gerenciadas (Plano Assessoria), o status HERDA do perfil-gerente.
+// Funcao sincrona; quando precisa herdar, devolve resultado generico ate
+// statusAtualAsync ser usada (nas rotas que ja sao async).
 export function statusAtual(perfil) {
-  const a = perfil.assinatura;
-  if (!a) return { status: "ativo", temAcesso: true, expiraEm: null, diasRestantes: null }; // legado/admin
+  const a = perfil?.assinatura;
+  if (!a && !perfil?.gerenciadoPor) return { status: "ativo", temAcesso: true, expiraEm: null, diasRestantes: null }; // legado/admin
+  if (!a && perfil?.gerenciadoPor) {
+    // Empresa gerenciada sem assinatura propria: assume "ativo" (a checagem
+    // assincrona via statusAtualAsync pega o gerente). Em modo sincrono, nao
+    // travamos o acesso — o gerente ja foi cobrado.
+    return { status: "ativo", temAcesso: true, expiraEm: null, diasRestantes: null, herdado: true };
+  }
 
   const agora = new Date();
   const expira = a.expiraEm ? new Date(a.expiraEm) : null;
