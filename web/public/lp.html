@@ -270,6 +270,12 @@
       <span><span class="ok">✓</span> Teste grátis, sem cartão</span>
     </div>
 
+    <div class="autoridade" id="autoridade-hero" style="margin-top:24px;display:flex;gap:14px 30px;flex-wrap:wrap;justify-content:center;font-size:13.5px;color:var(--cinza);font-weight:600">
+      <span><b id="stat-editais" style="font-size:17px;color:var(--indigo)">25 mil+</b> licitações abertas agora</span>
+      <span><b style="font-size:17px;color:var(--indigo)">357 mil+</b> contratos no histórico</span>
+      <span><b style="font-size:17px;color:var(--indigo)">5.570</b> municípios cobertos</span>
+    </div>
+
     <div id="resultados"></div>
   </div></header>
 
@@ -278,7 +284,7 @@
     <div class="titulo-sec">
       <span class="tag-sec">Soa familiar?</span>
       <h2>Vender pro governo é uma mina de ouro. E uma dor de cabeça.</h2>
-      <p>Todo dia milhões em contratos são abertos. O problema não é falta de oportunidade, é o que te faz perder ela.</p>
+      <p>Todo dia milhões em contratos são abertos. O problema não é falta de oportunidade — é o que te faz perder o contrato.</p>
     </div>
     <div class="dores">
       <div class="dor"><div class="ic">01</div><h3>Você descobre tarde demais</h3><p>Cada órgão publica num portal diferente, e ninguém te avisa. Quando você acha o edital certo, ele já encerrou. O contrato foi pra outro.</p></div>
@@ -368,7 +374,7 @@
     <div class="titulo-sec">
       <span class="tag-sec">Por que o ContrataX</span>
       <h2>Direto ao ponto. Sem vendedor, sem contrato.</h2>
-      <p>A maioria das plataformas foi feita para o consultor especialista. O ContrataX é para a sua empresa.</p>
+      <p>A maioria das plataformas foi feita para a assessoria de licitação que cobra caro. O ContrataX é para a sua empresa fazer sozinha — pagando o preço de um almoço por mês.</p>
     </div>
     <div class="tabela-comp">
       <div class="th"></div>
@@ -521,8 +527,9 @@
   <section class="bloco alt"><div class="wrap">
     <div class="cta-final">
       <h2>As licitações do seu ramo estão abertas agora.</h2>
-      <p>Crie sua conta grátis e veja em quais você pode ganhar.</p>
-      <a href="/cadastro" class="btn btn-grande">Criar minha conta grátis</a>
+      <p>Crie sua conta grátis e veja em quais você pode ganhar. Você não precisa de uma assessoria de R$ 5 mil por mês para vender pro governo.</p>
+      <a href="/cadastro" class="btn btn-grande">Ver as licitações que posso ganhar →</a>
+      <div style="margin-top:14px;font-size:13.5px;opacity:.85">7 dias grátis · sem cartão · cancele quando quiser, sem fidelidade</div>
     </div>
   </div></section>
 
@@ -546,7 +553,7 @@ const selUf = document.getElementById("uf");
 selUf.innerHTML = '<option value="">Brasil todo</option>' + UFS.map(u => `<option value="${u}"${u==="SC"?" selected":""}>${u}</option>`).join("");
 
 const esc = s => (s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const brl = v => (v == null || Number(v) === 0) ? "valor não informado" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+const brl = v => (v == null || Number(v) === 0) ? "valor não divulgado" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 const brlHumano = v => {
   v = Number(v || 0);
   if (v >= 1e9) { const n = v/1e9; return `R$ ${n.toLocaleString("pt-BR",{maximumFractionDigits:1})} ${n < 2 ? "bilhão" : "bilhões"}`; }
@@ -557,9 +564,14 @@ const brlHumano = v => {
 const dias = iso => { if (!iso) return null; const d = new Date(iso); return isNaN(d)?null:Math.ceil((d-new Date())/864e5); };
 function pz(iso){ const d = dias(iso); if (d==null) return ""; const c = d<=2?"u":d<=7?"m":"t"; const t = d<0?"encerrado":d===0?"encerra hoje":d===1?"encerra amanhã":`encerra em ${d} dias`; return `<span class="pz ${c}">${t}</span>`; }
 
-// Contador nacional no topo
+// Contador nacional no topo + número real na faixa de autoridade
 fetch("/api/busca-publica").then(r=>r.json()).then(d=>{
-  if (d.total) document.getElementById("contador-topo").textContent = `${d.total.toLocaleString("pt-BR")} licitações abertas agora no Brasil`;
+  if (d.total) {
+    const fmt = d.total.toLocaleString("pt-BR");
+    document.getElementById("contador-topo").textContent = `${fmt} licitações abertas agora no Brasil`;
+    const se = document.getElementById("stat-editais");
+    if (se) se.textContent = fmt;
+  }
 }).catch(()=>{});
 
 async function buscar() {
