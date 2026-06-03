@@ -8,7 +8,8 @@ import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao, carregarLeads } from "../src/store.mjs";
+import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao, carregarLeads, carregarTldr, salvarTldr } from "../src/store.mjs";
+import { gerarTldr } from "../src/tldr.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
 import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
@@ -536,6 +537,7 @@ const servidor = createServer(async (req, res) => {
       const analiseCache = await carregarAnalise(id);
       const confCache = await carregarConferencia(id, empresa.id);
       const impugCache = await carregarImpugnacao(id);
+      const tldrCache = await carregarTldr(id);
       // Ranking de concorrentes localizado NO EDITAL aberto (cidade/UF do edital),
       // no ramo do cliente. Assim o ranking muda conforme a regiao da licitacao.
       // Usa a UF do edital (mais relevante) ou a primeira UF do perfil como fallback.
@@ -562,6 +564,7 @@ const servidor = createServer(async (req, res) => {
         temDocumentos,
         preco,
         referencia,
+        tldr: tldrCache?.tldr ?? null,
         uso: perfil ? usoDe(perfil) : null,
         ia: { liberada: liberacao.ok, motivo: liberacao.motivo ?? null }, // recurso do plano pago
         temChave: temChave(),
@@ -594,6 +597,32 @@ const servidor = createServer(async (req, res) => {
       } catch (e) {
         res.writeHead(502);
         return res.end("Falha ao baixar: " + e.message);
+      }
+    }
+
+    // TL;DR do edital (5 linhas): gera sob demanda se nao houver cache.
+    // Recurso GRATUITO (cache global por edital) — diferente da analise completa,
+    // nao conta na cota do cliente. So exige assinatura ativa pra evitar abuso.
+    if (rota === "/api/tldr" && req.method === "POST") {
+      const id = url.searchParams.get("id");
+      const edital = buscarPorId(id);
+      if (!edital) return json(res, 404, { erro: "Edital nao encontrado" });
+      // Cache global: se ja existe, devolve direto
+      const cache = await carregarTldr(id);
+      if (cache) return json(res, 200, { tldr: cache.tldr, cache: true });
+      // Sem chave ou sem assinatura: nao gera
+      if (!temChave()) return json(res, 400, { erro: "Sem ANTHROPIC_API_KEY configurada" });
+      const tokenT = url.searchParams.get("c") || "";
+      const perfilT = await perfilPorToken(tokenT);
+      if (tokenT !== ADMIN && (!perfilT || !statusAtual(perfilT).temAcesso)) {
+        return json(res, 403, { erro: "Assinatura nao ativa" });
+      }
+      try {
+        const tldr = await gerarTldr(edital);
+        await salvarTldr(id, tldr);
+        return json(res, 200, { tldr, cache: false });
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
       }
     }
 

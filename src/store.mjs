@@ -67,6 +67,21 @@ export async function carregarResultados() {
   return lerJSON(ARQUIVO_RESULTADOS, {});
 }
 
+const ARQUIVO_TLDRS = resolve(DATA_DIR, "tldrs.json");
+
+// TL;DR do edital (5 linhas geradas por IA). Cache global por edital — mesmo
+// resumo serve para todos os clientes que abrirem o mesmo edital.
+export async function salvarTldr(id, tldr) {
+  const tudo = await lerJSON(ARQUIVO_TLDRS, {});
+  tudo[id] = { tldr, geradoEm: new Date().toISOString() };
+  await gravarJSON(ARQUIVO_TLDRS, tudo);
+}
+
+export async function carregarTldr(id) {
+  const tudo = await lerJSON(ARQUIVO_TLDRS, {});
+  return tudo[id] ?? null;
+}
+
 const ARQUIVO_ANALISES = resolve(DATA_DIR, "analises.json");
 
 // Guarda a analise de IA de um edital (cache para nao reprocessar nem repagar).

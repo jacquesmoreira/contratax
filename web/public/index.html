@@ -360,6 +360,50 @@ fundo.onclick = fechar;
 const ICON = { atende: ['ok','✓'], valida: ['ok','✓'], nao_atende: ['no','✕'], vencida: ['no','✕'], ausente: ['no','✕'], confirmar: ['dd','?'] };
 function iconHTML(s){ const [cls,ch] = ICON[s] ?? ['dd','·']; return `<span class="ic ${cls}">${ch}</span>`; }
 
+function tldrHTML(t, id) {
+  if (t === "gerando") {
+    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--indigo);background:linear-gradient(135deg,#eef2ff 0%,#fff 60%)">
+      <h3>⚡ TL;DR — análise rápida</h3>
+      <div style="padding:10px 0;font-size:14px;color:var(--cinza)"><span class="spinner"></span>Lendo o edital... isso leva 5–10 segundos.</div>
+    </div>`;
+  }
+  if (!t) return `<div class="bloco" id="tldr-bloco"></div>`; // placeholder pra preencher
+  const rotulo = {
+    apto: ["#059669", "#ecfdf5", "✓ APTO"],
+    apto_pendencias: ["#b45309", "#fffbeb", "⚠ APTO COM PENDÊNCIAS"],
+    nao_apto: ["#dc2626", "#fef2f2", "✕ NÃO APTO"],
+    indefinido: ["#475569", "#f8fafc", "? INDEFINIDO"],
+  }[t.veredito] || ["#475569", "#f8fafc", t.veredito || "?"];
+  const [cor, bg, txt] = rotulo;
+  const exigencias = (t.exigencias || []).map(e =>
+    `<li style="padding:4px 0;font-size:13.5px;color:var(--tinta)"><span style="color:var(--cinza-c);margin-right:6px">•</span>${esc(e)}</li>`
+  ).join("");
+  return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid ${cor};background:linear-gradient(135deg,${bg} 0%,#fff 60%)">
+    <h3 style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <span>⚡ TL;DR — análise rápida</span>
+      <span style="font-size:11px;font-weight:800;color:${cor};background:${bg};border:1px solid ${cor}55;padding:4px 10px;border-radius:99px;letter-spacing:.4px">${txt}</span>
+    </h3>
+    <div style="font-size:14.5px;color:var(--tinta);margin:8px 0 12px;line-height:1.5"><b>${esc(t.objeto || "")}</b></div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--cinza);margin-bottom:12px">
+      ${t.valor ? `<div>💰 <b style="color:var(--tinta)">${esc(t.valor)}</b></div>` : ""}
+      ${t.prazo ? `<div>📅 <b style="color:var(--tinta)">${esc(t.prazo)}</b></div>` : ""}
+    </div>
+    ${exigencias ? `<div style="font-size:12px;font-weight:700;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Exigências-chave</div><ul style="list-style:none;padding:0;margin:0 0 12px">${exigencias}</ul>` : ""}
+    ${t.motivo ? `<div style="background:#fff;border:1px solid var(--linha);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--cinza);line-height:1.5"><b style="color:${cor}">Veredito:</b> ${esc(t.motivo)}</div>` : ""}
+  </div>`;
+}
+
+async function gerarTldrAsync(id) {
+  try {
+    const r = await fetch("/api/tldr?id=" + encodeURIComponent(id) + "&c=" + encodeURIComponent(token), { method: "POST" });
+    const d = await r.json();
+    const el = document.getElementById("tldr-bloco");
+    if (!el || editalAtual !== id) return; // o cliente trocou de edital
+    if (d.tldr) el.outerHTML = tldrHTML(d.tldr, id);
+    else el.outerHTML = ""; // falhou silencioso (nao polui a UI)
+  } catch { /* silencioso: TL;DR e gancho, nao bloqueia experiencia */ }
+}
+
 function referenciaHTML(r) {
   if (!r || !r.temReferencia) return "";
   const s = r.stats;
@@ -483,7 +527,16 @@ async function abrirDrawer(id) {
     ? "Ir para o portal de lances onde acontece a disputa →"
     : "Ver o edital e o acesso à disputa no portal PNCP →";
 
-  let html = `<div class="bloco"><h3>Edital</h3>
+  let html = "";
+  // TL;DR no topo (gancho rapido): se ja tem cache, renderiza; senao mostra
+  // estado "gerando" e dispara a geracao em background.
+  if (d.tldr) {
+    html += tldrHTML(d.tldr, ed.id);
+  } else if (d.temChave && d.ia && (d.ia.liberada || token === "")) {
+    html += tldrHTML("gerando", ed.id);
+    setTimeout(() => gerarTldrAsync(ed.id), 100);
+  }
+  html += `<div class="bloco"><h3>Edital</h3>
     <div class="linha-info"><span>Órgão</span><span style="text-align:right">${esc(ed.orgao)}</span></div>
     <div class="linha-info"><span>Modalidade</span><span>${esc(ed.modalidade)}</span></div>
     <div class="linha-info"><span>Valor estimado</span><span>${brl(ed.valorEstimado)}</span></div>
