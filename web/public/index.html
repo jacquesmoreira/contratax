@@ -168,7 +168,10 @@
     </div>
   </div></header>
 
-  <main class="wrap" id="conteudo"><div class="carregando"><span class="spinner"></span>Carregando o seu painel...</div></main>
+  <main class="wrap">
+    <div id="onb-banner"></div>
+    <div id="conteudo"><div class="carregando"><span class="spinner"></span>Carregando o seu painel...</div></div>
+  </main>
 
   <div class="fundo-escuro" id="fundo"></div>
   <aside class="drawer" id="drawer">
@@ -308,12 +311,55 @@ function paywall(a) {
   </div>`;
 }
 
+async function carregarOnboarding() {
+  if (!token) return;
+  try {
+    const d = await (await fetch("/api/onboarding?c=" + encodeURIComponent(token))).json();
+    const el = document.getElementById("onb-banner");
+    if (!el) return;
+    if (d.completo || d.dispensado) { el.innerHTML = ""; return; }
+    const pct = Math.round((d.feitos / d.total) * 100);
+    const passos = d.passos.map((p) => `
+      <a href="${p.link === "#painel" ? "#" : p.link + "?c=" + encodeURIComponent(token)}" style="background:#fff;border:1.5px solid ${p.feito ? "#10b981" : "#e2e8f0"};border-radius:11px;padding:13px 14px;text-decoration:none;color:var(--tinta);display:flex;flex-direction:column;gap:4px;transition:transform .12s, box-shadow .12s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 18px rgba(15,23,42,.08)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">${p.feito ? "✅" : p.icone}</span>
+          <span style="font-size:13.5px;font-weight:800;flex:1">${p.titulo}</span>
+        </div>
+        <div style="font-size:12px;color:var(--cinza);line-height:1.4">${p.descricao}</div>
+        ${p.progresso && !p.feito ? `<div style="font-size:11px;color:var(--indigo);font-weight:700;margin-top:2px">${p.progresso}</div>` : ""}
+      </a>`).join("");
+    el.innerHTML = `<div style="background:linear-gradient(135deg,#eef2ff 0%, #fff 60%);border:1px solid #c7d2fe;border-radius:14px;padding:20px;margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:800;color:var(--tinta);margin-bottom:2px">👋 Bem-vindo ao ContrataX</div>
+          <div style="font-size:13.5px;color:var(--cinza)">Configure sua conta pra extrair o máximo: <b>${d.feitos}/${d.total} passos concluídos</b></div>
+        </div>
+        <div style="width:90px;height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;flex-shrink:0"><div style="width:${pct}%;height:100%;background:var(--indigo);transition:width .3s"></div></div>
+        <a href="#" onclick="dispensarOnb();return false" style="font-size:12px;color:var(--cinza-c);font-weight:600;text-decoration:none">Esconder</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">${passos}</div>
+    </div>`;
+  } catch { /* silencioso */ }
+}
+
+async function dispensarOnb() {
+  try {
+    await fetch("/api/onboarding/dispensar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ c: token }),
+    });
+    document.getElementById("onb-banner").innerHTML = "";
+  } catch {}
+}
+
 async function carregar() {
   const c = document.getElementById("conteudo");
   if (!token) {
     c.innerHTML = `<div class="vazio"><span class="emoji">🔑</span>Acesse o seu painel pelo link exclusivo que enviamos.<br><br><a href="/entrar">Entrar com meu e-mail</a></div>`;
     return;
   }
+  carregarOnboarding(); // roda em paralelo, sem bloquear o painel
   try {
     const acesso = await (await fetch(`/api/acesso?c=${encodeURIComponent(token)}`)).json();
     if (!acesso.encontrado) {

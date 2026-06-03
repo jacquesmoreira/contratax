@@ -24,6 +24,7 @@ import { precoReferencia } from "../src/precoReferencia.mjs";
 import { csvEditais, csvHistorico, csvRadar, nomeArquivo } from "../src/exportar.mjs";
 import { icsEdital, nomeIcs } from "../src/calendario.mjs";
 import { ehAssessoria, limiteEmpresas, listarEmpresasGerenciadas, adicionarEmpresa, removerEmpresa } from "../src/assessoria.mjs";
+import { checklist as onboardingChecklist } from "../src/onboarding.mjs";
 import { radarRenovacao } from "../src/radar.mjs";
 import { listarDocumentos, baixarArquivo } from "../src/documentos.mjs";
 import { verificarSenha } from "../src/senha.mjs";
@@ -339,6 +340,25 @@ const servidor = createServer(async (req, res) => {
     }
 
     // Estado da assinatura do cliente (o painel usa para liberar ou cobrar).
+    // Onboarding: checklist de primeiros passos pos-cadastro.
+    if (rota === "/api/onboarding") {
+      const tokenOb = url.searchParams.get("c") || "";
+      const perfilOb = await perfilPorToken(tokenOb);
+      if (!perfilOb) return json(res, 404, { erro: "Conta nao encontrada" });
+      return json(res, 200, onboardingChecklist(perfilOb));
+    }
+
+    // Onboarding: cliente dispensa o banner (volta com botao 'mostrar de novo')
+    if (rota === "/api/onboarding/dispensar" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfis = await lerPerfis();
+      const p = perfis.find((x) => x.token === (corpo.c || ""));
+      if (!p) return json(res, 404, { erro: "Conta nao encontrada" });
+      p._onboardingDispensado = !p._onboardingDispensado;
+      await salvarPerfis(perfis);
+      return json(res, 200, { ok: true, dispensado: p._onboardingDispensado });
+    }
+
     if (rota === "/api/acesso") {
       const token = url.searchParams.get("c") || "";
       if (token === ADMIN) return json(res, 200, { encontrado: true, nome: "Administrador", status: "admin", temAcesso: true });
