@@ -368,6 +368,7 @@ const servidor = createServer(async (req, res) => {
         encontrado: true,
         nome: perfil.nome,
         ...statusAtual(perfil),
+        nivel: perfil.assinatura?.nivel ?? null,
         uso: usoDe(perfil),
         cobranca: { preco: cobranca.preco, pix: cobranca.pix, contato: cobranca.contato },
       });
