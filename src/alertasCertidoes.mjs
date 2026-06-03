@@ -33,7 +33,13 @@ function htmlAlerta(nome, certidoes) {
   }).join("");
   return `
   <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:24px">
-    <img src="https://www.contratax.com.br/logo-horizontal.png" alt="ContrataX" style="height:30px;margin-bottom:24px" />
+    <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:22px"><tr>
+      <td style="background:#312e81;border-radius:10px;padding:8px 12px;">
+        <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#fff;border-radius:6px;padding:5px 8px;">
+          <img src="https://www.contratax.com.br/logo-horizontal.png" alt="ContrataX" height="20" style="display:block;height:20px;width:auto;border:0" />
+        </td></tr></table>
+      </td>
+    </tr></table>
     <h2 style="color:#0f172a;font-size:20px;margin-bottom:8px">Certidões próximas do vencimento — ${nome}</h2>
     <p style="color:#475569;font-size:15px;margin-bottom:20px">Renove antes que vençam para não ser inabilitada em licitações.</p>
     <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">

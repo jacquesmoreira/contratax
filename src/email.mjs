@@ -48,9 +48,13 @@ export function gerarDigest(perfil, editais) {
   const html = `<!DOCTYPE html><html><body style="margin:0;background:#f8fafc;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:24px 12px;"><tr><td align="center">
     <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;">
-      <tr><td style="background:linear-gradient(135deg,#312e81,#2563eb);border-radius:16px 16px 0 0;padding:26px 28px;">
-        <div style="color:#fff;font-size:22px;font-weight:800;">ContrataX</div>
-        <div style="color:#c7d2fe;font-size:14px;margin-top:2px;">Seus editais de hoje, ${perfil.nome}</div>
+      <tr><td style="background:linear-gradient(135deg,#312e81,#2563eb);border-radius:16px 16px 0 0;padding:24px 28px 22px;">
+        <table cellpadding="0" cellspacing="0" border="0"><tr>
+          <td style="background:#fff;border-radius:9px;padding:7px 11px;">
+            <img src="${BASE}/logo-horizontal.png" alt="ContrataX" height="22" style="display:block;height:22px;width:auto;border:0" />
+          </td>
+        </tr></table>
+        <div style="color:#c7d2fe;font-size:14px;margin-top:14px;">Seus editais de hoje, ${perfil.nome}</div>
       </td></tr>
       <tr><td style="background:#fff;padding:24px 28px;">
         <div style="font-size:16px;color:#0f172a;margin-bottom:18px;">
