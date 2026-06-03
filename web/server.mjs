@@ -377,6 +377,16 @@ const servidor = createServer(async (req, res) => {
       let leads = []; try { leads = await carregarLeads(); } catch {}
       return json(res, 200, { editais: estatisticas(), contratos: estatisticasContratos(), leads });
     }
+    // Admin: dispara o digest do dia manualmente (para testar sem esperar 8h).
+    if (rota === "/api/admin/digest" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const { enviarDigestDoDia } = await import("../src/digestDiario.mjs");
+        const r = await enviarDigestDoDia({});
+        return json(res, 200, { ok: true, ...r });
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
     if (rota === "/api/admin/ativar" && req.method === "POST") {
       const corpo = await lerCorpo(req);
       if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
@@ -783,4 +793,16 @@ if (process.env.LICITA_ATUALIZAR) {
       return atualizarLoop({ intervaloHoras: horas });
     })
     .catch((e) => console.error("[atualizar] erro:", e.message));
+}
+
+// Opcional (Railway): digest diario por e-mail. Envia 1x ao dia para cada cliente
+// ativo um resumo dos editais NOVOS do ramo dele. Ative com LICITA_DIGEST=1.
+if (process.env.LICITA_DIGEST) {
+  import("../src/digestDiario.mjs")
+    .then(({ digestLoop }) => {
+      const horaBR = Number(process.env.LICITA_DIGEST_HORA || 8);
+      console.log(`[digest] ativado em background (alvo: ${horaBR}h Brasilia)`);
+      return digestLoop({ horaBR });
+    })
+    .catch((e) => console.error("[digest] erro:", e.message));
 }

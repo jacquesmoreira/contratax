@@ -2,7 +2,7 @@
 // Verifica todos os perfis e envia e-mail quando uma certidao esta prestes a vencer.
 
 import { lerPerfis } from "./perfis.mjs";
-import { enviar } from "./email.mjs";
+import { enviar, temEmailKey } from "./email.mjs";
 import { statusAtual } from "./assinatura.mjs";
 
 const DIAS_AVISO = [30, 15, 7, 3]; // avisar quando faltam esses dias
@@ -51,6 +51,10 @@ function htmlAlerta(nome, certidoes) {
 }
 
 export async function verificarCertidoesVencendo({ log = console.log } = {}) {
+  if (!temEmailKey()) {
+    log("[alertas] RESEND_API_KEY ausente; pulando verificacao de certidoes.");
+    return 0;
+  }
   const perfis = await lerPerfis();
   let alertasEnviados = 0;
   const hoje = new Date().toDateString();
