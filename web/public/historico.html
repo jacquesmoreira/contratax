@@ -113,7 +113,11 @@ async function carregar(pag = 1) {
   const d = await (await fetch("/api/historico?" + p)).json();
   pagAtual = d.pagina; totalPag = d.paginas;
 
-  if (!d.contratos || !d.contratos.length) {
+  if (d.aviso) {
+    $("lista").innerHTML = `<div class="vazio"><div class="ic">🔍</div><p>${d.aviso}</p></div>`;
+    return;
+  }
+  if (!d.licitacoes || !d.licitacoes.length) {
     $("lista").innerHTML = '<div class="vazio"><div class="ic">📋</div><p>Nenhum contrato encontrado para esse filtro.</p><p style="font-size:14px;margin-top:8px;color:var(--cinza-c)">Tente ampliar o período ou mudar as palavras-chave.</p></div>';
     return;
   }

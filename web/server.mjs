@@ -270,9 +270,9 @@ const servidor = createServer(async (req, res) => {
     }
 
     // Historico de contratos do ramo do cliente (ultimos 12 meses por padrao).
+    // Funciona sem login se houver termo na URL; com login pre-carrega o ramo do perfil.
     if (rota === "/api/historico") {
       const perfil = await perfilPorToken(url.searchParams.get("c") || "");
-      if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
       const uf    = url.searchParams.get("uf") || null;
       const cidade = url.searchParams.get("cidade") || "";
       const meses = Number(url.searchParams.get("meses") || 12);
@@ -281,11 +281,15 @@ const servidor = createServer(async (req, res) => {
       const { consultarContratos } = await import("../src/db.mjs");
       const { aplicarFiltro, normalizar } = await import("../src/filtro.mjs");
       const candidatos = consultarContratos({ uf, mesesAtras: meses });
-      // Usa o termo digitado como FRASE (AND entre palavras) ou os termos do perfil.
+      // Usa o termo digitado ou os termos do perfil (se logado).
       const customTermo = url.searchParams.get("termo");
       const termos = customTermo
-        ? customTermo.split(",").map(t => t.trim()).filter(Boolean)  // vírgula = OR entre frases; espaço = AND dentro da frase
-        : (perfil.filtro?.termos ?? []);
+        ? customTermo.split(",").map(t => t.trim()).filter(Boolean)
+        : (perfil?.filtro?.termos ?? []);
+      // Sem termo e sem perfil: pede que o usuario busque algo
+      if (!termos.length) {
+        return json(res, 200, { total: 0, paginas: 0, pagina: 1, termos: [], licitacoes: [], aviso: "Digite um produto ou serviço para ver o histórico." });
+      }
       let todos = aplicarFiltro(candidatos, { termos }).filter(c => c.valor > 0);
       // Filtro por cidade
       if (cidade.trim()) {
