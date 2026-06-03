@@ -14,6 +14,7 @@ import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
 import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
 import { renderizarArtigo, renderizarListagem, urlsBlog } from "../src/blog.mjs";
+import { injetarAnalytics, enviarConversao } from "../src/analytics.mjs";
 import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
 import { temChave } from "../src/ia.mjs";
@@ -633,10 +634,38 @@ const servidor = createServer(async (req, res) => {
           if (!ref && pg.subscription) ref = await externalReferenceDaAssinatura(pg.subscription);
           const [tipo, token, id] = String(ref || "").split(":");
           if (tipo === "sub" && token) {
-            await ativarPlano(token, PLANOS[id] ? id : "basico", 30, pg.billingType || null);
+            const nivel = PLANOS[id] ? id : "basico";
+            await ativarPlano(token, nivel, 30, pg.billingType || null);
+            // Conversion API GA4 (server-side): registra purchase pra remarketing
+            // e medicao precisa de ROAS no Google Ads.
+            try {
+              const perfil = await perfilPorToken(token);
+              if (perfil) {
+                await enviarConversao(perfil, {
+                  transactionId: pg.id || ref,
+                  value: pg.value || precoNumero(PLANOS[nivel]?.preco || "0"),
+                  planoId: nivel,
+                  planoNome: PLANOS[nivel]?.nome || nivel,
+                  formaPagamento: pg.billingType || null,
+                });
+              }
+            } catch (e) { console.error("[ga4]", e.message); }
           } else if (tipo === "avulso" && token) {
             const qtd = AVULSOS[id]?.analises || 0;
             if (qtd) await adicionarAvulsas(token, qtd);
+            // Conversion para avulso tambem
+            try {
+              const perfil = await perfilPorToken(token);
+              if (perfil) {
+                await enviarConversao(perfil, {
+                  transactionId: pg.id || ref,
+                  value: pg.value || precoNumero(AVULSOS[id]?.preco || "0"),
+                  planoId: "avulso-" + id,
+                  planoNome: AVULSOS[id]?.nome || id,
+                  formaPagamento: pg.billingType || null,
+                });
+              }
+            } catch (e) { console.error("[ga4]", e.message); }
           }
         }
       } catch (e) {
@@ -683,7 +712,7 @@ const servidor = createServer(async (req, res) => {
         .slice(0, 6);
       const { html } = gerarDigest(perfil, editais);
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
 
     // Detalhe de um edital + analise/conferencia em cache (se houver).
@@ -889,19 +918,26 @@ const servidor = createServer(async (req, res) => {
       } catch { /* nao existe: cai no 404 */ }
     }
 
+    // Landing comparativa (sem nomear concorrentes — risco juridico)
+    if (rota === "/lp/comparativo" || rota === "/comparativo") {
+      const html = await readFile(resolve(AQUI, "public", "lp-comparativo.html"), "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(html));
+    }
+
     // ===== Blog SEO: artigos em /blog e /blog/<slug> =====
     const BASE_PUBLICA = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
     if (rota === "/blog" || rota === "/blog/") {
       const html = await renderizarListagem(BASE_PUBLICA);
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota.startsWith("/blog/")) {
       const slug = rota.replace(/^\/blog\//, "").replace(/\/$/, "");
       const html = await renderizarArtigo(slug, BASE_PUBLICA);
       if (html) {
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-        return res.end(html);
+        return res.end(injetarAnalytics(html));
       }
       // slug invalido cai no 404
     }
@@ -909,14 +945,14 @@ const servidor = createServer(async (req, res) => {
     // ===== SEO programatico: paginas publicas de licitacoes por ramo/estado =====
     if (rota === "/licitacoes" || rota === "/licitacoes/") {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(paginaHub());
+      return res.end(injetarAnalytics(paginaHub()));
     }
     if (rota.startsWith("/licitacoes/")) {
       const partes = rota.split("/").filter(Boolean); // ["licitacoes", slug, uf?]
       const html = paginaCategoria(partes[1], partes[2] || null);
       if (html) {
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-        return res.end(html);
+        return res.end(injetarAnalytics(html));
       }
       // slug/uf invalido: cai no 404
     }
@@ -941,67 +977,67 @@ const servidor = createServer(async (req, res) => {
     if (rota === "/" || rota === "/lp.html") {
       const html = await readFile(LP, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/cadastro" || rota === "/cadastro.html") {
       const html = await readFile(CADASTRO, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/entrar" || rota === "/entrar.html") {
       const html = await readFile(ENTRAR, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/documentos" || rota === "/documentos.html") {
       const html = await readFile(DOCUMENTOS, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/equipe" || rota === "/equipe.html") {
       const html = await readFile(EQUIPE, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/conta" || rota === "/conta.html") {
       const html = await readFile(CONTA, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/historico" || rota === "/historico.html") {
       const html = await readFile(HISTORICO, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/assinar" || rota === "/assinar.html") {
       const html = await readFile(ASSINAR, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/declaracoes" || rota === "/declaracoes.html") {
       const html = await readFile(DECLARACOES, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/obrigado" || rota === "/obrigado.html") {
       const html = await readFile(resolve(AQUI, "public", "obrigado.html"), "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/empresas" || rota === "/empresas.html") {
       const html = await readFile(EMPRESAS, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/admin" || rota === "/admin.html") {
       const html = await readFile(ADMIN_PAGE, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/painel" || rota === "/index.html") {
       const html = await readFile(INDEX, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
 
     res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });

@@ -4,6 +4,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { injetarAnalytics } from "./analytics.mjs";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const DIR_POSTS = resolve(AQUI, "..", "content", "blog");
@@ -221,7 +222,7 @@ export async function urlsBlog(baseUrl) {
 
 // HTML base reaproveitando a paleta do site
 function template({ title, description, keywords, url, ld, conteudo, dataBR }) {
-  return `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -283,4 +284,5 @@ ${ld ? `<script type="application/ld+json">${JSON.stringify(ld)}</script>` : ""}
   </footer>
 </body>
 </html>`;
+  return injetarAnalytics(html);
 }
