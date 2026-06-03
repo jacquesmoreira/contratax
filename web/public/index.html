@@ -91,10 +91,12 @@
   .banner-cta .sub { font-size:13.5px; color:#c7d2fe; font-weight:500; }
   .banner-cta a.btn-cta { background:#fff; color:var(--indigo); font-weight:800; font-size:14.5px; padding:11px 20px; border-radius:10px; text-decoration:none; white-space:nowrap; }
   .banner-cta a.btn-cta:hover { background:#eef2ff; }
-  #nav-plano.chip-teste { background:#fef3c7; color:#92400e; padding:5px 11px; border-radius:99px; font-size:12.5px; font-weight:800; text-decoration:none; }
-  #nav-plano.chip-teste.urgente { background:#fee2e2; color:#991b1b; }
-  #nav-plano.chip-ativo { background:#ecfdf5; color:#047857; padding:5px 11px; border-radius:99px; font-size:12.5px; font-weight:800; text-decoration:none; }
-  #nav-plano.chip-upgrade { background:#eef2ff; color:var(--indigo); padding:5px 11px; border-radius:99px; font-size:12.5px; font-weight:800; text-decoration:none; }
+  #nav-plano { padding:6px 12px; border-radius:8px; font-size:12.5px; font-weight:800; text-decoration:none; white-space:nowrap; line-height:1; display:inline-flex; align-items:center; gap:4px; }
+  #nav-plano.chip-teste { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+  #nav-plano.chip-teste.urgente { background:#fee2e2; color:#991b1b; border-color:#fecaca; animation:pulsa 1.6s ease-in-out infinite; }
+  #nav-plano.chip-ativo { background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; }
+  #nav-plano.chip-upgrade { background:#eef2ff; color:var(--indigo); border:1px solid #c7d2fe; }
+  @keyframes pulsa { 0%,100% { opacity:1 } 50% { opacity:.65 } }
 
   /* Paywall */
   .paywall { max-width:520px; margin:30px auto; background:#fff; border:1px solid var(--linha); border-radius:20px; padding:36px; text-align:center; box-shadow:var(--sombra); }
@@ -316,21 +318,21 @@ function chipPlano(acesso) {
     const d = acesso.diasRestantes ?? 0;
     el.classList.add("chip-teste");
     if (d <= 2) el.classList.add("urgente");
-    el.textContent = d <= 0 ? "Teste expirou — assinar" : `🔥 Teste · ${d}d`;
+    el.textContent = d <= 0 ? "Teste expirou — Assinar" : `Teste · ${d}d restantes`;
   } else if (acesso.status === "ativo") {
     const nome = (acesso.nivel || "basico").replace(/^./, c => c.toUpperCase());
     const u = acesso.uso || {};
     const pct = u.limite > 0 ? u.usados / u.limite : 0;
     if (pct >= 0.8 && (acesso.nivel || "") === "basico") {
       el.classList.add("chip-upgrade");
-      el.textContent = `⬆️ Upgrade Pro`;
+      el.textContent = "Upgrade para Pro";
     } else {
       el.classList.add("chip-ativo");
-      el.textContent = `✓ ${nome}`;
+      el.textContent = "Plano " + nome;
     }
   } else if (acesso.status === "atrasado") {
     el.classList.add("chip-teste", "urgente");
-    el.textContent = `⚠ Atrasado · regularizar`;
+    el.textContent = "Pagamento atrasado";
   }
 }
 
@@ -408,13 +410,32 @@ function paywall(a) {
     : a.status === "vencido" ? "Aguardando o pagamento"
     : "Acesso suspenso";
   const desc = a.status === "vencido"
-    ? "Não identificamos o pagamento da sua mensalidade, por isso o acesso está bloqueado. Assim que o pagamento for confirmado, ele é reativado <b>na hora</b>."
-    : "Continue recebendo as licitações do seu ramo, a análise por IA e a checagem de aptidão.";
+    ? "Não identificamos o pagamento da sua mensalidade. Assim que o pagamento for confirmado, o acesso é reativado <b>na hora</b>."
+    : "Para continuar recebendo as licitações do seu ramo, análise por IA e alertas de certidões, escolha o plano que cabe na sua operação.";
+  const link = "/assinar?c=" + encodeURIComponent(token);
+  // Cards inline pra cliente escolher direto (so quando teste expirou)
+  const cards = a.status === "teste_expirado" ? `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;margin:24px 0 16px;max-width:760px;margin-left:auto;margin-right:auto">
+      <a href="${link}" style="background:#fff;border:1.5px solid var(--linha);border-radius:14px;padding:18px;text-decoration:none;text-align:left;display:block">
+        <div style="font-size:11px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px">Básico</div>
+        <div style="font-size:24px;font-weight:900;color:var(--indigo);margin:4px 0">R$ 197<span style="font-size:13px;color:var(--cinza);font-weight:600">/mês</span></div>
+        <div style="font-size:13px;color:var(--cinza)">100 análises de IA/mês<br>1 acesso · 1 CNPJ</div>
+      </a>
+      <a href="${link}" style="background:#fff;border:2px solid var(--indigo);border-radius:14px;padding:18px;text-decoration:none;text-align:left;display:block;position:relative">
+        <span style="position:absolute;top:-10px;left:14px;background:var(--indigo);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.4px;text-transform:uppercase">Recomendado</span>
+        <div style="font-size:11px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px">Pro</div>
+        <div style="font-size:24px;font-weight:900;color:var(--indigo);margin:4px 0">R$ 297<span style="font-size:13px;color:var(--cinza);font-weight:600">/mês</span></div>
+        <div style="font-size:13px;color:var(--cinza)">250 análises de IA/mês<br>Acessos para a equipe</div>
+      </a>
+    </div>
+    <div style="font-size:13px;color:var(--cinza);margin-bottom:8px">Consultor com múltiplos clientes? Veja os <a href="${link}" style="color:var(--indigo);font-weight:700">planos Assessoria</a> (multi-CNPJ).</div>
+  ` : "";
   return `<div class="paywall">
     <div class="lock">🔒</div>
     <h2>${titulo}</h2>
     <div class="desc">${desc}</div>
-    <a href="/assinar?c=${encodeURIComponent(token)}" style="display:inline-block;margin-top:18px;background:var(--indigo);color:#fff;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none">${a.status === "vencido" ? "Regularizar pagamento" : "Ver planos e assinar"} →</a>
+    ${cards}
+    <a href="${link}" style="display:inline-block;margin-top:14px;background:var(--indigo);color:#fff;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none">${a.status === "vencido" ? "Regularizar pagamento" : "Ir para a página de assinatura"} →</a>
   </div>`;
 }
 
