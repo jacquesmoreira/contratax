@@ -13,6 +13,7 @@ import { gerarTldr } from "../src/tldr.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
 import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
+import { renderizarArtigo, renderizarListagem, urlsBlog } from "../src/blog.mjs";
 import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
 import { temChave } from "../src/ia.mjs";
@@ -888,6 +889,23 @@ const servidor = createServer(async (req, res) => {
       } catch { /* nao existe: cai no 404 */ }
     }
 
+    // ===== Blog SEO: artigos em /blog e /blog/<slug> =====
+    const BASE_PUBLICA = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
+    if (rota === "/blog" || rota === "/blog/") {
+      const html = await renderizarListagem(BASE_PUBLICA);
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(html);
+    }
+    if (rota.startsWith("/blog/")) {
+      const slug = rota.replace(/^\/blog\//, "").replace(/\/$/, "");
+      const html = await renderizarArtigo(slug, BASE_PUBLICA);
+      if (html) {
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(html);
+      }
+      // slug invalido cai no 404
+    }
+
     // ===== SEO programatico: paginas publicas de licitacoes por ramo/estado =====
     if (rota === "/licitacoes" || rota === "/licitacoes/") {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
@@ -912,7 +930,8 @@ const servidor = createServer(async (req, res) => {
     // Sitemap DINAMICO: paginas-base + todas as paginas de SEO (ramo x estado).
     if (rota === "/sitemap.xml") {
       const base = ["https://contratax.com.br/", "https://contratax.com.br/cadastro", "https://contratax.com.br/entrar"];
-      const urls = [...base, ...urlsSEO()];
+      const blog = (await urlsBlog("https://contratax.com.br")).map((b) => b.loc);
+      const urls = [...base, ...blog, ...urlsSEO()];
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc><changefreq>daily</changefreq></url>`).join("\n")}\n</urlset>`;
       res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
       return res.end(xml);
