@@ -360,6 +360,34 @@ fundo.onclick = fechar;
 const ICON = { atende: ['ok','✓'], valida: ['ok','✓'], nao_atende: ['no','✕'], vencida: ['no','✕'], ausente: ['no','✕'], confirmar: ['dd','?'] };
 function iconHTML(s){ const [cls,ch] = ICON[s] ?? ['dd','·']; return `<span class="ic ${cls}">${ch}</span>`; }
 
+function referenciaHTML(r) {
+  if (!r || !r.temReferencia) return "";
+  const s = r.stats;
+  const periodo = r.meses === 12 ? "último ano"
+    : r.meses === 18 ? "último ano e meio"
+    : `últimos ${r.meses} meses`;
+  const escopo = r.escopo === "uf" ? `em ${esc(r.uf)}` : "no Brasil";
+  // Cor do badge do perfil (sinalizacao honesta sobre o tamanho do edital)
+  const corPerfil = r.perfil?.tipo === "grande" ? "#b45309"
+    : r.perfil?.tipo === "pequeno" ? "#0369a1"
+    : "#059669";
+  const bgPerfil = r.perfil?.tipo === "grande" ? "#fffbeb"
+    : r.perfil?.tipo === "pequeno" ? "#f0f9ff"
+    : "#ecfdf5";
+  return `<div class="bloco"><h3>💰 Preços praticados em contratos similares</h3>
+    <div style="font-size:13px;color:var(--cinza);margin-bottom:14px">${s.n.toLocaleString("pt-BR")} contratos fechados ${escopo} no ${periodo}, no segmento <b>${esc((r.termos||[]).join(", "))}</b>.</div>
+    ${r.perfil ? `<div style="background:${bgPerfil};border:1px solid ${corPerfil}33;border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:13.5px;color:${corPerfil};font-weight:600">${esc(r.perfil.texto)}</div>` : ""}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;text-align:center">
+      <div style="background:var(--fundo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--cinza-c);font-weight:700;text-transform:uppercase;letter-spacing:.3px">Mínimo</div><div style="font-size:14px;font-weight:800;color:var(--tinta);margin-top:3px">${brl(s.min)}</div></div>
+      <div style="background:var(--fundo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--cinza-c);font-weight:700;text-transform:uppercase;letter-spacing:.3px">25% Abaixo</div><div style="font-size:14px;font-weight:800;color:var(--tinta);margin-top:3px">${brl(s.p25)}</div></div>
+      <div style="background:#eef2ff;border:1px solid var(--indigo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--indigo);font-weight:700;text-transform:uppercase;letter-spacing:.3px">Mediana</div><div style="font-size:15px;font-weight:900;color:var(--indigo);margin-top:3px">${brl(s.mediana)}</div></div>
+      <div style="background:var(--fundo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--cinza-c);font-weight:700;text-transform:uppercase;letter-spacing:.3px">25% Acima</div><div style="font-size:14px;font-weight:800;color:var(--tinta);margin-top:3px">${brl(s.p75)}</div></div>
+      <div style="background:var(--fundo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--cinza-c);font-weight:700;text-transform:uppercase;letter-spacing:.3px">Máximo</div><div style="font-size:14px;font-weight:800;color:var(--tinta);margin-top:3px">${brl(s.max)}</div></div>
+    </div>
+    <div style="font-size:11.5px;color:var(--cinza-c);margin-top:10px;line-height:1.5">Faixa de valores praticados em contratos semelhantes (fonte: PNCP). Valores podem refletir preço unitário ou contrato inteiro — use como referência para dimensionar sua proposta.</div>
+  </div>`;
+}
+
 function precoHTML(p) {
   if (!p) return "";
   if (!p.stats) return `<div class="bloco"><h3>🏆 Quem ganha no seu ramo</h3><p style="font-size:14px;color:var(--cinza)">Ainda estamos reunindo o histórico de contratos do seu ramo na sua região.</p></div>`;
@@ -463,6 +491,7 @@ async function abrirDrawer(id) {
     ${portalUrl ? `<div class="linha-info"><span>Portal</span><span><a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="color:var(--indigo);font-weight:700">abrir →</a></span></div>` : ""}</div>`;
   html += `<div class="bloco" id="docs-bloco"><h3>📄 Documentos do edital</h3><div class="carregando" style="padding:10px"><span class="spinner"></span>Carregando documentos...</div></div>`;
   if (portalUrl) html += `<a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--verde);color:#fff;font-weight:700;padding:14px;border-radius:11px;text-decoration:none;margin-bottom:14px">${portalLabel}</a>`;
+  html += referenciaHTML(d.referencia);
   html += precoHTML(d.preco);
   html += d.temDocumentos
     ? saudeHTML(d.saude)

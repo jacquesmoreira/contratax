@@ -19,6 +19,7 @@ import { criarPerfil } from "../src/cadastro.mjs";
 import { gerarDigest, enviar, temEmailKey } from "../src/email.mjs";
 import { statusAtual, cobranca } from "../src/assinatura.mjs";
 import { precoVencedores } from "../src/preco.mjs";
+import { precoReferencia } from "../src/precoReferencia.mjs";
 import { radarRenovacao } from "../src/radar.mjs";
 import { listarDocumentos, baixarArquivo } from "../src/documentos.mjs";
 import { verificarSenha } from "../src/senha.mjs";
@@ -549,6 +550,9 @@ const servidor = createServer(async (req, res) => {
           })
         : null;
       const liberacao = token === ADMIN ? { ok: true } : (perfil ? checarAnalise(perfil) : { ok: false, motivo: "assinatura" });
+      // Preco de referencia: faixa de valores de contratos similares (UF ou nacional).
+      // Quando ha perfil, usa os termos do ramo (mais precisos).
+      const referencia = precoReferencia(edital, { termosPerfil: perfil?.filtro?.termos ?? [] });
       return json(res, 200, {
         edital,
         analise: analiseCache?.analise ?? null,
@@ -557,6 +561,7 @@ const servidor = createServer(async (req, res) => {
         saude: saudeDocumental(empresa),
         temDocumentos,
         preco,
+        referencia,
         uso: perfil ? usoDe(perfil) : null,
         ia: { liberada: liberacao.ok, motivo: liberacao.motivo ?? null }, // recurso do plano pago
         temChave: temChave(),
