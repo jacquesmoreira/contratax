@@ -76,7 +76,7 @@ Pra quem está começando, este é o fluxo que funciona:
 6. **Verifica a data de encerramento** — se for em menos de 3 dias, prioriza
 7. **Marca os editais que vai responder** numa planilha
 
-Pra escala, ferramentas como o [ContrataX](https://www.contratax.com.br) automatizam esses passos: leem todo o PNCP a cada hora, filtram pelo seu ramo, mandam alerta diário, e ainda **leem o edital com IA** dizendo se você está apto e o que falta pra participar.
+Pra escala, ferramentas como o [ContrataX](https://www.contratax.com.br) automatizam esses passos: leem todo o PNCP a cada hora, filtram pelo seu ramo, mandam alerta diário, e ainda **fazem a leitura completa de cada edital** dizendo se você está apto e o que falta pra participar.
 
 ## Modalidades que você vai encontrar
 

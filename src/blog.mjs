@@ -179,7 +179,7 @@ export async function renderizarArtigo(slug, baseUrl) {
         <div style="background:linear-gradient(135deg,#4338ca,#2563eb);color:#fff;border-radius:16px;padding:28px;margin:40px 0;text-align:center">
           <div style="font-size:13px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.85;margin-bottom:6px">Sobre o ContrataX</div>
           <h3 style="font-size:22px;font-weight:800;margin-bottom:8px">Monitore licitações do seu ramo no Brasil todo</h3>
-          <p style="font-size:14.5px;line-height:1.55;color:#c7d2fe;margin-bottom:16px">IA lê cada edital, diz se a sua empresa está apta e o que falta — em segundos. 7 dias grátis sem cartão.</p>
+          <p style="font-size:14.5px;line-height:1.55;color:#c7d2fe;margin-bottom:16px">Nosso sistema lê cada edital, diz se a sua empresa está apta e o que falta — em segundos. 7 dias grátis sem cartão.</p>
           <a href="/cadastro" style="display:inline-block;background:#fff;color:#4338ca;font-weight:800;padding:13px 26px;border-radius:11px;text-decoration:none">Testar grátis →</a>
         </div>
         ${relacionados ? `<div style="margin-top:48px"><h3 style="font-size:18px;font-weight:800;margin-bottom:14px">Leia também</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">${relacionados}</div></div>` : ""}

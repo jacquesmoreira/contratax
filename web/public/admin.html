@@ -81,8 +81,8 @@ async function carregar() {
     <div class="c"><div class="n" style="color:var(--vermelho)">${r.vencidos + r.atrasados}</div><div class="l">Vencidos/atrasados</div></div>
     <div class="c"><div class="n">${(s.editais?.abertos ?? 0).toLocaleString("pt-BR")}</div><div class="l">Editais abertos</div></div>
     <div class="c"><div class="n">${(s.contratos?.total ?? 0).toLocaleString("pt-BR")}</div><div class="l">Contratos no acervo</div></div>
-    <div class="c"><div class="n">${cu.analises ?? 0}</div><div class="l">Análises de IA</div></div>
-    <div class="c"><div class="n">${brl(cu.brlTotal ?? 0)}</div><div class="l">Custo IA total (${cu.custoMedioPorAnaliseBRL ? brl(cu.custoMedioPorAnaliseBRL)+"/análise" : "—"})</div></div>
+    <div class="c"><div class="n">${cu.analises ?? 0}</div><div class="l">Análises por mês</div></div>
+    <div class="c"><div class="n">${brl(cu.brlTotal ?? 0)}</div><div class="l">Custo total (${cu.custoMedioPorAnaliseBRL ? brl(cu.custoMedioPorAnaliseBRL)+"/análise" : "—"})</div></div>
   </div>`;
 
   html += `<h2>Clientes e cadastros</h2><table><thead><tr>

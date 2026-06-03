@@ -448,7 +448,7 @@
         <ul>
           <li>Todas as licitações do seu ramo, no Brasil todo</li>
           <li>Alerta diário dos editais novos</li>
-          <li><b>100 análises de edital por mês</b> (a IA lê e confere a sua aptidão)</li>
+          <li><b>100 análises de edital por mês</b> (o sistema lê e confere a sua aptidão)</li>
           <li>Declarações de habilitação prontas</li>
           <li>Dossiê de impugnação</li>
           <li>Histórico de contratos: quem ganhou e por quanto</li>
@@ -473,7 +473,7 @@
 
     <!-- Bloco: planos para consultores/assessorias -->
     <h3 style="text-align:center;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--cinza-c);margin:48px 0 8px">Para consultores e assessorias</h3>
-    <p style="text-align:center;color:var(--cinza);max-width:560px;margin:0 auto 22px;font-size:14.5px">Gerencie vários clientes em <b>um único login</b>. Cada CNPJ ganha painel próprio, alertas e análise por IA.</p>
+    <p style="text-align:center;color:var(--cinza);max-width:560px;margin:0 auto 22px;font-size:14.5px">Gerencie vários clientes em <b>um único login</b>. Cada CNPJ ganha painel próprio, alertas e analise dos editais.</p>
     <div style="display:flex;gap:22px;flex-wrap:wrap;justify-content:center;align-items:stretch">
       <div class="preco-card" style="margin:0;flex:1;min-width:280px;max-width:360px">
         <div class="selo-preco">Multi-CNPJ</div>
@@ -482,7 +482,7 @@
         <ul>
           <li><b>Até 10 empresas</b> sob um único login</li>
           <li>Painel separado para cada CNPJ</li>
-          <li>100 análises de IA por empresa</li>
+          <li>100 leituras dos editais por empresa</li>
           <li>Alertas por empresa (editais e certidões)</li>
           <li>Suas marcas registradas: você fica entre o cliente e a ferramenta</li>
         </ul>
@@ -495,7 +495,7 @@
         <ul>
           <li><b>Até 25 empresas</b> sob um único login</li>
           <li>Painel separado para cada CNPJ</li>
-          <li>100 análises de IA por empresa</li>
+          <li>100 leituras dos editais por empresa</li>
           <li>Alertas por empresa (editais e certidões)</li>
           <li>Ideal para escritórios e contadores com carteira ampla</li>
         </ul>
@@ -586,14 +586,14 @@ async function buscar() {
       const restantes = (d.total - d.amostra.length).toLocaleString("pt-BR");
       html += `<div class="cta-trava">
         <h3>+ ${restantes} licitaç${(d.total - d.amostra.length) === 1 ? "ão" : "ões"} esperando você</h3>
-        <p>Aqui mostramos só ${d.amostra.length} resultados — o painel completo tem todas, com filtros por município, prazo, modalidade e tipo, mais a <b>análise por IA</b> que lê cada edital e diz se sua empresa está apta. Tudo grátis por 7 dias, sem cartão.</p>
+        <p>Aqui mostramos só ${d.amostra.length} resultados — o painel completo tem todas, com filtros por município, prazo, modalidade e tipo, mais a <b>analise dos editais</b> que lê cada edital e diz se sua empresa está apta. Tudo grátis por 7 dias, sem cartão.</p>
         <a href="/cadastro" class="btn btn-grande" style="background:#fff;color:var(--indigo)">Ver todas as ${d.total.toLocaleString("pt-BR")} licitações →</a>
       </div>`;
     } else if (d.total > 0) {
-      // Mostrou tudo — convida pra cadastrar pra IA + alertas
+      // Mostrou tudo — convida pra cadastrar pra receber alertas
       html += `<div class="cta-trava">
         <h3>Receba os próximos editais automaticamente</h3>
-        <p>Esses são os editais abertos agora. Toda semana surgem novos — cadastre seu ramo grátis e receba digest diário por e-mail + análise por IA de cada um (apto / não apto).</p>
+        <p>Esses são os editais abertos agora. Toda semana surgem novos — cadastre seu ramo grátis e receba digest diário por e-mail + analise dos editais de cada um (apto / não apto).</p>
         <a href="/cadastro" class="btn btn-grande" style="background:#fff;color:var(--indigo)">Criar conta grátis →</a>
       </div>`;
     }

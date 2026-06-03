@@ -176,7 +176,7 @@ Pregão de produto físico exige entrega. Calcule frete, taxa, embalagem antes d
 
 ## Ferramenta que ajuda
 
-Plataformas como o [ContrataX](https://www.contratax.com.br) monitoram todos os editais do seu ramo no PNCP, leem o PDF com IA e dizem se você está apto antes mesmo de você abrir. O alerta diário por e-mail garante que nenhum pregão importante passa batido — e o calendário automático de certidões evita o erro #2 da lista acima.
+Plataformas como o [ContrataX](https://www.contratax.com.br) monitoram todos os editais do seu ramo no PNCP, leem o PDF completo e dizem se você está apto antes mesmo de você abrir. O alerta diário por e-mail garante que nenhum pregão importante passa batido — e o calendário automático de certidões evita o erro #2 da lista acima.
 
 ## Resumo
 

@@ -126,7 +126,7 @@ Impugnação não é arma. Use com critério:
 
 ## Ferramentas que ajudam
 
-Plataformas como o [ContrataX](https://www.contratax.com.br) leem o edital com IA e geram **automaticamente** um relatório das cláusulas potencialmente restritivas, indicando o fundamento legal de cada uma. Isso reduz o tempo de análise de 1-2 horas para alguns segundos e ajuda a saber se vale impugnar antes de gastar tempo.
+Plataformas como o [ContrataX](https://www.contratax.com.br) fazem a leitura completa do edital e geram **automaticamente** um relatório das cláusulas potencialmente restritivas, indicando o fundamento legal de cada uma. Isso reduz o tempo de análise de 1-2 horas para alguns segundos e ajuda a saber se vale impugnar antes de gastar tempo.
 
 ## Resumo
 

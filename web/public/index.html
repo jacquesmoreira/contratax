@@ -147,7 +147,7 @@
     <a class="logo" href="/"><img src="/logo-horizontal.png" alt="ContrataX" style="height:32px;width:auto;display:block" /></a>
     <div class="dir">
       <span id="nav-cliente"></span>
-      <span id="nav-uso" title="Análises de IA usadas neste mês"></span>
+      <span id="nav-uso" title="leituras dos editais usadas neste mês"></span>
       <a id="nav-plano" href="#" style="display:none"></a>
       <a id="nav-conta" href="#">Minha conta</a>
       <a id="nav-equipe" href="#">Equipe</a>
@@ -268,7 +268,7 @@ function bannerTeste(a) {
       <div class="ico">⏰</div>
       <div class="corpo">
         <div class="tit">Seu teste grátis termina ${d <= 0 ? "hoje" : d === 1 ? "amanhã" : `em ${d} dias`}!</div>
-        <div class="sub" style="color:#fecaca">Sem assinatura, você perde o acesso aos editais, análise por IA e alertas. Garante agora.</div>
+        <div class="sub" style="color:#fecaca">Sem assinatura, você perde o acesso aos editais, analise dos editais e alertas. Garante agora.</div>
       </div>
       <a class="btn-cta" href="/assinar?c=${encodeURIComponent(token)}">Escolher plano</a>
     </div>`;
@@ -278,7 +278,7 @@ function bannerTeste(a) {
     <div class="ico">⚡</div>
     <div class="corpo">
       <div class="tit">Você está testando o ContrataX gratuitamente</div>
-      <div class="sub">Restam <b>${d} dia${d !== 1 ? "s" : ""}</b> do seu teste. Assine para garantir o monitoramento contínuo e 100 análises por IA todo mês.</div>
+      <div class="sub">Restam <b>${d} dia${d !== 1 ? "s" : ""}</b> do seu teste. Assine para garantir o monitoramento contínuo e 100 leituras dos editais todo mês.</div>
     </div>
     <a class="btn-cta" href="/assinar?c=${encodeURIComponent(token)}">Ver planos</a>
   </div>`;
@@ -397,7 +397,7 @@ function popupVencimento(a) {
   ov.innerHTML = `<div style="background:#fff;border-radius:18px;max-width:400px;width:100%;padding:30px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.3)">
     <div style="font-size:40px">🔔</div>
     <h2 style="font-size:20px;font-weight:800;margin:8px 0 6px">Sua assinatura ${quando}</h2>
-    <p style="color:#475569;font-size:14.5px;margin-bottom:20px">Renove o pagamento para continuar com a análise por IA e o monitoramento sem interrupção.</p>
+    <p style="color:#475569;font-size:14.5px;margin-bottom:20px">Renove o pagamento para continuar com a analise dos editais e o monitoramento sem interrupção.</p>
     <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;background:#4338ca;color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none;margin-bottom:10px">Renovar agora</a>
     <button id="fechar-venc" style="background:none;border:none;color:#94a3b8;font-weight:600;font-size:14px;cursor:pointer">Agora não</button>
   </div>`;
@@ -411,7 +411,7 @@ function paywall(a) {
     : "Acesso suspenso";
   const desc = a.status === "vencido"
     ? "Não identificamos o pagamento da sua mensalidade. Assim que o pagamento for confirmado, o acesso é reativado <b>na hora</b>."
-    : "Para continuar recebendo as licitações do seu ramo, análise por IA e alertas de certidões, escolha o plano que cabe na sua operação.";
+    : "Para continuar recebendo as licitações do seu ramo, analise dos editais e alertas de certidões, escolha o plano que cabe na sua operação.";
   const link = "/assinar?c=" + encodeURIComponent(token);
   // Cards inline pra cliente escolher direto (so quando teste expirou)
   const cards = a.status === "teste_expirado" ? `
@@ -419,13 +419,13 @@ function paywall(a) {
       <a href="${link}" style="background:#fff;border:1.5px solid var(--linha);border-radius:14px;padding:18px;text-decoration:none;text-align:left;display:block">
         <div style="font-size:11px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px">Básico</div>
         <div style="font-size:24px;font-weight:900;color:var(--indigo);margin:4px 0">R$ 197<span style="font-size:13px;color:var(--cinza);font-weight:600">/mês</span></div>
-        <div style="font-size:13px;color:var(--cinza)">100 análises de IA/mês<br>1 acesso · 1 CNPJ</div>
+        <div style="font-size:13px;color:var(--cinza)">100 leituras dos editais/mês<br>1 acesso · 1 CNPJ</div>
       </a>
       <a href="${link}" style="background:#fff;border:2px solid var(--indigo);border-radius:14px;padding:18px;text-decoration:none;text-align:left;display:block;position:relative">
         <span style="position:absolute;top:-10px;left:14px;background:var(--indigo);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.4px;text-transform:uppercase">Recomendado</span>
         <div style="font-size:11px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px">Pro</div>
         <div style="font-size:24px;font-weight:900;color:var(--indigo);margin:4px 0">R$ 297<span style="font-size:13px;color:var(--cinza);font-weight:600">/mês</span></div>
-        <div style="font-size:13px;color:var(--cinza)">250 análises de IA/mês<br>Acessos para a equipe</div>
+        <div style="font-size:13px;color:var(--cinza)">250 leituras dos editais/mês<br>Acessos para a equipe</div>
       </a>
     </div>
     <div style="font-size:13px;color:var(--cinza);margin-bottom:8px">Consultor com múltiplos clientes? Veja os <a href="${link}" style="color:var(--indigo);font-weight:700">planos Assessoria</a> (multi-CNPJ).</div>
@@ -551,7 +551,7 @@ function iconHTML(s){ const [cls,ch] = ICON[s] ?? ['dd','·']; return `<span cla
 function tldrHTML(t, id) {
   if (t === "gerando") {
     return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--indigo);background:linear-gradient(135deg,#eef2ff 0%,#fff 60%)">
-      <h3>⚡ TL;DR — análise rápida</h3>
+      <h3>⚡ Resumo rápido do edital</h3>
       <div style="padding:10px 0;font-size:14px;color:var(--cinza)"><span class="spinner"></span>Lendo o edital... isso leva 5–10 segundos.</div>
     </div>`;
   }
@@ -568,7 +568,7 @@ function tldrHTML(t, id) {
   ).join("");
   return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid ${cor};background:linear-gradient(135deg,${bg} 0%,#fff 60%)">
     <h3 style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-      <span>⚡ TL;DR — análise rápida</span>
+      <span>⚡ Resumo rápido do edital</span>
       <span style="font-size:11px;font-weight:800;color:${cor};background:${bg};border:1px solid ${cor}55;padding:4px 10px;border-radius:99px;letter-spacing:.4px">${txt}</span>
     </h3>
     <div style="font-size:14.5px;color:var(--tinta);margin:8px 0 12px;line-height:1.5"><b>${esc(t.objeto || "")}</b></div>
@@ -659,7 +659,7 @@ function impugnacaoHTML(d) {
         <pre id="minuta-imp" style="white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.5;background:var(--fundo);border:1px solid var(--linha);border-radius:10px;padding:14px;margin-top:8px">${esc(i.minuta || "")}</pre>
         <button onclick="copiarMinuta()" style="margin-top:8px;background:var(--indigo);color:#fff;border:none;padding:10px 16px;border-radius:9px;font-weight:700;cursor:pointer;font-family:inherit">Copiar minuta</button>
       </details>
-      <div style="font-size:11px;color:var(--cinza-c);margin-top:10px">Minuta gerada por IA a partir do edital. Revise com o seu jurídico antes de protocolar.</div>
+      <div style="font-size:11px;color:var(--cinza-c);margin-top:10px">Minuta gerada com base no edital a partir do edital. Revise com o seu jurídico antes de protocolar.</div>
     </div>`;
   }
   if (d.ia && d.ia.liberada) {
@@ -750,8 +750,8 @@ async function abrirDrawer(id) {
   } else if (d.temChave && d.ia && d.ia.motivo === "assinatura") {
     // Recurso do plano: aparece para todos (gancho), mas pede assinatura para usar.
     html += `<div class="bloco" style="border:1px solid var(--linha);background:linear-gradient(180deg,#fff, #f8fafc)">
-      <h3>🔒 Análise por IA — recurso do plano</h3>
-      <p style="font-size:13.5px;color:var(--cinza);margin:6px 0 12px">A IA lê o edital inteiro e cruza com os seus documentos: diz, em segundos, <b>se você está apto</b> e <b>o que falta</b> para participar. Disponível para assinantes.</p>
+      <h3>🔒 Analise dos editais — recurso do plano</h3>
+      <p style="font-size:13.5px;color:var(--cinza);margin:6px 0 12px">O sistema lê o edital inteiro e cruza com os seus documentos: diz, em segundos, <b>se você está apto</b> e <b>o que falta</b> para participar. Disponível para assinantes.</p>
       <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;text-align:center;background:var(--indigo);color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none">Assinar e liberar a análise →</a>
     </div>`;
   } else if (d.temChave) {

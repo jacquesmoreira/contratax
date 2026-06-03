@@ -59,8 +59,8 @@
 
   <div class="wrap-main">
     <div class="selo-teste" id="selo" style="display:none"></div>
-    <h1>Libere a inteligência completa</h1>
-    <div class="sub">A leitura do edital por IA e a conferência dos seus documentos ficam liberadas na assinatura. Pagou, liberou na hora.</div>
+    <h1>Libere todos os recursos</h1>
+    <div class="sub">A leitura completa do edital e a conferência dos seus documentos ficam liberadas na assinatura. Pagou, liberou na hora.</div>
 
     <div class="planos" id="planos"></div>
 
@@ -80,7 +80,7 @@ const $ = (id) => document.getElementById(id);
 ["voltar-logo","link-painel","link-painel2"].forEach((i) => $(i).href = "/painel?c=" + encodeURIComponent(token));
 
 const BENEFICIOS = [
-  "Análise por IA: lê o edital e diz se você está apto e o que falta",
+  "analise dos editais: le o edital e diz se você está apto e o que falta",
   "Conferência dos seus documentos contra cada edital",
   "Radar de renovação e ranking de quem ganha em cada órgão",
   "Busca nacional por produto, cidade e prazo + acessos para a equipe",
@@ -118,7 +118,7 @@ async function carregar() {
     const blocoAss = document.createElement("div");
     blocoAss.innerHTML = `
       <h2 style="margin-top:42px">Para consultores e assessorias de licitação</h2>
-      <div class="sub" style="margin-bottom:18px">Gerencie vários clientes em um único login. Cada CNPJ tem painel próprio com editais, alertas e análise por IA.</div>
+      <div class="sub" style="margin-bottom:18px">Gerencie vários clientes em um único login. Cada CNPJ tem painel próprio com editais, alertas e analise dos editais.</div>
       <div class="planos" id="planos-ass"></div>
     `;
     $("planos").parentNode.insertBefore(blocoAss, $("planos").nextSibling);
