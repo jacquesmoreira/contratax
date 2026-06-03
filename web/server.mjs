@@ -109,7 +109,7 @@ const servidor = createServer(async (req, res) => {
     if (rota === "/api/busca-publica") {
       const uf = url.searchParams.get("uf") || null;
       const termo = url.searchParams.get("termo") || "";
-      return json(res, 200, buscaPublica({ uf, termo, limite: 6 }));
+      return json(res, 200, buscaPublica({ uf, termo, limite: 15 }));
     }
 
     // Login por e-mail e senha.

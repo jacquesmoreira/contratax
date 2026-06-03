@@ -568,21 +568,33 @@ async function buscar() {
   box.innerHTML = `<div class="res-vazio">Buscando no acervo nacional...</div>`;
   try {
     const d = await (await fetch(`/api/busca-publica?uf=${encodeURIComponent(uf)}&termo=${encodeURIComponent(termo)}`)).json();
-    if (!d.total) { box.innerHTML = `<div class="res-vazio">Nenhuma licitação aberta encontrada para "<b>${esc(termo)}</b>"${uf?" em "+uf:""}. Tente um termo mais amplo.</div>`; return; }
+    if (!d.total) { box.innerHTML = `<div class="res-vazio">Nenhuma licitação aberta encontrada para "<b>${esc(termo)}</b>"${uf?" em "+uf:""}. Tente um termo mais amplo (ex: <b>hospitalar</b> em vez de <b>material hospitalar</b>).</div>`; return; }
     const ondeUf = uf || "Brasil";
     const ramo = termo ? `de ${esc(termo)} ` : "";
-    let html = `<div class="stat-banner"><div class="num">${d.total.toLocaleString("pt-BR")}</div><div class="txt">licitações ${ramo}abertas em ${ondeUf}, somando ${brlHumano(d.somaValor)} em oportunidades</div></div>`;
+    // Frase de período baseada no range temporal
+    const dataBR = (s) => s ? new Date(s).toLocaleDateString("pt-BR") : "";
+    const periodoLinha = d.range
+      ? `Encerramento entre <b>${dataBR(d.range.de)}</b> e <b>${dataBR(d.range.ate)}</b>${d.comValor < d.total ? ` · <span title="dado do PNCP, não publicado pelo órgão">${d.total - d.comValor} sem valor declarado</span>` : ""}`
+      : "";
+    let html = `<div class="stat-banner"><div class="num">${d.total.toLocaleString("pt-BR")}</div><div class="txt">licitações ${ramo}abertas em ${ondeUf}, somando ${brlHumano(d.somaValor)} em oportunidades</div>${periodoLinha ? `<div class="periodo" style="margin-top:8px;font-size:12.5px;color:rgba(255,255,255,.85);font-weight:500">${periodoLinha}</div>` : ""}</div>`;
     html += d.amostra.map(e => `<div class="res-card">
       <div class="top"><span class="org">${esc(e.municipio)}/${esc(e.uf)} · ${esc(e.orgao)}</span>${pz(e.encerramento)}</div>
       <div class="obj">${esc((e.objeto||"").slice(0,140))}</div>
-      <div class="rod"><span class="mod">${esc(e.modalidade)}</span><span class="val">${brl(e.valorEstimado)}</span></div>
+      <div class="rod"><span class="mod">${esc(e.modalidade)}</span>${e.valorEstimado > 0 ? `<span class="val">${brl(e.valorEstimado)}</span>` : `<span class="val" style="color:#94a3b8;font-style:italic;font-weight:600;font-size:13px" title="O órgão não divulgou o valor estimado no PNCP">valor não divulgado</span>`}</div>
     </div>`).join("");
     if (d.total > d.amostra.length) {
       const restantes = (d.total - d.amostra.length).toLocaleString("pt-BR");
       html += `<div class="cta-trava">
-        <h3>Falta você ver outras ${restantes} licitações</h3>
-        <p>Para acessar todas as licitações e editais do seu ramo, e descobrir em cada um se você está apto a participar, faça o seu cadastro gratuito.</p>
-        <a href="/cadastro" class="btn btn-grande" style="background:#fff;color:var(--indigo)">Fazer meu cadastro grátis</a>
+        <h3>+ ${restantes} licitaç${(d.total - d.amostra.length) === 1 ? "ão" : "ões"} esperando você</h3>
+        <p>Aqui mostramos só ${d.amostra.length} resultados — o painel completo tem todas, com filtros por município, prazo, modalidade e tipo, mais a <b>análise por IA</b> que lê cada edital e diz se sua empresa está apta. Tudo grátis por 7 dias, sem cartão.</p>
+        <a href="/cadastro" class="btn btn-grande" style="background:#fff;color:var(--indigo)">Ver todas as ${d.total.toLocaleString("pt-BR")} licitações →</a>
+      </div>`;
+    } else if (d.total > 0) {
+      // Mostrou tudo — convida pra cadastrar pra IA + alertas
+      html += `<div class="cta-trava">
+        <h3>Receba os próximos editais automaticamente</h3>
+        <p>Esses são os editais abertos agora. Toda semana surgem novos — cadastre seu ramo grátis e receba digest diário por e-mail + análise por IA de cada um (apto / não apto).</p>
+        <a href="/cadastro" class="btn btn-grande" style="background:#fff;color:var(--indigo)">Criar conta grátis →</a>
       </div>`;
     }
     box.innerHTML = html;

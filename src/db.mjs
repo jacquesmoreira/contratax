@@ -237,7 +237,7 @@ export function estatisticasContratos() {
 
 // Busca publica da landing page: por UF e termo livre, devolve o total, a soma
 // dos valores e uma amostra dos editais abertos. Sem perfil, sem login.
-export function buscaPublica({ uf = null, termo = "", limite = 6 } = {}) {
+export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
   const candidatos = consultar({ ufs: uf ? [uf] : [], apenasAbertos: true });
   const termos = termo && termo.trim() ? [termo.trim()] : [];
   let casaram = aplicarFiltro(candidatos, { termos });
@@ -250,11 +250,16 @@ export function buscaPublica({ uf = null, termo = "", limite = 6 } = {}) {
   casaram = dedupEditais(casaram);
 
   const somaValor = casaram.reduce((s, e) => s + (e.valorEstimado || 0), 0);
+  // Range temporal: ajuda o cliente a entender de QUE periodo sao os resultados
+  // (vai desde o que encerra hoje ate o mais distante)
+  const datas = casaram.map((e) => e.encerramento).filter(Boolean).sort();
+  const range = datas.length ? { de: datas[0], ate: datas[datas.length - 1] } : null;
+  const comValor = casaram.filter((e) => e.valorEstimado > 0).length;
   const amostra = casaram.slice(0, limite).map((e) => ({
     municipio: e.municipio, uf: e.uf, orgao: e.orgao, objeto: e.objeto,
     valorEstimado: e.valorEstimado, encerramento: e.encerramento, modalidade: e.modalidade, link: e.link,
   }));
-  return { total: casaram.length, somaValor, amostra };
+  return { total: casaram.length, somaValor, comValor, range, amostra };
 }
 
 // Busca livre no acervo (usada pelo painel): por termo, UF e modalidade.
