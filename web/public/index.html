@@ -583,7 +583,7 @@ async function abrirDrawer(id) {
   // estado "gerando" e dispara a geracao em background.
   if (d.tldr) {
     html += tldrHTML(d.tldr, ed.id);
-  } else if (d.temChave && d.ia && (d.ia.liberada || token === "")) {
+  } else if (d.temChave) {
     html += tldrHTML("gerando", ed.id);
     setTimeout(() => gerarTldrAsync(ed.id), 100);
   }

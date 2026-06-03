@@ -775,27 +775,32 @@ const servidor = createServer(async (req, res) => {
     }
 
     // TL;DR do edital (5 linhas): gera sob demanda se nao houver cache.
-    // Recurso GRATUITO (cache global por edital) — diferente da analise completa,
-    // nao conta na cota do cliente. So exige assinatura ativa pra evitar abuso.
+    // Recurso GRATUITO (cache global por edital) — abre pra qualquer visitante
+    // (gancho de aquisicao). O cache protege contra custo: mesmo edital aberto
+    // 1000 vezes = 1 chamada de IA. Circuit breaker simples por hora.
     if (rota === "/api/tldr" && req.method === "POST") {
       const id = url.searchParams.get("id");
       const edital = buscarPorId(id);
       if (!edital) return json(res, 404, { erro: "Edital nao encontrado" });
-      // Cache global: se ja existe, devolve direto
+      // Cache global: se ja existe, devolve direto (sem custo de IA)
       const cache = await carregarTldr(id);
       if (cache) return json(res, 200, { tldr: cache.tldr, cache: true });
-      // Sem chave ou sem assinatura: nao gera
       if (!temChave()) return json(res, 400, { erro: "Sem ANTHROPIC_API_KEY configurada" });
-      const tokenT = url.searchParams.get("c") || "";
-      const perfilT = await perfilPorToken(tokenT);
-      if (tokenT !== ADMIN && (!perfilT || !statusAtual(perfilT).temAcesso)) {
-        return json(res, 403, { erro: "Assinatura nao ativa" });
+      // Circuit breaker: limita geracoes novas por hora pra proteger orcamento
+      if (!global.__tldrCounter) global.__tldrCounter = { hora: 0, count: 0 };
+      const horaAtual = Math.floor(Date.now() / 3600000);
+      if (global.__tldrCounter.hora !== horaAtual) global.__tldrCounter = { hora: horaAtual, count: 0 };
+      const LIMITE = Number(process.env.LICITA_TLDR_LIMITE_HORA || 60);
+      if (global.__tldrCounter.count >= LIMITE) {
+        return json(res, 429, { erro: "Limite temporario atingido. Tente daqui a alguns minutos." });
       }
+      global.__tldrCounter.count++;
       try {
         const tldr = await gerarTldr(edital);
         await salvarTldr(id, tldr);
         return json(res, 200, { tldr, cache: false });
       } catch (e) {
+        global.__tldrCounter.count--; // nao consome cota se falhou
         return json(res, 500, { erro: e.message });
       }
     }
