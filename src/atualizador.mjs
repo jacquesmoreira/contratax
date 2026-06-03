@@ -7,6 +7,7 @@ import { ingerirNacional } from "./ingest.mjs";
 import { monitorar } from "./monitor.mjs";
 import { removerExpirados, estatisticas } from "./db.mjs";
 import { lerPerfis } from "./perfis.mjs";
+import { verificarCertidoesVencendo } from "./alertasCertidoes.mjs";
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -20,6 +21,8 @@ export async function atualizarEditais({ limitePaginas = Infinity, log = console
     try { await monitorar(p); } catch (e) { log(`[atualizar] perfil ${p.nome || p.id}: ${e.message}`); }
   }
   const removidos = removerExpirados({ graceDias: 3 });
+  // Alertas automaticos de certidoes vencendo (so se e-mail configurado)
+  try { await verificarCertidoesVencendo({ log }); } catch (e) { log(`[alertas] erro: ${e.message}`); }
   const s = estatisticas();
   log(`[atualizar] concluido. Acervo: ${s.total} editais (${s.abertos} abertos); ${removidos} removidos.`);
   return s;

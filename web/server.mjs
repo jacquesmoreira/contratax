@@ -509,7 +509,7 @@ const servidor = createServer(async (req, res) => {
         .sort((a, b) => (a.encerramento || "").localeCompare(b.encerramento || ""))
         .slice(0, 6);
       const { html } = gerarDigest(perfil, editais);
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
 
@@ -645,7 +645,7 @@ const servidor = createServer(async (req, res) => {
     if (/^\/google[\w-]+\.html$/.test(rota)) {
       try {
         const buf = await readFile(resolve(AQUI, "public", rota.slice(1)));
-        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
         return res.end(buf);
       } catch { /* nao existe: cai no 404 */ }
     }
@@ -662,14 +662,14 @@ const servidor = createServer(async (req, res) => {
 
     // ===== SEO programatico: paginas publicas de licitacoes por ramo/estado =====
     if (rota === "/licitacoes" || rota === "/licitacoes/") {
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(paginaHub());
     }
     if (rota.startsWith("/licitacoes/")) {
       const partes = rota.split("/").filter(Boolean); // ["licitacoes", slug, uf?]
       const html = paginaCategoria(partes[1], partes[2] || null);
       if (html) {
-        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
         return res.end(html);
       }
       // slug/uf invalido: cai no 404
@@ -693,57 +693,57 @@ const servidor = createServer(async (req, res) => {
     // Landing page (porta de entrada) e o painel da aplicacao.
     if (rota === "/" || rota === "/lp.html") {
       const html = await readFile(LP, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
     if (rota === "/cadastro" || rota === "/cadastro.html") {
       const html = await readFile(CADASTRO, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
     if (rota === "/entrar" || rota === "/entrar.html") {
       const html = await readFile(ENTRAR, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
     if (rota === "/documentos" || rota === "/documentos.html") {
       const html = await readFile(DOCUMENTOS, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
     if (rota === "/equipe" || rota === "/equipe.html") {
       const html = await readFile(EQUIPE, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
     if (rota === "/conta" || rota === "/conta.html") {
       const html = await readFile(CONTA, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
     if (rota === "/historico" || rota === "/historico.html") {
       const html = await readFile(HISTORICO, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
     if (rota === "/assinar" || rota === "/assinar.html") {
       const html = await readFile(ASSINAR, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
     if (rota === "/declaracoes" || rota === "/declaracoes.html") {
       const html = await readFile(DECLARACOES, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
     if (rota === "/admin" || rota === "/admin.html") {
       const html = await readFile(ADMIN_PAGE, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
     if (rota === "/painel" || rota === "/index.html") {
       const html = await readFile(INDEX, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }
 
