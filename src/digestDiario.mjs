@@ -47,6 +47,14 @@ export async function enviarDigestDoDia({ log = console.log } = {}) {
       if (!st.temAcesso) continue;
       if (p._ultimoDigest === hoje) continue;
 
+      // Sanity: se o perfil ficou sem UFs cadastradas, NAO manda digest nacional
+      // (evita inundar o cliente com editais de regioes que ele nao atua).
+      const ufs = p.ufs ?? (p.uf ? [p.uf] : []);
+      if (!ufs.length) {
+        log(`[digest] ${p.nome}: sem UF cadastrada, pulando (atualize "Minha conta").`);
+        continue;
+      }
+
       // Recalcula os editais do ramo (sem marcar como vistos ainda)
       const { filtrados, novos } = await monitorar(p, { marcar: false });
       if (!novos.length) {
