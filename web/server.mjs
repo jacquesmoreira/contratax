@@ -94,6 +94,7 @@ async function salvarEmpresaPerfil(token, empresa) {
 }
 
 const ADMIN = process.env.LICITA_ADMIN_TOKEN || "admin";
+const BASE_PUBLICA = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
 
 // Perfil completo pelo token, lido de perfis.json.
 async function perfilPorToken(token) {
@@ -972,7 +973,6 @@ const servidor = createServer(async (req, res) => {
     }
 
     // ===== Blog SEO: artigos em /blog e /blog/<slug> =====
-    const BASE_PUBLICA = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
     if (rota === "/blog" || rota === "/blog/") {
       const html = await renderizarListagem(BASE_PUBLICA);
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
