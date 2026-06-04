@@ -11,6 +11,10 @@ const MODELO_PADRAO = process.env.LICITA_MODELO || "claude-sonnet-4-6";
 // no MODELO_PADRAO (Sonnet) por ser o veredito apto/nao-apto e custar pouco.
 const MODELO_LEITURA = process.env.LICITA_MODELO_LEITURA || "claude-haiku-4-5-20251001";
 const LIMITE_BYTES = 30 * 1024 * 1024; // ~limite pratico de PDF da API
+// Trunca PDF antes de mandar pra IA. As exigencias de habilitacao e o objeto
+// ficam nas primeiras paginas; anexos (planilhas de itens, modelos, plantas) ficam
+// no fim e nao afetam o veredito apto/nao-apto. Reduz custo em ~70%.
+const MAX_PDF_BYTES = Number(process.env.LICITA_ANALISE_MAX_PDF_BYTES || 800 * 1024);
 
 export function temChave() {
   return Boolean(process.env.ANTHROPIC_API_KEY);
@@ -44,16 +48,19 @@ export function montarCorpo(pdfBuffer, { modelo = MODELO_LEITURA } = {}) {
   if (pdfBuffer.length > LIMITE_BYTES) {
     throw new Error(`PDF grande demais (${(pdfBuffer.length / 1048576).toFixed(1)} MB) para a API`);
   }
+  // Trunca o PDF se passar do limite (mais barato, menos chance de truncar JSON
+  // de saida tambem). Claude tolera PDFs incompletos — le o que conseguir.
+  const buf = pdfBuffer.length > MAX_PDF_BYTES ? pdfBuffer.slice(0, MAX_PDF_BYTES) : pdfBuffer;
   return {
     model: modelo,
-    max_tokens: 4000,
+    max_tokens: 8000, // dobrado: editais ricos geram JSON com muitas exigencias
     messages: [
       {
         role: "user",
         content: [
           {
             type: "document",
-            source: { type: "base64", media_type: "application/pdf", data: pdfBuffer.toString("base64") },
+            source: { type: "base64", media_type: "application/pdf", data: buf.toString("base64") },
             cache_control: { type: "ephemeral" },
           },
           { type: "text", text: INSTRUCAO },
@@ -63,9 +70,68 @@ export function montarCorpo(pdfBuffer, { modelo = MODELO_LEITURA } = {}) {
   };
 }
 
+// Parser tolerante a JSON truncado. Se a IA cortou no meio (max_tokens estourado
+// ou conexao caiu), tenta recuperar o que ja foi escrito, fechando chaves/colchetes
+// e arrays abertos. Pior caso: devolve um objeto parcial, melhor que erro fatal.
 export function extrairJson(texto) {
   const limpo = (texto ?? "").replace(/```json\s*|\s*```/g, "").trim();
-  return JSON.parse(limpo);
+  if (!limpo) throw new Error("Resposta vazia da IA");
+  // Tentativa 1: JSON puro
+  try { return JSON.parse(limpo); } catch (e1) {
+    // Tentativa 2: recuperar JSON truncado fechando estruturas abertas
+    try { return JSON.parse(repararJsonTruncado(limpo)); } catch (e2) {
+      // Loga o motivo original (e1) e devolve um veredito utilizavel mesmo assim
+      console.error("[ia] JSON truncado e nao recuperavel:", e1.message);
+      throw new Error("A resposta da analise veio incompleta. Tente novamente em alguns minutos.");
+    }
+  }
+}
+
+// Recebe JSON possivelmente truncado e tenta fechar de forma valida.
+// Estrategia: percorre char a char rastreando aspas, escapes e profundidade de
+// { e [. Corta antes da ultima virgula incompleta e fecha tudo na ordem inversa.
+function repararJsonTruncado(s) {
+  let dentroString = false;
+  let escape = false;
+  const pilha = []; // empilha "}" ou "]" na ordem que precisam fechar
+  let ultimoCorteSeguro = -1;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (dentroString) {
+      if (escape) { escape = false; continue; }
+      if (c === "\\") { escape = true; continue; }
+      if (c === '"') { dentroString = false; }
+      continue;
+    }
+    if (c === '"') { dentroString = true; continue; }
+    if (c === "{") pilha.push("}");
+    else if (c === "[") pilha.push("]");
+    else if (c === "}" || c === "]") pilha.pop();
+    // Apos uma virgula ou ":", marca como ponto seguro pra cortar
+    if (c === "," || c === ":") ultimoCorteSeguro = i;
+  }
+  let r = s;
+  // Se acabou no meio de uma string, corta ate antes do ultimo ponto seguro
+  if (dentroString && ultimoCorteSeguro > 0) {
+    r = s.slice(0, ultimoCorteSeguro);
+    // Tira virgula final se houver
+    r = r.replace(/[,:]\s*$/, "");
+    // Recalcula pilha do trecho cortado
+    pilha.length = 0;
+    let ds = false, esc = false;
+    for (const c of r) {
+      if (ds) { if (esc) { esc = false; continue; } if (c === "\\") { esc = true; continue; } if (c === '"') ds = false; continue; }
+      if (c === '"') ds = true;
+      else if (c === "{") pilha.push("}");
+      else if (c === "[") pilha.push("]");
+      else if (c === "}" || c === "]") pilha.pop();
+    }
+  }
+  // Remove virgula pendurada antes de fechar
+  r = r.replace(/,\s*$/, "");
+  // Fecha tudo na ordem reversa
+  while (pilha.length) r += pilha.pop();
+  return r;
 }
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
