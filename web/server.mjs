@@ -260,10 +260,15 @@ const servidor = createServer(async (req, res) => {
           todos = todos.filter(c => normalizar(c.municipio || "").includes(cn));
         }
         // Agrupa por objeto aproximado (mesma logica do /api/historico)
+        const hojeIsoExp = new Date().toISOString();
+        const dataValidaExp = (c) => {
+          const cand = c.publicacao || c.vigenciaInicio;
+          return cand && cand <= hojeIsoExp ? cand : null;
+        };
         const grupos = new Map();
         for (const c of todos) {
           const ch = `${c.orgao || ""}|${normalizar(c.objeto || "").slice(0, 50)}`;
-          const g = grupos.get(ch) || { orgao: c.orgao, municipio: c.municipio, uf: c.uf, objeto: c.objeto, data: c.vigenciaInicio, fornecedores: new Map(), valorTotal: 0, qtdContratos: 0 };
+          const g = grupos.get(ch) || { orgao: c.orgao, municipio: c.municipio, uf: c.uf, objeto: c.objeto, data: dataValidaExp(c), fornecedores: new Map(), valorTotal: 0, qtdContratos: 0 };
           if ((c.objeto || "").length > (g.objeto || "").length) g.objeto = c.objeto;
           const f = c.fornecedor || "Nao informado";
           g.fornecedores.set(f, (g.fornecedores.get(f) || 0) + (c.valor || 0));
@@ -522,16 +527,25 @@ const servidor = createServer(async (req, res) => {
       }
       // Agrupa por licitacao (mesmo objeto aproximado): colapsa contratos do mesmo
       // Registro de Precos comprado por varias prefeituras. Mostra top 3 vencedores.
+      // Usa data de PUBLICACAO no PNCP (fato registrado, nunca futuro). Se nao tiver,
+      // cai pra vigenciaInicio. Descarta datas no futuro (anomalias do PNCP).
+      const hojeIso = new Date().toISOString();
+      const dataValida = (c) => {
+        const cand = c.publicacao || c.vigenciaInicio;
+        if (!cand) return null;
+        return cand > hojeIso ? null : cand; // ignora datas futuras
+      };
       const grupos = new Map();
       for (const c of todos) {
         const chave = normalizar(c.objeto || "").replace(/\s+/g, " ").trim().slice(0, 60);
         const g = grupos.get(chave) || {
           objeto: c.objeto, orgao: c.orgao, municipio: c.municipio, uf: c.uf,
-          data: c.vigenciaInicio, vigenciaFim: c.vigenciaFim,
+          data: dataValida(c), vigenciaFim: c.vigenciaFim,
           valorTotal: 0, qtdContratos: 0, fornecedores: new Map(),
         };
         if ((c.objeto || "").length > (g.objeto || "").length) g.objeto = c.objeto;
-        if ((c.vigenciaInicio || "") > (g.data || "")) g.data = c.vigenciaInicio;
+        const d = dataValida(c);
+        if (d && (d > (g.data || ""))) g.data = d;
         g.valorTotal += c.valor || 0;
         g.qtdContratos++;
         g.fornecedores.set(c.fornecedor || "Não informado",
