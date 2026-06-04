@@ -48,8 +48,24 @@
         <h2>Dados da empresa</h2>
         <div class="dica">Usados para conferir exigências de porte e qualificação econômica.</div>
         <div class="grid2">
-          <div><label for="porte">Porte</label><select id="porte"><option value="ME">Microempresa (ME)</option><option value="EPP">Pequena empresa (EPP)</option><option value="DEMAIS">Demais</option></select></div>
-          <div><label for="capital">Capital social (R$)</label><input id="capital" type="number" placeholder="Ex: 150000" /></div>
+          <div>
+            <label for="porte">Porte</label>
+            <select id="porte">
+              <option value="MEI">MEI — Microempreendedor Individual (até R$ 81 mil/ano)</option>
+              <option value="ME">Microempresa (ME) — até R$ 360 mil/ano</option>
+              <option value="EPP" selected>Empresa de Pequeno Porte (EPP) — até R$ 4,8 milhões/ano</option>
+              <option value="MEDIA">Média empresa — R$ 4,8 milhões a R$ 300 milhões/ano</option>
+              <option value="GRANDE">Grande empresa — acima de R$ 300 milhões/ano</option>
+              <option value="COOPERATIVA">Cooperativa</option>
+              <option value="DEMAIS">Outro / não se enquadra</option>
+            </select>
+            <div style="font-size:11.5px;color:var(--cinza-c);margin-top:5px;line-height:1.4">MEI/ME/EPP têm <b>cota exclusiva</b> em editais até R$ 80 mil e direito a <b>empate ficto</b>. Selecione corretamente para a conferência ser precisa.</div>
+          </div>
+          <div>
+            <label for="capital">Capital social (R$)</label>
+            <input id="capital" type="number" placeholder="Ex: 150000" />
+            <div style="font-size:11.5px;color:var(--cinza-c);margin-top:5px;line-height:1.4">Capital social registrado no contrato social. Editais grandes podem exigir mínimo de <b>10% do valor estimado</b>.</div>
+          </div>
         </div>
       </div>
 
