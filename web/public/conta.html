@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
-<title>ContrataX — Minha conta</title>
+<title>ContrataX, Minha conta</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -88,11 +88,11 @@
       <div class="cap" style="font-size:13.5px;color:var(--cinza);margin-bottom:6px">Usados para preencher automaticamente as declarações de habilitação.</div>
       <label for="endereco">Endereço completo da empresa</label>
       <input id="endereco" type="text" placeholder="Rua, nº, bairro, cidade/UF, CEP" />
-      <label for="rep-nome">Representante legal — nome</label>
+      <label for="rep-nome">Representante legal, nome</label>
       <input id="rep-nome" type="text" placeholder="Nome de quem assina" />
-      <label for="rep-cpf">Representante legal — CPF</label>
+      <label for="rep-cpf">Representante legal, CPF</label>
       <input id="rep-cpf" type="text" placeholder="000.000.000-00" />
-      <label for="rep-cargo">Representante legal — cargo</label>
+      <label for="rep-cargo">Representante legal, cargo</label>
       <input id="rep-cargo" type="text" placeholder="Ex: sócio administrador" />
 
       <button class="btn" id="salvar">Salvar alterações</button>
@@ -130,7 +130,7 @@ UFS.forEach(u => {
 async function carregar() {
   const d = await (await fetch("/api/perfil?c=" + encodeURIComponent(token))).json();
   if (d.erro) { $("ro-empresa").textContent = d.erro; return; }
-  $("ro-empresa").innerHTML = `<b>${d.razaoSocial || d.nome || "Empresa"}</b><br>CNPJ: ${d.cnpj || "—"}<br>E-mail: ${d.email || "—"}`;
+  $("ro-empresa").innerHTML = `<b>${d.razaoSocial || d.nome || "Empresa"}</b><br>CNPJ: ${d.cnpj || ","}<br>E-mail: ${d.email || ","}`;
   $("nome").value = d.nome || "";
   $("ramo").value = d.ramo || "";
   $("excluir").value = d.excluir || "";

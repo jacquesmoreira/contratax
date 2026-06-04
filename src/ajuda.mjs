@@ -38,7 +38,7 @@ export async function renderizarAjuda(baseUrl) {
   const { meta, corpo } = frontMatter(texto);
   const html = mdParaHtml(corpo);
   return template({
-    title: (meta.title || "Central de Ajuda") + " — ContrataX",
+    title: (meta.title || "Central de Ajuda") + " | ContrataX",
     description: meta.description || "Tudo o que você precisa saber para usar o ContrataX.",
     canonical: `${baseUrl}/ajuda`,
     conteudo: `
@@ -49,7 +49,7 @@ export async function renderizarAjuda(baseUrl) {
       <article class="post"><div class="conteudo-post">${html}</div></article>
       <div style="background:linear-gradient(135deg,#4338ca,#2563eb);color:#fff;border-radius:16px;padding:24px;margin-top:36px;text-align:center">
         <div style="font-size:18px;font-weight:800;margin-bottom:6px">Não achou a resposta?</div>
-        <p style="color:#c7d2fe;font-size:14.5px;margin-bottom:14px">Fale com a gente — respondemos em até 1 dia útil.</p>
+        <p style="color:#c7d2fe;font-size:14.5px;margin-bottom:14px">Fale com a gente, respondemos em até 1 dia útil.</p>
         <a href="/contato" style="display:inline-block;background:#fff;color:#4338ca;font-weight:800;padding:11px 22px;border-radius:11px;text-decoration:none">Abrir contato →</a>
       </div>`,
   });
@@ -57,7 +57,7 @@ export async function renderizarAjuda(baseUrl) {
 
 export async function renderizarContato(baseUrl, { token = "", erro = "", sucesso = false } = {}) {
   return template({
-    title: "Fale com a gente — ContrataX",
+    title: "Fale com a gente | ContrataX",
     description: "Envie sua mensagem para o suporte do ContrataX. Respondemos em até 1 dia útil.",
     canonical: `${baseUrl}/contato`,
     conteudo: sucesso ? `
@@ -119,18 +119,18 @@ export async function processarContato({ email, assunto, mensagem, token, meta =
 
   const html = `
     <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:20px">
-      <h2 style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:12px">Novo contato — ContrataX</h2>
+      <h2 style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:12px">Novo contato, ContrataX</h2>
       <p style="font-size:14px;color:#475569;margin-bottom:8px"><b>De:</b> ${escHtml(email)}</p>
       <p style="font-size:14px;color:#475569;margin-bottom:14px"><b>Assunto:</b> ${escHtml(assunto)}</p>
       <div style="background:#f8fafc;border-left:4px solid #4338ca;padding:14px 18px;border-radius:0 8px 8px 0;white-space:pre-wrap;font-size:14.5px;color:#1e293b;line-height:1.55">${escHtml(mensagem)}</div>
       ${linhasMeta.length ? `<div style="font-size:12px;color:#94a3b8;margin-top:16px">${linhasMeta.map(l => escHtml(l)).join("<br>")}</div>` : ""}
-      <p style="font-size:12px;color:#94a3b8;margin-top:24px">Para responder, basta clicar em Responder no seu e-mail — o endereço de retorno é do cliente.</p>
+      <p style="font-size:12px;color:#94a3b8;margin-top:24px">Para responder, basta clicar em Responder no seu e-mail, o endereço de retorno é do cliente.</p>
     </div>`;
 
   try {
     await enviar({
       para: SUPORTE_FORWARD,
-      assunto: `[ContrataX] ${assunto} — ${email}`,
+      assunto: `[ContrataX] ${assunto}, ${email}`,
       html,
     });
     return { ok: true };

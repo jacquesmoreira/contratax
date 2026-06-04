@@ -1,6 +1,6 @@
 ---
 title: Central de Ajuda
-description: Tudo o que você precisa saber para usar o ContrataX — cadastro, busca de licitações, pagamento, análise de editais, certidões e mais.
+description: Tudo o que você precisa saber para usar o ContrataX, cadastro, busca de licitações, pagamento, análise de editais, certidões e mais.
 ---
 
 Encontre aqui as respostas para as dúvidas mais comuns. Se não achar o que precisa, fale com a gente em [/contato](/contato).
@@ -8,10 +8,10 @@ Encontre aqui as respostas para as dúvidas mais comuns. Se não achar o que pre
 ## Conta e Cadastro
 
 ### Como faço meu cadastro no ContrataX?
-O cadastro é grátis e leva menos de 1 minuto. Acesse [/cadastro](/cadastro), informe seu CNPJ (a razão social é preenchida automaticamente pela Receita), defina uma senha, escolha o ramo da sua empresa (palavras-chave do que você vende) e os estados onde atua. Pronto — você já cai no painel com as licitações do seu ramo.
+O cadastro é grátis e leva menos de 1 minuto. Acesse [/cadastro](/cadastro), informe seu CNPJ (a razão social é preenchida automaticamente pela Receita), defina uma senha, escolha o ramo da sua empresa (palavras-chave do que você vende) e os estados onde atua. Pronto, você já cai no painel com as licitações do seu ramo.
 
 ### O teste grátis exige cartão de crédito?
-Não. O teste de 7 dias é totalmente livre — você não cadastra cartão, não precisa cancelar nada se não quiser continuar. Se gostar, assina pelo próprio painel ao final do período.
+Não. O teste de 7 dias é totalmente livre, você não cadastra cartão, não precisa cancelar nada se não quiser continuar. Se gostar, assina pelo próprio painel ao final do período.
 
 ### Esqueci minha senha. Como recupero?
 Por enquanto, fale com a gente em [/contato](/contato) que reativamos seu acesso. Em breve teremos recuperação automática por e-mail.
@@ -30,13 +30,13 @@ Sim. O **Plano Pro** e os planos Assessoria já vêm com acessos para a equipe. 
 ## Busca e Editais
 
 ### De onde vêm os dados de licitação?
-Do **PNCP — Portal Nacional de Contratações Públicas**, a base oficial e obrigatória por lei (Lei 14.133/2021) para todas as compras públicas do Brasil. Atualizamos diariamente.
+Do **PNCP, Portal Nacional de Contratações Públicas**, a base oficial e obrigatória por lei (Lei 14.133/2021) para todas as compras públicas do Brasil. Atualizamos diariamente.
 
 ### Por que algumas licitações não mostram o valor?
 Porque o órgão público **não declarou** o valor estimado no PNCP em alguns editais. É um dado que falta na fonte oficial. Quando o valor existe no PNCP, mostramos.
 
 ### O ContrataX cobre licitações de todo o Brasil?
-Sim. Pregão eletrônico, dispensa, concorrência, credenciamento, leilão e mais — em todos os estados e municípios do país. Você filtra pela região onde atua.
+Sim. Pregão eletrônico, dispensa, concorrência, credenciamento, leilão e mais, em todos os estados e municípios do país. Você filtra pela região onde atua.
 
 ### Como ajusto os estados que monitoro?
 No painel, em **Minha conta**, na seção "Estados de atuação". Pode marcar quantos quiser.
@@ -45,7 +45,7 @@ No painel, em **Minha conta**, na seção "Estados de atuação". Pode marcar qu
 Pode. A busca pública da nossa página inicial mostra os editais abertos por estado e ramo, gratuitamente. Para receber alerta diário e a leitura completa de cada edital, precisa do cadastro.
 
 ### O que significa "valor não divulgado"?
-É quando o órgão público publicou o edital sem informar o valor estimado. Acontece em parte das compras — dado faltante na fonte oficial.
+É quando o órgão público publicou o edital sem informar o valor estimado. Acontece em parte das compras, dado faltante na fonte oficial.
 
 ---
 
@@ -78,7 +78,7 @@ Quando o edital tem cláusulas potencialmente restritivas, o sistema identifica,
 ## Documentos e Certidões
 
 ### Onde cadastro os documentos da minha empresa?
-No painel, em **Meus documentos**. Cadastre as datas de validade das certidões — usamos isso pra conferir aptidão em cada edital e te avisar de vencimentos.
+No painel, em **Meus documentos**. Cadastre as datas de validade das certidões, usamos isso pra conferir aptidão em cada edital e te avisar de vencimentos.
 
 ### Quais certidões devo cadastrar?
 As principais exigidas em licitação:
@@ -104,13 +104,13 @@ Sim. Em **Declarações**, no painel, geramos as 5 declarações padrão (idonei
 Pix, cartão de crédito e boleto. A cobrança é mensal e automática (pelo gateway Asaas). O cartão renova sozinho; no Pix você recebe nova cobrança a cada mês.
 
 ### Posso cancelar quando quiser?
-Sim. Sem fidelidade, sem multa. Cancele no painel a qualquer momento — você fica com acesso até o fim do mês pago.
+Sim. Sem fidelidade, sem multa. Cancele no painel a qualquer momento, você fica com acesso até o fim do mês pago.
 
 ### Quais são os planos disponíveis?
-- **Básico** — R$ 197/mês, 100 análises, 1 CNPJ
-- **Pro** — R$ 297/mês, 250 análises, equipe, 1 CNPJ
-- **Assessoria 10** — R$ 497/mês, até 10 empresas
-- **Assessoria 25** — R$ 897/mês, até 25 empresas
+- **Básico**, R$ 197/mês, 100 análises, 1 CNPJ
+- **Pro**, R$ 297/mês, 250 análises, equipe, 1 CNPJ
+- **Assessoria 10**, R$ 497/mês, até 10 empresas
+- **Assessoria 25**, R$ 897/mês, até 25 empresas
 
 Veja detalhes na página de [/assinar](/assinar).
 
@@ -118,7 +118,7 @@ Veja detalhes na página de [/assinar](/assinar).
 Em [/assinar](/assinar), na seção "Precisa de mais análises num mês?", escolha 50 ou 150 análises. O valor é cobrado uma vez só (não vira mensalidade) e soma à sua cota.
 
 ### O que acontece se eu não pagar a mensalidade?
-Se for cartão e a cobrança falhar, tentamos algumas vezes e você recebe aviso. Se for Pix/boleto e atrasar, tem **3 dias de carência** acessando normalmente, com aviso urgente. Passada a carência, o acesso é suspenso até o pagamento — quando regularizar, libera na hora (não perde nada).
+Se for cartão e a cobrança falhar, tentamos algumas vezes e você recebe aviso. Se for Pix/boleto e atrasar, tem **3 dias de carência** acessando normalmente, com aviso urgente. Passada a carência, o acesso é suspenso até o pagamento, quando regularizar, libera na hora (não perde nada).
 
 ### Onde vejo o status do meu pagamento?
 No painel, no topo, aparece o chip do seu plano. E em **Minha conta**, o status detalhado da assinatura.
@@ -139,10 +139,10 @@ Tudo enviado de `contato@contratax.com.br`.
 
 ### Não estou recebendo o e-mail diário. O que pode ser?
 Algumas possibilidades:
-1. Foi pra **caixa de spam** — marque como "não é spam" pra próximo cair na inbox.
-2. Sua assinatura **não está ativa** — só quem tem plano ativo (ou em teste) recebe.
-3. Seu perfil está **sem UF cadastrada** — precisamos saber em quais estados monitorar.
-4. **Não há editais novos** no seu ramo no dia — só mandamos quando há novidade.
+1. Foi pra **caixa de spam**, marque como "não é spam" pra próximo cair na inbox.
+2. Sua assinatura **não está ativa**, só quem tem plano ativo (ou em teste) recebe.
+3. Seu perfil está **sem UF cadastrada**, precisamos saber em quais estados monitorar.
+4. **Não há editais novos** no seu ramo no dia, só mandamos quando há novidade.
 
 ### Como faço pra parar de receber e-mails?
 Por enquanto, cancele a assinatura ou fale com a gente em [/contato](/contato).
@@ -158,7 +158,7 @@ Por enquanto, cancele a assinatura ou fale com a gente em [/contato](/contato).
 São contratos do seu ramo que vão vencer em até 12 meses. Como uma nova licitação tende a sair, você se prepara com antecedência.
 
 ### O que é o Ranking de Concorrentes?
-Em cada edital, mostramos as empresas que mais ganharam contratos parecidos na mesma região — pra você saber contra quem está disputando.
+Em cada edital, mostramos as empresas que mais ganharam contratos parecidos na mesma região, pra você saber contra quem está disputando.
 
 ---
 
@@ -174,10 +174,10 @@ Não. O ContrataX **leva você até a oportunidade certa**, com toda a inteligê
 Sim. MEI tem prioridade legal em vários tipos de licitação, e nosso radar identifica essas oportunidades. Veja o guia em [/blog/como-mei-participar-licitacao](/blog/como-mei-participar-licitacao).
 
 ### Como faço para falar com vocês?
-[/contato](/contato) — responde em até 1 dia útil. Estamos no Brasil, sem chatbot.
+[/contato](/contato), responde em até 1 dia útil. Estamos no Brasil, sem chatbot.
 
 ### Vocês têm um aplicativo de celular?
-Ainda não. A plataforma é totalmente responsiva — funciona no navegador do celular, sem precisar instalar nada.
+Ainda não. A plataforma é totalmente responsiva, funciona no navegador do celular, sem instalar nada.
 
 ---
 

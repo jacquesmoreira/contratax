@@ -16,6 +16,8 @@ import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
 import { renderizarArtigo, renderizarListagem, urlsBlog } from "../src/blog.mjs";
 import { renderizarAjuda, renderizarContato, processarContato } from "../src/ajuda.mjs";
 import { tentarUsoVisitante, ipDoRequest } from "../src/rateLimitVisitante.mjs";
+import { listarTemplates, gerarTemplate } from "../src/templates.mjs";
+import { paginaCasos, paginaStatus, paginaSeguranca } from "../src/paginasInstitucionais.mjs";
 import { injetarAnalytics, enviarConversao } from "../src/analytics.mjs";
 import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
@@ -424,6 +426,25 @@ const servidor = createServer(async (req, res) => {
         fornecedorNi, fornecedor,
       });
       return json(res, 200, { contratos: lista, escopo });
+    }
+
+    // Templates: lista os disponiveis
+    if (rota === "/api/templates") {
+      return json(res, 200, { templates: listarTemplates() });
+    }
+    // Templates: baixa um (sem login — gratis pra qualquer um, sao genericos)
+    if (rota.startsWith("/api/templates/")) {
+      const id = rota.replace("/api/templates/", "");
+      const t = gerarTemplate(id);
+      if (!t) return json(res, 404, { erro: "Template nao encontrado" });
+      const ct = t.ext === "csv" ? "text/csv; charset=utf-8" : "text/markdown; charset=utf-8";
+      const nome = `contratax-${id}.${t.ext}`;
+      res.writeHead(200, {
+        "Content-Type": ct,
+        "Content-Disposition": `attachment; filename="${nome}"`,
+        "Cache-Control": "no-store",
+      });
+      return res.end(t.conteudo);
     }
 
     // Saude documental do perfil (lista de certidoes + dias para vencer).
@@ -1035,6 +1056,20 @@ const servidor = createServer(async (req, res) => {
       return res.end(injetarAnalytics(html));
     }
 
+    // ===== Paginas institucionais (Casos, Status, Seguranca) =====
+    if (rota === "/casos" || rota === "/casos.html") {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(paginaCasos());
+    }
+    if (rota === "/status" || rota === "/status.html") {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(paginaStatus());
+    }
+    if (rota === "/seguranca" || rota === "/seguranca.html") {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(paginaSeguranca());
+    }
+
     // ===== Central de Ajuda e Contato =====
     if (rota === "/ajuda" || rota === "/ajuda.html") {
       const html = await renderizarAjuda(BASE_PUBLICA);
@@ -1119,7 +1154,7 @@ const servidor = createServer(async (req, res) => {
     }
     // Sitemap DINAMICO: paginas-base + todas as paginas de SEO (ramo x estado).
     if (rota === "/sitemap.xml") {
-      const base = ["https://contratax.com.br/", "https://contratax.com.br/cadastro", "https://contratax.com.br/entrar", "https://contratax.com.br/ajuda", "https://contratax.com.br/contato", "https://contratax.com.br/lp/comparativo"];
+      const base = ["https://contratax.com.br/", "https://contratax.com.br/cadastro", "https://contratax.com.br/entrar", "https://contratax.com.br/ajuda", "https://contratax.com.br/contato", "https://contratax.com.br/lp/comparativo", "https://contratax.com.br/casos", "https://contratax.com.br/status", "https://contratax.com.br/seguranca"];
       const blog = (await urlsBlog("https://contratax.com.br")).map((b) => b.loc);
       const urls = [...base, ...blog, ...urlsSEO()];
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc><changefreq>daily</changefreq></url>`).join("\n")}\n</urlset>`;

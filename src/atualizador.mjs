@@ -8,6 +8,7 @@ import { monitorar } from "./monitor.mjs";
 import { removerExpirados, estatisticas } from "./db.mjs";
 import { lerPerfis } from "./perfis.mjs";
 import { verificarCertidoesVencendo } from "./alertasCertidoes.mjs";
+import { disparosOnboarding } from "./onboardingEmails.mjs";
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -23,6 +24,8 @@ export async function atualizarEditais({ limitePaginas = Infinity, log = console
   const removidos = removerExpirados({ graceDias: 3 });
   // Alertas automaticos de certidoes vencendo (so se e-mail configurado)
   try { await verificarCertidoesVencendo({ log }); } catch (e) { log(`[alertas] erro: ${e.message}`); }
+  // Sequencia de onboarding (3 e-mails nos primeiros 6 dias do cadastro)
+  try { await disparosOnboarding({ log }); } catch (e) { log(`[onboarding] erro: ${e.message}`); }
   const s = estatisticas();
   log(`[atualizar] concluido. Acervo: ${s.total} editais (${s.abertos} abertos); ${removidos} removidos.`);
   return s;

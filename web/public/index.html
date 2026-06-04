@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
-<title>ContrataX — Meu painel</title>
+<title>ContrataX, Meu painel</title>
 <meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -332,7 +332,7 @@ function chipPlano(acesso) {
     const d = acesso.diasRestantes ?? 0;
     el.classList.add("chip-teste");
     if (d <= 2) el.classList.add("urgente");
-    el.textContent = d <= 0 ? "Teste expirou — Assinar" : `Teste · ${d}d restantes`;
+    el.textContent = d <= 0 ? "Teste expirou, Assinar" : `Teste · ${d}d restantes`;
   } else if (acesso.status === "ativo") {
     const nome = (acesso.nivel || "basico").replace(/^./, c => c.toUpperCase());
     const u = acesso.uso || {};
@@ -522,6 +522,32 @@ async function carregarOnboarding() {
   } catch { /* silencioso */ }
 }
 
+// Carrega templates baixaveis pra mostrar no painel
+async function carregarTemplates() {
+  try {
+    const d = await (await fetch("/api/templates")).json();
+    if (!d.templates?.length) return;
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "background:#fff;border:1px solid var(--linha);border-radius:14px;padding:20px;margin-bottom:24px";
+    wrap.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:18px">📥</span>
+        <h3 style="font-size:15px;font-weight:800;margin:0">Templates prontos pra usar</h3>
+      </div>
+      <p style="font-size:13px;color:var(--cinza);margin-bottom:14px">Planilhas e modelos que economizam horas de pesquisa. Baixe e use à vontade.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
+        ${d.templates.map(t => `
+          <a href="/api/templates/${t.id}" download style="background:var(--fundo);border:1px solid var(--linha);border-radius:10px;padding:12px;text-decoration:none;color:inherit;display:block;transition:transform .12s,border-color .12s" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--indigo)'" onmouseout="this.style.transform='';this.style.borderColor='var(--linha)'">
+            <div style="font-size:11.5px;font-weight:800;color:var(--indigo);text-transform:uppercase;letter-spacing:.4px">.${t.ext}</div>
+            <div style="font-size:13.5px;font-weight:700;color:var(--tinta);margin:4px 0 4px">${t.nome}</div>
+            <div style="font-size:12px;color:var(--cinza);line-height:1.4">${t.descricao}</div>
+          </a>`).join("")}
+      </div>`;
+    const onb = document.getElementById("onb-banner");
+    if (onb) onb.appendChild(wrap);
+  } catch { /* silencioso */ }
+}
+
 async function dispensarOnb() {
   try {
     await fetch("/api/onboarding/dispensar", {
@@ -541,6 +567,7 @@ async function carregar() {
   }
   carregarOnboarding(); // roda em paralelo, sem bloquear o painel
   setTimeout(() => avisarCertidoesVencendo(), 1500); // alerta de certidao, com pequeno atraso
+  setTimeout(() => carregarTemplates(), 2000); // templates baixaveis no fim do banner de onboarding
   try {
     const acesso = await (await fetch(`/api/acesso?c=${encodeURIComponent(token)}`)).json();
     if (!acesso.encontrado) {
@@ -669,7 +696,7 @@ function referenciaHTML(r) {
       <div style="background:var(--fundo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--cinza-c);font-weight:700;text-transform:uppercase;letter-spacing:.3px">25% Acima</div><div style="font-size:14px;font-weight:800;color:var(--tinta);margin-top:3px">${brl(s.p75)}</div></div>
       <div style="background:var(--fundo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--cinza-c);font-weight:700;text-transform:uppercase;letter-spacing:.3px">Máximo</div><div style="font-size:14px;font-weight:800;color:var(--tinta);margin-top:3px">${brl(s.max)}</div></div>
     </div>
-    <div style="font-size:11.5px;color:var(--cinza-c);margin-top:10px;line-height:1.5">Faixa de valores praticados em contratos semelhantes (fonte: PNCP). Valores podem refletir preço unitário ou contrato inteiro — use como referência para dimensionar sua proposta.</div>
+    <div style="font-size:11.5px;color:var(--cinza-c);margin-top:10px;line-height:1.5">Faixa de valores praticados em contratos semelhantes (fonte: PNCP). Valores podem refletir preço unitário ou contrato inteiro, use como referência para dimensionar sua proposta.</div>
   </div>`;
 }
 
@@ -708,7 +735,7 @@ function precoHTML(p) {
 }
 function saudeHTML(saude) {
   return `<div class="bloco"><h3>Saúde documental da empresa</h3><ul class="itens">${
-    saude.itens.map(i => `<li>${iconHTML(i.situacao)}<span>${esc(i.documento)}${i.validade ? ` (vence ${dataBR(i.validade)})` : ""} — <b>${esc(i.situacao)}</b></span></li>`).join("")
+    saude.itens.map(i => `<li>${iconHTML(i.situacao)}<span>${esc(i.documento)}${i.validade ? ` (vence ${dataBR(i.validade)})` : ""}, <b>${esc(i.situacao)}</b></span></li>`).join("")
   }</ul></div>`;
 }
 function impugnacaoHTML(d) {
@@ -763,7 +790,7 @@ let editalAtual = null;
 async function abrirDrawer(id) {
   editalAtual = id;
   const e = store[id] || {};
-  document.getElementById("drawer-titulo").textContent = `${e.municipio ?? ""}/${e.uf ?? ""} — ${(e.objeto||"").slice(0,80)}`;
+  document.getElementById("drawer-titulo").textContent = `${e.municipio ?? ""}/${e.uf ?? ""}, ${(e.objeto||"").slice(0,80)}`;
   const corpo = document.getElementById("drawer-corpo");
   corpo.innerHTML = `<div class="carregando"><span class="spinner"></span>Carregando...</div>`;
   abrir();
@@ -802,7 +829,7 @@ async function abrirDrawer(id) {
   }
   html += `<div class="bloco" id="docs-bloco"><h3>📄 Documentos do edital</h3><div class="carregando" style="padding:10px"><span class="spinner"></span>Carregando documentos...</div></div>`;
   if (portalUrl) html += `<a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--verde);color:#fff;font-weight:700;padding:14px;border-radius:11px;text-decoration:none;margin-bottom:14px">${portalLabel}</a>`;
-  // [removido] Bloco "Precos praticados em contratos similares" — saiu porque o
+  // [removido] Bloco "Precos praticados em contratos similares", saiu porque o
   // PNCP mistura preco unitario com contrato inteiro, deixando a faixa enganosa.
   // Volta quando tivermos como filtrar por categoria/item especifico (nao palavra-chave).
   html += precoHTML(d.preco);
@@ -818,7 +845,7 @@ async function abrirDrawer(id) {
   } else if (d.temChave && d.ia && d.ia.motivo === "assinatura") {
     // Recurso do plano: aparece para todos (gancho), mas pede assinatura para usar.
     html += `<div class="bloco" style="border:1px solid var(--linha);background:linear-gradient(180deg,#fff, #f8fafc)">
-      <h3>🔒 Analise dos editais — recurso do plano</h3>
+      <h3>🔒 Analise dos editais, recurso do plano</h3>
       <p style="font-size:13.5px;color:var(--cinza);margin:6px 0 12px">O sistema lê o edital inteiro e cruza com os seus documentos: diz, em segundos, <b>se você está apto</b> e <b>o que falta</b> para participar. Disponível para assinantes.</p>
       <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;text-align:center;background:var(--indigo);color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none">Assinar e liberar a análise →</a>
     </div>`;
@@ -1051,7 +1078,7 @@ carregar();
         <h2 style="font-size:20px;font-weight:800;margin:0">Fale com a gente</h2>
         <button id="sup-fechar" style="background:none;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1">×</button>
       </div>
-      <p style="font-size:13.5px;color:#475569;margin-bottom:16px">Conta o que está acontecendo — respondemos em até 1 dia útil no seu e-mail.</p>
+      <p style="font-size:13.5px;color:#475569;margin-bottom:16px">Conta o que está acontecendo, respondemos em até 1 dia útil no seu e-mail.</p>
       <label style="display:block;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Seu e-mail</label>
       <input id="sup-email" type="email" required placeholder="voce@empresa.com.br" style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;margin-bottom:14px" />
       <label style="display:block;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Assunto</label>
@@ -1067,7 +1094,7 @@ carregar();
       <textarea id="sup-msg" required rows="5" placeholder="O que aconteceu? Quanto mais detalhe, mais rápido a gente resolve." style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;resize:vertical;margin-bottom:6px"></textarea>
       <div id="sup-erro" style="color:#dc2626;font-size:13px;margin-bottom:8px;display:none"></div>
       <button id="sup-enviar" style="width:100%;background:#4338ca;color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:6px">Enviar mensagem</button>
-      <div style="font-size:11.5px;color:#94a3b8;margin-top:10px;text-align:center">Dá uma olhada antes na <a href="/ajuda" target="_blank" style="color:#4338ca;font-weight:700">Central de Ajuda</a> — talvez você ache a resposta lá.</div>
+      <div style="font-size:11.5px;color:#94a3b8;margin-top:10px;text-align:center">Dá uma olhada antes na <a href="/ajuda" target="_blank" style="color:#4338ca;font-weight:700">Central de Ajuda</a>, talvez você ache a resposta lá.</div>
     </div>`;
     document.body.appendChild(ov);
     ov.querySelector("#sup-fechar").onclick = () => ov.remove();

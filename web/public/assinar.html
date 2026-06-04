@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
-<title>ContrataX — Assinar</title>
+<title>Assinar | ContrataX</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -60,7 +60,7 @@
   <div class="wrap-main">
     <div class="selo-teste" id="selo" style="display:none"></div>
     <h1>Continue vendo as licitações que você pode ganhar</h1>
-    <div class="sub">A leitura completa do edital e a conferência dos seus documentos ficam liberadas na assinatura. Pagou, liberou na hora — sem fidelidade, cancele quando quiser.</div>
+    <div class="sub">A leitura completa do edital e a conferência dos seus documentos ficam liberadas na assinatura. Pagou, liberou na hora, sem fidelidade, cancele quando quiser.</div>
 
     <div class="planos" id="planos"></div>
 
@@ -94,7 +94,7 @@ async function carregar() {
   try {
     const a = await (await fetch("/api/acesso?c=" + encodeURIComponent(token))).json();
     if (a.status === "teste" && a.diasRestantes != null) { $("selo").style.display = "inline-block"; $("selo").textContent = `Seu teste grátis termina em ${a.diasRestantes} dia(s)`; }
-    else if (a.status === "teste_expirado" || a.status === "vencido") { $("selo").style.display = "inline-block"; $("selo").textContent = "Seu acesso expirou — assine para reativar"; }
+    else if (a.status === "teste_expirado" || a.status === "vencido") { $("selo").style.display = "inline-block"; $("selo").textContent = "Seu acesso expirou, assine para reativar"; }
   } catch {}
 
   // Separa planos: clientes finais (1 CNPJ) e assessoria (multi-CNPJ)
@@ -158,7 +158,7 @@ async function checkout(btn) {
     // Sem gateway configurado: mostra o Pix concierge
     const c = d.cobranca || {};
     $("concierge").style.display = "block";
-    $("concierge").innerHTML = `Pagamento automático ainda não ativado. Por enquanto: faça um Pix para <b>${c.pix || "—"}</b> e envie o comprovante para <b>${c.contato || "—"}</b> que ativamos a sua conta.`;
+    $("concierge").innerHTML = `Pagamento automático ainda não ativado. Por enquanto: faça um Pix para <b>${c.pix || ","}</b> e envie o comprovante para <b>${c.contato || ","}</b> que ativamos a sua conta.`;
   } catch (e) {
     $("erro").textContent = "Não consegui abrir o pagamento: " + e.message;
   } finally {
