@@ -101,7 +101,7 @@ Sim. Em **Declarações**, no painel, geramos as 5 declarações padrão (idonei
 ## Pagamento e Planos
 
 ### Quais formas de pagamento aceitam?
-Pix, cartão de crédito e boleto. A cobrança é mensal e automática (pelo gateway Asaas). O cartão renova sozinho; no Pix você recebe nova cobrança a cada mês.
+Pix, cartão de crédito e boleto. A cobrança é mensal e automática (pelo gateway Asaas). O cartão renova sozinho. No Pix e no boleto, você recebe o aviso de cobrança alguns dias antes do vencimento e tem 3 dias de carência após o vencimento para regularizar sem perda de acesso.
 
 ### Posso cancelar quando quiser?
 Sim. Sem fidelidade, sem multa. Cancele no painel a qualquer momento, você fica com acesso até o fim do mês pago.
