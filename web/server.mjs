@@ -22,7 +22,7 @@ import { temChave } from "../src/ia.mjs";
 import { criarPerfil } from "../src/cadastro.mjs";
 import { gerarDigest, enviar, temEmailKey } from "../src/email.mjs";
 import { statusAtual, cobranca } from "../src/assinatura.mjs";
-import { precoVencedores } from "../src/preco.mjs";
+import { precoVencedores, contratosDoFornecedor } from "../src/preco.mjs";
 import { precoReferencia } from "../src/precoReferencia.mjs";
 import { csvEditais, csvHistorico, csvRadar, csvContratos, nomeArquivo } from "../src/exportar.mjs";
 import { icsEdital, nomeIcs } from "../src/calendario.mjs";
@@ -397,6 +397,25 @@ const servidor = createServer(async (req, res) => {
     }
 
     // Perfil do cliente: ler dados editaveis (para a pagina Minha conta).
+    // Contratos detalhados de um fornecedor especifico no escopo do edital
+    // (mesmo orgao, ramo do cliente). Devolve com link pro PNCP.
+    if (rota === "/api/contratos-fornecedor") {
+      const tokenF = url.searchParams.get("c") || "";
+      const perfilF = await perfilPorToken(tokenF);
+      if (!perfilF) return json(res, 404, { erro: "Conta nao encontrada" });
+      const editalId = url.searchParams.get("editalId");
+      const editalF = editalId ? buscarPorId(editalId) : null;
+      const fornecedorNi = url.searchParams.get("ni") || null;
+      const fornecedor = url.searchParams.get("fornecedor") || null;
+      const lista = contratosDoFornecedor({
+        termos: perfilF.filtro?.termos ?? [],
+        uf: editalF?.uf || (perfilF.ufs ?? [])[0] || null,
+        orgaoCnpj: editalF?.orgaoCnpj || null,
+        fornecedorNi, fornecedor,
+      });
+      return json(res, 200, { contratos: lista });
+    }
+
     // Saude documental do perfil (lista de certidoes + dias para vencer).
     // Usado pelo painel pra mostrar popup de alerta quando algo vai vencer logo.
     if (rota === "/api/saude-empresa" && req.method === "GET") {

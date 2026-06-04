@@ -29,9 +29,10 @@ function rankear(casaram, limite) {
   const porForn = new Map();
   for (const c of casaram) {
     const f = c.fornecedor || "Nao informado";
-    const reg = porForn.get(f) || { fornecedor: f, qtd: 0, valorTotal: 0 };
+    const reg = porForn.get(f) || { fornecedor: f, fornecedorNi: c.fornecedorNi || null, qtd: 0, valorTotal: 0 };
     reg.qtd += 1;
     reg.valorTotal += c.valor;
+    if (!reg.fornecedorNi && c.fornecedorNi) reg.fornecedorNi = c.fornecedorNi;
     porForn.set(f, reg);
   }
   return [...porForn.values()].sort((a, b) => b.qtd - a.qtd).slice(0, limite);
@@ -72,5 +73,47 @@ export function precoVencedores({ termos = [], uf = null, municipio = null, orga
     escopo, // "orgao" | "municipio" | "uf" | "nacional"
     stats: estatisticas(casaram.map((c) => c.valor)),
     topFornecedores: rankear(casaram, limite),
+    contratosCasaram: casaram, // mantem a lista pra detalhamento
   };
+}
+
+// Monta a URL publica do PNCP para o detalhe do contrato, a partir do
+// numeroControlePNCP (formato: CNPJ-tipo-sequencial/ano).
+// Ex: "00394502000144-2-000045/2026" -> https://pncp.gov.br/app/contratos/00394502000144/2026/45
+export function linkPncpContrato(id) {
+  if (!id) return null;
+  const m = String(id).match(/^(\d+)-\d+-(\d+)\/(\d+)$/);
+  if (!m) return null;
+  const [, cnpj, sequencial, ano] = m;
+  // Remove zeros a esquerda do sequencial
+  const seq = String(Number(sequencial));
+  return `https://pncp.gov.br/app/contratos/${cnpj}/${ano}/${seq}`;
+}
+
+// Lista os contratos de UM fornecedor especifico, dentro do escopo (mesmo orgao,
+// mesmo ramo do cliente). Devolve com link pro PNCP de cada contrato.
+export function contratosDoFornecedor({ termos = [], uf = null, orgaoCnpj = null, fornecedorNi = null, fornecedor = null, meses = 18 } = {}) {
+  if (!fornecedorNi && !fornecedor) return [];
+  const candidatos = consultarContratos({ uf, mesesAtras: meses });
+  let casaram = aplicarFiltro(candidatos, { termos }).filter((c) => c.valor > 0);
+  if (orgaoCnpj) casaram = casaram.filter((c) => (c.orgaoCnpj || "") === orgaoCnpj);
+  // Casa por CNPJ do fornecedor (mais preciso) ou por nome (fallback)
+  if (fornecedorNi) {
+    casaram = casaram.filter((c) => (c.fornecedorNi || "").replace(/\D/g, "") === String(fornecedorNi).replace(/\D/g, ""));
+  } else {
+    casaram = casaram.filter((c) => (c.fornecedor || "") === fornecedor);
+  }
+  return casaram
+    .sort((a, b) => (b.vigenciaInicio || "").localeCompare(a.vigenciaInicio || ""))
+    .map((c) => ({
+      id: c.id,
+      objeto: c.objeto,
+      orgao: c.orgao,
+      municipio: c.municipio,
+      uf: c.uf,
+      valor: c.valor,
+      vigenciaInicio: c.vigenciaInicio,
+      vigenciaFim: c.vigenciaFim,
+      linkPncp: linkPncpContrato(c.id),
+    }));
 }
