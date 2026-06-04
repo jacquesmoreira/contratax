@@ -681,7 +681,7 @@ function precoHTML(p) {
     <div style="font-size:13px;color:var(--cinza);margin-bottom:10px">As empresas que mais venceram contratos do seu ramo ${localFrase} (${p.total} contratos analisados ${periodo}). Clique em cada uma pra ver os contratos:</div>
     <ul class="itens" id="lista-fornecedores">${p.topFornecedores.map((f, i) => `
       <li style="flex-direction:column;align-items:stretch;padding:0;border:1px solid var(--linha);border-radius:10px;margin-bottom:8px;overflow:hidden">
-        <button class="forn-toggle" data-idx="${i}" data-ni="${esc(f.fornecedorNi || "")}" data-nome="${esc(f.fornecedor || "")}" style="display:flex;align-items:center;gap:9px;padding:11px 14px;background:#fff;border:none;width:100%;text-align:left;cursor:pointer;font-family:inherit;font-size:14px">
+        <button class="forn-toggle" data-idx="${i}" data-ni="${esc(f.fornecedorNi || "")}" data-nome="${esc(f.fornecedor || "")}" data-escopo="${esc(p.escopo || "")}" style="display:flex;align-items:center;gap:9px;padding:11px 14px;background:#fff;border:none;width:100%;text-align:left;cursor:pointer;font-family:inherit;font-size:14px">
           <span class="ic">🏆</span>
           <span style="flex:1;font-weight:600">${esc(f.fornecedor)}</span>
           <span style="color:var(--cinza);white-space:nowrap;font-weight:700">${f.qtd} contrato${f.qtd > 1 ? "s" : ""}</span>
@@ -828,7 +828,8 @@ async function abrirDrawer(id) {
       det.style.display = "block";
       det.innerHTML = `<div style="padding:10px 0;font-size:13px;color:var(--cinza)"><span class="spinner"></span> Buscando contratos...</div>`;
       try {
-        const params = new URLSearchParams({ editalId: id, c: token });
+        const escopo = b.dataset.escopo || "orgao";
+        const params = new URLSearchParams({ editalId: id, c: token, escopo });
         if (ni) params.set("ni", ni); else params.set("fornecedor", nome);
         const r = await fetch("/api/contratos-fornecedor?" + params);
         const d = await r.json();

@@ -397,8 +397,8 @@ const servidor = createServer(async (req, res) => {
     }
 
     // Perfil do cliente: ler dados editaveis (para a pagina Minha conta).
-    // Contratos detalhados de um fornecedor especifico no escopo do edital
-    // (mesmo orgao, ramo do cliente). Devolve com link pro PNCP.
+    // Contratos detalhados de um fornecedor especifico, no MESMO escopo que o
+    // ranking usou (orgao, municipio, uf ou nacional). Devolve com link pro PNCP.
     if (rota === "/api/contratos-fornecedor") {
       const tokenF = url.searchParams.get("c") || "";
       const perfilF = await perfilPorToken(tokenF);
@@ -407,13 +407,17 @@ const servidor = createServer(async (req, res) => {
       const editalF = editalId ? buscarPorId(editalId) : null;
       const fornecedorNi = url.searchParams.get("ni") || null;
       const fornecedor = url.searchParams.get("fornecedor") || null;
+      const escopo = url.searchParams.get("escopo") || "orgao";
+      // Filtra por orgao SO se o ranking foi escopo "orgao". Senao usa UF (escopo
+      // do ranking) ou nacional — mesmo escopo que o cliente esta vendo no topo.
+      const filtrarOrgao = escopo === "orgao";
       const lista = contratosDoFornecedor({
         termos: perfilF.filtro?.termos ?? [],
-        uf: editalF?.uf || (perfilF.ufs ?? [])[0] || null,
-        orgaoCnpj: editalF?.orgaoCnpj || null,
+        uf: escopo === "nacional" ? null : (editalF?.uf || (perfilF.ufs ?? [])[0] || null),
+        orgaoCnpj: filtrarOrgao ? (editalF?.orgaoCnpj || null) : null,
         fornecedorNi, fornecedor,
       });
-      return json(res, 200, { contratos: lista });
+      return json(res, 200, { contratos: lista, escopo });
     }
 
     // Saude documental do perfil (lista de certidoes + dias para vencer).
