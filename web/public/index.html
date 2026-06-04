@@ -24,14 +24,24 @@
   a { color:inherit; text-decoration:none; }
 
   /* Nav */
-  nav { background:#fff; border-bottom:1px solid var(--linha); position:sticky; top:0; z-index:20; }
-  nav .wrap { display:flex; align-items:center; height:60px; gap:18px; }
-  .logo { font-weight:900; font-size:21px; color:var(--indigo); letter-spacing:-.5px; }
+  nav { background:#fff; border-bottom:1px solid var(--linha); position:sticky; top:0; z-index:20; box-shadow:0 1px 0 rgba(15,23,42,.02); }
+  nav .wrap { display:flex; align-items:center; height:64px; gap:18px; }
+  .logo { font-weight:900; font-size:21px; color:var(--indigo); letter-spacing:-.5px; display:flex; align-items:center; flex-shrink:0; }
   .logo span { color:var(--cinza-c); }
-  nav .dir { margin-left:auto; display:flex; align-items:center; gap:18px; font-size:14px; font-weight:600; color:var(--cinza); }
-  nav .dir a:hover { color:var(--tinta); }
-  #nav-cliente { color:var(--tinta); font-weight:700; }
-  .sair { color:var(--cinza); }
+  .nav-id { display:flex; align-items:center; gap:10px; padding-left:18px; border-left:1px solid var(--linha); margin-left:6px; min-width:0; max-width:280px; }
+  .nav-id-nome { font-size:13.5px; font-weight:700; color:var(--tinta); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; }
+  .nav-id-uso { font-size:11.5px; color:var(--cinza-c); font-weight:600; margin-top:1px; white-space:nowrap; }
+  .nav-id-uso b { color:var(--indigo); font-weight:800; }
+  nav .dir { margin-left:auto; display:flex; align-items:center; gap:4px; font-size:13.5px; font-weight:600; color:var(--cinza); }
+  nav .dir a { padding:8px 12px; border-radius:8px; transition:background .12s, color .12s; }
+  nav .dir a:hover { color:var(--tinta); background:var(--fundo); }
+  .nav-sair { color:var(--cinza-c) !important; font-size:13px !important; }
+  .nav-sair:hover { color:var(--vermelho) !important; background:var(--vermelho-bg) !important; }
+  /* Esconde labels longos em telas menores; mostra so icones */
+  @media (max-width:980px) {
+    .nav-id { display:none; }
+    nav .dir a { padding:8px 9px; }
+  }
 
   /* Cabecalho */
   .topo { background:linear-gradient(135deg,var(--indigo-d),var(--azul)); color:#fff; padding:30px 0 26px; }
@@ -144,17 +154,21 @@
 </head>
 <body>
   <nav><div class="wrap">
-    <a class="logo" href="/"><img src="/logo-horizontal.png" alt="ContrataX" style="height:32px;width:auto;display:block" /></a>
+    <a class="logo" href="/"><img src="/logo-horizontal.png" alt="ContrataX" style="height:30px;width:auto;display:block" /></a>
+    <div class="nav-id">
+      <div style="min-width:0;flex:1">
+        <div class="nav-id-nome" id="nav-cliente"></div>
+        <div class="nav-id-uso" id="nav-uso" title="Pesquisas usadas neste mês"></div>
+      </div>
+    </div>
     <div class="dir">
-      <span id="nav-cliente"></span>
-      <span id="nav-uso" title="leituras dos editais usadas neste mês"></span>
       <a id="nav-plano" href="#" style="display:none"></a>
-      <a id="nav-conta" href="#">Minha conta</a>
+      <a id="nav-conta" href="#">Conta</a>
       <a id="nav-equipe" href="#">Equipe</a>
-      <a id="nav-docs" href="#">Meus documentos</a>
+      <a id="nav-docs" href="#">Documentos</a>
       <a id="nav-historico" href="#">Histórico</a>
       <a id="nav-declaracoes" href="#">Declarações</a>
-      <a class="sair" href="/">Sair</a>
+      <a class="nav-sair" href="/">Sair</a>
     </div>
   </div></nav>
 
@@ -541,8 +555,8 @@ async function carregar() {
     document.getElementById("nav-declaracoes").href = "/declaracoes?c=" + encodeURIComponent(token);
     if (acesso.uso) {
       const u = acesso.uso, n = document.getElementById("nav-uso");
-      n.textContent = `${u.usados}/${u.limite} análises`;
-      n.style.color = u.restantes === 0 ? "#dc2626" : "var(--cinza-c)";
+      n.innerHTML = `<b>${u.usados}/${u.limite}</b> pesquisas no mês`;
+      if (u.restantes === 0) n.style.color = "#dc2626";
     }
     if (!acesso.temAcesso) { c.innerHTML = paywall(acesso); return; }
 
@@ -886,7 +900,7 @@ async function analisar(id) {
     if (!r.ok) throw new Error(d.erro || "falha");
     if (d.uso) {
       const n = document.getElementById("nav-uso");
-      if (n) { n.textContent = `${d.uso.usados}/${d.uso.limite} análises`; n.style.color = d.uso.restantes === 0 ? "#dc2626" : "var(--cinza-c)"; }
+      if (n) { n.innerHTML = `<b>${d.uso.usados}/${d.uso.limite}</b> pesquisas no mês`; if (d.uso.restantes === 0) n.style.color = "#dc2626"; }
     }
     if (editalAtual === id) abrirDrawer(id);
   } catch (e) {
@@ -907,7 +921,7 @@ async function impugnar(id) {
       alert(d.erro); return;
     }
     if (!r.ok) throw new Error(d.erro || "falha");
-    if (d.uso) { const n = document.getElementById("nav-uso"); if (n) { n.textContent = `${d.uso.usados}/${d.uso.limite} análises`; n.style.color = d.uso.restantes === 0 ? "#dc2626" : "var(--cinza-c)"; } }
+    if (d.uso) { const n = document.getElementById("nav-uso"); if (n) { n.innerHTML = `<b>${d.uso.usados}/${d.uso.limite}</b> pesquisas no mês`; if (d.uso.restantes === 0) n.style.color = "#dc2626"; } }
     if (editalAtual === id) abrirDrawer(id);
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = "⚖️ Gerar dossiê de impugnação"; }
