@@ -779,7 +779,9 @@ async function abrirDrawer(id) {
   }
   html += `<div class="bloco" id="docs-bloco"><h3>📄 Documentos do edital</h3><div class="carregando" style="padding:10px"><span class="spinner"></span>Carregando documentos...</div></div>`;
   if (portalUrl) html += `<a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--verde);color:#fff;font-weight:700;padding:14px;border-radius:11px;text-decoration:none;margin-bottom:14px">${portalLabel}</a>`;
-  html += referenciaHTML(d.referencia);
+  // [removido] Bloco "Precos praticados em contratos similares" — saiu porque o
+  // PNCP mistura preco unitario com contrato inteiro, deixando a faixa enganosa.
+  // Volta quando tivermos como filtrar por categoria/item especifico (nao palavra-chave).
   html += precoHTML(d.preco);
   html += d.temDocumentos
     ? saudeHTML(d.saude)
