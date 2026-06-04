@@ -296,7 +296,7 @@ function bannerUpgrade(acesso) {
       <div class="ico">📈</div>
       <div class="corpo">
         <div class="tit">Você usou ${u.usados}/${u.limite} análises este mês (${restantes} restantes)</div>
-        <div class="sub" style="color:#cffafe">Faça upgrade para o <b>Pro</b> e tenha 250 análises/mês + acessos para a equipe.</div>
+        <div class="sub" style="color:#cffafe">Faça upgrade para o <b>Pro</b> e tenha 100 pesquisas/mês + acessos para a equipe.</div>
       </div>
       <a class="btn-cta" href="/assinar?c=${encodeURIComponent(token)}">Fazer upgrade</a>
     </div>`;
@@ -809,7 +809,7 @@ async function abrirDrawer(id) {
       <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;text-align:center;background:var(--indigo);color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none">Assinar e liberar a análise →</a>
     </div>`;
   } else if (d.temChave) {
-    html += `<div class="bloco" style="color:var(--cinza)">Você usou as análises do mês. A cota volta no próximo mês.</div>`;
+    html += `<div class="bloco" style="color:var(--cinza)">Você usou as pesquisas do mês. A cota volta no próximo mês.</div>`;
   } else {
     html += `<div class="bloco" style="color:var(--cinza)">Análise indisponível no momento.</div>`;
   }

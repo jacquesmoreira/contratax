@@ -106,7 +106,7 @@ async function carregar() {
       ${tag ? `<span class="tag-top">${tag}</span>` : ""}
       <div class="pl-nome">${p.nome}</div>
       <div class="preco"><b>R$ ${p.preco}</b><span>/mês</span></div>
-      <div class="pl-cota">${p.empresas && p.empresas > 1 ? `Até ${p.empresas} empresas (CNPJs)<br><span style="font-weight:600;color:var(--cinza)">${p.analises} análises/mês cada</span>` : `${p.analises} análises por mês`}</div>
+      <div class="pl-cota">${p.empresas && p.empresas > 1 ? `Até ${p.empresas} empresas (CNPJs)<br><span style="font-weight:600;color:var(--cinza)">${p.analises} pesquisas/mês cada</span>` : `${p.analises} pesquisas por mês`}</div>
       <ul class="inc">${BENEFICIOS.map(b => `<li>${b}</li>`).join("")}${p.assessoria ? '<li style="color:var(--indigo);font-weight:700">Painel único para gerenciar todas as empresas</li>' : ""}</ul>
       <button class="btn" data-tipo="plano" data-id="${p.id}">Assinar ${p.nome}</button>
     </div>`;

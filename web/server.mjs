@@ -15,6 +15,7 @@ import { gerarDeclaracoes } from "../src/declaracoes.mjs";
 import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
 import { renderizarArtigo, renderizarListagem, urlsBlog } from "../src/blog.mjs";
 import { renderizarAjuda, renderizarContato, processarContato } from "../src/ajuda.mjs";
+import { tentarUsoVisitante, ipDoRequest } from "../src/rateLimitVisitante.mjs";
 import { injetarAnalytics, enviarConversao } from "../src/analytics.mjs";
 import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
@@ -872,33 +873,53 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
-    // TL;DR do edital (5 linhas): gera sob demanda se nao houver cache.
-    // Recurso GRATUITO (cache global por edital) — abre pra qualquer visitante
-    // (gancho de aquisicao). O cache protege contra custo: mesmo edital aberto
-    // 1000 vezes = 1 chamada de IA. Circuit breaker simples por hora.
+    // TL;DR do edital (resumo rapido): gera sob demanda se nao houver cache.
+    // - Visitante anonimo: 3 grátis por IP/24h (gancho). Depois bloqueia com paywall.
+    // - Cliente pagante: cada TL;DR novo (sem cache) consome 1 da cota.
+    // - Cache global por edital protege custo medio.
     if (rota === "/api/tldr" && req.method === "POST") {
       const id = url.searchParams.get("id");
       const edital = buscarPorId(id);
       if (!edital) return json(res, 404, { erro: "Edital nao encontrado" });
-      // Cache global: se ja existe, devolve direto (sem custo de IA)
+      // Cache global: devolve direto sem custo (e sem consumir cota)
       const cache = await carregarTldr(id);
       if (cache) return json(res, 200, { tldr: cache.tldr, cache: true });
-      if (!temChave()) return json(res, 400, { erro: "Sem ANTHROPIC_API_KEY configurada" });
-      // Circuit breaker: limita geracoes novas por hora pra proteger orcamento
-      if (!global.__tldrCounter) global.__tldrCounter = { hora: 0, count: 0 };
-      const horaAtual = Math.floor(Date.now() / 3600000);
-      if (global.__tldrCounter.hora !== horaAtual) global.__tldrCounter = { hora: horaAtual, count: 0 };
-      const LIMITE = Number(process.env.LICITA_TLDR_LIMITE_HORA || 60);
-      if (global.__tldrCounter.count >= LIMITE) {
-        return json(res, 429, { erro: "Limite temporario atingido. Tente daqui a alguns minutos." });
+
+      if (!temChave()) return json(res, 400, { erro: "Sem chave de leitura configurada" });
+
+      const tokenT = url.searchParams.get("c") || "";
+      const perfilT = await perfilPorToken(tokenT);
+      // Caminho 1: cliente PAGANTE — consome 1 da cota
+      if (perfilT && tokenT !== ADMIN) {
+        if (!statusAtual(perfilT).temAcesso) {
+          return json(res, 403, { erro: "Assinatura nao ativa", paywall: true });
+        }
+        const chk = checarAnalise(perfilT);
+        if (!chk.ok) return json(res, 402, { erro: "Cota mensal esgotada", motivo: chk.motivo, paywall: true });
+        try {
+          const tldr = await gerarTldr(edital);
+          await salvarTldr(id, tldr);
+          await registrarAnalise(perfilT, { tipo: "tldr", editalId: id });
+          return json(res, 200, { tldr, cache: false });
+        } catch (e) {
+          return json(res, 500, { erro: e.message });
+        }
       }
-      global.__tldrCounter.count++;
+      // Caminho 2: visitante ANONIMO — rate limit por IP (3/24h)
+      const ip = ipDoRequest(req);
+      const r = tentarUsoVisitante(ip, "tldr");
+      if (!r.ok) {
+        return json(res, 402, {
+          erro: "Você usou seus testes grátis.",
+          paywall: true,
+          mensagem: `Visitantes têm direito a ${r.limite} análises rápidas grátis por dia. Cadastre-se grátis para ter mais.`,
+        });
+      }
       try {
         const tldr = await gerarTldr(edital);
         await salvarTldr(id, tldr);
-        return json(res, 200, { tldr, cache: false });
+        return json(res, 200, { tldr, cache: false, restantes: r.restantes });
       } catch (e) {
-        global.__tldrCounter.count--; // nao consome cota se falhou
         return json(res, 500, { erro: e.message });
       }
     }
@@ -940,16 +961,28 @@ const servidor = createServer(async (req, res) => {
       const id = url.searchParams.get("id");
       const edital = buscarPorId(id);
       if (!edital) return json(res, 404, { erro: "Edital nao encontrado" });
-      if (!temChave()) return json(res, 400, { erro: "Sem ANTHROPIC_API_KEY configurada" });
+      if (!temChave()) return json(res, 400, { erro: "Sem chave de leitura configurada" });
       const tokenA = url.searchParams.get("c") || "";
       const perfilA = await perfilPorToken(tokenA);
-      if (perfilA) {
+      // Cliente pagante: consome cota
+      if (perfilA && tokenA !== ADMIN) {
         const lib = checarAnalise(perfilA);
         if (!lib.ok) {
           const msg = lib.motivo === "assinatura"
             ? "O dossie de impugnacao faz parte do plano. Assine para liberar."
-            : `Voce usou as ${lib.uso.limite} analises do seu plano neste mes. A cota volta no proximo mes.`;
-          return json(res, 402, { erro: msg, motivo: lib.motivo, limiteAtingido: true, uso: lib.uso });
+            : `Voce usou as ${lib.uso.limite} pesquisas do seu plano neste mes. A cota volta no proximo mes.`;
+          return json(res, 402, { erro: msg, motivo: lib.motivo, limiteAtingido: true, paywall: true, uso: lib.uso });
+        }
+      } else if (!perfilA) {
+        // Visitante anonimo: rate limit (1 impugnacao gratis por 24h por IP)
+        const ip = ipDoRequest(req);
+        const r = tentarUsoVisitante(ip, "impugnacao");
+        if (!r.ok) {
+          return json(res, 402, {
+            erro: "Você usou sua impugnação grátis.",
+            paywall: true,
+            mensagem: `Visitantes têm direito a ${r.limite} dossiê grátis por dia. Cadastre-se grátis para ter mais.`,
+          });
         }
       }
       try {
