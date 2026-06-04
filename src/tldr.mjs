@@ -51,11 +51,10 @@ function extrairJSON(texto) {
 
 // Gera o TL;DR a partir do PDF do edital. Retorna o JSON estruturado.
 //
-// Custo: para um edital de 5 linhas de resumo, NAO precisamos do PDF inteiro.
-// Limitamos a 500KB (~12-15 paginas, suficiente pra pegar objeto, valor, prazo e
-// principais exigencias). Editais grandes (>1MB) ficavam custando ~R$0,30/leitura;
-// truncados ficam ~R$0,05. Cache global protege contra re-leituras.
-const MAX_PDF_BYTES = Number(process.env.LICITA_TLDR_MAX_PDF_BYTES || 500 * 1024);
+// NOTA: NAO truncamos PDF binario aqui — PDF tem cross-references no FIM do
+// arquivo; cortar no meio corrompe a estrutura e a API rejeita ("PDF not valid").
+// Cache global por edital (data/tldrs.json) ja protege contra custo repetido:
+// 1a chamada paga, todas as outras vem de cache.
 
 export async function gerarTldr(edital) {
   if (!temChaveIA()) throw new Error("ANTHROPIC_API_KEY ausente");
@@ -64,21 +63,13 @@ export async function gerarTldr(edital) {
   if (!pdfs.length) throw new Error("Nenhum PDF disponivel para este edital");
   const principal = pdfs[0];
 
-  // Trunca PDF se grande (Claude tolera PDFs incompletos — le o que conseguir).
-  // As primeiras paginas concentram objeto, exigencias e dados de habilitacao,
-  // que e exatamente o que o TL;DR precisa.
-  const buffer = principal.buffer.length > MAX_PDF_BYTES
-    ? principal.buffer.slice(0, MAX_PDF_BYTES)
-    : principal.buffer;
-  const truncado = buffer.length < principal.buffer.length;
-
   const corpo = {
     model: MODELO,
     max_tokens: 800,
     messages: [{
       role: "user",
       content: [
-        { type: "document", source: { type: "base64", media_type: "application/pdf", data: buffer.toString("base64") } },
+        { type: "document", source: { type: "base64", media_type: "application/pdf", data: principal.buffer.toString("base64") } },
         { type: "text", text: PROMPT },
       ],
     }],
@@ -109,8 +100,7 @@ export async function gerarTldr(edital) {
       modelo: MODELO,
       etapa: "tldr",
       editalId: edital.id,
-      pdfKB: Math.round(buffer.length / 1024),
-      pdfTruncado: truncado,
+      pdfKB: Math.round(principal.buffer.length / 1024),
     });
   } catch {}
 

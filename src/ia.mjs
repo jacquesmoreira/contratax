@@ -11,10 +11,10 @@ const MODELO_PADRAO = process.env.LICITA_MODELO || "claude-sonnet-4-6";
 // no MODELO_PADRAO (Sonnet) por ser o veredito apto/nao-apto e custar pouco.
 const MODELO_LEITURA = process.env.LICITA_MODELO_LEITURA || "claude-haiku-4-5-20251001";
 const LIMITE_BYTES = 30 * 1024 * 1024; // ~limite pratico de PDF da API
-// Trunca PDF antes de mandar pra IA. As exigencias de habilitacao e o objeto
-// ficam nas primeiras paginas; anexos (planilhas de itens, modelos, plantas) ficam
-// no fim e nao afetam o veredito apto/nao-apto. Reduz custo em ~70%.
-const MAX_PDF_BYTES = Number(process.env.LICITA_ANALISE_MAX_PDF_BYTES || 800 * 1024);
+// NOTA: NAO truncamos PDF binario aqui — PDF tem cross-references no FIM do
+// arquivo; cortar no meio corrompe a estrutura e a API rejeita ("PDF not valid").
+// Pra reduzir custo no futuro: usar prompt caching (ja habilitado) ou extrair
+// texto do PDF antes de enviar.
 
 export function temChave() {
   return Boolean(process.env.ANTHROPIC_API_KEY);
@@ -48,9 +48,6 @@ export function montarCorpo(pdfBuffer, { modelo = MODELO_LEITURA } = {}) {
   if (pdfBuffer.length > LIMITE_BYTES) {
     throw new Error(`PDF grande demais (${(pdfBuffer.length / 1048576).toFixed(1)} MB) para a API`);
   }
-  // Trunca o PDF se passar do limite (mais barato, menos chance de truncar JSON
-  // de saida tambem). Claude tolera PDFs incompletos — le o que conseguir.
-  const buf = pdfBuffer.length > MAX_PDF_BYTES ? pdfBuffer.slice(0, MAX_PDF_BYTES) : pdfBuffer;
   return {
     model: modelo,
     max_tokens: 8000, // dobrado: editais ricos geram JSON com muitas exigencias
@@ -60,7 +57,7 @@ export function montarCorpo(pdfBuffer, { modelo = MODELO_LEITURA } = {}) {
         content: [
           {
             type: "document",
-            source: { type: "base64", media_type: "application/pdf", data: buf.toString("base64") },
+            source: { type: "base64", media_type: "application/pdf", data: pdfBuffer.toString("base64") },
             cache_control: { type: "ephemeral" },
           },
           { type: "text", text: INSTRUCAO },
