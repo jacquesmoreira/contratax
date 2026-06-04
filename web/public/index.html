@@ -820,7 +820,7 @@ async function abrirDrawer(id) {
       return;
     }
     bloco.innerHTML = `<h3>📄 Documentos do edital</h3><ul class="itens">` +
-      docs.map(doc => `<li><span class="ic">📎</span><span style="flex:1">${esc(doc.titulo)}<br><span style="color:var(--cinza-c);font-size:12px">${esc(doc.tipo)}</span></span><a href="/api/edital-arquivo?id=${encodeURIComponent(id)}&doc=${doc.indice}" target="_blank" style="color:var(--indigo);font-weight:700;white-space:nowrap">baixar ↓</a></li>`).join("") +
+      docs.map(doc => `<li><span class="ic">📎</span><span style="flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word">${esc(doc.titulo)}<br><span style="color:var(--cinza-c);font-size:12px">${esc(doc.tipo)}</span></span><a href="/api/edital-arquivo?id=${encodeURIComponent(id)}&doc=${doc.indice}" target="_blank" style="color:var(--indigo);font-weight:700;white-space:nowrap;flex-shrink:0">baixar ↓</a></li>`).join("") +
       `</ul>`;
   }).catch(() => { const b = document.getElementById("docs-bloco"); if (b) b.innerHTML = `<h3>📄 Documentos do edital</h3><p style="font-size:13.5px;color:var(--cinza)">Não consegui carregar os documentos agora.</p>`; });
 }
