@@ -290,9 +290,16 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
     casaram = casaram.filter((e) => e.encerramento && e.encerramento <= fim);
   }
 
+  // Ordenacao: PRAZO primeiro (urgencia), relevancia como desempate.
+  // Editais que encerram antes vem antes — o cliente quer correr atras dos
+  // mais urgentes. Editais sem data ficam no fim.
   const termoNorm = termos.length ? normalizar(termos[0]).replace(/"/g, "") : "";
   const posicao = (e) => { if (!termoNorm) return 0; const i = normalizar(e.objeto).indexOf(termoNorm); return i < 0 ? 1e9 : i; };
-  casaram.sort((a, b) => posicao(a) - posicao(b) || (a.encerramento || "").localeCompare(b.encerramento || ""));
+  casaram.sort((a, b) => {
+    const ea = a.encerramento || "9999-12-31";
+    const eb = b.encerramento || "9999-12-31";
+    return ea.localeCompare(eb) || posicao(a) - posicao(b);
+  });
 
   const unicos = dedupEditais(casaram);
   return { total: unicos.length, editais: unicos.slice(0, limite) };
@@ -300,19 +307,35 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
 
 // Colapsa editais quase-identicos (mesma compra republicada no PNCP com sequenciais
 // diferentes ou sob duas unidades): mesmo orgao + mesmo objeto + mesmo valor.
-// Mantem o primeiro (ja ordenado por relevancia/prazo) e descarta as repeticoes.
+// Mantem o primeiro (ja ordenado por prazo/relevancia) e descarta as repeticoes.
+//
+// Pra absorver variacoes minimas ("preco" vs "precos", "+textil" no fim, etc):
+// 1. Normaliza acentos/caixa
+// 2. Remove "s" final de cada palavra (plurais simples)
+// 3. Tira pontuacao e espacos extras
+// 4. Usa so os primeiros 40 caracteres como chave + orgao + valor
+function chaveDedupe(obj) {
+  return normalizar(obj || "")
+    .replace(/[^a-z0-9 ]/g, " ")  // tira pontuacao
+    .split(/\s+/)
+    .map((w) => w.replace(/s$/, ""))  // remove "s" final (plurais)
+    .filter(Boolean)
+    .join(" ")
+    .slice(0, 40);  // primeiros 40 chars normalizados
+}
+
 export function dedupEditais(lista) {
   const vistos = new Set();
   const out = [];
   for (const e of lista) {
     const org = e.orgaoCnpj || e.orgao || "";
-    const obj = normalizar(e.objeto || "").replace(/\s+/g, " ").trim();
     const val = e.valorEstimado;
-    // Com valor confiavel: mesmo orgao + mesmo valor (centavos) + inicio do objeto
-    // (pega republicacoes com o texto levemente reescrito). Sem valor: objeto inteiro.
+    // Com valor confiavel: mesmo orgao + valor + inicio normalizado do objeto.
+    // Sem valor: inicio do objeto inteiro (mais conservador).
+    const ini = chaveDedupe(e.objeto);
     const chave = val && val > 0
-      ? `${org}|${val}|${obj.slice(0, 60)}`
-      : `${org}|0|${obj}`;
+      ? `${org}|${Math.round(val * 100)}|${ini}`
+      : `${org}|0|${ini}`;
     if (vistos.has(chave)) continue;
     vistos.add(chave);
     out.push(e);
