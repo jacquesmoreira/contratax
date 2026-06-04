@@ -18,7 +18,7 @@ function escHtml(s) {
 
 // Parser Markdown ENXUTO: cobre o que precisamos pra blog SEO (headers H2/H3,
 // paragrafos, listas ordenadas/nao-ord, bold, italic, links, codigo inline).
-function mdParaHtml(md) {
+export function mdParaHtml(md) {
   const linhas = md.split(/\r?\n/);
   const out = [];
   let parag = [];

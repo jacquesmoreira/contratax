@@ -924,6 +924,79 @@ document.getElementById("conteudo").addEventListener("click", ev => {
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") fechar(); });
 carregar();
+
+// ============ WIDGET DE SUPORTE ============
+// Botão flutuante "Precisa de ajuda?" + modal com formulário pré-preenchido
+// (token, navegador, URL atual). Envia via POST /contato JSON.
+(function instalarWidgetSuporte() {
+  const btn = document.createElement("button");
+  btn.id = "btn-suporte";
+  btn.title = "Precisa de ajuda?";
+  btn.innerHTML = "💬 Ajuda";
+  btn.style.cssText = "position:fixed;bottom:22px;right:22px;background:#4338ca;color:#fff;border:none;border-radius:99px;padding:13px 22px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(67,56,202,.35);z-index:90;font-family:inherit;display:flex;align-items:center;gap:6px";
+  btn.onmouseover = () => { btn.style.background = "#312e81"; btn.style.transform = "translateY(-2px)"; };
+  btn.onmouseout = () => { btn.style.background = "#4338ca"; btn.style.transform = ""; };
+  document.body.appendChild(btn);
+
+  btn.onclick = () => {
+    const ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px";
+    ov.innerHTML = `<div id="sup-card" style="background:#fff;border-radius:18px;max-width:480px;width:100%;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <h2 style="font-size:20px;font-weight:800;margin:0">Fale com a gente</h2>
+        <button id="sup-fechar" style="background:none;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1">×</button>
+      </div>
+      <p style="font-size:13.5px;color:#475569;margin-bottom:16px">Conta o que está acontecendo — respondemos em até 1 dia útil no seu e-mail.</p>
+      <label style="display:block;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Seu e-mail</label>
+      <input id="sup-email" type="email" required placeholder="voce@empresa.com.br" style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;margin-bottom:14px" />
+      <label style="display:block;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Assunto</label>
+      <select id="sup-assunto" required style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;margin-bottom:14px;background:#fff">
+        <option value="">Selecione...</option>
+        <option>Dúvida sobre plano ou pagamento</option>
+        <option>Problema técnico</option>
+        <option>Dúvida sobre um edital</option>
+        <option>Sugestão de melhoria</option>
+        <option>Outra coisa</option>
+      </select>
+      <label style="display:block;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Sua mensagem</label>
+      <textarea id="sup-msg" required rows="5" placeholder="O que aconteceu? Quanto mais detalhe, mais rápido a gente resolve." style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;resize:vertical;margin-bottom:6px"></textarea>
+      <div id="sup-erro" style="color:#dc2626;font-size:13px;margin-bottom:8px;display:none"></div>
+      <button id="sup-enviar" style="width:100%;background:#4338ca;color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:6px">Enviar mensagem</button>
+      <div style="font-size:11.5px;color:#94a3b8;margin-top:10px;text-align:center">Dá uma olhada antes na <a href="/ajuda" target="_blank" style="color:#4338ca;font-weight:700">Central de Ajuda</a> — talvez você ache a resposta lá.</div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.querySelector("#sup-fechar").onclick = () => ov.remove();
+    ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+    ov.querySelector("#sup-enviar").onclick = async () => {
+      const email = ov.querySelector("#sup-email").value.trim();
+      const assunto = ov.querySelector("#sup-assunto").value;
+      const mensagem = ov.querySelector("#sup-msg").value.trim();
+      const erroEl = ov.querySelector("#sup-erro");
+      erroEl.style.display = "none";
+      if (!email || !assunto || mensagem.length < 10) {
+        erroEl.textContent = "Preenche e-mail, assunto e uma mensagem (mín. 10 caracteres).";
+        erroEl.style.display = "block";
+        return;
+      }
+      const btn = ov.querySelector("#sup-enviar");
+      btn.disabled = true; btn.textContent = "Enviando...";
+      try {
+        const r = await fetch("/contato", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, assunto, mensagem, token, origem: location.href }),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.erro || "falha");
+        ov.querySelector("#sup-card").innerHTML = `<div style="text-align:center;padding:24px 8px"><div style="font-size:48px;margin-bottom:8px">✓</div><h2 style="font-size:20px;font-weight:800;color:#047857;margin-bottom:6px">Mensagem enviada!</h2><p style="font-size:14px;color:#475569;margin-bottom:18px">Respondemos em até 1 dia útil no e-mail <b>${email}</b>.</p><button onclick="this.closest('[style*=fixed]').remove()" style="background:#4338ca;color:#fff;border:none;padding:11px 22px;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit">Fechar</button></div>`;
+      } catch (e) {
+        erroEl.textContent = "Não conseguimos enviar agora. Tente novamente em alguns minutos.";
+        erroEl.style.display = "block";
+        btn.disabled = false; btn.textContent = "Enviar mensagem";
+      }
+    };
+  };
+})();
 </script>
 </body>
 </html>

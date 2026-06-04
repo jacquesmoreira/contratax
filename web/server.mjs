@@ -14,6 +14,7 @@ import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
 import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
 import { renderizarArtigo, renderizarListagem, urlsBlog } from "../src/blog.mjs";
+import { renderizarAjuda, renderizarContato, processarContato } from "../src/ajuda.mjs";
 import { injetarAnalytics, enviarConversao } from "../src/analytics.mjs";
 import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
@@ -925,6 +926,51 @@ const servidor = createServer(async (req, res) => {
       return res.end(injetarAnalytics(html));
     }
 
+    // ===== Central de Ajuda e Contato =====
+    if (rota === "/ajuda" || rota === "/ajuda.html") {
+      const html = await renderizarAjuda(BASE_PUBLICA);
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(html);
+    }
+    if (rota === "/contato" && req.method === "GET") {
+      const tokenCt = url.searchParams.get("c") || "";
+      const html = await renderizarContato(BASE_PUBLICA, { token: tokenCt });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(html);
+    }
+    if (rota === "/contato" && req.method === "POST") {
+      // Aceita form-urlencoded (do <form> normal) ou JSON (do widget)
+      let dados = {};
+      const ct = req.headers["content-type"] || "";
+      if (ct.includes("application/json")) {
+        dados = await lerCorpo(req);
+      } else {
+        // form-urlencoded
+        const corpo = await new Promise((resolve) => {
+          let d = ""; req.on("data", (c) => d += c); req.on("end", () => resolve(d));
+        });
+        const params = new URLSearchParams(corpo);
+        dados = Object.fromEntries(params.entries());
+      }
+      const r = await processarContato({
+        email: dados.email,
+        assunto: dados.assunto,
+        mensagem: dados.mensagem,
+        token: dados.token,
+        meta: { userAgent: req.headers["user-agent"], url: dados.origem || null, painel: !!dados.token },
+      });
+      if (!r.ok) {
+        if (ct.includes("application/json")) return json(res, 400, { erro: r.erro });
+        const html = await renderizarContato(BASE_PUBLICA, { token: dados.token || "", erro: r.erro });
+        res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(html);
+      }
+      if (ct.includes("application/json")) return json(res, 200, { ok: true });
+      const html = await renderizarContato(BASE_PUBLICA, { sucesso: true });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(html);
+    }
+
     // ===== Blog SEO: artigos em /blog e /blog/<slug> =====
     const BASE_PUBLICA = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
     if (rota === "/blog" || rota === "/blog/") {
@@ -965,7 +1011,7 @@ const servidor = createServer(async (req, res) => {
     }
     // Sitemap DINAMICO: paginas-base + todas as paginas de SEO (ramo x estado).
     if (rota === "/sitemap.xml") {
-      const base = ["https://contratax.com.br/", "https://contratax.com.br/cadastro", "https://contratax.com.br/entrar"];
+      const base = ["https://contratax.com.br/", "https://contratax.com.br/cadastro", "https://contratax.com.br/entrar", "https://contratax.com.br/ajuda", "https://contratax.com.br/contato", "https://contratax.com.br/lp/comparativo"];
       const blog = (await urlsBlog("https://contratax.com.br")).map((b) => b.loc);
       const urls = [...base, ...blog, ...urlsSEO()];
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc><changefreq>daily</changefreq></url>`).join("\n")}\n</urlset>`;
