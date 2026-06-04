@@ -70,6 +70,24 @@ export function csvHistorico(licitacoes) {
   return BOM + [csvLinha(cab), ...linhas].join("\r\n");
 }
 
+// CONTRATOS analisados (lista crua de contratos fechados num orgao/ramo,
+// usado para exportar o bloco "Quem mais ganha neste orgao").
+export function csvContratos(contratos) {
+  const cab = ["Municipio", "UF", "Orgao", "Objeto", "Fornecedor", "CNPJ Fornecedor", "Valor (R$)", "Vigencia inicio", "Vigencia fim"];
+  const linhas = contratos.map((c) => csvLinha([
+    c.municipio ?? "",
+    c.uf ?? "",
+    c.orgao ?? "",
+    c.objeto ?? "",
+    c.fornecedor ?? "",
+    c.fornecedorNi ?? c.fornecedorCnpj ?? "",
+    brl(c.valor),
+    dataBR(c.vigenciaInicio),
+    dataBR(c.vigenciaFim),
+  ]));
+  return BOM + [csvLinha(cab), ...linhas].join("\r\n");
+}
+
 // RADAR (contratos vencendo + top 3 fornecedores por vitorias)
 export function csvRadar(itens) {
   const cab = ["Municipio", "UF", "Orgao", "Objeto", "Vigencia ate", "1o vencedor", "Vitorias", "2o vencedor", "Vitorias", "3o vencedor", "Vitorias", "Valor total contratado (R$)"];

@@ -439,6 +439,44 @@ function paywall(a) {
   </div>`;
 }
 
+// Popup de certidoes proximas do vencimento. Mostra 1x por dia (localStorage).
+// Aviso suave no canto inferior ESQUERDO (canto direito tem o widget de Ajuda).
+async function avisarCertidoesVencendo() {
+  if (!token) return;
+  try {
+    const d = await (await fetch("/api/saude-empresa?c=" + encodeURIComponent(token))).json();
+    if (!d.itens?.length) return;
+    // Pega certidoes que: ja venceram OU vencem em ate 30 dias
+    const alertas = d.itens.filter((i) => i.dias !== null && i.dias <= 30);
+    if (!alertas.length) return;
+    const hoje = new Date().toISOString().slice(0, 10);
+    const dispensado = localStorage.getItem("certVencendo-" + hoje);
+    if (dispensado) return;
+    // Pega os 3 mais urgentes
+    const top = alertas.sort((a, b) => a.dias - b.dias).slice(0, 3);
+    const ic = (d) => d < 0 ? "🔴" : d <= 3 ? "🔴" : d <= 7 ? "🟠" : d <= 15 ? "🟡" : "🟢";
+    const texto = (d) => d < 0 ? `VENCIDA há ${Math.abs(d)}d` : d === 0 ? "vence HOJE" : d === 1 ? "vence amanhã" : `vence em ${d} dias`;
+    const corBorda = top[0].dias <= 3 ? "#dc2626" : top[0].dias <= 7 ? "#d97706" : "#0891b2";
+    const box = document.createElement("div");
+    box.id = "alerta-cert";
+    box.style.cssText = `position:fixed;bottom:22px;left:22px;background:#fff;border-left:5px solid ${corBorda};border-radius:14px;padding:18px 20px;max-width:360px;box-shadow:0 18px 50px rgba(15,23,42,.18);z-index:80;font-family:inherit`;
+    box.innerHTML = `
+      <div style="display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:10px">
+        <div style="font-size:14.5px;font-weight:800;color:#0f172a">⚠️ Certidões precisando atenção</div>
+        <button id="fechar-cert" style="background:none;border:none;font-size:20px;color:#94a3b8;cursor:pointer;line-height:1;padding:0">×</button>
+      </div>
+      ${top.map(t => `<div style="font-size:13px;color:#475569;padding:6px 0;border-top:1px solid #f1f5f9">${ic(t.dias)} <b style="color:#0f172a">${esc(t.documento)}</b><br><span style="color:${t.dias < 7 ? "#b91c1c" : "#475569"};font-weight:600;font-size:12.5px">${texto(t.dias)}</span></div>`).join("")}
+      ${alertas.length > 3 ? `<div style="font-size:11.5px;color:#94a3b8;margin-top:6px">+ ${alertas.length - 3} outra(s) certidão(ões) próximas do vencimento</div>` : ""}
+      <a href="/documentos?c=${encodeURIComponent(token)}" style="display:block;text-align:center;margin-top:12px;background:#4338ca;color:#fff;font-weight:700;padding:10px;border-radius:9px;text-decoration:none;font-size:13.5px">Atualizar meus documentos →</a>
+    `;
+    document.body.appendChild(box);
+    box.querySelector("#fechar-cert").onclick = () => {
+      localStorage.setItem("certVencendo-" + hoje, "1");
+      box.remove();
+    };
+  } catch { /* silencioso */ }
+}
+
 async function carregarOnboarding() {
   if (!token) return;
   try {
@@ -488,6 +526,7 @@ async function carregar() {
     return;
   }
   carregarOnboarding(); // roda em paralelo, sem bloquear o painel
+  setTimeout(() => avisarCertidoesVencendo(), 1500); // alerta de certidao, com pequeno atraso
   try {
     const acesso = await (await fetch(`/api/acesso?c=${encodeURIComponent(token)}`)).json();
     if (!acesso.encontrado) {
@@ -634,7 +673,11 @@ function precoHTML(p) {
     : p.escopo === "uf" ? "em " + esc(p.uf)
     : "no Brasil";
   const titulo = p.escopo === "orgao" ? "🏆 Quem mais ganha neste órgão" : "🏆 Quem ganha no seu ramo nesta região";
-  return `<div class="bloco"><h3>${titulo}</h3>
+  // Botao de download dos contratos analisados (so quando escopo for "orgao", que e o caso mais util)
+  const btnExportar = p.escopo === "orgao" && editalAtual
+    ? `<a href="/api/exportar?tipo=concorrentes&editalId=${encodeURIComponent(editalAtual)}&c=${encodeURIComponent(token)}" style="font-size:12.5px;font-weight:700;color:var(--indigo);text-decoration:none;display:inline-flex;align-items:center;gap:5px;background:#eef2ff;padding:6px 11px;border-radius:8px;border:1px solid #c7d2fe;margin-left:auto;white-space:nowrap" title="Baixar planilha com os contratos analisados">📊 Baixar contratos</a>`
+    : "";
+  return `<div class="bloco"><h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${titulo}${btnExportar}</h3>
     <div style="font-size:13px;color:var(--cinza);margin-bottom:10px">As empresas que mais venceram contratos do seu ramo ${localFrase} (${p.total} contratos analisados ${periodo}). É contra elas que você joga aqui:</div>
     <ul class="itens">${p.topFornecedores.map(f => `<li><span class="ic">🏆</span><span style="flex:1">${esc(f.fornecedor)}</span><span style="color:var(--cinza);white-space:nowrap;font-weight:700">${f.qtd} contrato${f.qtd > 1 ? "s" : ""}</span></li>`).join("")}</ul>
     <div style="font-size:11px;color:var(--cinza-c);margin-top:10px">Ranking ${localFrase}, no ramo do seu cadastro (${esc(ramo)}), nos contratos ${periodo}. Fonte: dados públicos do PNCP — os vencedores de contratos públicos são informação oficial e aberta.</div>

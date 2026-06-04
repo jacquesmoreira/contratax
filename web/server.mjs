@@ -24,7 +24,7 @@ import { gerarDigest, enviar, temEmailKey } from "../src/email.mjs";
 import { statusAtual, cobranca } from "../src/assinatura.mjs";
 import { precoVencedores } from "../src/preco.mjs";
 import { precoReferencia } from "../src/precoReferencia.mjs";
-import { csvEditais, csvHistorico, csvRadar, nomeArquivo } from "../src/exportar.mjs";
+import { csvEditais, csvHistorico, csvRadar, csvContratos, nomeArquivo } from "../src/exportar.mjs";
 import { icsEdital, nomeIcs } from "../src/calendario.mjs";
 import { ehAssessoria, limiteEmpresas, listarEmpresasGerenciadas, adicionarEmpresa, removerEmpresa } from "../src/assessoria.mjs";
 import { checklist as onboardingChecklist } from "../src/onboarding.mjs";
@@ -275,6 +275,24 @@ const servidor = createServer(async (req, res) => {
           return { ...g, vencedores };
         }).sort((a, b) => (b.data || "").localeCompare(a.data || ""));
         csv = csvHistorico(licitacoes);
+      } else if (tipo === "concorrentes") {
+        // Lista crua dos contratos analisados no bloco "Quem mais ganha neste orgao":
+        // filtra por orgao + termos do ramo do cliente, mesma janela do precoVencedores.
+        if (!perfilEx) return json(res, 401, { erro: "Login obrigatorio" });
+        const editalId = url.searchParams.get("editalId");
+        const edital = editalId ? buscarPorId(editalId) : null;
+        const { consultarContratos } = await import("../src/db.mjs");
+        const { aplicarFiltro } = await import("../src/filtro.mjs");
+        const termos = perfilEx.filtro?.termos ?? [];
+        const meses = 18;
+        const uf = edital?.uf || (perfilEx.ufs ?? [])[0] || null;
+        const candidatos = consultarContratos({ uf, mesesAtras: meses });
+        let casaram = aplicarFiltro(candidatos, { termos });
+        // Filtra pelo orgao do edital se houver
+        const orgaoCnpj = edital?.orgaoCnpj || null;
+        if (orgaoCnpj) casaram = casaram.filter((c) => (c.orgaoCnpj || "") === orgaoCnpj);
+        casaram.sort((a, b) => (b.valor || 0) - (a.valor || 0));
+        csv = csvContratos(casaram.slice(0, 500));
       } else if (tipo === "radar") {
         if (!perfilEx) return json(res, 401, { erro: "Login obrigatorio" });
         const itens = radarRenovacao({
@@ -379,6 +397,26 @@ const servidor = createServer(async (req, res) => {
     }
 
     // Perfil do cliente: ler dados editaveis (para a pagina Minha conta).
+    // Saude documental do perfil (lista de certidoes + dias para vencer).
+    // Usado pelo painel pra mostrar popup de alerta quando algo vai vencer logo.
+    if (rota === "/api/saude-empresa" && req.method === "GET") {
+      const tokenS = url.searchParams.get("c") || "";
+      const perfilS = await perfilPorToken(tokenS);
+      if (!perfilS) return json(res, 404, { erro: "Conta nao encontrada" });
+      const empresa = empresaDoPerfil(perfilS);
+      const s = saudeDocumental(empresa);
+      // Calcula dias para vencer de cada item com validade
+      const itens = (s.itens || []).map((i) => {
+        let dias = null;
+        if (i.validade) {
+          const d = new Date(i.validade);
+          if (!isNaN(d)) dias = Math.ceil((d - new Date()) / 864e5);
+        }
+        return { ...i, dias };
+      });
+      return json(res, 200, { ...s, itens });
+    }
+
     if (rota === "/api/perfil" && req.method === "GET") {
       const perfil = await perfilPorToken(url.searchParams.get("c") || "");
       if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
