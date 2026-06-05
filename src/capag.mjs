@@ -118,6 +118,9 @@ export function estimarPorCapag(registro) {
     nota,
     municipio: registro.nome,
     uf: registro.uf,
+    // "oficial" = nota CAPAG publicada pelo Tesouro; "derivada" = calculada das
+    // notas parciais dos 3 indicadores quando o municipio nao tem CAPAG final.
+    fonteNota: registro.fonteNota || "oficial",
   };
 }
 

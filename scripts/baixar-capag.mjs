@@ -142,15 +142,27 @@ const RAIZ = resolve(import.meta.dirname, "..");
 const ARQ_XLSX = resolve(RAIZ, "data/capag-municipios.xlsx");
 const ARQ_JSON = resolve(RAIZ, "src/dados/capag-municipios.json");
 
-console.log("[capag] baixando", url);
-const r = await fetch(url);
-if (!r.ok) { console.error("falhou:", r.status); process.exit(1); }
-const arrayBuf = await r.arrayBuffer();
-const buf = Buffer.from(arrayBuf);
 await mkdir(resolve(RAIZ, "data"), { recursive: true });
 await mkdir(resolve(RAIZ, "src/dados"), { recursive: true });
-await writeFile(ARQ_XLSX, buf);
-console.log("[capag] salvo", ARQ_XLSX, buf.length, "bytes");
+
+// Reusa o XLSX local se existir e nao for passado --baixar (evita rebaixar 22MB).
+let buf;
+const querBaixar = process.argv.includes("--baixar") || process.argv[2]?.startsWith("http");
+const { readFile: readFileLocal } = await import("node:fs/promises");
+if (!querBaixar) {
+  try {
+    buf = await readFileLocal(ARQ_XLSX);
+    console.log("[capag] usando XLSX local:", ARQ_XLSX, buf.length, "bytes");
+  } catch { /* nao tem local, baixa */ }
+}
+if (!buf) {
+  console.log("[capag] baixando", url);
+  const r = await fetch(url);
+  if (!r.ok) { console.error("falhou:", r.status); process.exit(1); }
+  buf = Buffer.from(await r.arrayBuffer());
+  await writeFile(ARQ_XLSX, buf);
+  console.log("[capag] salvo", ARQ_XLSX, buf.length, "bytes");
+}
 
 console.log("[capag] descompactando...");
 const arquivos = await lerZip(buf);
@@ -189,6 +201,11 @@ const cUf = acharCol([/^UF$/]);
 const cMun = acharCol([/^NOME[_\s]*MUNIC/, /^NOME$/, /^MUNICIPIO$|^MUNICÍPIO$/, /CIDADE/]);
 const cIbge = acharCol([/^CODIGO[_\s]*MUNIC/, /IBGE/, /^CODIGO/]);
 const cCapag = acharCol([/^CAPAG$|CAPAG.*FINAL|NOTA.*FINAL/]);
+// Notas parciais por indicador (A/B/C) - permitem derivar a nota final dos
+// municipios que nao tem CAPAG oficial publicada (n.d./n.e.).
+const cNota1 = acharCol([/^NOTA\s*1$/]);
+const cNota2 = acharCol([/^NOTA\s*2$/]);
+const cNota3 = acharCol([/^NOTA\s*3$/]);
 const cIndic1 = acharCol([/ENDIVIDAMENTO|INDICADOR\s*1|^I1\b/]);
 const cIndic2 = acharCol([/POUPANCA|POUPANÇA|INDICADOR\s*2|^I2\b/]);
 const cIndic3 = acharCol([/LIQUIDEZ|INDICADOR\s*3|^I3\b/]);
@@ -197,20 +214,61 @@ console.log("[capag] colunas: uf=", cUf, "mun=", cMun, "ibge=", cIbge, "capag=",
 
 if (cUf < 0 || cMun < 0 || cCapag < 0) throw new Error("Colunas obrigatorias (UF, Municipio, CAPAG) nao localizadas");
 
+const NOTAS_VALIDAS = new Set(["A+", "A", "B+", "B", "C", "D", "D-"]);
+
+// Normaliza a nota parcial de um indicador (A/B/C) - tira espacos, uppercase.
+function normNota(v) {
+  const s = String(v || "").trim().toUpperCase();
+  if (s === "A" || s === "B" || s === "C" || s === "D") return s;
+  return null;
+}
+
+// Deriva a nota CAPAG final a partir das notas parciais dos 3 indicadores,
+// seguindo a metodologia do Tesouro Nacional (Manual de Capacidade de Pagamento):
+//   - Indicador 3 (Liquidez) e eliminatorio: se for B ou C, a CAPAG nao passa de C.
+//   - CAPAG A: I1=A, I2=A, I3=A.
+//   - CAPAG B: I1 e I2 in {A,B}, I3=A, e nao e A pleno.
+//   - CAPAG C: qualquer indicador = C, ou liquidez (I3) != A.
+//   - CAPAG D: dividida em atraso (nao deduzivel daqui; fica como C no pior caso).
+function derivarCapag(n1, n2, n3) {
+  if (!n1 || !n2 || !n3) return null;
+  // Liquidez ruim (I3 != A) puxa pra C - nao tem caixa pra honrar obrigacoes.
+  if (n3 !== "A") return "C";
+  if (n1 === "C" || n2 === "C") return "C";
+  if (n1 === "A" && n2 === "A") return "A";
+  return "B"; // pelo menos um B, nenhum C, liquidez A
+}
+
 const registros = [];
+let derivadas = 0;
 for (let i = idxCabecalho + 1; i < linhas.length; i++) {
   const l = linhas[i];
   const uf = normalizar(l[cUf]);
   const nome = String(l[cMun] || "").trim();
   if (!uf || !nome || uf.length > 2) continue;
-  const capag = String(l[cCapag] || "").trim();
+  let capag = String(l[cCapag] || "").trim();
   const ibge = cIbge >= 0 ? String(l[cIbge] || "").trim() : null;
-  if (!capag) continue;
+
+  const n1 = cNota1 >= 0 ? normNota(l[cNota1]) : null;
+  const n2 = cNota2 >= 0 ? normNota(l[cNota2]) : null;
+  const n3 = cNota3 >= 0 ? normNota(l[cNota3]) : null;
+
+  let fonte = "oficial";
+  // Se a CAPAG oficial nao e uma nota valida (n.d./n.e./#N/A), tenta derivar
+  // pelas notas parciais dos indicadores.
+  if (!NOTAS_VALIDAS.has(capag)) {
+    const derivada = derivarCapag(n1, n2, n3);
+    if (derivada) { capag = derivada; fonte = "derivada"; derivadas++; }
+    else continue; // sem nota e sem como derivar: descarta
+  }
+
   registros.push({
     uf,
     ibge: ibge || null,
     nome,
     capag,
+    fonteNota: fonte,
+    notasParciais: { i1: n1, i2: n2, i3: n3 },
     indicadores: {
       endividamento: cIndic1 >= 0 ? (String(l[cIndic1] || "").trim() || null) : null,
       poupanca:      cIndic2 >= 0 ? (String(l[cIndic2] || "").trim() || null) : null,
@@ -218,6 +276,7 @@ for (let i = idxCabecalho + 1; i < linhas.length; i++) {
     },
   });
 }
+console.log("[capag] notas derivadas dos indicadores (municipios sem CAPAG oficial):", derivadas);
 
 const saida = {
   atualizadoEm: new Date().toISOString().slice(0, 10),

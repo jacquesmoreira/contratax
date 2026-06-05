@@ -122,6 +122,7 @@ export async function reputacaoDoOrgao({ cnpj, nome, uf, municipio }) {
         nota: cap.nota,
         municipio: cap.municipio,
         uf: cap.uf,
+        notaDerivada: cap.fonteNota === "derivada",
         fonteOficial: "Tesouro Nacional - Capacidade de Pagamento (anual)",
       },
     };
