@@ -125,35 +125,50 @@ function compressivel(headers) {
   return /text\/|application\/(json|javascript|xml|manifest\+json|rss\+xml|atom\+xml|ld\+json)|image\/svg/.test(ct);
 }
 
-// Wrapper que bufferiza res.end() e aplica gzip quando o cliente aceita e o
-// content-type vale a pena. Transparente pra todas as rotas existentes.
+// Wrapper que ADIA writeHead ate o res.end pra decidir se vale comprimir.
+// Antes ele setava Content-Encoding: gzip no writeHead e so depois decidia
+// comprimir ou nao - quando o body era pequeno (<200B) ou o gzip falhava,
+// o header ficava 'gzip' mas o body ia cru, gerando ERR_CONTENT_DECODING_FAILED
+// no navegador. Agora o header so e setado quando temos certeza de que vamos
+// comprimir.
 function ativarGzip(req, res) {
   const aceita = String(req.headers["accept-encoding"] || "").toLowerCase();
   if (!/\bgzip\b/.test(aceita)) return;
   const writeHeadOriginal = res.writeHead.bind(res);
   const endOriginal = res.end.bind(res);
-  let usar = false;
-  let codigo = 200, headersAtuais = {};
-  res.writeHead = (c, headers) => {
-    codigo = c;
-    headersAtuais = headers || {};
-    if (compressivel(headersAtuais)) {
-      usar = true;
-      headersAtuais["Content-Encoding"] = "gzip";
-      headersAtuais["Vary"] = headersAtuais["Vary"] ? headersAtuais["Vary"] + ", Accept-Encoding" : "Accept-Encoding";
-      delete headersAtuais["Content-Length"]; // tamanho muda
-    }
-    return writeHeadOriginal(codigo, headersAtuais);
+  let codigoBuf = 200, headersBuf = {}, jaEnvieiHeader = false;
+
+  res.writeHead = (codigo, headers) => {
+    codigoBuf = codigo;
+    headersBuf = headers || {};
+    // NAO envia ainda - decidiremos comprimir ou nao no res.end
+    return res;
   };
+
   res.end = async (data) => {
-    if (!usar || !data) return endOriginal(data);
+    if (jaEnvieiHeader) return endOriginal(data);
+    jaEnvieiHeader = true;
+    const ehCompressivel = compressivel(headersBuf);
+    if (!ehCompressivel || !data) {
+      writeHeadOriginal(codigoBuf, headersBuf);
+      return endOriginal(data);
+    }
     try {
       const buf = Buffer.isBuffer(data) ? data : Buffer.from(String(data));
-      // gzip so vale a pena pra > 200 bytes (sobrecabecalho da compressao).
-      if (buf.length < 200) return endOriginal(buf);
+      if (buf.length < 200) {
+        // muito pequeno - nao vale comprimir
+        writeHeadOriginal(codigoBuf, headersBuf);
+        return endOriginal(buf);
+      }
       const comp = await gzip(buf);
+      headersBuf["Content-Encoding"] = "gzip";
+      headersBuf["Vary"] = headersBuf["Vary"] ? headersBuf["Vary"] + ", Accept-Encoding" : "Accept-Encoding";
+      delete headersBuf["Content-Length"]; // tamanho mudou
+      writeHeadOriginal(codigoBuf, headersBuf);
       return endOriginal(comp);
     } catch {
+      // falhou - manda cru com headers originais (sem gzip)
+      writeHeadOriginal(codigoBuf, headersBuf);
       return endOriginal(data);
     }
   };
