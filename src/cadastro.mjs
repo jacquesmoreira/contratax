@@ -22,7 +22,7 @@ export async function criarPerfilGoogle({ nome, email, googleSub }) {
   if (perfis.some((p) => (p.email || "").toLowerCase() === email.trim().toLowerCase())) {
     throw new Error("Ja existe uma conta com esse e-mail.");
   }
-  const token = randomBytes(6).toString("hex");
+  const token = randomBytes(16).toString("hex");
   const id = `${slug(email.split("@")[0])}-${Date.now().toString(36)}`;
   const agora = new Date().toISOString();
   const nomeConta = (nome || email.split("@")[0]).trim();
@@ -69,7 +69,7 @@ export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, c
 
   const termos = ramo.split(/[,;]/).map((t) => t.trim()).filter(Boolean);
   if (!termos.length) throw new Error("Informe ao menos uma palavra do seu ramo");
-  const token = randomBytes(6).toString("hex");
+  const token = randomBytes(16).toString("hex");
   const id = `${slug(email.split("@")[0])}-${Date.now().toString(36)}`;
   const agora = new Date().toISOString();
   const nomeConta = (nome || razaoSocial || email.split("@")[0]).trim();

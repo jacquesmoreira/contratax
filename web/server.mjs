@@ -55,6 +55,7 @@ import { indicesDisponiveis, gatilhoReequilibrio } from "../src/indicesEconomico
 import { parsearXmlContrato, extrairContratoPdf, detectarTipo as detectarTipoArquivo } from "../src/extratorContrato.mjs";
 import { googleConfigurado, urlAutorizacao, processarCallback } from "../src/googleOAuth.mjs";
 import { solicitarReset, aplicarReset, verificarToken } from "../src/recuperarSenha.mjs";
+import { checarAuth, registrarTentativa, limparAuth, ipDoRequest as ipAuth } from "../src/rateLimitAuth.mjs";
 import { PLANOS, AVULSOS, planoDe } from "../src/planos.mjs";
 import { ativarPlano } from "../src/assinatura.mjs";
 import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura } from "../src/asaas.mjs";
@@ -111,8 +112,42 @@ async function salvarEmpresaPerfil(token, empresa) {
   return true;
 }
 
-const ADMIN = process.env.LICITA_ADMIN_TOKEN || "admin";
+// Token do admin. SEM fallback inseguro: se LICITA_ADMIN_TOKEN nao estiver
+// definido, geramos um token aleatorio forte no boot (logado uma vez no
+// console) - assim o painel admin nunca fica acessivel com a senha obvia "admin".
+const ADMIN = process.env.LICITA_ADMIN_TOKEN || (() => {
+  const aleatorio = randomBytes(24).toString("hex");
+  console.warn(`[seguranca] LICITA_ADMIN_TOKEN nao definido. Token admin temporario desta sessao: ${aleatorio}`);
+  console.warn("[seguranca] Defina LICITA_ADMIN_TOKEN no ambiente para um token fixo e seguro.");
+  return aleatorio;
+})();
 const BASE_PUBLICA = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
+
+// Cabecalhos de seguranca aplicados a TODAS as respostas. Protegem contra
+// clickjacking, MIME sniffing, downgrade de HTTPS e vazamento de token no
+// Referer (o token de acesso vai na URL, entao Referrer-Policy e essencial).
+function aplicarHeadersSeguranca(res) {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=()");
+  // CSP permissiva o suficiente pro que o site usa (Google Fonts, GTM/Analytics,
+  // inline scripts/styles do proprio app), mas bloqueia object/base e fontes nao
+  // listadas. Bloqueia carregamento de scripts de dominios desconhecidos.
+  res.setHeader("Content-Security-Policy", [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: https:",
+    "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com",
+    "frame-ancestors 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "form-action 'self'",
+  ].join("; "));
+}
 
 // Perfil completo pelo token, lido de perfis.json.
 async function perfilPorToken(token) {
@@ -178,6 +213,7 @@ function ativarGzip(req, res) {
 
 const servidor = createServer(async (req, res) => {
   try {
+    aplicarHeadersSeguranca(res);
     ativarGzip(req, res);
     const url = new URL(req.url, "http://localhost");
     const rota = url.pathname;
@@ -192,6 +228,10 @@ const servidor = createServer(async (req, res) => {
     // Recuperacao de senha - solicitar (sempre devolve sucesso pra nao revelar
     // se o e-mail esta cadastrado).
     if (rota === "/api/recuperar-senha" && req.method === "POST") {
+      const ip = ipAuth(req);
+      const lim = checarAuth("recuperar", ip);
+      if (!lim.ok) return json(res, 429, { erro: `Muitas solicitações. Tente novamente em ${Math.ceil(lim.esperaSeg / 60)} minutos.` });
+      registrarTentativa("recuperar", ip);
       const corpo = await lerCorpo(req);
       await solicitarReset({ email: corpo.email, baseUrl: BASE_PUBLICA });
       return json(res, 200, { ok: true });
@@ -249,16 +289,21 @@ const servidor = createServer(async (req, res) => {
 
     // Login por e-mail e senha.
     if (rota === "/api/entrar" && req.method === "POST") {
+      const ip = ipAuth(req);
+      const lim = checarAuth("login", ip);
+      if (!lim.ok) return json(res, 429, { erro: `Muitas tentativas de login. Tente novamente em ${Math.ceil(lim.esperaSeg / 60)} minutos.` });
       const corpo = await lerCorpo(req);
       const email = (corpo.email || corpo.cnpj || "").trim();
       const senha = corpo.senha || "";
       if (!email) return json(res, 400, { erro: "Informe o seu e-mail ou CNPJ" });
+      registrarTentativa("login", ip);
       // Procura por e-mail ou CNPJ em todas as contas (admin ou membro de equipe).
       const r = await autenticarUsuario(email, senha);
       if (!r.ok) {
         const codigo = /incorret/i.test(r.motivo) ? 401 : 404;
         return json(res, codigo, { erro: r.motivo });
       }
+      limparAuth("login", ip); // sucesso zera o contador
       // Assessoria: direto pra /empresas (gestao multi-CNPJ)
       const destino = ehAssessoria(r.perfil) ? `/empresas?c=${r.perfil.token}` : `/painel?c=${r.perfil.token}`;
       return json(res, 200, { link: destino });
@@ -322,6 +367,10 @@ const servidor = createServer(async (req, res) => {
 
     // Cadastro self-service: cria o perfil e devolve o link do painel.
     if (rota === "/api/cadastrar" && req.method === "POST") {
+      const ipCad = ipAuth(req);
+      const limCad = checarAuth("cadastro", ipCad);
+      if (!limCad.ok) return json(res, 429, { erro: `Muitos cadastros deste IP. Tente novamente em ${Math.ceil(limCad.esperaSeg / 60)} minutos.` });
+      registrarTentativa("cadastro", ipCad);
       const corpo = await lerCorpo(req);
       try {
         const r = await criarPerfil(corpo);
@@ -540,6 +589,10 @@ const servidor = createServer(async (req, res) => {
     // Completar cadastro (fluxo Google): cliente preenche CNPJ + ramo + UFs.
     // TRAVA DE CNPJ: bloqueia se o CNPJ ja pertence a outra conta.
     if (rota === "/api/completar-cadastro" && req.method === "POST") {
+      const ipC = ipAuth(req);
+      const limC = checarAuth("completar", ipC);
+      if (!limC.ok) return json(res, 429, { erro: `Muitas tentativas. Tente novamente em ${Math.ceil(limC.esperaSeg / 60)} minutos.` });
+      registrarTentativa("completar", ipC);
       const token = url.searchParams.get("c") || "";
       const corpo = await lerCorpo(req);
       const perfis = await lerPerfis();

@@ -58,7 +58,7 @@ export async function adicionarEmpresa(tokenGerente, dados) {
   if (!termos.length) throw new Error("Informe pelo menos uma palavra-chave do ramo");
 
   const ufsArr = Array.isArray(ufs) ? ufs.filter(Boolean) : (ufs ? [ufs] : []);
-  const token = randomBytes(6).toString("hex");
+  const token = randomBytes(16).toString("hex");
   const id = `${slug(razaoSocial || nome || "empresa")}-${Date.now().toString(36)}`;
   const agora = new Date().toISOString();
   const nomeFinal = (nome || razaoSocial || "Empresa").trim();
