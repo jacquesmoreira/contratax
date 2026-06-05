@@ -14,6 +14,44 @@ const slug = (s) =>
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30);
 
 // Cria um perfil a partir dos dados do formulario e devolve o link do painel.
+// Cria um perfil "stub" via Google OAuth, sem exigir CNPJ/ramo/senha. O cliente
+// e direcionado a /conta apos o primeiro login para completar o cadastro.
+export async function criarPerfilGoogle({ nome, email, googleSub }) {
+  if (!email || !/.+@.+\..+/.test(email)) throw new Error("E-mail invalido");
+  const perfis = await lerPerfis();
+  if (perfis.some((p) => (p.email || "").toLowerCase() === email.trim().toLowerCase())) {
+    throw new Error("Ja existe uma conta com esse e-mail.");
+  }
+  const token = randomBytes(6).toString("hex");
+  const id = `${slug(email.split("@")[0])}-${Date.now().toString(36)}`;
+  const agora = new Date().toISOString();
+  const nomeConta = (nome || email.split("@")[0]).trim();
+  const perfil = {
+    id,
+    nome: nomeConta,
+    razaoSocial: null,
+    cnpj: "",
+    email: email.trim(),
+    senhaHash: null,
+    googleSub: googleSub || null,
+    precisaCompletarCadastro: true,
+    token,
+    usuarios: [{
+      id: "u-" + id, nome: nomeConta, email: email.trim(),
+      senhaHash: null, googleSub: googleSub || null, papel: "admin", criadoEm: agora,
+    }],
+    assentos: 1,
+    analises: { mes: agora.slice(0, 7), usados: 0 },
+    ufs: [],
+    modalidades: [6, 8, 9, 4],
+    filtro: { termos: [], termosExcluir: [], valorMin: null, valorMax: null },
+    assinatura: novaAssinaturaTeste(),
+  };
+  perfis.push(perfil);
+  await salvarPerfis(perfis);
+  return { token, link: `/conta?c=${token}&completar=1`, nome: perfil.nome };
+}
+
 export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, cnpj, razaoSocial }) {
   if (!email || !/.+@.+\..+/.test(email)) throw new Error("E-mail invalido");
   if (!cnpj || !validarFormatoCNPJ(cnpj)) throw new Error("CNPJ invalido");

@@ -48,6 +48,8 @@ import { reputacaoDoOrgao } from "../src/reputacaoOrgaos.mjs";
 import { listarContratos, obterContrato, cadastrarContrato, removerContrato } from "../src/contratosMeus.mjs";
 import { minutaProrrogacao, minutaAditivo, minutaReequilibrio } from "../src/minutasContrato.mjs";
 import { indicesDisponiveis, gatilhoReequilibrio } from "../src/indicesEconomicos.mjs";
+import { parsearXmlContrato, extrairContratoPdf, detectarTipo as detectarTipoArquivo } from "../src/extratorContrato.mjs";
+import { googleConfigurado, urlAutorizacao, processarCallback } from "../src/googleOAuth.mjs";
 import { PLANOS, AVULSOS, planoDe } from "../src/planos.mjs";
 import { ativarPlano } from "../src/assinatura.mjs";
 import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura } from "../src/asaas.mjs";
@@ -123,6 +125,45 @@ const servidor = createServer(async (req, res) => {
       const uf = url.searchParams.get("uf") || null;
       const termo = url.searchParams.get("termo") || "";
       return json(res, 200, buscaPublica({ uf, termo, limite: 15 }));
+    }
+
+    // Google OAuth: status (front consulta pra mostrar/esconder botao)
+    if (rota === "/api/google/status") {
+      return json(res, 200, { configurado: googleConfigurado() });
+    }
+
+    // Google OAuth: inicia o fluxo. /api/google/iniciar?intencao=cadastro|entrar
+    if (rota === "/api/google/iniciar") {
+      if (!googleConfigurado()) {
+        res.writeHead(503, { "Content-Type": "text/plain; charset=utf-8" });
+        return res.end("Login com Google nao configurado neste ambiente");
+      }
+      const intencao = url.searchParams.get("intencao") || "entrar";
+      const { url: urlG } = urlAutorizacao({ intencao });
+      res.writeHead(302, { Location: urlG });
+      return res.end();
+    }
+
+    // Google OAuth: callback do Google
+    if (rota === "/api/google/callback") {
+      const code = url.searchParams.get("code");
+      const state = url.searchParams.get("state") || "";
+      const erro = url.searchParams.get("error");
+      if (erro) {
+        res.writeHead(302, { Location: `/entrar?google_erro=${encodeURIComponent(erro)}` });
+        return res.end();
+      }
+      try {
+        const { perfil, isNovo } = await processarCallback(code, state);
+        const destino = isNovo || perfil.precisaCompletarCadastro
+          ? `/conta?c=${perfil.token}&completar=1`
+          : (ehAssessoria(perfil) ? `/empresas?c=${perfil.token}` : `/painel?c=${perfil.token}`);
+        res.writeHead(302, { Location: destino });
+        return res.end();
+      } catch (e) {
+        res.writeHead(302, { Location: `/entrar?google_erro=${encodeURIComponent(e.message.slice(0, 200))}` });
+        return res.end();
+      }
     }
 
     // Login por e-mail e senha.
@@ -1369,6 +1410,34 @@ const servidor = createServer(async (req, res) => {
       if (!corpoC.dataFim) return json(res, 400, { erro: "Data fim e obrigatoria" });
       const c = cadastrarContrato(tokenC, corpoC);
       return json(res, 200, { ok: true, contrato: c });
+    }
+
+    // POST /api/contratos-meus/extrair { arquivo: base64, tipo: "pdf"|"xml" }
+    // Le PDF ou XML e devolve os campos extraidos (sem salvar; o cliente revisa
+    // e confirma antes de salvar via /api/contratos-meus).
+    if (rota === "/api/contratos-meus/extrair" && req.method === "POST") {
+      const tokenC = url.searchParams.get("c") || "";
+      const perfilC = await perfilPorToken(tokenC);
+      if (!perfilC) return json(res, 404, { erro: "Conta nao encontrada" });
+      const corpoC = await lerCorpo(req);
+      if (!corpoC.arquivo) return json(res, 400, { erro: "Arquivo nao enviado" });
+      try {
+        const buf = Buffer.from(corpoC.arquivo, "base64");
+        const tipo = corpoC.tipo || detectarTipoArquivo(buf);
+        if (tipo === "xml") {
+          const dados = parsearXmlContrato(buf.toString("utf8"));
+          if (!dados) return json(res, 400, { erro: "XML nao reconhecido como contrato" });
+          return json(res, 200, { ok: true, dados, fonte: "xml" });
+        }
+        if (tipo === "pdf") {
+          if (!temChave()) return json(res, 503, { erro: "Servico de extracao indisponivel no momento" });
+          const dados = await extrairContratoPdf(buf);
+          return json(res, 200, { ok: true, dados, fonte: "pdf" });
+        }
+        return json(res, 400, { erro: "Tipo de arquivo nao suportado (use PDF ou XML)" });
+      } catch (e) {
+        return json(res, 500, { erro: "Falha ao extrair: " + e.message });
+      }
     }
 
     if (rota === "/api/contratos-meus/remover" && req.method === "POST") {

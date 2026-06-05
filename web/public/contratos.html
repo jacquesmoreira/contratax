@@ -81,7 +81,8 @@ textarea { resize:vertical; min-height:70px; }
   </div>
 
   <div class="botoes">
-    <button class="btn" id="btn-novo">+ Cadastrar contrato</button>
+    <button class="btn" id="btn-novo">+ Cadastrar manualmente</button>
+    <button class="btn sec" id="btn-importar">📎 Importar do PDF ou XML do contrato</button>
   </div>
 
   <div id="lista"></div>
@@ -126,6 +127,24 @@ textarea { resize:vertical; min-height:70px; }
     <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end">
       <button class="btn sec" onclick="fechar('m-novo')">Cancelar</button>
       <button class="btn" id="b-salvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Importar -->
+<div class="modal" id="m-import">
+  <div class="modal-card">
+    <h3>Importar contrato</h3>
+    <div class="cap">Arraste o PDF (que você assinou) ou o XML do contrato (publicado no PNCP). Vamos extrair número, órgão, valor, vigência e objeto automaticamente. Você revisa antes de salvar.</div>
+    <div class="drop" id="drop-c" style="border:2px dashed var(--linha);border-radius:12px;padding:30px 18px;text-align:center;cursor:pointer;transition:.2s">
+      <div style="font-size:32px;margin-bottom:8px;opacity:.6">📎</div>
+      <b>Arraste o PDF ou XML aqui</b>
+      <div style="font-size:13px;color:var(--cinza);margin-top:4px">ou clique para escolher do computador</div>
+      <input type="file" id="f-arquivo" accept=".pdf,.xml" style="display:none" />
+    </div>
+    <div id="status-import" style="margin-top:14px"></div>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn sec" onclick="fechar('m-import')">Fechar</button>
     </div>
   </div>
 </div>
@@ -235,6 +254,57 @@ function abrir(id) { $(id).classList.add("open"); }
 function fechar(id) { $(id).classList.remove("open"); }
 
 $("btn-novo").onclick = () => { ["f-num","f-org","f-cnpj","f-obj","f-val"].forEach(i=>$(i).value=""); $("f-idx").value=""; $("f-ini").value = new Date().toISOString().slice(0,10); abrir("m-novo"); };
+
+// === Importar contrato (PDF ou XML) ===
+$("btn-importar").onclick = () => { $("f-arquivo").value=""; $("status-import").innerHTML=""; abrir("m-import"); };
+const dropC = $("drop-c"), inputArq = $("f-arquivo");
+dropC.onclick = () => inputArq.click();
+dropC.ondragover = (e) => { e.preventDefault(); dropC.style.borderColor = "var(--indigo)"; dropC.style.background = "#eef2ff"; };
+dropC.ondragleave = () => { dropC.style.borderColor = "var(--linha)"; dropC.style.background = ""; };
+dropC.ondrop = (e) => { e.preventDefault(); dropC.style.borderColor = "var(--linha)"; dropC.style.background = ""; processarArquivo(e.dataTransfer.files[0]); };
+inputArq.onchange = (e) => processarArquivo(e.target.files[0]);
+
+function bufToB64(buf) {
+  let bin = ""; const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+async function processarArquivo(arq) {
+  if (!arq) return;
+  const tipo = arq.name.toLowerCase().endsWith(".xml") ? "xml" : "pdf";
+  $("status-import").innerHTML = `<div style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:10px 12px;border-radius:9px;font-size:13.5px">Lendo arquivo (${tipo === "pdf" ? "PDF, pode levar 10-20s" : "XML, instantaneo"})...</div>`;
+  try {
+    const ab = await arq.arrayBuffer();
+    const b64 = bufToB64(ab);
+    const r = await fetch("/api/contratos-meus/extrair?c=" + encodeURIComponent(token), {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ arquivo: b64, tipo }),
+    });
+    const d = await r.json();
+    if (!r.ok) { $("status-import").innerHTML = `<div style="color:var(--vermelho);font-size:13.5px;margin-top:8px">${d.erro || "Erro ao extrair."}</div>`; return; }
+    // Preenche modal "novo" com o que veio
+    const x = d.dados;
+    $("f-num").value = x.numero || "";
+    $("f-org").value = x.orgaoNome || "";
+    $("f-cnpj").value = x.orgaoCnpj || "";
+    $("f-obj").value = x.objeto || "";
+    $("f-ini").value = x.dataInicio || "";
+    $("f-fim").value = x.dataFim || "";
+    $("f-val").value = x.valorTotal || "";
+    $("f-idx").value = x.indiceReajuste || "";
+    fechar("m-import");
+    abrir("m-novo");
+    // banner de confirmacao no topo do modal de cadastro
+    const banner = `<div style="background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:10px 12px;border-radius:9px;font-size:13.5px;margin-bottom:8px">Dados extraídos automaticamente (fonte: ${d.fonte === "xml" ? "XML do PNCP" : "PDF"}). Revise e clique em Salvar.</div>`;
+    const card = document.querySelector("#m-novo .modal-card");
+    const antigo = card.querySelector(".banner-extracao"); if (antigo) antigo.remove();
+    const wrap = document.createElement("div"); wrap.className = "banner-extracao"; wrap.innerHTML = banner;
+    card.insertBefore(wrap, card.querySelector("label"));
+  } catch (e) {
+    $("status-import").innerHTML = `<div style="color:var(--vermelho);font-size:13.5px;margin-top:8px">Erro: ${e.message}</div>`;
+  }
+}
 
 $("b-salvar").onclick = async () => {
   const d = {

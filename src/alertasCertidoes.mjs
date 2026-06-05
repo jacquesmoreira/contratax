@@ -93,7 +93,7 @@ export async function verificarCertidoesVencendo({ log = console.log } = {}) {
     try {
       await enviar({
         para: p.email,
-        assunto: `Atenção: ${alertar.length} certidão${alertar.length > 1 ? "ões" : ""} vencendo — ${p.razaoSocial || p.nome}`,
+        assunto: `Atenção: ${alertar.length} ${alertar.length > 1 ? "certidões" : "certidão"} vencendo — ${p.razaoSocial || p.nome}`,
         html: htmlAlerta(p.razaoSocial || p.nome, alertar),
       });
       // Marca que já foi enviado hoje

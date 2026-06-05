@@ -569,7 +569,7 @@ async function carregar() {
   }
   carregarOnboarding(); // roda em paralelo, sem bloquear o painel
   setTimeout(() => avisarCertidoesVencendo(), 1500); // alerta de certidao, com pequeno atraso
-  setTimeout(() => carregarTemplates(), 2000); // templates baixaveis no fim do banner de onboarding
+  // (removido em 2026-06: bloco "Templates prontos pra usar" deixou de ser exibido)
   try {
     const acesso = await (await fetch(`/api/acesso?c=${encodeURIComponent(token)}`)).json();
     if (!acesso.encontrado) {
@@ -639,6 +639,13 @@ function tldrHTML(t, id) {
       <div style="padding:10px 0;font-size:14px;color:var(--cinza)"><span class="spinner"></span>Lendo o edital... isso leva 5–10 segundos.</div>
     </div>`;
   }
+  if (t === "sob-demanda") {
+    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--indigo);background:linear-gradient(135deg,#eef2ff 0%,#fff 60%)">
+      <h3>⚡ Resumo rápido do edital</h3>
+      <p style="font-size:13.5px;color:var(--cinza);margin:6px 0 12px">Objeto, valor, prazo e exigências em 5 a 10 segundos. Gere sob demanda para evitar consumo desnecessário da sua cota.</p>
+      <button id="btn-tldr-on" onclick="iniciarTldr('${id}')" style="background:var(--indigo);color:#fff;border:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer">Gerar resumo rápido</button>
+    </div>`;
+  }
   if (!t) return `<div class="bloco" id="tldr-bloco"></div>`; // placeholder pra preencher
   const rotulo = {
     apto: ["#059669", "#ecfdf5", "✓ APTO"],
@@ -665,6 +672,12 @@ function tldrHTML(t, id) {
   </div>`;
 }
 
+function iniciarTldr(id) {
+  const el = document.getElementById("tldr-bloco");
+  if (el) el.outerHTML = tldrHTML("gerando", id);
+  gerarTldrAsync(id);
+}
+
 async function gerarTldrAsync(id) {
   try {
     const r = await fetch("/api/tldr?id=" + encodeURIComponent(id) + "&c=" + encodeURIComponent(token), { method: "POST" });
@@ -687,9 +700,12 @@ function reputacaoHTML(r) {
   const rotulo = r.classificacao === "rapido" ? "Paga rápido"
               : r.classificacao === "lento" ? "Tende a atrasar"
               : "Pagamento regular";
-  const fonte = r.fonte === "dados_proprios"
-    ? `Calculado com base em ${r.n} pagamento(s) reais registrados por clientes do ContrataX.`
-    : r.contexto;
+  const fonteTag = r.fonte === "dados_proprios"
+    ? `<span style="background:#ecfdf5;color:#065f46;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:99px;letter-spacing:.3px">DADOS REAIS · ${r.n} pagamentos</span>`
+    : `<span style="background:#eef2ff;color:#3730a3;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:99px;letter-spacing:.3px">ESTIMATIVA POR PORTE</span>`;
+  const explicacao = r.fonte === "dados_proprios"
+    ? `<b>Como calculamos:</b> média dos dias entre a emissão da nota fiscal e o pagamento efetivo, registrados por outros clientes do ContrataX que já receberam desse mesmo órgão (CNPJ). Quanto mais clientes registram, mais precisa fica essa média.`
+    : `<b>Como estimamos:</b> classificamos o órgão por porte (federal, estadual, capital, município médio ou município pequeno) e aplicamos a média histórica do setor público brasileiro para cada categoria. Quando começarmos a ter pagamentos reais registrados desse órgão pelos clientes do ContrataX, essa estimativa é substituída pela média real automaticamente.`;
   return `<div class="bloco"><h3>🏛️ Reputação de pagamento desse órgão</h3>
     <div style="display:flex;align-items:center;gap:14px;padding:10px 0">
       <div style="background:${bg};color:${cor};font-weight:800;font-size:13px;padding:8px 14px;border-radius:99px;border:1px solid ${cor}33">${rotulo}</div>
@@ -697,9 +713,13 @@ function reputacaoHTML(r) {
         <div style="font-size:22px;font-weight:900;color:${cor}">${r.diasMedios} dias</div>
         <div style="font-size:12.5px;color:var(--cinza)">tempo médio até receber</div>
       </div>
+      <div>${fonteTag}</div>
     </div>
-    <p style="font-size:13px;color:var(--cinza);margin-top:6px">${esc(fonte)}</p>
-    <p style="font-size:11.5px;color:var(--cinza-c);margin-top:4px">Por lei (14.133/2021, art. 141) o prazo é de 30 dias. Atrasos geram direito a correção monetária + juros.</p>
+    <p style="font-size:13px;color:var(--cinza);margin-top:6px">${esc(r.contexto)}</p>
+    <details style="margin-top:10px"><summary style="cursor:pointer;font-size:12.5px;color:var(--indigo);font-weight:700">Como esse número é calculado?</summary>
+      <p style="font-size:12.5px;color:var(--cinza);margin-top:8px;line-height:1.55">${explicacao}</p>
+    </details>
+    <p style="font-size:11.5px;color:var(--cinza-c);margin-top:8px">Base legal: Lei 14.133/2021, art. 141 — prazo de 30 dias. Atrasos geram direito a correção monetária pelo IPCA + juros moratórios de 0,5% ao mês.</p>
   </div>`;
 }
 
@@ -845,8 +865,9 @@ async function abrirDrawer(id) {
   if (d.tldr) {
     html += tldrHTML(d.tldr, ed.id);
   } else if (d.temChave) {
-    html += tldrHTML("gerando", ed.id);
-    setTimeout(() => gerarTldrAsync(ed.id), 100);
+    // Em vez de disparar automaticamente (consome IA mesmo se o cliente
+    // nao quer ler o resumo), exibimos um botao "Gerar resumo rapido".
+    html += tldrHTML("sob-demanda", ed.id);
   }
   html += `<div class="bloco"><h3>Edital</h3>
     <div class="linha-info"><span>Órgão</span><span style="text-align:right">${esc(ed.orgao)}</span></div>
