@@ -44,6 +44,10 @@ import { listarNotas, obterNota, cadastrarNota, marcarPaga, removerNota, estatis
 import { parsearNFe } from "../src/parserNFe.mjs";
 import { gerarOficioHtml } from "../src/oficioCobranca.mjs";
 import { escalarParaAdvogado } from "../src/escalonamentoJuridico.mjs";
+import { reputacaoDoOrgao } from "../src/reputacaoOrgaos.mjs";
+import { listarContratos, obterContrato, cadastrarContrato, removerContrato } from "../src/contratosMeus.mjs";
+import { minutaProrrogacao, minutaAditivo, minutaReequilibrio } from "../src/minutasContrato.mjs";
+import { indicesDisponiveis, gatilhoReequilibrio } from "../src/indicesEconomicos.mjs";
 import { PLANOS, AVULSOS, planoDe } from "../src/planos.mjs";
 import { ativarPlano } from "../src/assinatura.mjs";
 import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura } from "../src/asaas.mjs";
@@ -848,6 +852,7 @@ const servidor = createServer(async (req, res) => {
       // Preco de referencia: faixa de valores de contratos similares (UF ou nacional).
       // Quando ha perfil, usa os termos do ramo (mais precisos).
       const referencia = precoReferencia(edital, { termosPerfil: perfil?.filtro?.termos ?? [] });
+      const reputacao = reputacaoDoOrgao({ cnpj: edital.orgaoCnpj, nome: edital.orgao });
       return json(res, 200, {
         edital,
         analise: analiseCache?.analise ?? null,
@@ -857,6 +862,7 @@ const servidor = createServer(async (req, res) => {
         temDocumentos,
         preco,
         referencia,
+        reputacao,
         tldr: tldrCache?.tldr ?? null,
         uso: perfil ? usoDe(perfil) : null,
         ia: { liberada: liberacao.ok, motivo: liberacao.motivo ?? null }, // recurso do plano pago
@@ -1342,6 +1348,90 @@ const servidor = createServer(async (req, res) => {
     // Pagina /recebiveis
     if (rota === "/recebiveis" || rota === "/recebiveis.html") {
       const html = await readFile(resolve(AQUI, "public", "recebiveis.html"), "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(html));
+    }
+
+    // ===== Modulo Contratos Meus (gestao de vigencia + aditivos + reequilibrio) =====
+
+    if (rota === "/api/contratos-meus" && req.method === "GET") {
+      const tokenC = url.searchParams.get("c") || "";
+      const perfilC = await perfilPorToken(tokenC);
+      if (!perfilC) return json(res, 404, { erro: "Conta nao encontrada" });
+      return json(res, 200, { contratos: listarContratos(tokenC), indices: indicesDisponiveis() });
+    }
+
+    if (rota === "/api/contratos-meus" && req.method === "POST") {
+      const tokenC = url.searchParams.get("c") || "";
+      const perfilC = await perfilPorToken(tokenC);
+      if (!perfilC) return json(res, 404, { erro: "Conta nao encontrada" });
+      const corpoC = await lerCorpo(req);
+      if (!corpoC.dataFim) return json(res, 400, { erro: "Data fim e obrigatoria" });
+      const c = cadastrarContrato(tokenC, corpoC);
+      return json(res, 200, { ok: true, contrato: c });
+    }
+
+    if (rota === "/api/contratos-meus/remover" && req.method === "POST") {
+      const tokenC = url.searchParams.get("c") || "";
+      const perfilC = await perfilPorToken(tokenC);
+      if (!perfilC) return json(res, 404, { erro: "Conta nao encontrada" });
+      const corpoC = await lerCorpo(req);
+      const ok = removerContrato(tokenC, Number(corpoC.id));
+      return json(res, 200, { ok });
+    }
+
+    if (rota === "/api/contratos-meus/gatilho-reequilibrio" && req.method === "GET") {
+      const indice = url.searchParams.get("indice");
+      const dataBase = url.searchParams.get("dataBase");
+      return json(res, 200, gatilhoReequilibrio({ indice, dataBase }) || { erro: "Parametros invalidos" });
+    }
+
+    // Minutas: /contratos-meus/minuta?c=token&id=...&tipo=prorrogacao|aditivo|reequilibrio
+    if (rota === "/contratos-meus/minuta") {
+      const tokenC = url.searchParams.get("c") || "";
+      const perfilC = await perfilPorToken(tokenC);
+      if (!perfilC) { res.writeHead(404).end("Conta nao encontrada"); return; }
+      const id = Number(url.searchParams.get("id"));
+      const c = obterContrato(tokenC, id);
+      if (!c) { res.writeHead(404).end("Contrato nao encontrado"); return; }
+      const empresa = {
+        razao: perfilC.empresa?.razaoSocial || perfilC.nome,
+        cnpj: perfilC.cnpj,
+        cidade: perfilC.empresa?.cidade,
+        uf: perfilC.empresa?.uf || (perfilC.ufs || [])[0],
+      };
+      const tipo = url.searchParams.get("tipo") || "prorrogacao";
+      let html;
+      if (tipo === "aditivo") {
+        html = minutaAditivo({
+          contrato: c,
+          empresa,
+          tipo: url.searchParams.get("natureza") || "quantitativo",
+          justificativa: url.searchParams.get("justificativa") || "",
+          percentualPretendido: Number(url.searchParams.get("percentual") || 25),
+        });
+      } else if (tipo === "reequilibrio") {
+        html = minutaReequilibrio({
+          contrato: c,
+          empresa,
+          indice: url.searchParams.get("indice") || c.indice_reajuste || "IPCA",
+          dataBase: url.searchParams.get("dataBase") || c.data_inicio,
+          justificativa: url.searchParams.get("justificativa") || "",
+        });
+      } else {
+        html = minutaProrrogacao({
+          contrato: c,
+          empresa,
+          mesesProrrogacao: Number(url.searchParams.get("meses") || 12),
+        });
+      }
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(html);
+    }
+
+    // Pagina /contratos
+    if (rota === "/contratos" || rota === "/contratos.html") {
+      const html = await readFile(resolve(AQUI, "public", "contratos.html"), "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(injetarAnalytics(html));
     }

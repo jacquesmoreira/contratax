@@ -167,6 +167,7 @@
       <a id="nav-equipe" href="#">Equipe</a>
       <a id="nav-docs" href="#">Documentos</a>
       <a id="nav-receb" href="#">Recebíveis</a>
+      <a id="nav-contratos" href="#">Contratos</a>
       <a id="nav-historico" href="#">Histórico</a>
       <a id="nav-declaracoes" href="#">Declarações</a>
       <a class="nav-sair" href="/">Sair</a>
@@ -579,6 +580,7 @@ async function carregar() {
     document.getElementById("nav-docs").href = "/documentos?c=" + encodeURIComponent(token);
     document.getElementById("nav-equipe").href = "/equipe?c=" + encodeURIComponent(token);
     document.getElementById("nav-receb").href = "/recebiveis?c=" + encodeURIComponent(token);
+    document.getElementById("nav-contratos").href = "/contratos?c=" + encodeURIComponent(token);
     document.getElementById("nav-conta").href = "/conta?c=" + encodeURIComponent(token);
     document.getElementById("nav-historico").href = "/historico?c=" + encodeURIComponent(token);
     document.getElementById("nav-declaracoes").href = "/declaracoes?c=" + encodeURIComponent(token);
@@ -672,6 +674,33 @@ async function gerarTldrAsync(id) {
     if (d.tldr) el.outerHTML = tldrHTML(d.tldr, id);
     else el.outerHTML = ""; // falhou silencioso (nao polui a UI)
   } catch { /* silencioso: TL;DR e gancho, nao bloqueia experiencia */ }
+}
+
+function reputacaoHTML(r) {
+  if (!r) return "";
+  const cor = r.classificacao === "rapido" ? "#059669"
+            : r.classificacao === "lento" ? "#dc2626"
+            : "#d97706";
+  const bg  = r.classificacao === "rapido" ? "#ecfdf5"
+            : r.classificacao === "lento" ? "#fef2f2"
+            : "#fffbeb";
+  const rotulo = r.classificacao === "rapido" ? "Paga rápido"
+              : r.classificacao === "lento" ? "Tende a atrasar"
+              : "Pagamento regular";
+  const fonte = r.fonte === "dados_proprios"
+    ? `Calculado com base em ${r.n} pagamento(s) reais registrados por clientes do ContrataX.`
+    : r.contexto;
+  return `<div class="bloco"><h3>🏛️ Reputação de pagamento desse órgão</h3>
+    <div style="display:flex;align-items:center;gap:14px;padding:10px 0">
+      <div style="background:${bg};color:${cor};font-weight:800;font-size:13px;padding:8px 14px;border-radius:99px;border:1px solid ${cor}33">${rotulo}</div>
+      <div style="flex:1">
+        <div style="font-size:22px;font-weight:900;color:${cor}">${r.diasMedios} dias</div>
+        <div style="font-size:12.5px;color:var(--cinza)">tempo médio até receber</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--cinza);margin-top:6px">${esc(fonte)}</p>
+    <p style="font-size:11.5px;color:var(--cinza-c);margin-top:4px">Por lei (14.133/2021, art. 141) o prazo é de 30 dias. Atrasos geram direito a correção monetária + juros.</p>
+  </div>`;
 }
 
 function referenciaHTML(r) {
@@ -825,6 +854,7 @@ async function abrirDrawer(id) {
     <div class="linha-info"><span>Valor estimado</span><span>${brl(ed.valorEstimado)}</span></div>
     <div class="linha-info"><span>Encerra</span><span>${dataBR(ed.encerramento)}</span></div>
     ${portalUrl ? `<div class="linha-info"><span>Portal</span><span><a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="color:var(--indigo);font-weight:700">abrir →</a></span></div>` : ""}</div>`;
+  html += reputacaoHTML(d.reputacao);
   // Botao de adicionar ao calendario (Google/Outlook/Apple) com lembretes auto
   if (ed.encerramento) {
     html += `<a href="/api/calendario?id=${encodeURIComponent(ed.id)}" download style="display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;border:1.5px solid var(--indigo);color:var(--indigo);font-weight:700;padding:11px 14px;border-radius:11px;text-decoration:none;margin-bottom:10px;font-size:14px" title="Baixa um arquivo .ics que abre no Google Calendar, Outlook ou Apple Calendar com lembretes 3 dias antes e 1 hora antes">📅 Adicionar ao meu calendário</a>`;

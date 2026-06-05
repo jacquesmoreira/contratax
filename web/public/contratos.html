@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/logo-favicon.png" type="image/png" />
+<title>ContrataX — Meus contratos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+:root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; --vermelho:#dc2626; --vermelho-bg:#fef2f2; --amarelo:#d97706; --amarelo-bg:#fffbeb; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif; background:var(--fundo); color:var(--tinta); }
+nav { background:#fff; border-bottom:1px solid var(--linha); }
+nav .wrap { max-width:1080px; margin:0 auto; display:flex; align-items:center; height:60px; gap:18px; padding:0 20px; }
+.logo img { height:32px; display:block; }
+nav .dir { margin-left:auto; display:flex; gap:18px; font-size:14px; font-weight:600; }
+nav .dir a { color:var(--cinza); text-decoration:none; }
+nav .dir a:hover { color:var(--tinta); }
+.wrap-main { max-width:1080px; margin:0 auto; padding:30px 20px 60px; }
+h1 { font-size:26px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px; }
+.sub { color:var(--cinza); font-size:15px; margin-bottom:24px; }
+.dica { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; border-radius:10px; padding:13px 14px; font-size:13.5px; margin-bottom:18px; }
+.card { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:22px; margin-bottom:18px; }
+.card h2 { font-size:17px; font-weight:800; margin-bottom:14px; }
+.botoes { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+.btn { background:var(--indigo); color:#fff; border:none; padding:11px 18px; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; }
+.btn:hover { background:var(--indigo-d); }
+.btn.sec { background:#fff; color:var(--indigo); border:1.5px solid var(--indigo); }
+.btn.sm { padding:7px 12px; font-size:12.5px; }
+.btn.del { background:#fff; color:var(--vermelho); border:1px solid var(--linha); }
+.contrato { border:1px solid var(--linha); border-radius:12px; padding:18px; margin-bottom:12px; background:#fff; }
+.contrato .top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+.contrato .num { font-weight:800; font-size:16px; }
+.contrato .org { color:var(--cinza); font-size:13.5px; margin-top:2px; }
+.contrato .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin:14px 0; }
+.contrato .grid div { background:#f8fafc; padding:10px 12px; border-radius:9px; }
+.contrato .grid .lbl { font-size:10.5px; font-weight:800; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+.contrato .grid .v { font-weight:700; font-size:14px; }
+.contrato .acoes { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.tag { display:inline-block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; padding:3px 9px; border-radius:99px; }
+.tag.ativo { background:var(--verde-bg); color:var(--verde); }
+.tag.fim_em_90d { background:#eff6ff; color:#1e40af; }
+.tag.fim_em_30d { background:var(--amarelo-bg); color:var(--amarelo); }
+.tag.encerrado { background:#f1f5f9; color:var(--cinza); }
+.modal { position:fixed; inset:0; background:rgba(15,23,42,.5); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; }
+.modal.open { display:flex; }
+.modal-card { background:#fff; border-radius:14px; padding:28px; max-width:560px; width:100%; max-height:90vh; overflow-y:auto; }
+.modal-card h3 { font-size:18px; font-weight:800; margin-bottom:6px; }
+.modal-card .cap { font-size:13.5px; color:var(--cinza); margin-bottom:14px; }
+label { display:block; font-size:11.5px; font-weight:800; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin:12px 0 6px; }
+input, textarea, select { width:100%; padding:11px 13px; border:1px solid var(--linha); border-radius:9px; font-size:14.5px; font-family:inherit; outline:none; }
+input:focus, textarea:focus, select:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+textarea { resize:vertical; min-height:70px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.aviso-direito { background:var(--verde-bg); border:1px solid #a7f3d0; color:#065f46; border-radius:10px; padding:12px 14px; font-size:13.5px; margin:12px 0; }
+.aviso-nao { background:#f1f5f9; border:1px solid var(--linha); color:var(--cinza); border-radius:10px; padding:12px 14px; font-size:13.5px; margin:12px 0; }
+.err { color:var(--vermelho); font-size:13px; margin-top:10px; }
+.vazio { text-align:center; padding:40px 20px; color:var(--cinza); }
+.vazio b { display:block; margin-bottom:6px; color:var(--tinta); font-size:15.5px; }
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="logo" href="#" id="voltar"><img src="/logo-horizontal.png" alt="ContrataX" /></a>
+  <div class="dir">
+    <a href="#" id="link-painel">Painel</a>
+    <a href="#" id="link-receb">Recebíveis</a>
+    <a href="#" id="link-conta">Conta</a>
+  </div>
+</div></nav>
+
+<div class="wrap-main">
+  <h1>Meus contratos</h1>
+  <div class="sub">Contratos ativos com órgãos públicos, com alerta de fim de vigência e minutas prontas (prorrogação, aditivo, reequilíbrio).</div>
+
+  <div class="dica">
+    Cadastre cada contrato vigente para receber alertas <b>90, 60 e 30 dias</b> antes do término, e gerar a minuta de prorrogação, aditivo (art. 124, I) ou reequilíbrio econômico-financeiro (art. 124, II) sem custo jurídico.
+  </div>
+
+  <div class="botoes">
+    <button class="btn" id="btn-novo">+ Cadastrar contrato</button>
+  </div>
+
+  <div id="lista"></div>
+</div>
+
+<!-- Modal novo contrato -->
+<div class="modal" id="m-novo">
+  <div class="modal-card">
+    <h3>Cadastrar contrato</h3>
+    <div class="cap">Você precisa apenas dos dados básicos. Pode editar depois.</div>
+    <label>Número do contrato</label>
+    <input id="f-num" placeholder="ex: 045/2025" />
+    <label>Nome do órgão</label>
+    <input id="f-org" placeholder="ex: Prefeitura de Florianópolis" />
+    <label>CNPJ do órgão (opcional)</label>
+    <input id="f-cnpj" />
+    <label>Objeto</label>
+    <textarea id="f-obj" placeholder="O que está sendo fornecido / prestado"></textarea>
+    <div class="grid2">
+      <div>
+        <label>Data de início</label>
+        <input id="f-ini" type="date" />
+      </div>
+      <div>
+        <label>Data de fim</label>
+        <input id="f-fim" type="date" />
+      </div>
+    </div>
+    <label>Valor total (R$)</label>
+    <input id="f-val" type="number" step="0.01" />
+    <label>Índice de reajuste contratado (opcional)</label>
+    <select id="f-idx">
+      <option value="">— Nenhum / não sei</option>
+      <option value="IPCA">IPCA</option>
+      <option value="INPC">INPC</option>
+      <option value="INCC">INCC (construção)</option>
+      <option value="COMBUSTIVEL">Combustível</option>
+      <option value="ENERGIA">Energia elétrica</option>
+      <option value="TRABALHISTA">Trabalhista / Salário mínimo</option>
+    </select>
+    <div class="err" id="e-novo"></div>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn sec" onclick="fechar('m-novo')">Cancelar</button>
+      <button class="btn" id="b-salvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Aditivo -->
+<div class="modal" id="m-aditivo">
+  <div class="modal-card">
+    <h3>Pedido de aditivo</h3>
+    <div class="cap">Vamos gerar uma minuta pronta com base no art. 124, I, da Lei 14.133/2021.</div>
+    <label>Natureza</label>
+    <select id="a-tipo">
+      <option value="quantitativo">Quantitativo (mais volume do mesmo objeto)</option>
+      <option value="qualitativo">Qualitativo (alteração de especificação)</option>
+    </select>
+    <label>Percentual pretendido (até 25%, ou 50% em reforma)</label>
+    <input id="a-perc" type="number" value="25" />
+    <label>Justificativa</label>
+    <textarea id="a-just" placeholder="Por que esse aditivo é necessário?"></textarea>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn sec" onclick="fechar('m-aditivo')">Cancelar</button>
+      <button class="btn" id="b-aditivo">Gerar minuta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Reequilibrio -->
+<div class="modal" id="m-req">
+  <div class="modal-card">
+    <h3>Pedido de reequilíbrio econômico-financeiro</h3>
+    <div class="cap">Quando o custo de um insumo essencial varia além do previsto, você tem direito a renegociar (art. 124, II + art. 135).</div>
+    <label>Índice de referência</label>
+    <select id="r-idx">
+      <option value="IPCA">IPCA — inflação oficial</option>
+      <option value="INPC">INPC — inflação assalariados</option>
+      <option value="INCC">INCC — custo de construção</option>
+      <option value="COMBUSTIVEL">Combustível</option>
+      <option value="ENERGIA">Energia elétrica</option>
+      <option value="TRABALHISTA">Trabalhista / Salário mínimo</option>
+    </select>
+    <label>Data-base do contrato</label>
+    <input id="r-base" type="date" />
+    <div id="r-gatilho"></div>
+    <label>Justificativa</label>
+    <textarea id="r-just" placeholder="Descreva o insumo afetado, planilhas de custo antes/depois..."></textarea>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn sec" onclick="fechar('m-req')">Cancelar</button>
+      <button class="btn" id="b-req">Gerar minuta</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const token = params.get("c") || "";
+if (!token) location.href = "/entrar";
+const $ = (i) => document.getElementById(i);
+["voltar","link-painel"].forEach(i => $(i).href = "/painel?c=" + encodeURIComponent(token));
+$("link-receb").href = "/recebiveis?c=" + encodeURIComponent(token);
+$("link-conta").href = "/conta?c=" + encodeURIComponent(token);
+
+const brl = (v) => Number(v||0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+const dt = (s) => { if(!s) return "—"; const d=new Date(s); return isNaN(d)?s:d.toLocaleDateString("pt-BR"); };
+const LBL_SIT = { ativo:"Ativo", fim_em_90d:"Vence em 90 dias", fim_em_30d:"Vence em 30 dias", encerrado:"Encerrado", indefinida:"Sem data" };
+
+let contratoAtivo = null;
+
+async function carregar() {
+  const r = await fetch("/api/contratos-meus?c=" + encodeURIComponent(token));
+  const d = await r.json();
+  renderLista(d.contratos);
+}
+
+function renderLista(lista) {
+  if (!lista.length) {
+    $("lista").innerHTML = `<div class="vazio"><b>Nenhum contrato cadastrado ainda.</b>Cadastre seu primeiro contrato pra receber alertas de fim de vigência e gerar minutas automáticas.</div>`;
+    return;
+  }
+  $("lista").innerHTML = lista.map(c => {
+    const dias = c.diasParaFim;
+    const restante = dias === null ? "—" : dias < 0 ? `Encerrou há ${Math.abs(dias)}d` : `${dias} dias restantes`;
+    return `<div class="contrato">
+      <div class="top">
+        <div>
+          <div class="num">Contrato ${c.numero || "—"}</div>
+          <div class="org">${c.orgao_nome || "Órgão não informado"}</div>
+        </div>
+        <span class="tag ${c.situacao}">${LBL_SIT[c.situacao] || "—"}</span>
+      </div>
+      <div class="grid">
+        <div><div class="lbl">Início</div><div class="v">${dt(c.data_inicio)}</div></div>
+        <div><div class="lbl">Fim</div><div class="v">${dt(c.data_fim)}</div></div>
+        <div><div class="lbl">Vigência</div><div class="v">${restante}</div></div>
+        <div><div class="lbl">Valor total</div><div class="v">${brl(c.valor_total)}</div></div>
+      </div>
+      ${c.objeto ? `<div style="font-size:13.5px;color:var(--cinza);margin-bottom:8px">${c.objeto}</div>` : ""}
+      <div class="acoes">
+        <a class="btn sm sec" target="_blank" href="/contratos-meus/minuta?c=${encodeURIComponent(token)}&id=${c.id}&tipo=prorrogacao">Minuta prorrogação</a>
+        <button class="btn sm sec" onclick="abrirAditivo(${c.id})">Pedir aditivo</button>
+        <button class="btn sm sec" onclick="abrirReq(${c.id}, '${c.indice_reajuste||""}', '${c.data_inicio||""}')">Reequilíbrio</button>
+        <button class="btn sm del" onclick="remover(${c.id})">Excluir</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function abrir(id) { $(id).classList.add("open"); }
+function fechar(id) { $(id).classList.remove("open"); }
+
+$("btn-novo").onclick = () => { ["f-num","f-org","f-cnpj","f-obj","f-val"].forEach(i=>$(i).value=""); $("f-idx").value=""; $("f-ini").value = new Date().toISOString().slice(0,10); abrir("m-novo"); };
+
+$("b-salvar").onclick = async () => {
+  const d = {
+    numero: $("f-num").value, orgaoNome: $("f-org").value, orgaoCnpj: $("f-cnpj").value,
+    objeto: $("f-obj").value, dataInicio: $("f-ini").value, dataFim: $("f-fim").value,
+    valorTotal: $("f-val").value, indiceReajuste: $("f-idx").value,
+  };
+  if (!d.dataFim) { $("e-novo").textContent = "Data de fim é obrigatória."; return; }
+  const r = await fetch("/api/contratos-meus?c=" + encodeURIComponent(token), { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(d) });
+  if (!r.ok) { $("e-novo").textContent = "Erro ao salvar."; return; }
+  fechar("m-novo"); carregar();
+};
+
+async function remover(id) {
+  if (!confirm("Excluir esse contrato?")) return;
+  await fetch("/api/contratos-meus/remover?c=" + encodeURIComponent(token), { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ id }) });
+  carregar();
+}
+
+function abrirAditivo(id) { contratoAtivo = id; abrir("m-aditivo"); }
+$("b-aditivo").onclick = () => {
+  const qs = new URLSearchParams({ c: token, id: contratoAtivo, tipo: "aditivo",
+    natureza: $("a-tipo").value, percentual: $("a-perc").value, justificativa: $("a-just").value });
+  window.open("/contratos-meus/minuta?" + qs.toString(), "_blank");
+  fechar("m-aditivo");
+};
+
+async function abrirReq(id, indice, dataBase) {
+  contratoAtivo = id;
+  $("r-idx").value = indice || "IPCA";
+  $("r-base").value = dataBase || "";
+  $("r-gatilho").innerHTML = "";
+  abrir("m-req");
+  await checarGatilho();
+}
+
+["r-idx","r-base"].forEach(i => $(i).addEventListener("change", checarGatilho));
+async function checarGatilho() {
+  const idx = $("r-idx").value, base = $("r-base").value;
+  if (!idx || !base) return;
+  const r = await fetch(`/api/contratos-meus/gatilho-reequilibrio?indice=${idx}&dataBase=${base}`);
+  const d = await r.json();
+  if (d.temDireito) {
+    $("r-gatilho").innerHTML = `<div class="aviso-direito"><b>Variação acumulada: ${d.variacaoPercent}% em ${d.meses} meses.</b> A jurisprudência consagra variações acima de 5% como suficientes para pedir reequilíbrio.</div>`;
+  } else if (typeof d.variacaoPercent === "number") {
+    $("r-gatilho").innerHTML = `<div class="aviso-nao">Variação acumulada de apenas ${d.variacaoPercent}% em ${d.meses} meses. Você pode protocolar mesmo assim, mas a chance de aceitação é menor.</div>`;
+  }
+}
+
+$("b-req").onclick = () => {
+  const qs = new URLSearchParams({ c: token, id: contratoAtivo, tipo: "reequilibrio",
+    indice: $("r-idx").value, dataBase: $("r-base").value, justificativa: $("r-just").value });
+  window.open("/contratos-meus/minuta?" + qs.toString(), "_blank");
+  fechar("m-req");
+};
+
+carregar();
+</script>
+</body>
+</html>

@@ -35,7 +35,34 @@ function abrir() {
   `);
   _db.exec("CREATE INDEX IF NOT EXISTS idx_nfe_perfil ON notas_fiscais(perfil_token);");
   _db.exec("CREATE INDEX IF NOT EXISTS idx_nfe_status ON notas_fiscais(status);");
+  // Marcadores de alerta enviado por marco (25, 30, 45, 60 dias)
+  try { _db.exec("ALTER TABLE notas_fiscais ADD COLUMN alertas_enviados TEXT;"); } catch {}
   return _db;
+}
+
+// Marcadores de alerta ja enviados (lista CSV: "25,30,45")
+export function alertasEnviadosDe(nf) {
+  if (!nf.alertas_enviados) return [];
+  return String(nf.alertas_enviados).split(",").map(Number).filter(Boolean);
+}
+
+export function registrarAlertaEnviado(id, marco) {
+  const db = abrir();
+  const linha = db.prepare("SELECT alertas_enviados FROM notas_fiscais WHERE id = ?").get(id);
+  if (!linha) return;
+  const set = new Set(alertasEnviadosDe(linha));
+  set.add(marco);
+  db.prepare("UPDATE notas_fiscais SET alertas_enviados = ? WHERE id = ?")
+    .run([...set].sort((a,b)=>a-b).join(","), id);
+}
+
+// Lista todas as NFs pendentes/atrasadas (todos os perfis) - usado pelo loop de alertas
+export function todasNotasPendentes() {
+  const db = abrir();
+  const linhas = db.prepare(
+    "SELECT * FROM notas_fiscais WHERE data_pagamento IS NULL ORDER BY data_emissao DESC"
+  ).all();
+  return linhas;
 }
 
 // Prazo legal de pagamento na licitacao publica: 30 dias da liquidacao
