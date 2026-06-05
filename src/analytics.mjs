@@ -49,7 +49,7 @@ const SNIPPET_PWA = `
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="ContrataX">
-<link rel="apple-touch-icon" href="/logo-favicon.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <style>
 /* Responsive base aplicado em TODAS as paginas via injecao - garante que
    contas/cadastro/entrar/equipe e demais paginas funcionem bem no celular
