@@ -122,7 +122,7 @@ async function perfilPorToken(token) {
 // comprimidos por natureza (PNG, PDF, XLSX) - gzip neles desperdica CPU.
 function compressivel(headers) {
   const ct = (headers?.["Content-Type"] || "").toLowerCase();
-  return /text\/|application\/json|application\/javascript|application\/xml|image\/svg/.test(ct);
+  return /text\/|application\/(json|javascript|xml|manifest\+json|rss\+xml|atom\+xml|ld\+json)|image\/svg/.test(ct);
 }
 
 // Wrapper que bufferiza res.end() e aplica gzip quando o cliente aceita e o
@@ -1196,28 +1196,28 @@ const servidor = createServer(async (req, res) => {
     // ===== Paginas institucionais (Casos, Status, Seguranca) =====
     if (rota === "/casos" || rota === "/casos.html") {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      return res.end(paginaCasos());
+      return res.end(injetarAnalytics(paginaCasos()));
     }
     if (rota === "/status" || rota === "/status.html") {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      return res.end(paginaStatus());
+      return res.end(injetarAnalytics(paginaStatus()));
     }
     if (rota === "/seguranca" || rota === "/seguranca.html") {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      return res.end(paginaSeguranca());
+      return res.end(injetarAnalytics(paginaSeguranca()));
     }
 
     // ===== Central de Ajuda e Contato =====
     if (rota === "/ajuda" || rota === "/ajuda.html") {
       const html = await renderizarAjuda(BASE_PUBLICA);
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/contato" && req.method === "GET") {
       const tokenCt = url.searchParams.get("c") || "";
       const html = await renderizarContato(BASE_PUBLICA, { token: tokenCt });
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
     if (rota === "/contato" && req.method === "POST") {
       // Aceita form-urlencoded (do <form> normal) ou JSON (do widget)
@@ -1244,12 +1244,12 @@ const servidor = createServer(async (req, res) => {
         if (ct.includes("application/json")) return json(res, 400, { erro: r.erro });
         const html = await renderizarContato(BASE_PUBLICA, { token: dados.token || "", erro: r.erro });
         res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
-        return res.end(html);
+        return res.end(injetarAnalytics(html));
       }
       if (ct.includes("application/json")) return json(res, 200, { ok: true });
       const html = await renderizarContato(BASE_PUBLICA, { sucesso: true });
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      return res.end(html);
+      return res.end(injetarAnalytics(html));
     }
 
     // ===== Blog SEO: artigos em /blog e /blog/<slug> =====
