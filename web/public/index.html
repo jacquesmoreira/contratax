@@ -33,14 +33,30 @@
   .nav-id-uso { font-size:11.5px; color:var(--cinza-c); font-weight:600; margin-top:1px; white-space:nowrap; }
   .nav-id-uso b { color:var(--indigo); font-weight:800; }
   nav .dir { margin-left:auto; display:flex; align-items:center; gap:4px; font-size:13.5px; font-weight:600; color:var(--cinza); }
-  nav .dir a { padding:8px 12px; border-radius:8px; transition:background .12s, color .12s; }
+  nav .dir a { padding:8px 12px; border-radius:8px; transition:background .12s, color .12s; text-decoration:none; color:inherit; }
   nav .dir a:hover { color:var(--tinta); background:var(--fundo); }
   .nav-sair { color:var(--cinza-c) !important; font-size:13px !important; }
   .nav-sair:hover { color:var(--vermelho) !important; background:var(--vermelho-bg) !important; }
-  /* Esconde labels longos em telas menores; mostra so icones */
+  /* Dropdown "Mais" agrupando itens secundarios */
+  .dropdown { position:relative; }
+  .dropdown > .dd-btn { display:inline-flex; align-items:center; gap:4px; padding:8px 12px; border-radius:8px; cursor:pointer; color:var(--cinza); font-weight:600; font-size:13.5px; }
+  .dropdown > .dd-btn:hover, .dropdown.open > .dd-btn { background:var(--fundo); color:var(--tinta); }
+  .dropdown > .dd-btn::after { content:"▾"; font-size:9px; opacity:.6; margin-left:1px; }
+  .dd-menu { position:absolute; top:100%; right:0; margin-top:6px; background:#fff; border:1px solid var(--linha); border-radius:11px; padding:6px; min-width:180px; box-shadow:0 10px 30px rgba(15,23,42,.10); display:none; flex-direction:column; gap:1px; z-index:30; }
+  .dropdown.open .dd-menu, .dropdown:hover .dd-menu { display:flex; }
+  .dd-menu a { padding:9px 12px; border-radius:7px; font-size:13.5px; font-weight:600; color:var(--cinza); white-space:nowrap; text-decoration:none; }
+  .dd-menu a:hover { background:var(--fundo); color:var(--tinta); }
+  /* Esconde labels longos em telas menores */
   @media (max-width:980px) {
     .nav-id { display:none; }
-    nav .dir a { padding:8px 9px; }
+    nav .dir a, .dropdown > .dd-btn { padding:8px 9px; }
+    nav .dir { gap:2px; font-size:13px; }
+  }
+  @media (max-width:640px) {
+    nav .wrap { gap:8px; }
+    nav .dir { gap:0; }
+    nav .dir a, .dropdown > .dd-btn { padding:6px 7px; font-size:12.5px; }
+    #nav-plano { display:none !important; }
   }
 
   /* Cabecalho */
@@ -163,13 +179,18 @@
     </div>
     <div class="dir">
       <a id="nav-plano" href="#" style="display:none"></a>
-      <a id="nav-conta" href="#">Conta</a>
-      <a id="nav-equipe" href="#">Equipe</a>
-      <a id="nav-docs" href="#">Documentos</a>
       <a id="nav-receb" href="#">Recebíveis</a>
       <a id="nav-contratos" href="#">Contratos</a>
-      <a id="nav-historico" href="#">Histórico</a>
-      <a id="nav-declaracoes" href="#">Declarações</a>
+      <div class="dropdown" id="dd-mais">
+        <span class="dd-btn">Mais</span>
+        <div class="dd-menu">
+          <a id="nav-docs" href="#">Documentos</a>
+          <a id="nav-declaracoes" href="#">Declarações</a>
+          <a id="nav-historico" href="#">Histórico</a>
+          <a id="nav-equipe" href="#">Equipe</a>
+          <a id="nav-conta" href="#">Conta</a>
+        </div>
+      </div>
       <a class="nav-sair" href="/">Sair</a>
     </div>
   </div></nav>
@@ -584,6 +605,14 @@ async function carregar() {
     document.getElementById("nav-conta").href = "/conta?c=" + encodeURIComponent(token);
     document.getElementById("nav-historico").href = "/historico?c=" + encodeURIComponent(token);
     document.getElementById("nav-declaracoes").href = "/declaracoes?c=" + encodeURIComponent(token);
+    // Dropdown "Mais": click no botao alterna .open (toque/mobile). Fora fecha.
+    (function(){
+      const dd = document.getElementById("dd-mais"); if (!dd) return;
+      const btn = dd.querySelector(".dd-btn");
+      btn.addEventListener("click", (e) => { e.stopPropagation(); dd.classList.toggle("open"); });
+      document.addEventListener("click", (e) => { if (!dd.contains(e.target)) dd.classList.remove("open"); });
+      dd.querySelectorAll("a").forEach(a => a.addEventListener("click", () => dd.classList.remove("open")));
+    })();
     if (acesso.uso) {
       const u = acesso.uso, n = document.getElementById("nav-uso");
       n.innerHTML = `<b>${u.usados}/${u.limite}</b> pesquisas no mês`;
