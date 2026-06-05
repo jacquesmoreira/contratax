@@ -894,7 +894,12 @@ const servidor = createServer(async (req, res) => {
       // Preco de referencia: faixa de valores de contratos similares (UF ou nacional).
       // Quando ha perfil, usa os termos do ramo (mais precisos).
       const referencia = precoReferencia(edital, { termosPerfil: perfil?.filtro?.termos ?? [] });
-      const reputacao = reputacaoDoOrgao({ cnpj: edital.orgaoCnpj, nome: edital.orgao });
+      const reputacao = await reputacaoDoOrgao({
+        cnpj: edital.orgaoCnpj,
+        nome: edital.orgao,
+        uf: edital.uf,
+        municipio: edital.municipio,
+      });
       return json(res, 200, {
         edital,
         analise: analiseCache?.analise ?? null,

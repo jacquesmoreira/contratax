@@ -700,12 +700,18 @@ function reputacaoHTML(r) {
   const rotulo = r.classificacao === "rapido" ? "Paga rápido"
               : r.classificacao === "lento" ? "Tende a atrasar"
               : "Pagamento regular";
-  const fonteTag = r.fonte === "dados_proprios"
-    ? `<span style="background:#ecfdf5;color:#065f46;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:99px;letter-spacing:.3px">DADOS REAIS · ${r.n} pagamentos</span>`
-    : `<span style="background:#eef2ff;color:#3730a3;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:99px;letter-spacing:.3px">ESTIMATIVA POR PORTE</span>`;
-  const explicacao = r.fonte === "dados_proprios"
-    ? `<b>Como calculamos:</b> média dos dias entre a emissão da nota fiscal e o pagamento efetivo, registrados por outros clientes do ContrataX que já receberam desse mesmo órgão (CNPJ). Quanto mais clientes registram, mais precisa fica essa média.`
-    : `<b>Como estimamos:</b> classificamos o órgão por porte (federal, estadual, capital, município médio ou município pequeno) e aplicamos a média histórica do setor público brasileiro para cada categoria. Quando começarmos a ter pagamentos reais registrados desse órgão pelos clientes do ContrataX, essa estimativa é substituída pela média real automaticamente.`;
+  let fonteTag, explicacao;
+  if (r.fonte === "dados_proprios") {
+    fonteTag = `<span style="background:#ecfdf5;color:#065f46;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:99px;letter-spacing:.3px">DADOS REAIS · ${r.n} pagamentos</span>`;
+    explicacao = `<b>Como calculamos:</b> média dos dias entre a emissão da nota fiscal e o pagamento efetivo, registrados por outros clientes do ContrataX que já receberam desse mesmo órgão (CNPJ). Quanto mais clientes registram, mais precisa fica essa média.`;
+  } else if (r.fonte === "capag") {
+    const nota = r.fonteDetalhe?.nota || "—";
+    fonteTag = `<span style="background:#eff6ff;color:#1d4ed8;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:99px;letter-spacing:.3px">CAPAG ${nota} · TESOURO NACIONAL</span>`;
+    explicacao = `<b>Como classificamos:</b> usamos a <b>nota CAPAG (Capacidade de Pagamento)</b> que o Tesouro Nacional publica anualmente para cada município brasileiro. A nota varia de A+ (capacidade alta) a D- (situação crítica) e é baseada em três indicadores fiscais oficiais: endividamento, poupança corrente e liquidez. A estimativa de dias até receber é uma tradução da nota CAPAG em prazo médio observado. <a href="https://www.tesourotransparente.gov.br/temas/estados-e-municipios/capacidade-de-pagamento-capag" target="_blank" rel="noopener" style="color:var(--indigo)">Saiba mais sobre o CAPAG →</a>`;
+  } else {
+    fonteTag = `<span style="background:#fef3c7;color:#92400e;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:99px;letter-spacing:.3px">ESTIMATIVA</span>`;
+    explicacao = `<b>Como estimamos:</b> esse órgão ainda não tem nota CAPAG do Tesouro Nacional disponível, nem temos pagamentos registrados pelos clientes do ContrataX. Usamos a média do setor (federal, estadual ou municipal). Assim que houver dado oficial ou registro de pagamento, a fonte muda automaticamente.`;
+  }
   return `<div class="bloco"><h3>🏛️ Reputação de pagamento desse órgão</h3>
     <div style="display:flex;align-items:center;gap:14px;padding:10px 0">
       <div style="background:${bg};color:${cor};font-weight:800;font-size:13px;padding:8px 14px;border-radius:99px;border:1px solid ${cor}33">${rotulo}</div>

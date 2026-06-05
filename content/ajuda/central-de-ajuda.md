@@ -222,12 +222,23 @@ Quando o custo de um insumo essencial varia muito além do previsto (combustíve
 Você escolhe o índice (IPCA, INPC, INCC, combustível, energia, trabalhista) e a data-base do contrato. O sistema mostra na hora a variação acumulada e te diz se já passou do gatilho de 5%. Se passou, gera a minuta com a fundamentação. Os índices são estimativas baseadas nos últimos 12 meses; pra protocolo, recomenda-se anexar a memória de cálculo com índices oficiais do período exato.
 
 ### O que é a "reputação de pagamento do órgão" que aparece no edital?
-É um indicador no detalhe de cada edital: quanto tempo em média esse órgão leva pra pagar. Aparece com uma das duas marcas:
+É um indicador no detalhe de cada edital: quanto tempo em média esse órgão leva pra pagar. Aparece com uma de três marcas, na ordem de precisão:
 
-- **DADOS REAIS · N pagamentos** — quando já temos pelo menos 2 NFs pagas registradas no ContrataX por clientes que receberam desse mesmo órgão (pelo CNPJ). É a média efetiva entre data de emissão da nota e data de pagamento. Quanto mais clientes registram, mais precisa fica.
-- **ESTIMATIVA POR PORTE** — quando ainda não temos dados próprios desse órgão, classificamos pelo porte e usamos a média histórica do setor público brasileiro: federal 32 dias, estadual 42 dias, capital ou município com mais de 500 mil habitantes 48 dias, município médio (100-500 mil) 58 dias, município pequeno 72 dias.
+- **DADOS REAIS · N pagamentos** — quando já temos pelo menos 2 NFs pagas registradas no ContrataX por clientes que receberam desse mesmo órgão (pelo CNPJ). É a média efetiva entre data de emissão da nota e data de pagamento.
+- **CAPAG (nota) · TESOURO NACIONAL** — usamos a Capacidade de Pagamento publicada anualmente pelo Tesouro Nacional para cada município brasileiro. A nota varia de **A+** (capacidade alta, paga em dia) a **D-** (situação crítica). É baseada em três indicadores fiscais oficiais: endividamento, poupança corrente e liquidez. Tradução em prazo:
+  - **A+**: 22 dias (paga rápido)
+  - **A**: 28 dias
+  - **B+**: 35 dias
+  - **B**: 45 dias (paga no limite)
+  - **C**: 65 dias (atrasos frequentes)
+  - **D**: 95 dias (atraso recorrente)
+  - **D-**: 125 dias (situação crítica)
+- **ESTIMATIVA** — quando o município não tem CAPAG publicada (raro) ou o órgão é federal/estadual (CAPAG só vale pra municípios). Usamos a média histórica do setor.
 
-Quando começamos a ter dados reais do órgão, a estimativa é substituída pela média efetiva automaticamente. Decida disputar com base em dado, não em torcida.
+Quando começamos a ter dados reais dos clientes pagos por aquele órgão, a fonte muda automaticamente da CAPAG ou da estimativa para os DADOS REAIS. Decida disputar com base em dado, não em torcida.
+
+### A CAPAG do Tesouro é mesmo confiável?
+É a referência oficial de capacidade fiscal dos municípios brasileiros, publicada anualmente em [tesourotransparente.gov.br](https://www.tesourotransparente.gov.br/temas/estados-e-municipios/capacidade-de-pagamento-capag). Bancos públicos (como BNDES e Caixa) e organismos internacionais usam a CAPAG pra decidir se concedem empréstimo a um município. Se serve pra liberar crédito de centenas de milhões, serve pra você prever se vai receber seus R$ 50 mil no prazo.
 
 ---
 
