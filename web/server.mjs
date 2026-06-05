@@ -371,6 +371,10 @@ const servidor = createServer(async (req, res) => {
         if (perfis.some((p) => (p.cnpj || "").replace(/\D/g, "") === limpo)) {
           return json(res, 200, { valido: false, erro: "Já existe uma conta com este CNPJ. Use a página de Entrar ou peça acesso ao administrador da conta." });
         }
+        // Empresa nao-ativa na Receita: avisa logo na consulta.
+        if (r.ativa === false) {
+          return json(res, 200, { valido: false, erro: `Este CNPJ consta como "${r.situacao}" na Receita. Para participar de licitações, a empresa precisa estar com situação cadastral ativa.` });
+        }
       }
       return json(res, 200, r);
     }
@@ -627,10 +631,14 @@ const servidor = createServer(async (req, res) => {
       const termos = String(corpo.ramo || "").split(/[,;]/).map((s) => s.trim()).filter(Boolean);
       if (!termos.length) return json(res, 400, { erro: "Informe ao menos uma palavra do seu ramo" });
 
-      // Consulta razao social na Receita (best-effort; nao bloqueia se falhar).
+      // Consulta a Receita: puxa razao social E bloqueia empresa inativa (so
+      // quando a Receita confirma nao-ativa; falha de API nao bloqueia).
       let razao = p.razaoSocial || null;
       try {
         const consulta = await consultarCNPJ(cnpjLimpo);
+        if (consulta?.ativa === false) {
+          return json(res, 400, { erro: `Este CNPJ consta como "${consulta.situacao}" na Receita. Para participar de licitações, a empresa precisa estar com situação cadastral ativa.` });
+        }
         if (consulta?.valido && consulta.razaoSocial) razao = consulta.razaoSocial;
       } catch { /* segue sem razao */ }
 

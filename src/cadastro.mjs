@@ -6,7 +6,7 @@ import { randomBytes } from "node:crypto";
 import { monitorar } from "./monitor.mjs";
 import { novaAssinaturaTeste } from "./assinatura.mjs";
 import { hashSenha } from "./senha.mjs";
-import { validarFormatoCNPJ, limparCNPJ } from "./cnpj.mjs";
+import { validarFormatoCNPJ, limparCNPJ, consultarCNPJ } from "./cnpj.mjs";
 import { lerPerfis, salvarPerfis } from "./perfis.mjs";
 
 const slug = (s) =>
@@ -65,6 +65,22 @@ export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, c
   }
   if (perfis.some((p) => limparCNPJ(p.cnpj || "") === cnpjLimpo)) {
     throw new Error("Ja existe uma conta com este CNPJ. Peca acesso ao administrador da conta.");
+  }
+
+  // So aceita empresa ATIVA na Receita. Empresa baixada/inapta/suspensa nao pode
+  // participar de licitacao, entao monitorar nao faz sentido. Bloqueia apenas
+  // quando a Receita CONFIRMA que nao esta ativa (se a consulta falhar, deixa
+  // passar pra nao punir cadastro legitimo por instabilidade da API).
+  try {
+    const consulta = await consultarCNPJ(cnpjLimpo);
+    if (consulta.ativa === false) {
+      throw new Error(`Este CNPJ consta como "${consulta.situacao}" na Receita. Para participar de licitacoes, a empresa precisa estar com situacao cadastral ativa.`);
+    }
+    if (!razaoSocial && consulta.razaoSocial) razaoSocial = consulta.razaoSocial;
+  } catch (e) {
+    // Se o erro veio da nossa validacao (ativa === false), propaga. Se foi
+    // falha de rede/parse, ignora e segue (best-effort).
+    if (/situacao cadastral ativa/.test(e.message)) throw e;
   }
 
   const termos = ramo.split(/[,;]/).map((t) => t.trim()).filter(Boolean);

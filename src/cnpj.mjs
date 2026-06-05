@@ -31,8 +31,12 @@ export async function consultarCNPJ(cnpj) {
     if (r.status === 404) return { valido: false, erro: "CNPJ não encontrado na base da Receita" };
     if (!r.ok) return { valido: true, razaoSocial: null, aviso: "não deu para confirmar na Receita agora" };
     const j = await r.json();
-    return { valido: true, razaoSocial: j.razao_social ?? null, situacao: j.descricao_situacao_cadastral ?? null, uf: j.uf ?? null };
+    const situacao = j.descricao_situacao_cadastral ?? null;
+    // ativa: true se a Receita confirma ATIVA, false se confirma outra situacao
+    // (BAIXADA/INAPTA/SUSPENSA/NULA), null se nao deu pra confirmar.
+    const ativa = situacao ? /^ATIVA$/i.test(String(situacao).trim()) : null;
+    return { valido: true, razaoSocial: j.razao_social ?? null, situacao, ativa, uf: j.uf ?? null };
   } catch {
-    return { valido: true, razaoSocial: null, aviso: "não deu para confirmar na Receita agora" };
+    return { valido: true, razaoSocial: null, ativa: null, aviso: "não deu para confirmar na Receita agora" };
   }
 }
