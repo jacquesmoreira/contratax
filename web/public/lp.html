@@ -76,7 +76,7 @@
 <style>
   :root {
     --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --roxo:#6d28d9;
-    --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8;
+    --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b;
     --linha:#e2e8f0; --fundo:#f8fafc; --branco:#fff;
     --verde:#059669; --verde-bg:#ecfdf5; --ambar:#d97706; --ambar-bg:#fffbeb;
     --vermelho:#dc2626; --vermelho-bg:#fef2f2;
@@ -224,7 +224,7 @@
   .cta-final .btn { background:#fff; color:var(--indigo); }
   .cta-final .btn:hover { background:#eef2ff; }
 
-  footer { background:#0f172a; color:#94a3b8; padding:44px 0; text-align:center; font-size:14px; }
+  footer { background:#0f172a; color:#64748b; padding:44px 0; text-align:center; font-size:14px; }
   footer .logo { color:#fff; margin-bottom:10px; }
 
   @media (max-width:760px) { .dores,.passos,.dif-wrap { grid-template-columns:1fr; } .busca-form .btn { width:100%; } nav .links a:not(.btn) { display:none; } }
@@ -585,11 +585,11 @@
       <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;justify-content:center;margin-bottom:20px">
         <div style="flex:1;min-width:200px">
           <label style="display:block;font-size:11.5px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Valor médio do contrato (R$)</label>
-          <input id="calc-valor" type="number" value="4000" min="0" style="width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:10px;font-size:16px;font-family:inherit;outline:none" />
+          <input id="calc-valor" type="number" value="4000" min="0" aria-label="Valor médio do contrato em reais" style="width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:10px;font-size:16px;font-family:inherit;outline:none" />
         </div>
         <div style="flex:1;min-width:200px">
           <label style="display:block;font-size:11.5px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Plano</label>
-          <select id="calc-plano" style="width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:10px;font-size:16px;font-family:inherit;outline:none;background:#fff">
+          <select id="calc-plano" aria-label="Plano para o cálculo de retorno" style="width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:10px;font-size:16px;font-family:inherit;outline:none;background:#fff">
             <option value="197">Básico, R$ 197/mês</option>
             <option value="297">Pro, R$ 297/mês</option>
             <option value="497">Assessoria 10, R$ 497/mês</option>
@@ -718,7 +718,7 @@ async function buscar() {
     html += d.amostra.map(e => `<div class="res-card">
       <div class="top"><span class="org">${esc(e.municipio)}/${esc(e.uf)} · ${esc(e.orgao)}</span>${pz(e.encerramento)}</div>
       <div class="obj">${esc((e.objeto||"").slice(0,140))}</div>
-      <div class="rod"><span class="mod">${esc(e.modalidade)}</span>${e.valorEstimado > 0 ? `<span class="val">${brl(e.valorEstimado)}</span>` : `<span class="val" style="color:#94a3b8;font-style:italic;font-weight:600;font-size:13px" title="O órgão não divulgou o valor estimado no PNCP">valor não divulgado</span>`}</div>
+      <div class="rod"><span class="mod">${esc(e.modalidade)}</span>${e.valorEstimado > 0 ? `<span class="val">${brl(e.valorEstimado)}</span>` : `<span class="val" style="color:#64748b;font-style:italic;font-weight:600;font-size:13px" title="O órgão não divulgou o valor estimado no PNCP">valor não divulgado</span>`}</div>
     </div>`).join("");
     if (d.total > d.amostra.length) {
       const restantes = (d.total - d.amostra.length).toLocaleString("pt-BR");

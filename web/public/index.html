@@ -12,7 +12,7 @@
 <style>
   :root {
     --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --roxo:#6d28d9;
-    --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8;
+    --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b;
     --linha:#e2e8f0; --fundo:#f8fafc; --branco:#fff;
     --verde:#059669; --verde-bg:#ecfdf5; --ambar:#d97706; --ambar-bg:#fffbeb;
     --vermelho:#dc2626; --vermelho-bg:#fef2f2;
@@ -228,7 +228,7 @@
 
   <div class="fundo-escuro" id="fundo"></div>
   <aside class="drawer" id="drawer">
-    <div class="drawer-topo"><h2 id="drawer-titulo"></h2><button class="fechar" id="btn-fechar">×</button></div>
+    <div class="drawer-topo"><h2 id="drawer-titulo"></h2><button class="fechar" id="btn-fechar" aria-label="Fechar">×</button></div>
     <div class="drawer-corpo" id="drawer-corpo"></div>
   </aside>
 
@@ -388,7 +388,7 @@ function popupTesteAcabando(a) {
     <h2 style="font-size:22px;font-weight:800;margin:10px 0 6px;color:#991b1b">Seu teste ${quando}</h2>
     <p style="color:#475569;font-size:14.5px;margin-bottom:22px;line-height:1.55">Garanta seu acesso antes que expire. Você mantém todo o histórico, alertas e configurações da sua empresa.</p>
     <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;background:var(--indigo);color:#fff;font-weight:800;padding:14px;border-radius:11px;text-decoration:none;margin-bottom:12px;font-size:15px">Ver planos</a>
-    <button id="fechar-tst" style="background:none;border:none;color:#94a3b8;font-weight:600;font-size:13.5px;cursor:pointer">Decidir depois</button>
+    <button id="fechar-tst" style="background:none;border:none;color:#64748b;font-weight:600;font-size:13.5px;cursor:pointer">Decidir depois</button>
   </div>`;
   document.body.appendChild(ov);
   ov.querySelector("#fechar-tst").onclick = () => ov.remove();
@@ -416,7 +416,7 @@ function popupAtrasado(a) {
     <h2 style="font-size:20px;font-weight:800;margin:8px 0 6px;color:#b91c1c">Pagamento em atraso</h2>
     <p style="color:#475569;font-size:14.5px;margin-bottom:20px">Não identificamos o pagamento da sua mensalidade. ${restamBloqueio > 0 ? `Você tem <b>${restamBloqueio} dia${restamBloqueio !== 1 ? "s" : ""}</b> para regularizar antes do bloqueio.` : "Regularize para reativar o acesso."}</p>
     <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;background:#dc2626;color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none;margin-bottom:10px">Regularizar pagamento</a>
-    <button id="fechar-atr" style="background:none;border:none;color:#94a3b8;font-weight:600;font-size:14px;cursor:pointer">Agora não</button>
+    <button id="fechar-atr" style="background:none;border:none;color:#64748b;font-weight:600;font-size:14px;cursor:pointer">Agora não</button>
   </div>`;
   document.body.appendChild(ov);
   ov.querySelector("#fechar-atr").onclick = () => ov.remove();
@@ -436,7 +436,7 @@ function popupVencimento(a) {
     <h2 style="font-size:20px;font-weight:800;margin:8px 0 6px">Sua assinatura ${quando}</h2>
     <p style="color:#475569;font-size:14.5px;margin-bottom:20px">Renove o pagamento para continuar com a analise dos editais e o monitoramento sem interrupção.</p>
     <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;background:#4338ca;color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none;margin-bottom:10px">Renovar agora</a>
-    <button id="fechar-venc" style="background:none;border:none;color:#94a3b8;font-weight:600;font-size:14px;cursor:pointer">Agora não</button>
+    <button id="fechar-venc" style="background:none;border:none;color:#64748b;font-weight:600;font-size:14px;cursor:pointer">Agora não</button>
   </div>`;
   document.body.appendChild(ov);
   ov.querySelector("#fechar-venc").onclick = () => ov.remove();
@@ -500,10 +500,10 @@ async function avisarCertidoesVencendo() {
     box.innerHTML = `
       <div style="display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:10px">
         <div style="font-size:14.5px;font-weight:800;color:#0f172a">⚠️ Certidões precisando atenção</div>
-        <button id="fechar-cert" style="background:none;border:none;font-size:20px;color:#94a3b8;cursor:pointer;line-height:1;padding:0">×</button>
+        <button id="fechar-cert" style="background:none;border:none;font-size:20px;color:#64748b;cursor:pointer;line-height:1;padding:0" aria-label="Fechar">×</button>
       </div>
       ${top.map(t => `<div style="font-size:13px;color:#475569;padding:6px 0;border-top:1px solid #f1f5f9">${ic(t.dias)} <b style="color:#0f172a">${esc(t.documento)}</b><br><span style="color:${t.dias < 7 ? "#b91c1c" : "#475569"};font-weight:600;font-size:12.5px">${texto(t.dias)}</span></div>`).join("")}
-      ${alertas.length > 3 ? `<div style="font-size:11.5px;color:#94a3b8;margin-top:6px">+ ${alertas.length - 3} outra(s) certidão(ões) próximas do vencimento</div>` : ""}
+      ${alertas.length > 3 ? `<div style="font-size:11.5px;color:#64748b;margin-top:6px">+ ${alertas.length - 3} outra(s) certidão(ões) próximas do vencimento</div>` : ""}
       <a href="/documentos?c=${encodeURIComponent(token)}" style="display:block;text-align:center;margin-top:12px;background:#4338ca;color:#fff;font-weight:700;padding:10px;border-radius:9px;text-decoration:none;font-size:13.5px">Atualizar meus documentos →</a>
     `;
     document.body.appendChild(box);
@@ -1144,12 +1144,12 @@ carregar();
     ov.innerHTML = `<div id="sup-card" style="background:#fff;border-radius:18px;max-width:480px;width:100%;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <h2 style="font-size:20px;font-weight:800;margin:0">Fale com a gente</h2>
-        <button id="sup-fechar" style="background:none;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1">×</button>
+        <button id="sup-fechar" style="background:none;border:none;font-size:22px;color:#64748b;cursor:pointer;line-height:1" aria-label="Fechar">×</button>
       </div>
       <p style="font-size:13.5px;color:#475569;margin-bottom:16px">Conta o que está acontecendo, respondemos em até 1 dia útil no seu e-mail.</p>
-      <label style="display:block;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Seu e-mail</label>
+      <label style="display:block;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Seu e-mail</label>
       <input id="sup-email" type="email" required placeholder="voce@empresa.com.br" style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;margin-bottom:14px" />
-      <label style="display:block;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Assunto</label>
+      <label style="display:block;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Assunto</label>
       <select id="sup-assunto" required style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;margin-bottom:14px;background:#fff">
         <option value="">Selecione...</option>
         <option>Dúvida sobre plano ou pagamento</option>
@@ -1158,11 +1158,11 @@ carregar();
         <option>Sugestão de melhoria</option>
         <option>Outra coisa</option>
       </select>
-      <label style="display:block;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Sua mensagem</label>
+      <label style="display:block;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Sua mensagem</label>
       <textarea id="sup-msg" required rows="5" placeholder="O que aconteceu? Quanto mais detalhe, mais rápido a gente resolve." style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;resize:vertical;margin-bottom:6px"></textarea>
       <div id="sup-erro" style="color:#dc2626;font-size:13px;margin-bottom:8px;display:none"></div>
       <button id="sup-enviar" style="width:100%;background:#4338ca;color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:6px">Enviar mensagem</button>
-      <div style="font-size:11.5px;color:#94a3b8;margin-top:10px;text-align:center">Dá uma olhada antes na <a href="/ajuda" target="_blank" style="color:#4338ca;font-weight:700">Central de Ajuda</a>, talvez você ache a resposta lá.</div>
+      <div style="font-size:11.5px;color:#64748b;margin-top:10px;text-align:center">Dá uma olhada antes na <a href="/ajuda" target="_blank" style="color:#4338ca;font-weight:700">Central de Ajuda</a>, talvez você ache a resposta lá.</div>
     </div>`;
     document.body.appendChild(ov);
     ov.querySelector("#sup-fechar").onclick = () => ov.remove();
