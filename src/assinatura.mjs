@@ -81,6 +81,9 @@ export async function ativarPorToken(token, dias = 30, nivel = null, formaPagame
     ativadoEm: new Date().toISOString(),
     expiraEm: new Date(Date.now() + dias * 864e5).toISOString(),
   };
+  // Marca que ja foi pagante: a sequencia de win-back nao deve perseguir quem
+  // virou cliente (e depois eventualmente cancelou) com e-mails de reativacao.
+  p._jaFoiPago = true;
   await salvarPerfis(perfis);
   return p;
 }
