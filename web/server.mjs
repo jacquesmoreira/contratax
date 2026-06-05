@@ -529,8 +529,57 @@ const servidor = createServer(async (req, res) => {
         nivel: perfil.assinatura?.nivel ?? null,
         uso: usoDe(perfil),
         usoExtracoes: usoExtracoesDe(perfil),
+        // Conta criada via Google sem CNPJ ainda: front redireciona pra completar.
+        precisaCompletarCadastro: !!perfil.precisaCompletarCadastro || !perfil.cnpj,
         cobranca: { preco: cobranca.preco, pix: cobranca.pix, contato: cobranca.contato },
       });
+    }
+
+    // Completar cadastro (fluxo Google): cliente preenche CNPJ + ramo + UFs.
+    // TRAVA DE CNPJ: bloqueia se o CNPJ ja pertence a outra conta.
+    if (rota === "/api/completar-cadastro" && req.method === "POST") {
+      const token = url.searchParams.get("c") || "";
+      const corpo = await lerCorpo(req);
+      const perfis = await lerPerfis();
+      const p = perfis.find((x) => x.token === token);
+      if (!p) return json(res, 404, { erro: "Conta nao encontrada" });
+
+      const cnpjLimpo = String(corpo.cnpj || "").replace(/\D/g, "");
+      if (cnpjLimpo.length !== 14) return json(res, 400, { erro: "Informe um CNPJ valido (14 digitos)" });
+
+      // TRAVA: CNPJ ja existe em OUTRA conta?
+      const donoExistente = perfis.find(
+        (x) => x.token !== token && (x.cnpj || "").replace(/\D/g, "") === cnpjLimpo
+      );
+      if (donoExistente) {
+        const emailMasc = (donoExistente.email || "").replace(/^(.{2}).*(@.*)$/, "$1***$2");
+        return json(res, 409, {
+          erro: `Este CNPJ já tem uma conta no ContrataX (e-mail ${emailMasc}). Se for a sua empresa, entre com esse e-mail ou recupere a senha. Se você é da equipe, peça ao administrador da conta para te convidar.`,
+          cnpjJaExiste: true,
+        });
+      }
+
+      const termos = String(corpo.ramo || "").split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+      if (!termos.length) return json(res, 400, { erro: "Informe ao menos uma palavra do seu ramo" });
+
+      // Consulta razao social na Receita (best-effort; nao bloqueia se falhar).
+      let razao = p.razaoSocial || null;
+      try {
+        const consulta = await consultarCNPJ(cnpjLimpo);
+        if (consulta?.valido && consulta.razaoSocial) razao = consulta.razaoSocial;
+      } catch { /* segue sem razao */ }
+
+      p.cnpj = cnpjLimpo;
+      if (razao) p.razaoSocial = razao;
+      p.filtro = { ...(p.filtro || {}), termos, termosExcluir: p.filtro?.termosExcluir || [] };
+      p.ufs = Array.isArray(corpo.ufs) ? corpo.ufs.filter(Boolean) : (corpo.uf ? [corpo.uf] : []);
+      if (corpo.nome && corpo.nome.trim()) p.nome = corpo.nome.trim();
+      p.precisaCompletarCadastro = false;
+      await salvarPerfis(perfis);
+
+      let total = 0;
+      try { const { filtrados } = await monitorar(p); total = filtrados.length; } catch {}
+      return json(res, 200, { ok: true, total, link: `/painel?c=${token}` });
     }
 
     // Perfil do cliente: ler dados editaveis (para a pagina Minha conta).

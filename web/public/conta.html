@@ -53,9 +53,32 @@
   </div></nav>
 
   <div class="wrap-main">
-    <h1>Minha conta</h1>
-    <div class="sub">Altere o seu ramo e a sua região quando precisar. O painel se atualiza na hora.</div>
+    <h1 id="titulo-conta">Minha conta</h1>
+    <div class="sub" id="sub-conta">Altere o seu ramo e a sua região quando precisar. O painel se atualiza na hora.</div>
 
+    <!-- Bloco de COMPLETAR CADASTRO (so aparece no fluxo Google: ?completar=1) -->
+    <div class="card" id="card-completar" style="display:none;border:2px solid var(--indigo);background:linear-gradient(135deg,#eef2ff 0%,#fff 60%)">
+      <h2>Falta pouco para liberar seu painel</h2>
+      <div class="cap" style="font-size:13.5px;color:var(--cinza);margin-bottom:14px">Você entrou com o Google. Para começar a receber as licitações certas, informe o CNPJ da sua empresa e o que ela vende.</div>
+      <label for="cnpj-completar">CNPJ da sua empresa</label>
+      <input id="cnpj-completar" type="text" placeholder="00.000.000/0000-00" inputmode="numeric" />
+      <div class="dica" id="cnpj-status" style="min-height:18px"></div>
+
+      <label for="ramo-completar">O que a sua empresa vende (seu ramo)</label>
+      <input id="ramo-completar" type="text" placeholder="Ex: material hospitalar, seringa, luva" />
+      <div class="dica">Separe por vírgula. São essas palavras que trazem as licitações para o seu painel.</div>
+
+      <label>Estados onde você atua</label>
+      <div class="mods" id="ufs-chips-completar" style="gap:7px"></div>
+      <div class="dica">Clique para selecionar. Deixe em branco = Brasil todo.</div>
+
+      <button class="btn" id="btn-completar" style="margin-top:18px">Liberar meu painel</button>
+      <div class="ok" id="completar-ok"></div>
+      <div class="erro" id="completar-erro"></div>
+    </div>
+
+    <!-- Conteudo normal da conta (escondido durante completar=1) -->
+    <div id="conteudo-normal">
     <div class="card">
       <h2>Dados da empresa</h2>
       <div class="ro" id="ro-empresa">Carregando...</div>
@@ -99,6 +122,7 @@
       <div class="ok" id="msg-ok"></div>
       <div class="erro" id="msg-erro"></div>
     </div>
+    </div><!-- /conteudo-normal -->
   </div>
 
 <script>
@@ -178,7 +202,92 @@ $("salvar").onclick = async () => {
   }
 };
 
-carregar();
+// ===== Fluxo COMPLETAR CADASTRO (Google sem CNPJ) =====
+const modoCompletar = new URLSearchParams(location.search).get("completar") === "1";
+
+const ufsCompletar = new Set();
+function montarChipsCompletar() {
+  const el = $("ufs-chips-completar");
+  UFS.forEach(u => {
+    const chip = document.createElement("label");
+    chip.style.cssText = "display:flex;align-items:center;gap:7px;margin:0;text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;color:var(--tinta);background:var(--fundo);border:1.5px solid var(--linha);padding:7px 12px;border-radius:99px;cursor:pointer";
+    chip.textContent = u;
+    chip.onclick = () => {
+      if (ufsCompletar.has(u)) { ufsCompletar.delete(u); chip.style.background="var(--fundo)"; chip.style.borderColor="var(--linha)"; chip.style.color="var(--tinta)"; }
+      else { ufsCompletar.add(u); chip.style.background="var(--indigo)"; chip.style.borderColor="var(--indigo)"; chip.style.color="#fff"; }
+    };
+    el.appendChild(chip);
+  });
+}
+
+// Mascara simples de CNPJ enquanto digita
+function mascaraCNPJ(v) {
+  return v.replace(/\D/g, "").slice(0, 14)
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+}
+
+if (modoCompletar) {
+  document.getElementById("titulo-conta").textContent = "Complete seu cadastro";
+  document.getElementById("sub-conta").textContent = "Mais um passo rápido e seu painel está pronto.";
+  document.getElementById("card-completar").style.display = "block";
+  document.getElementById("conteudo-normal").style.display = "none";
+  montarChipsCompletar();
+
+  const inCnpj = $("cnpj-completar");
+  inCnpj.addEventListener("input", () => { inCnpj.value = mascaraCNPJ(inCnpj.value); $("cnpj-status").textContent = ""; });
+
+  // Ao sair do campo CNPJ, consulta razao social (e ja avisa se duplicado).
+  inCnpj.addEventListener("blur", async () => {
+    const limpo = inCnpj.value.replace(/\D/g, "");
+    if (limpo.length !== 14) return;
+    $("cnpj-status").textContent = "Consultando CNPJ...";
+    $("cnpj-status").style.color = "var(--cinza)";
+    try {
+      const r = await fetch("/api/cnpj?cnpj=" + encodeURIComponent(limpo));
+      const d = await r.json();
+      if (d.valido) {
+        $("cnpj-status").textContent = "✓ " + (d.razaoSocial || "CNPJ válido");
+        $("cnpj-status").style.color = "var(--verde)";
+      } else {
+        $("cnpj-status").textContent = d.erro || "CNPJ não encontrado.";
+        $("cnpj-status").style.color = "#dc2626";
+      }
+    } catch { $("cnpj-status").textContent = ""; }
+  });
+
+  $("btn-completar").onclick = async () => {
+    $("completar-ok").textContent = ""; $("completar-erro").textContent = "";
+    const cnpj = inCnpj.value.replace(/\D/g, "");
+    const ramo = $("ramo-completar").value.trim();
+    if (cnpj.length !== 14) { $("completar-erro").textContent = "Informe um CNPJ válido (14 dígitos)."; return; }
+    if (!ramo) { $("completar-erro").textContent = "Informe ao menos uma palavra do seu ramo."; return; }
+    $("btn-completar").disabled = true;
+    $("btn-completar").textContent = "Liberando...";
+    try {
+      const r = await fetch("/api/completar-cadastro?c=" + encodeURIComponent(token), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cnpj, ramo, ufs: [...ufsCompletar] }),
+      });
+      const d = await r.json();
+      if (!r.ok) {
+        $("completar-erro").innerHTML = d.erro || "Não foi possível concluir.";
+        if (d.cnpjJaExiste) $("completar-erro").innerHTML += `<br><a href="/entrar" style="color:var(--indigo);font-weight:700">Ir para Entrar</a>`;
+        $("btn-completar").disabled = false; $("btn-completar").textContent = "Liberar meu painel";
+        return;
+      }
+      $("completar-ok").textContent = `Pronto. Seu painel já tem ${d.total} licitações do seu ramo. Redirecionando...`;
+      setTimeout(() => location.href = d.link || ("/painel?c=" + encodeURIComponent(token)), 1200);
+    } catch (e) {
+      $("completar-erro").textContent = "Erro de conexão. Tente de novo.";
+      $("btn-completar").disabled = false; $("btn-completar").textContent = "Liberar meu painel";
+    }
+  };
+} else {
+  carregar();
+}
 </script>
 </body>
 </html>

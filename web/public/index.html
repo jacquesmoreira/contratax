@@ -572,6 +572,11 @@ async function carregar() {
       c.innerHTML = `<div class="vazio"><span class="emoji">❌</span>Link inválido.<br><br><a href="/entrar">Entrar com meu e-mail</a></div>`;
       return;
     }
+    // Conta criada via Google ainda sem CNPJ: leva pra completar o cadastro.
+    if (acesso.precisaCompletarCadastro) {
+      location.href = "/conta?c=" + encodeURIComponent(token) + "&completar=1";
+      return;
+    }
     if (acesso.nome) document.getElementById("nav-cliente").textContent = acesso.nome;
     document.getElementById("nav-docs").href = "/documentos?c=" + encodeURIComponent(token);
     document.getElementById("nav-equipe").href = "/equipe?c=" + encodeURIComponent(token);
