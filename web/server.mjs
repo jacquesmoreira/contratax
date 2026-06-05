@@ -38,7 +38,7 @@ import { consultarCNPJ } from "../src/cnpj.mjs";
 import { autenticarUsuario, convidarMembro, removerMembro, listarMembros, definirAssentos } from "../src/equipe.mjs";
 import { lerPerfis, salvarPerfis, PERFIS, garantirUsuarios } from "../src/perfis.mjs";
 import { monitorar } from "../src/monitor.mjs";
-import { usoDe, registrarAnalise, checarAnalise, adicionarAvulsas } from "../src/uso.mjs";
+import { usoDe, registrarAnalise, checarAnalise, adicionarAvulsas, usoExtracoesDe, podeExtrairPdf, registrarExtracaoPdf } from "../src/uso.mjs";
 import { resumoCustos } from "../src/custo.mjs";
 import { listarNotas, obterNota, cadastrarNota, marcarPaga, removerNota, estatisticasRecebiveis } from "../src/recebiveis.mjs";
 import { parsearNFe } from "../src/parserNFe.mjs";
@@ -449,6 +449,7 @@ const servidor = createServer(async (req, res) => {
         ...statusAtual(perfil),
         nivel: perfil.assinatura?.nivel ?? null,
         uso: usoDe(perfil),
+        usoExtracoes: usoExtracoesDe(perfil),
         cobranca: { preco: cobranca.preco, pix: cobranca.pix, contato: cobranca.contato },
       });
     }
@@ -1431,8 +1432,17 @@ const servidor = createServer(async (req, res) => {
         }
         if (tipo === "pdf") {
           if (!temChave()) return json(res, 503, { erro: "Servico de extracao indisponivel no momento" });
+          // Cota de extracao de PDF (separada da cota de analise de edital).
+          // XML do PNCP nao consome essa cota porque o parsing eh local.
+          if (!podeExtrairPdf(perfilC)) {
+            return json(res, 402, {
+              erro: "Voce atingiu o limite de extracoes de PDF do mes neste plano. Importe via XML do PNCP (sem limite) ou faca upgrade do plano.",
+              uso: usoExtracoesDe(perfilC),
+            });
+          }
           const dados = await extrairContratoPdf(buf);
-          return json(res, 200, { ok: true, dados, fonte: "pdf" });
+          await registrarExtracaoPdf(tokenC);
+          return json(res, 200, { ok: true, dados, fonte: "pdf", uso: usoExtracoesDe(perfilC) });
         }
         return json(res, 400, { erro: "Tipo de arquivo nao suportado (use PDF ou XML)" });
       } catch (e) {

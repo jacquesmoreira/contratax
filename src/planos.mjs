@@ -8,6 +8,7 @@ export const PLANOS = {
     nome: "Basico",
     preco: process.env.LICITA_PRECO_BASICO || process.env.LICITA_PRECO || "197,00",
     analises: Number(process.env.LICITA_ANALISES_BASICO || 50),
+    extracoesPdf: Number(process.env.LICITA_EXTRACOES_BASICO || 5),
     empresas: 1, // 1 CNPJ
   },
   pro: {
@@ -15,6 +16,7 @@ export const PLANOS = {
     nome: "Pro",
     preco: process.env.LICITA_PRECO_PRO || "297,00",
     analises: Number(process.env.LICITA_ANALISES_PRO || 100),
+    extracoesPdf: Number(process.env.LICITA_EXTRACOES_PRO || 20),
     empresas: 1,
   },
   // Planos para CONSULTORES / ASSESSORIAS de licitacao: 1 login que gerencia
@@ -25,6 +27,7 @@ export const PLANOS = {
     nome: "Assessoria 10",
     preco: process.env.LICITA_PRECO_ASS10 || "497,00",
     analises: Number(process.env.LICITA_ANALISES_ASS10 || 20), // por empresa
+    extracoesPdf: Number(process.env.LICITA_EXTRACOES_ASS10 || 5), // por empresa
     empresas: Number(process.env.LICITA_EMPRESAS_ASS10 || 10),
     assessoria: true,
   },
@@ -33,6 +36,7 @@ export const PLANOS = {
     nome: "Assessoria 25",
     preco: process.env.LICITA_PRECO_ASS25 || "897,00",
     analises: Number(process.env.LICITA_ANALISES_ASS25 || 20), // por empresa
+    extracoesPdf: Number(process.env.LICITA_EXTRACOES_ASS25 || 5), // por empresa
     empresas: Number(process.env.LICITA_EMPRESAS_ASS25 || 25),
     assessoria: true,
   },

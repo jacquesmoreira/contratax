@@ -197,6 +197,15 @@ Os contratos vigentes que sua empresa tem com órgãos públicos: número, órg�
 ### Preciso cadastrar tudo na mão?
 Não. Em [/contratos](/contratos), além do **Cadastrar manualmente**, tem o botão **Importar do PDF ou XML do contrato**. Arraste o arquivo e nosso leitor inteligente extrai número, órgão, CNPJ, objeto, vigência, valor e índice de reajuste automaticamente. Você só revisa e confirma. O XML do PNCP é processado instantâneo; o PDF leva 10 a 20 segundos.
 
+### A importação de PDF de contrato tem limite?
+Sim, porque ler o PDF tem custo:
+
+- **Plano Básico**: 5 extrações de PDF por mês
+- **Plano Pro**: 20 extrações de PDF por mês
+- **Planos Assessoria**: 5 extrações por empresa cadastrada
+
+A **importação por XML do PNCP é ilimitada** em qualquer plano (parsing local, sem custo). Se você baixa o XML do contrato no PNCP, não consome cota nenhuma. Use o PDF quando não houver XML disponível.
+
 ### Quais alertas de contrato vou receber?
 **90, 60 e 30 dias** antes do fim da vigência, com link direto pra gerar a minuta de prorrogação. Quanto mais cedo você protocola o pedido, maior a chance da Administração aceitar e manter seu faturamento sem interrupção.
 

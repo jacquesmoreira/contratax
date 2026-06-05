@@ -79,6 +79,40 @@ export async function registrarAnalise(token) {
   return usoDe(p);
 }
 
+// === Cota de EXTRACOES de PDF de contrato (Haiku, custo baixo) ===
+// Separada da cota de analises de edital. XML do PNCP nao consome essa cota
+// (parsing local, custo zero). Apenas PDF consome.
+export function limiteExtracoesPdf(perfil) {
+  const s = statusAtual(perfil).status;
+  if (s === "ativo" || s === "admin" || s === "atrasado") {
+    return planoDe(perfil).extracoesPdf ?? 5;
+  }
+  if (s === "teste") return 2; // degustacao curta no teste
+  return 0;
+}
+
+export function usoExtracoesDe(perfil) {
+  const mes = mesAtual();
+  const usados = perfil.extracoesPdf && perfil.extracoesPdf.mes === mes ? perfil.extracoesPdf.usados : 0;
+  const limite = limiteExtracoesPdf(perfil);
+  return { mes, usados, limite, restantes: Math.max(0, limite - usados) };
+}
+
+export function podeExtrairPdf(perfil) {
+  return usoExtracoesDe(perfil).restantes > 0;
+}
+
+export async function registrarExtracaoPdf(token) {
+  const perfis = await lerPerfis();
+  const p = perfis.find((x) => x.token === token);
+  if (!p) return null;
+  const mes = mesAtual();
+  if (!p.extracoesPdf || p.extracoesPdf.mes !== mes) p.extracoesPdf = { mes, usados: 0 };
+  p.extracoesPdf.usados += 1;
+  await salvarPerfis(perfis);
+  return usoExtracoesDe(p);
+}
+
 // Adiciona creditos avulsos (chamado pelo webhook de pagamento de pacote avulso).
 export async function adicionarAvulsas(token, qtd) {
   const perfis = await lerPerfis();

@@ -273,7 +273,10 @@ function bufToB64(buf) {
 async function processarArquivo(arq) {
   if (!arq) return;
   const tipo = arq.name.toLowerCase().endsWith(".xml") ? "xml" : "pdf";
-  $("status-import").innerHTML = `<div style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:10px 12px;border-radius:9px;font-size:13.5px">Lendo arquivo (${tipo === "pdf" ? "PDF, pode levar 10-20s" : "XML, instantaneo"})...</div>`;
+  const aviso = tipo === "pdf"
+    ? "Lendo PDF (10 a 20s, consome 1 extração da cota do mês)..."
+    : "Lendo XML (instantâneo, não consome cota)...";
+  $("status-import").innerHTML = `<div style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:10px 12px;border-radius:9px;font-size:13.5px">${aviso}</div>`;
   try {
     const ab = await arq.arrayBuffer();
     const b64 = bufToB64(ab);
