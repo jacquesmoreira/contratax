@@ -40,6 +40,10 @@ import { lerPerfis, salvarPerfis, PERFIS, garantirUsuarios } from "../src/perfis
 import { monitorar } from "../src/monitor.mjs";
 import { usoDe, registrarAnalise, checarAnalise, adicionarAvulsas } from "../src/uso.mjs";
 import { resumoCustos } from "../src/custo.mjs";
+import { listarNotas, obterNota, cadastrarNota, marcarPaga, removerNota, estatisticasRecebiveis } from "../src/recebiveis.mjs";
+import { parsearNFe } from "../src/parserNFe.mjs";
+import { gerarOficioHtml } from "../src/oficioCobranca.mjs";
+import { escalarParaAdvogado } from "../src/escalonamentoJuridico.mjs";
 import { PLANOS, AVULSOS, planoDe } from "../src/planos.mjs";
 import { ativarPlano } from "../src/assinatura.mjs";
 import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura } from "../src/asaas.mjs";
@@ -1225,6 +1229,119 @@ const servidor = createServer(async (req, res) => {
     }
     if (rota === "/painel" || rota === "/index.html") {
       const html = await readFile(INDEX, "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(html));
+    }
+
+    // ===== Modulo Recebiveis (gestao de NFs emitidas pra orgaos publicos) =====
+
+    // GET /api/recebiveis?c=token -> lista de notas + estatisticas
+    if (rota === "/api/recebiveis" && req.method === "GET") {
+      const tokenR = url.searchParams.get("c") || "";
+      const perfilR = await perfilPorToken(tokenR);
+      if (!perfilR) return json(res, 404, { erro: "Conta nao encontrada" });
+      return json(res, 200, {
+        notas: listarNotas(tokenR),
+        stats: estatisticasRecebiveis(tokenR),
+      });
+    }
+
+    // POST /api/recebiveis?c=token { dataEmissao, valor, numero, orgaoNome, orgaoCnpj, descricao }
+    if (rota === "/api/recebiveis" && req.method === "POST") {
+      const tokenR = url.searchParams.get("c") || "";
+      const perfilR = await perfilPorToken(tokenR);
+      if (!perfilR) return json(res, 404, { erro: "Conta nao encontrada" });
+      const corpoR = await lerCorpo(req);
+      if (!corpoR.dataEmissao || !corpoR.valor) {
+        return json(res, 400, { erro: "Data de emissao e valor sao obrigatorios" });
+      }
+      const nota = cadastrarNota(tokenR, corpoR);
+      return json(res, 200, { ok: true, nota });
+    }
+
+    // POST /api/recebiveis/xml?c=token { xml: "..." }
+    if (rota === "/api/recebiveis/xml" && req.method === "POST") {
+      const tokenR = url.searchParams.get("c") || "";
+      const perfilR = await perfilPorToken(tokenR);
+      if (!perfilR) return json(res, 404, { erro: "Conta nao encontrada" });
+      const corpoR = await lerCorpo(req);
+      const dados = parsearNFe(corpoR.xml || "");
+      if (!dados) return json(res, 400, { erro: "XML nao parece ser uma NFe valida" });
+      const nota = cadastrarNota(tokenR, dados);
+      return json(res, 200, { ok: true, nota, extraido: dados });
+    }
+
+    // POST /api/recebiveis/paga?c=token { id, dataPagamento }
+    if (rota === "/api/recebiveis/paga" && req.method === "POST") {
+      const tokenR = url.searchParams.get("c") || "";
+      const perfilR = await perfilPorToken(tokenR);
+      if (!perfilR) return json(res, 404, { erro: "Conta nao encontrada" });
+      const corpoR = await lerCorpo(req);
+      const nota = marcarPaga(tokenR, Number(corpoR.id), corpoR.dataPagamento);
+      if (!nota) return json(res, 404, { erro: "NF nao encontrada" });
+      return json(res, 200, { ok: true, nota });
+    }
+
+    // POST /api/recebiveis/remover?c=token { id }
+    if (rota === "/api/recebiveis/remover" && req.method === "POST") {
+      const tokenR = url.searchParams.get("c") || "";
+      const perfilR = await perfilPorToken(tokenR);
+      if (!perfilR) return json(res, 404, { erro: "Conta nao encontrada" });
+      const corpoR = await lerCorpo(req);
+      const ok = removerNota(tokenR, Number(corpoR.id));
+      return json(res, 200, { ok });
+    }
+
+    // GET /recebiveis/oficio?c=token&id=... -> HTML do oficio (imprimivel como PDF)
+    if (rota === "/recebiveis/oficio") {
+      const tokenR = url.searchParams.get("c") || "";
+      const perfilR = await perfilPorToken(tokenR);
+      if (!perfilR) {
+        res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        return res.end("Conta nao encontrada");
+      }
+      const idR = Number(url.searchParams.get("id"));
+      const nota = obterNota(tokenR, idR);
+      if (!nota) {
+        res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        return res.end("NF nao encontrada");
+      }
+      const empresa = {
+        razao: perfilR.empresa?.razaoSocial || perfilR.nome,
+        cnpj: perfilR.cnpj,
+        cidade: perfilR.empresa?.cidade,
+        uf: perfilR.empresa?.uf || (perfilR.ufs || [])[0],
+        email: perfilR.email,
+      };
+      const html = gerarOficioHtml({ nota, empresa, perfilToken: tokenR });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(html);
+    }
+
+    // POST /api/recebiveis/escalar?c=token { id, observacoes }
+    if (rota === "/api/recebiveis/escalar" && req.method === "POST") {
+      const tokenR = url.searchParams.get("c") || "";
+      const perfilR = await perfilPorToken(tokenR);
+      if (!perfilR) return json(res, 404, { erro: "Conta nao encontrada" });
+      const corpoR = await lerCorpo(req);
+      const nota = obterNota(tokenR, Number(corpoR.id));
+      if (!nota) return json(res, 404, { erro: "NF nao encontrada" });
+      const empresa = {
+        razao: perfilR.empresa?.razaoSocial || perfilR.nome,
+        nome: perfilR.nome,
+        cnpj: perfilR.cnpj,
+        email: perfilR.email,
+        telefone: perfilR.telefone,
+        cidade: perfilR.empresa?.cidade,
+        uf: perfilR.empresa?.uf || (perfilR.ufs || [])[0],
+      };
+      const r = await escalarParaAdvogado({ nota, empresa, perfilToken: tokenR, observacoes: corpoR.observacoes });
+      return json(res, r.ok ? 200 : 500, r);
+    }
+
+    // Pagina /recebiveis
+    if (rota === "/recebiveis" || rota === "/recebiveis.html") {
+      const html = await readFile(resolve(AQUI, "public", "recebiveis.html"), "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(injetarAnalytics(html));
     }

@@ -166,6 +166,7 @@
       <a id="nav-conta" href="#">Conta</a>
       <a id="nav-equipe" href="#">Equipe</a>
       <a id="nav-docs" href="#">Documentos</a>
+      <a id="nav-receb" href="#">Recebíveis</a>
       <a id="nav-historico" href="#">Histórico</a>
       <a id="nav-declaracoes" href="#">Declarações</a>
       <a class="nav-sair" href="/">Sair</a>
@@ -577,6 +578,7 @@ async function carregar() {
     if (acesso.nome) document.getElementById("nav-cliente").textContent = acesso.nome;
     document.getElementById("nav-docs").href = "/documentos?c=" + encodeURIComponent(token);
     document.getElementById("nav-equipe").href = "/equipe?c=" + encodeURIComponent(token);
+    document.getElementById("nav-receb").href = "/recebiveis?c=" + encodeURIComponent(token);
     document.getElementById("nav-conta").href = "/conta?c=" + encodeURIComponent(token);
     document.getElementById("nav-historico").href = "/historico?c=" + encodeURIComponent(token);
     document.getElementById("nav-declaracoes").href = "/declaracoes?c=" + encodeURIComponent(token);

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/logo-favicon.png" type="image/png" />
+<title>ContrataX — Recebíveis (NFs emitidas pra órgãos)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+:root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; --vermelho:#dc2626; --vermelho-bg:#fef2f2; --amarelo:#d97706; --amarelo-bg:#fffbeb; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif; background:var(--fundo); color:var(--tinta); }
+nav { background:#fff; border-bottom:1px solid var(--linha); }
+nav .wrap { max-width:1080px; margin:0 auto; display:flex; align-items:center; height:60px; gap:18px; padding:0 20px; }
+.logo img { height:32px; display:block; }
+nav .dir { margin-left:auto; display:flex; gap:18px; font-size:14px; font-weight:600; }
+nav .dir a { color:var(--cinza); text-decoration:none; }
+nav .dir a:hover { color:var(--tinta); }
+.wrap-main { max-width:1080px; margin:0 auto; padding:30px 20px 60px; }
+h1 { font-size:26px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px; }
+.sub { color:var(--cinza); font-size:15px; margin-bottom:24px; }
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+@media(max-width:760px){ .stats { grid-template-columns:repeat(2,1fr); } }
+.stat { background:#fff; border:1px solid var(--linha); border-radius:12px; padding:16px; }
+.stat .lbl { font-size:11.5px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--cinza-c); margin-bottom:6px; }
+.stat .v { font-size:22px; font-weight:900; }
+.stat.al .v { color:var(--vermelho); }
+.stat.vn .v { color:var(--amarelo); }
+.card { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:22px; margin-bottom:18px; }
+.card h2 { font-size:17px; font-weight:800; margin-bottom:14px; }
+.botoes { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+.btn { background:var(--indigo); color:#fff; border:none; padding:11px 18px; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; }
+.btn:hover { background:var(--indigo-d); }
+.btn.sec { background:#fff; color:var(--indigo); border:1.5px solid var(--indigo); }
+.btn.sec:hover { background:#eef2ff; }
+.btn.sm { padding:7px 12px; font-size:12.5px; }
+.btn.del { background:#fff; color:var(--vermelho); border:1px solid var(--linha); }
+.btn.del:hover { border-color:var(--vermelho); }
+.tabela { width:100%; border-collapse:collapse; font-size:13.5px; }
+.tabela th { text-align:left; padding:10px 8px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; color:var(--cinza-c); border-bottom:1.5px solid var(--linha); }
+.tabela td { padding:14px 8px; border-bottom:1px solid var(--linha); vertical-align:top; }
+.tabela tr:last-child td { border-bottom:none; }
+.tag { display:inline-block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; padding:3px 9px; border-radius:99px; }
+.tag.pendente { background:#eef2ff; color:var(--indigo); }
+.tag.vencendo { background:var(--amarelo-bg); color:var(--amarelo); }
+.tag.atrasada { background:var(--vermelho-bg); color:var(--vermelho); }
+.tag.paga { background:var(--verde-bg); color:var(--verde); }
+.modal { position:fixed; inset:0; background:rgba(15,23,42,.5); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; }
+.modal.open { display:flex; }
+.modal-card { background:#fff; border-radius:14px; padding:28px; max-width:520px; width:100%; max-height:90vh; overflow-y:auto; }
+.modal-card h3 { font-size:18px; font-weight:800; margin-bottom:6px; }
+.modal-card .cap { font-size:13.5px; color:var(--cinza); margin-bottom:18px; }
+label { display:block; font-size:11.5px; font-weight:800; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin:14px 0 6px; }
+input, textarea { width:100%; padding:11px 13px; border:1px solid var(--linha); border-radius:9px; font-size:14.5px; font-family:inherit; outline:none; }
+input:focus, textarea:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+textarea { resize:vertical; min-height:80px; }
+.drop { border:2px dashed var(--linha); border-radius:12px; padding:30px 18px; text-align:center; margin-top:8px; transition:.2s; cursor:pointer; }
+.drop.hover { border-color:var(--indigo); background:#eef2ff; }
+.drop .icone { font-size:32px; margin-bottom:8px; opacity:.6; }
+.drop b { display:block; margin-bottom:4px; }
+.drop small { color:var(--cinza); }
+.divisor { text-align:center; color:var(--cinza-c); margin:18px 0 4px; font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+.divisor::before, .divisor::after { content:""; display:inline-block; width:30%; height:1px; background:var(--linha); vertical-align:middle; margin:0 10px; }
+.vazio { text-align:center; padding:40px 20px; color:var(--cinza); }
+.vazio b { display:block; margin-bottom:6px; color:var(--tinta); font-size:15.5px; }
+.aviso { background:var(--vermelho-bg); border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:13px 14px; font-size:13.5px; margin-bottom:14px; }
+.dica { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; border-radius:10px; padding:13px 14px; font-size:13.5px; margin-bottom:14px; }
+.err { color:var(--vermelho); font-size:13px; margin-top:10px; }
+.ok-msg { color:var(--verde); font-size:13px; margin-top:10px; font-weight:600; }
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="logo" href="#" id="voltar"><img src="/logo-horizontal.png" alt="ContrataX" /></a>
+  <div class="dir">
+    <a href="#" id="link-painel">Painel</a>
+    <a href="#" id="link-docs">Documentos</a>
+    <a href="#" id="link-conta">Conta</a>
+  </div>
+</div></nav>
+
+<div class="wrap-main">
+  <h1>Recebíveis</h1>
+  <div class="sub">Notas fiscais que você emitiu pra órgãos públicos, com alerta de atraso e ofício de cobrança pronto.</div>
+
+  <div class="dica">
+    A Lei 14.133/2021 (art. 141) garante o pagamento em <b>até 30 dias</b> da liquidação. Quando o órgão atrasa, você tem direito a correção monetária pelo IPCA e juros moratórios de 0,5% ao mês. Esta plataforma calcula tudo e gera o ofício formal de cobrança.
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="botoes">
+    <button class="btn" id="btn-nova">+ Cadastrar NF emitida</button>
+    <button class="btn sec" id="btn-xml">Importar XML da NFe</button>
+  </div>
+
+  <div class="card">
+    <h2>Suas notas fiscais</h2>
+    <div id="lista"></div>
+  </div>
+</div>
+
+<!-- Modal cadastro manual -->
+<div class="modal" id="m-manual">
+  <div class="modal-card">
+    <h3>Cadastrar NF manualmente</h3>
+    <div class="cap">Preencha os dados básicos da nota emitida pro órgão público.</div>
+    <label>Número da NF</label>
+    <input id="f-numero" placeholder="ex: 1234" />
+    <label>Data de emissão</label>
+    <input id="f-data" type="date" />
+    <label>Valor (R$)</label>
+    <input id="f-valor" type="number" step="0.01" placeholder="ex: 5000.00" />
+    <label>Nome do órgão</label>
+    <input id="f-orgao" placeholder="ex: Prefeitura de Florianópolis" />
+    <label>CNPJ do órgão (opcional)</label>
+    <input id="f-cnpj" placeholder="00.000.000/0000-00" />
+    <label>Descrição (opcional)</label>
+    <textarea id="f-desc" placeholder="O que foi entregue / prestado"></textarea>
+    <div class="err" id="e-manual"></div>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn sec" onclick="fechar('m-manual')">Cancelar</button>
+      <button class="btn" id="b-salvar-manual">Salvar NF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal upload XML -->
+<div class="modal" id="m-xml">
+  <div class="modal-card">
+    <h3>Importar XML da NFe</h3>
+    <div class="cap">Arraste o arquivo XML que o seu emissor de notas gerou. Extraímos número, data, valor, órgão e descrição automaticamente.</div>
+    <div class="drop" id="drop">
+      <div class="icone">📎</div>
+      <b>Arraste o arquivo XML aqui</b>
+      <small>ou clique pra escolher do computador</small>
+      <input type="file" id="f-xml" accept=".xml" style="display:none" />
+    </div>
+    <div class="err" id="e-xml"></div>
+    <div class="ok-msg" id="ok-xml"></div>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn sec" onclick="fechar('m-xml')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal escalonamento jurídico -->
+<div class="modal" id="m-escalar">
+  <div class="modal-card">
+    <h3>Escalonar pra advogado parceiro</h3>
+    <div class="cap">Cobrança formal não funcionou? Indicamos um advogado especialista em contratos administrativos. Sem custo de honorários iniciais, comissão paga só no sucesso. Nossa equipe te liga em até 1 dia útil com o nome do parceiro.</div>
+    <label>Algo a complementar? (opcional)</label>
+    <textarea id="f-obs" placeholder="Histórico do contato com o órgão, prazo, urgência..."></textarea>
+    <div class="err" id="e-escalar"></div>
+    <div class="ok-msg" id="ok-escalar"></div>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn sec" onclick="fechar('m-escalar')">Cancelar</button>
+      <button class="btn" id="b-escalar">Enviar pedido</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const token = params.get("c") || "";
+if (!token) location.href = "/entrar";
+
+const $ = (i) => document.getElementById(i);
+["voltar","link-painel"].forEach(i => $(i).href = "/painel?c=" + encodeURIComponent(token));
+$("link-docs").href = "/documentos?c=" + encodeURIComponent(token);
+$("link-conta").href = "/conta?c=" + encodeURIComponent(token);
+
+const brl = (v) => Number(v||0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+const dt = (s) => { if(!s) return "-"; const d=new Date(s); return isNaN(d)?s:d.toLocaleDateString("pt-BR"); };
+
+let escalarId = null;
+
+async function carregar() {
+  const r = await fetch("/api/recebiveis?c=" + encodeURIComponent(token));
+  const d = await r.json();
+  renderStats(d.stats);
+  renderLista(d.notas);
+}
+
+function renderStats(s) {
+  $("stats").innerHTML = `
+    <div class="stat"><div class="lbl">Total de NFs</div><div class="v">${s.total}</div></div>
+    <div class="stat"><div class="lbl">A receber</div><div class="v">${brl(s.valorPendente)}</div></div>
+    <div class="stat vn"><div class="lbl">Vencendo (5d)</div><div class="v">${s.vencendo}</div></div>
+    <div class="stat al"><div class="lbl">Em atraso</div><div class="v">${s.atrasadas} • ${brl(s.valorAtrasado)}</div></div>`;
+}
+
+function renderLista(notas) {
+  if (!notas.length) {
+    $("lista").innerHTML = `<div class="vazio"><b>Você ainda não cadastrou nenhuma NF.</b>Comece arrastando o XML da sua próxima nota emitida pra um órgão.</div>`;
+    return;
+  }
+  const linhas = notas.map(n => {
+    const status = n.situacao;
+    const labels = { pendente:"No prazo", vencendo:"Vence logo", atrasada:`Atrasada ${n.diasAtraso}d`, paga:"Paga" };
+    return `<tr>
+      <td><b>${n.numero || "—"}</b><br><small style="color:var(--cinza)">${n.orgao_nome || "Órgão não informado"}</small></td>
+      <td>${dt(n.data_emissao)}</td>
+      <td><b>${brl(n.valor)}</b></td>
+      <td><span class="tag ${status}">${labels[status]}</span></td>
+      <td style="text-align:right;white-space:nowrap">
+        ${status !== "paga" ? `<a class="btn sm sec" target="_blank" href="/recebiveis/oficio?c=${encodeURIComponent(token)}&id=${n.id}">Ofício</a>` : ""}
+        ${status === "atrasada" ? `<button class="btn sm" onclick="abrirEscalar(${n.id})" style="background:#059669">Advogado</button>` : ""}
+        ${status !== "paga" ? `<button class="btn sm" onclick="marcarPaga(${n.id})">Marcar paga</button>` : ""}
+        <button class="btn sm del" onclick="remover(${n.id})">Excluir</button>
+      </td>
+    </tr>`;
+  }).join("");
+  $("lista").innerHTML = `<table class="tabela">
+    <thead><tr><th>NF / Órgão</th><th>Emissão</th><th>Valor</th><th>Situação</th><th></th></tr></thead>
+    <tbody>${linhas}</tbody></table>`;
+}
+
+function abrir(id) { $(id).classList.add("open"); }
+function fechar(id) { $(id).classList.remove("open"); ["e-manual","e-xml","ok-xml","e-escalar","ok-escalar"].forEach(x => $(x) && ($(x).textContent = "")); }
+
+$("btn-nova").onclick = () => { ["f-numero","f-valor","f-orgao","f-cnpj","f-desc"].forEach(i => $(i).value=""); $("f-data").value = new Date().toISOString().slice(0,10); abrir("m-manual"); };
+$("btn-xml").onclick = () => { $("f-xml").value=""; abrir("m-xml"); };
+
+$("b-salvar-manual").onclick = async () => {
+  const dados = {
+    numero: $("f-numero").value,
+    dataEmissao: $("f-data").value,
+    valor: $("f-valor").value,
+    orgaoNome: $("f-orgao").value,
+    orgaoCnpj: $("f-cnpj").value,
+    descricao: $("f-desc").value,
+  };
+  if (!dados.dataEmissao || !dados.valor) { $("e-manual").textContent = "Data e valor são obrigatórios."; return; }
+  const r = await fetch("/api/recebiveis?c=" + encodeURIComponent(token), { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(dados) });
+  const d = await r.json();
+  if (!r.ok) { $("e-manual").textContent = d.erro || "Erro ao salvar."; return; }
+  fechar("m-manual"); carregar();
+};
+
+// Drag-drop XML
+const drop = $("drop");
+const inputXml = $("f-xml");
+drop.onclick = () => inputXml.click();
+drop.ondragover = (e) => { e.preventDefault(); drop.classList.add("hover"); };
+drop.ondragleave = () => drop.classList.remove("hover");
+drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove("hover"); processarXml(e.dataTransfer.files[0]); };
+inputXml.onchange = (e) => processarXml(e.target.files[0]);
+
+async function processarXml(arq) {
+  if (!arq) return;
+  $("e-xml").textContent = ""; $("ok-xml").textContent = "Lendo XML...";
+  const xml = await arq.text();
+  const r = await fetch("/api/recebiveis/xml?c=" + encodeURIComponent(token), { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ xml }) });
+  const d = await r.json();
+  if (!r.ok) { $("ok-xml").textContent=""; $("e-xml").textContent = d.erro || "Erro ao processar."; return; }
+  $("ok-xml").textContent = `NF ${d.extraido.numero} de ${brl(d.extraido.valor)} importada.`;
+  setTimeout(() => { fechar("m-xml"); carregar(); }, 800);
+}
+
+async function marcarPaga(id) {
+  if (!confirm("Marcar essa NF como paga?")) return;
+  const data = prompt("Data do pagamento (AAAA-MM-DD)", new Date().toISOString().slice(0,10));
+  if (!data) return;
+  await fetch("/api/recebiveis/paga?c=" + encodeURIComponent(token), { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ id, dataPagamento: data }) });
+  carregar();
+}
+
+async function remover(id) {
+  if (!confirm("Excluir essa NF? Não dá pra desfazer.")) return;
+  await fetch("/api/recebiveis/remover?c=" + encodeURIComponent(token), { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ id }) });
+  carregar();
+}
+
+function abrirEscalar(id) { escalarId = id; $("f-obs").value=""; abrir("m-escalar"); }
+
+$("b-escalar").onclick = async () => {
+  if (!escalarId) return;
+  $("b-escalar").disabled = true;
+  $("ok-escalar").textContent=""; $("e-escalar").textContent="";
+  const r = await fetch("/api/recebiveis/escalar?c=" + encodeURIComponent(token), { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ id: escalarId, observacoes: $("f-obs").value }) });
+  const d = await r.json();
+  $("b-escalar").disabled = false;
+  if (!r.ok || !d.ok) { $("e-escalar").textContent = "Não conseguimos enviar agora. Tente em alguns minutos ou fale pelo /contato."; return; }
+  $("ok-escalar").textContent = "Pedido recebido. Nossa equipe te liga em até 1 dia útil com o advogado parceiro.";
+  setTimeout(() => fechar("m-escalar"), 2200);
+};
+
+// Abrir modal escalar via hash (botão dentro do ofício)
+if (location.hash.startsWith("#escalar=")) {
+  const id = Number(location.hash.split("=")[1]);
+  if (id) setTimeout(() => abrirEscalar(id), 400);
+}
+
+carregar();
+</script>
+</body>
+</html>
