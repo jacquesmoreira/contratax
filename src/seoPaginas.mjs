@@ -7,7 +7,9 @@
 import { buscarEditais } from "./db.mjs";
 import { CATEGORIAS, UFS, categoriaPorSlug, ufPorSigla } from "./categorias.mjs";
 
-const BASE = process.env.LICITA_BASE_URL || "https://contratax.com.br";
+// Dominio canonico = COM www (alinhado com BASE_PUBLICA do server). Evita o
+// Google indexar duas versoes (www e apex) do mesmo conteudo.
+const BASE = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const brl = (v) => (v == null || Number(v) === 0) ? "valor não informado" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });

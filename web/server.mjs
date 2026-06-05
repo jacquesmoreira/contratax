@@ -214,6 +214,16 @@ function ativarGzip(req, res) {
 const servidor = createServer(async (req, res) => {
   try {
     aplicarHeadersSeguranca(res);
+
+    // Canonicalizacao de dominio: redireciona 301 do apex (contratax.com.br)
+    // para o www (www.contratax.com.br). Evita conteudo duplicado no Google.
+    // So atua em producao (host real), nunca em localhost/health checks.
+    const host = String(req.headers.host || "").toLowerCase();
+    if (host === "contratax.com.br") {
+      res.writeHead(301, { Location: `https://www.contratax.com.br${req.url}` });
+      return res.end();
+    }
+
     ativarGzip(req, res);
     const url = new URL(req.url, "http://localhost");
     const rota = url.pathname;
@@ -1415,8 +1425,11 @@ const servidor = createServer(async (req, res) => {
     }
     // Sitemap DINAMICO: paginas-base + todas as paginas de SEO (ramo x estado).
     if (rota === "/sitemap.xml") {
-      const base = ["https://contratax.com.br/", "https://contratax.com.br/cadastro", "https://contratax.com.br/entrar", "https://contratax.com.br/ajuda", "https://contratax.com.br/contato", "https://contratax.com.br/lp/comparativo", "https://contratax.com.br/casos", "https://contratax.com.br/status", "https://contratax.com.br/seguranca"];
-      const blog = (await urlsBlog("https://contratax.com.br")).map((b) => b.loc);
+      // Usa o dominio canonico (BASE_PUBLICA = com www) em tudo, alinhado com
+      // os canonicals das paginas e com o redirect 301 do apex.
+      const caminhos = ["/", "/cadastro", "/entrar", "/ajuda", "/contato", "/lp/comparativo", "/casos", "/status", "/seguranca"];
+      const base = caminhos.map((c) => BASE_PUBLICA + c);
+      const blog = (await urlsBlog(BASE_PUBLICA)).map((b) => b.loc);
       const urls = [...base, ...blog, ...urlsSEO()];
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc><changefreq>daily</changefreq></url>`).join("\n")}\n</urlset>`;
       res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
