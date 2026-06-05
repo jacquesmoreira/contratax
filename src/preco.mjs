@@ -103,12 +103,13 @@ export function contratosDoFornecedor({ termos = [], uf = null, orgaoCnpj = null
   } else {
     casaram = casaram.filter((c) => (c.fornecedor || "") === fornecedor);
   }
-  return casaram
+  const lista = casaram
     .sort((a, b) => (b.vigenciaInicio || "").localeCompare(a.vigenciaInicio || ""))
     .map((c) => ({
       id: c.id,
       objeto: c.objeto,
       orgao: c.orgao,
+      orgaoCnpj: c.orgaoCnpj,
       municipio: c.municipio,
       uf: c.uf,
       valor: c.valor,
@@ -116,4 +117,49 @@ export function contratosDoFornecedor({ termos = [], uf = null, orgaoCnpj = null
       vigenciaFim: c.vigenciaFim,
       linkPncp: linkPncpContrato(c.id),
     }));
+  return agruparContratos(lista);
+}
+
+// Agrupa contratos que sao, na pratica, o MESMO contrato registrado como varios
+// itens/empenhos no PNCP. Heuristica: mesmo orgao + mesma vigencia (inicio+fim).
+// O PNCP frequentemente fragmenta um contrato em N linhas (uma por item), com a
+// mesma vigencia e objeto quase identico. Agrupar evita a lista poluida que o
+// cliente via (ex: 22 linhas que sao 3 contratos).
+//
+// Cada grupo resultante traz:
+//   - valor: soma dos itens
+//   - itens: quantidade agrupada
+//   - objeto: o mais descritivo (mais longo)
+//   - links: lista de links do PNCP (todos os itens)
+export function agruparContratos(lista) {
+  const grupos = new Map();
+  for (const c of lista) {
+    // Chave: orgao + vigencia. Sem vigencia, cai no proprio id (nao agrupa).
+    const chave = (c.vigenciaInicio || c.vigenciaFim)
+      ? `${c.orgaoCnpj || c.orgao || ""}|${c.vigenciaInicio || ""}|${c.vigenciaFim || ""}`
+      : `solo-${c.id}`;
+    const g = grupos.get(chave);
+    if (!g) {
+      grupos.set(chave, {
+        id: c.id,
+        objeto: c.objeto,
+        orgao: c.orgao,
+        municipio: c.municipio,
+        uf: c.uf,
+        valor: c.valor || 0,
+        vigenciaInicio: c.vigenciaInicio,
+        vigenciaFim: c.vigenciaFim,
+        linkPncp: c.linkPncp,
+        itens: 1,
+        links: c.linkPncp ? [c.linkPncp] : [],
+      });
+    } else {
+      g.valor += c.valor || 0;
+      g.itens += 1;
+      // mantem o objeto mais descritivo (mais longo)
+      if ((c.objeto || "").length > (g.objeto || "").length) g.objeto = c.objeto;
+      if (c.linkPncp && !g.links.includes(c.linkPncp)) g.links.push(c.linkPncp);
+    }
+  }
+  return [...grupos.values()].sort((a, b) => (b.vigenciaInicio || "").localeCompare(a.vigenciaInicio || ""));
 }
