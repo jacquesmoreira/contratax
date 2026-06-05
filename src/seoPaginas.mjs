@@ -6,6 +6,18 @@
 
 import { buscarEditais } from "./db.mjs";
 import { CATEGORIAS, UFS, categoriaPorSlug, ufPorSigla } from "./categorias.mjs";
+import { precoVencedores } from "./preco.mjs";
+
+function brlCurto(v) {
+  const n = Number(v) || 0;
+  if (n >= 1e9) return `R$ ${(n / 1e9).toFixed(1).replace(".", ",")} bi`;
+  if (n >= 1e6) return `R$ ${(n / 1e6).toFixed(1).replace(".", ",")} mi`;
+  if (n >= 1e3) return `R$ ${Math.round(n / 1e3)} mil`;
+  return `R$ ${n.toLocaleString("pt-BR")}`;
+}
+function brlExato(v) {
+  return (Number(v) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+}
 
 // Dominio canonico = COM www (alinhado com BASE_PUBLICA do server). Evita o
 // Google indexar duas versoes (www e apex) do mesmo conteudo.
@@ -60,12 +72,12 @@ footer a{color:#cbd5e1;text-decoration:none}
 .grid a span{display:block;color:var(--cinza-c);font-weight:500;font-size:12.5px;margin-top:3px}
 `;
 
-function layout({ title, description, canonical, jsonld = "", body }) {
+function layout({ title, description, canonical, jsonld = "", body, noindex = false }) {
   return `<!DOCTYPE html><html lang="pt-BR"><head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}"/>
-<meta name="robots" content="index, follow, max-image-preview:large"/>
+<meta name="robots" content="${noindex ? "noindex, follow" : "index, follow, max-image-preview:large"}"/>
 <link rel="canonical" href="${canonical}"/>
 <link rel="icon" href="/logo-favicon.png" type="image/png"/>
 <meta property="og:type" content="website"/><meta property="og:locale" content="pt_BR"/>
@@ -111,6 +123,34 @@ export function paginaCategoria(slug, ufSigla = null) {
     ? editais.map(editalHTML).join("")
     : `<div class="como"><p>No momento não há editais de ${esc(cat.nome.toLowerCase())} abertos ${esc(onde)}. Novos editais entram todo dia — crie uma conta grátis e seja avisado assim que surgir um.</p></div>`;
 
+  // INTELIGENCIA DE MERCADO: dados reais do historico de contratos do ramo na
+  // regiao. Conteudo UNICO por ramo+UF que NAO some quando os editais expiram -
+  // transforma a pagina de "lista volatil" em "fonte de dados", o que rankeia
+  // e evita ser tratada como doorway page.
+  let mercado = null;
+  try {
+    mercado = precoVencedores({ termos: [cat.termo], uf: uf?.sigla || null, meses: 12, limite: 5 });
+  } catch { mercado = null; }
+  const temMercado = mercado && mercado.stats && mercado.stats.n >= 3;
+
+  const blocoMercado = temMercado ? `
+    <div class="sec"><div class="como">
+    <h2>Panorama do mercado de ${esc(cat.nome.toLowerCase())} ${esc(onde)}</h2>
+    <p>Nos últimos 12 meses, <b>${mercado.stats.n.toLocaleString("pt-BR")} contratos</b> de ${esc(cat.nome.toLowerCase())} foram firmados ${esc(onde)} com base em dados do PNCP. Esses números ajudam a calibrar a sua proposta antes de disputar.</p>
+    <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:14px">
+      <tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;color:#475569">Menor valor de contrato</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700">${brlExato(mercado.stats.min)}</td></tr>
+      <tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;color:#475569">Valor mediano</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700">${brlExato(mercado.stats.mediana)}</td></tr>
+      <tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;color:#475569">Maior valor de contrato</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700">${brlExato(mercado.stats.max)}</td></tr>
+    </table>
+    ${mercado.topFornecedores && mercado.topFornecedores.length ? `
+      <h3>Empresas que mais venceram licitações de ${esc(cat.nome.toLowerCase())} ${esc(onde)}</h3>
+      <table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:14px">
+        ${mercado.topFornecedores.map((f) => `<tr><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0">${esc((f.fornecedor || "").slice(0, 60))}</td><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;color:#475569;white-space:nowrap">${f.qtd} contrato${f.qtd > 1 ? "s" : ""} · ${brlCurto(f.valorTotal)}</td></tr>`).join("")}
+      </table>
+      <p style="font-size:13.5px;color:#64748b">Conhecer quem já fornece para a região ajuda a entender a concorrência antes de entrar na disputa.</p>
+    ` : ""}
+    </div></div>` : "";
+
   // Links internos: por estado (se nacional) ou "Brasil todo" (se UF) + outros ramos
   const linksEstados = !uf
     ? `<div class="sec"><h2>Licitações de ${esc(cat.nome)} por estado</h2><div class="chips">${UFS.map((u) => `<a href="/licitacoes/${slug}/${u.sigla.toLowerCase()}">${esc(cat.nome)} em ${u.sigla}</a>`).join("")}</div></div>`
@@ -140,6 +180,7 @@ export function paginaCategoria(slug, ufSigla = null) {
     <div class="cta-box"><h2>Não perca nenhuma licitação de ${esc(cat.nome.toLowerCase())}</h2>
     <p>Crie sua conta grátis e receba todo dia os editais do seu ramo, já sabendo se a sua empresa está apta a participar.</p>
     <a href="/cadastro">Criar conta grátis</a></div>
+    ${blocoMercado}
     ${linksEstados}
     ${outrosRamos}
     <div class="sec"><div class="como"><h3>Como participar de licitações de ${esc(cat.nome)}</h3>
@@ -147,7 +188,10 @@ export function paginaCategoria(slug, ufSigla = null) {
     <p>O ContrataX reúne esses editais num só lugar, lê cada um e cruza as exigências com a sua empresa, mostrando se você está apto e o que falta — antes de você gastar tempo montando a papelada.</p></div></div>
     </div>`;
 
-  return layout({ title, description, canonical, jsonld, body });
+  // noindex apenas quando a pagina e genuinamente vazia: 0 editais abertos E
+  // sem dados de mercado. Sem conteudo unico, melhor nao diluir a autoridade.
+  const noindex = total === 0 && !temMercado;
+  return layout({ title, description, canonical, jsonld, body, noindex });
 }
 
 // ---- Hub /licitacoes ----
