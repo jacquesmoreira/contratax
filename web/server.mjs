@@ -46,6 +46,8 @@ import { listarNotas, obterNota, cadastrarNota, marcarPaga, removerNota, estatis
 import { parsearNFe } from "../src/parserNFe.mjs";
 import { gerarOficioHtml } from "../src/oficioCobranca.mjs";
 import { escalarParaAdvogado } from "../src/escalonamentoJuridico.mjs";
+import { gerarLaiHtml, gerarTceHtml, gerarOuvidoriaHtml } from "../src/escalonamentoCobranca.mjs";
+import { solicitarAntecipacao, estimativaAntecipacao } from "../src/antecipacaoRecebivel.mjs";
 import { reputacaoDoOrgao } from "../src/reputacaoOrgaos.mjs";
 import { listarContratos, obterContrato, cadastrarContrato, removerContrato } from "../src/contratosMeus.mjs";
 import { minutaProrrogacao, minutaAditivo, minutaReequilibrio } from "../src/minutasContrato.mjs";
@@ -1513,6 +1515,60 @@ const servidor = createServer(async (req, res) => {
       const html = gerarOficioHtml({ nota, empresa, perfilToken: tokenR });
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
+    }
+
+    // GET /recebiveis/peca?c=token&id=...&tipo=lai|tce|ouvidoria|oficio
+    // Gera a peca de escalonamento escolhida (imprimivel como PDF).
+    if (rota === "/recebiveis/peca") {
+      const tokenR = url.searchParams.get("c") || "";
+      const perfilR = await perfilPorToken(tokenR);
+      if (!perfilR) { res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }); return res.end("Conta nao encontrada"); }
+      const nota = obterNota(tokenR, Number(url.searchParams.get("id")));
+      if (!nota) { res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }); return res.end("NF nao encontrada"); }
+      const empresa = {
+        razao: perfilR.empresa?.razaoSocial || perfilR.razaoSocial || perfilR.nome,
+        nome: perfilR.nome,
+        cnpj: perfilR.cnpj,
+        cidade: perfilR.empresa?.cidade,
+        uf: perfilR.empresa?.uf || (perfilR.ufs || [])[0],
+        email: perfilR.email,
+      };
+      const tipo = url.searchParams.get("tipo") || "oficio";
+      let html;
+      if (tipo === "lai") html = gerarLaiHtml({ nota, empresa });
+      else if (tipo === "tce") html = gerarTceHtml({ nota, empresa });
+      else if (tipo === "ouvidoria") html = gerarOuvidoriaHtml({ nota, empresa });
+      else html = gerarOficioHtml({ nota, empresa, perfilToken: tokenR });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(html);
+    }
+
+    // POST /api/recebiveis/antecipar?c=token { id, observacoes }
+    if (rota === "/api/recebiveis/antecipar" && req.method === "POST") {
+      const tokenR = url.searchParams.get("c") || "";
+      const perfilR = await perfilPorToken(tokenR);
+      if (!perfilR) return json(res, 404, { erro: "Conta nao encontrada" });
+      const corpoR = await lerCorpo(req);
+      const nota = obterNota(tokenR, Number(corpoR.id));
+      if (!nota) return json(res, 404, { erro: "NF nao encontrada" });
+      const empresa = {
+        razao: perfilR.empresa?.razaoSocial || perfilR.razaoSocial || perfilR.nome,
+        nome: perfilR.nome, cnpj: perfilR.cnpj, email: perfilR.email,
+        telefone: perfilR.telefone, cidade: perfilR.empresa?.cidade,
+        uf: perfilR.empresa?.uf || (perfilR.ufs || [])[0],
+      };
+      const r = await solicitarAntecipacao({ nota, empresa, perfilToken: tokenR, observacoes: corpoR.observacoes });
+      return json(res, r.ok ? 200 : 500, r);
+    }
+
+    // GET /api/recebiveis/estimativa-antecipacao?c=token&id=... (faixa pra UI)
+    if (rota === "/api/recebiveis/estimativa-antecipacao") {
+      const tokenR = url.searchParams.get("c") || "";
+      const perfilR = await perfilPorToken(tokenR);
+      if (!perfilR) return json(res, 404, { erro: "Conta nao encontrada" });
+      const nota = obterNota(tokenR, Number(url.searchParams.get("id")));
+      if (!nota) return json(res, 404, { erro: "NF nao encontrada" });
+      return json(res, 200, estimativaAntecipacao(nota.valor));
     }
 
     // POST /api/recebiveis/escalar?c=token { id, observacoes }

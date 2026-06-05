@@ -147,18 +147,35 @@ textarea { resize:vertical; min-height:80px; }
   </div>
 </div>
 
-<!-- Modal escalonamento jurídico -->
-<div class="modal" id="m-escalar">
+<!-- Modal ESCADA DE COBRANÇA -->
+<div class="modal" id="m-escada">
+  <div class="modal-card" style="max-width:620px">
+    <h3>Como cobrar essa NF</h3>
+    <div class="cap" id="escada-resumo"></div>
+    <div class="dica" style="background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:11px 13px;font-size:13px;margin-bottom:16px">
+      Cobrar juros de órgão público raramente funciona na prática. O que faz a Administração pagar é <b>pressão administrativa</b>: obrigação legal de resposta e risco de responsabilização do gestor. Use as opções abaixo na ordem, do mais leve ao mais forte.
+    </div>
+
+    <div id="escada-passos"></div>
+
+    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+      <button class="btn sec" onclick="fechar('m-escada')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de captação (advogado OU antecipação) -->
+<div class="modal" id="m-acao">
   <div class="modal-card">
-    <h3>Escalonar pra advogado parceiro</h3>
-    <div class="cap">Cobrança formal não funcionou? Indicamos um advogado especialista em contratos administrativos. Sem custo de honorários iniciais, comissão paga só no sucesso. Nossa equipe te liga em até 1 dia útil com o nome do parceiro.</div>
+    <h3 id="acao-titulo"></h3>
+    <div class="cap" id="acao-cap"></div>
     <label>Algo a complementar? (opcional)</label>
     <textarea id="f-obs" placeholder="Histórico do contato com o órgão, prazo, urgência..."></textarea>
-    <div class="err" id="e-escalar"></div>
-    <div class="ok-msg" id="ok-escalar"></div>
+    <div class="err" id="e-acao"></div>
+    <div class="ok-msg" id="ok-acao"></div>
     <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end">
-      <button class="btn sec" onclick="fechar('m-escalar')">Cancelar</button>
-      <button class="btn" id="b-escalar">Enviar pedido</button>
+      <button class="btn sec" onclick="fechar('m-acao')">Cancelar</button>
+      <button class="btn" id="b-acao">Enviar pedido</button>
     </div>
   </div>
 </div>
@@ -176,7 +193,6 @@ $("link-conta").href = "/conta?c=" + encodeURIComponent(token);
 const brl = (v) => Number(v||0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
 const dt = (s) => { if(!s) return "-"; const d=new Date(s); return isNaN(d)?s:d.toLocaleDateString("pt-BR"); };
 
-let escalarId = null;
 
 async function carregar() {
   const r = await fetch("/api/recebiveis?c=" + encodeURIComponent(token));
@@ -207,9 +223,8 @@ function renderLista(notas) {
       <td><b>${brl(n.valor)}</b></td>
       <td><span class="tag ${status}">${labels[status]}</span></td>
       <td style="text-align:right;white-space:nowrap">
-        ${status !== "paga" ? `<a class="btn sm sec" target="_blank" href="/recebiveis/oficio?c=${encodeURIComponent(token)}&id=${n.id}">Ofício</a>` : ""}
-        ${status === "atrasada" ? `<button class="btn sm" onclick="abrirEscalar(${n.id})" style="background:#059669">Advogado</button>` : ""}
-        ${status !== "paga" ? `<button class="btn sm" onclick="marcarPaga(${n.id})">Marcar paga</button>` : ""}
+        ${status !== "paga" ? `<button class="btn sm" onclick='abrirEscada(${JSON.stringify(n).replace(/'/g, "&#39;")})'>Cobrar →</button>` : ""}
+        ${status !== "paga" ? `<button class="btn sm sec" onclick="marcarPaga(${n.id})">Recebi</button>` : ""}
         <button class="btn sm del" onclick="remover(${n.id})">Excluir</button>
       </td>
     </tr>`;
@@ -220,7 +235,7 @@ function renderLista(notas) {
 }
 
 function abrir(id) { $(id).classList.add("open"); }
-function fechar(id) { $(id).classList.remove("open"); ["e-manual","e-xml","ok-xml","e-escalar","ok-escalar"].forEach(x => $(x) && ($(x).textContent = "")); }
+function fechar(id) { $(id).classList.remove("open"); ["e-manual","e-xml","ok-xml","e-acao","ok-acao"].forEach(x => $(x) && ($(x).textContent = "")); }
 
 $("btn-nova").onclick = () => { ["f-numero","f-valor","f-orgao","f-cnpj","f-desc"].forEach(i => $(i).value=""); $("f-data").value = new Date().toISOString().slice(0,10); abrir("m-manual"); };
 $("btn-xml").onclick = () => { $("f-xml").value=""; abrir("m-xml"); };
@@ -275,24 +290,112 @@ async function remover(id) {
   carregar();
 }
 
-function abrirEscalar(id) { escalarId = id; $("f-obs").value=""; abrir("m-escalar"); }
+// ===== ESCADA DE COBRANÇA =====
+let notaAtual = null;
 
-$("b-escalar").onclick = async () => {
-  if (!escalarId) return;
-  $("b-escalar").disabled = true;
-  $("ok-escalar").textContent=""; $("e-escalar").textContent="";
-  const r = await fetch("/api/recebiveis/escalar?c=" + encodeURIComponent(token), { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ id: escalarId, observacoes: $("f-obs").value }) });
+function abrirEscada(n) {
+  notaAtual = n;
+  const atraso = n.diasAtraso || 0;
+  $("escada-resumo").innerHTML = `NF <b>${n.numero || "—"}</b> · ${brl(n.valor)} · ${n.orgao_nome || "órgão não informado"}${atraso > 0 ? ` · <span style="color:#dc2626">atrasada ${atraso} dias</span>` : ""}`;
+
+  // Cada passo: titulo, descricao, acao. Marca quais ja "liberaram" pelo atraso.
+  const url = (tipo) => `/recebiveis/peca?c=${encodeURIComponent(token)}&id=${n.id}&tipo=${tipo}`;
+  const passos = [
+    {
+      n: 1, lib: true, cor: "#2563eb",
+      titulo: "Pedido via LAI (Lei de Acesso à Informação)",
+      desc: "Obriga o órgão a responder em até 20 dias quando vai pagar e qual a sua posição na ordem cronológica. Não responder gera sanção ao servidor. É o caminho mais leve e o mais eficaz pra destravar.",
+      botao: `<a class="btn sm" target="_blank" href="${url("lai")}">Gerar pedido LAI</a>`,
+    },
+    {
+      n: 2, lib: atraso >= 15, cor: "#7c3aed",
+      titulo: "Manifestação à Ouvidoria do órgão",
+      desc: "Registro formal interno com número de protocolo e prazo de resposta de 30 dias (Lei 13.460/2017). Cria pressão dentro da própria estrutura.",
+      botao: `<a class="btn sm" target="_blank" href="${url("ouvidoria")}">Gerar manifestação</a>`,
+    },
+    {
+      n: 3, lib: atraso >= 30, cor: "#dc2626",
+      titulo: "Representação ao Tribunal de Contas (TCE/TCM)",
+      desc: "Pede apuração de quebra da ordem cronológica e responsabilização do ordenador de despesas. É o que gestor público mais teme — costuma destravar o pagamento rápido.",
+      botao: `<a class="btn sm" target="_blank" href="${url("tce")}">Gerar representação</a>`,
+    },
+    {
+      n: 4, lib: true, cor: "#64748b",
+      titulo: "Ofício de cobrança com correção e juros",
+      desc: "A notificação extrajudicial formal com o débito atualizado (IPCA + 0,5%/mês). Útil como prova documental, mesmo que o foco da pressão sejam os passos acima.",
+      botao: `<a class="btn sm sec" target="_blank" href="${url("oficio")}">Gerar ofício</a>`,
+    },
+    {
+      n: 5, lib: true, cor: "#059669",
+      titulo: "Antecipar o recebível (receber agora)",
+      desc: "Não quer esperar? Conectamos você a um fundo especializado em recebível público. Você recebe a maior parte hoje e quem cobra o órgão passa a ser o fundo. Sem custo inicial.",
+      botao: `<button class="btn sm" style="background:#059669" onclick="abrirAcao('antecipar')">Quero antecipar</button>`,
+    },
+    {
+      n: 6, lib: atraso >= 60, cor: "#b45309",
+      titulo: "Escalonar para advogado parceiro",
+      desc: "Nada resolveu? Indicamos um advogado especialista em contratos administrativos para execução judicial. Sem honorários iniciais, comissão só no sucesso.",
+      botao: `<button class="btn sm" style="background:#b45309" onclick="abrirAcao('advogado')">Falar com advogado</button>`,
+    },
+  ];
+
+  $("escada-passos").innerHTML = passos.map(p => `
+    <div style="display:flex;gap:13px;padding:14px 0;border-bottom:1px solid var(--linha);${p.lib ? "" : "opacity:.5"}">
+      <div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:${p.cor};color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px">${p.n}</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:14.5px;margin-bottom:3px">${p.titulo} ${!p.lib ? `<span style="font-size:11px;font-weight:600;color:var(--cinza-c)">(sugerido a partir de ${p.n === 2 ? "15" : p.n === 3 ? "30" : "60"} dias de atraso)</span>` : ""}</div>
+        <div style="font-size:13px;color:var(--cinza);line-height:1.5;margin-bottom:8px">${p.desc}</div>
+        ${p.botao}
+      </div>
+    </div>`).join("");
+
+  abrir("m-escada");
+}
+
+// Modal de captação (advogado ou antecipação)
+let acaoTipo = null;
+function abrirAcao(tipo) {
+  acaoTipo = tipo;
+  $("f-obs").value = ""; $("e-acao").textContent = ""; $("ok-acao").textContent = "";
+  if (tipo === "antecipar") {
+    $("acao-titulo").textContent = "Antecipar este recebível";
+    $("acao-cap").innerHTML = "Vamos conectar você a um fundo especializado em recebível público. Nossa equipe retorna em até 1 dia útil com a proposta. Sem compromisso.";
+  } else {
+    $("acao-titulo").textContent = "Escalonar para advogado parceiro";
+    $("acao-cap").innerHTML = "Indicamos um advogado especialista em contratos administrativos. Sem honorários iniciais, comissão só no sucesso. Retornamos em até 1 dia útil.";
+  }
+  abrir("m-acao");
+}
+
+$("b-acao").onclick = async () => {
+  if (!notaAtual) return;
+  $("b-acao").disabled = true;
+  $("ok-acao").textContent = ""; $("e-acao").textContent = "";
+  const endpoint = acaoTipo === "antecipar" ? "antecipar" : "escalar";
+  const r = await fetch(`/api/recebiveis/${endpoint}?c=` + encodeURIComponent(token), {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: notaAtual.id, observacoes: $("f-obs").value }),
+  });
   const d = await r.json();
-  $("b-escalar").disabled = false;
-  if (!r.ok || !d.ok) { $("e-escalar").textContent = "Não conseguimos enviar agora. Tente em alguns minutos ou fale pelo /contato."; return; }
-  $("ok-escalar").textContent = "Pedido recebido. Nossa equipe te liga em até 1 dia útil com o advogado parceiro.";
-  setTimeout(() => fechar("m-escalar"), 2200);
+  $("b-acao").disabled = false;
+  if (!r.ok || !d.ok) { $("e-acao").textContent = "Não conseguimos enviar agora. Tente em alguns minutos ou fale pelo /contato."; return; }
+  $("ok-acao").textContent = acaoTipo === "antecipar"
+    ? "Pedido recebido. Retornamos em até 1 dia útil com a proposta de antecipação."
+    : "Pedido recebido. Nossa equipe te liga em até 1 dia útil com o advogado parceiro.";
+  setTimeout(() => { fechar("m-acao"); }, 2200);
 };
 
-// Abrir modal escalar via hash (botão dentro do ofício)
-if (location.hash.startsWith("#escalar=")) {
+// Abrir escada via hash (vindo de um e-mail de alerta)
+if (location.hash.startsWith("#escalar=") || location.hash.startsWith("#cobrar=")) {
   const id = Number(location.hash.split("=")[1]);
-  if (id) setTimeout(() => abrirEscalar(id), 400);
+  if (id) {
+    setTimeout(async () => {
+      const r = await fetch("/api/recebiveis?c=" + encodeURIComponent(token));
+      const d = await r.json();
+      const n = (d.notas || []).find(x => x.id === id);
+      if (n) abrirEscada(n);
+    }, 600);
+  }
 }
 
 carregar();

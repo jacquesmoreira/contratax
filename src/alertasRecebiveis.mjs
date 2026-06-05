@@ -28,19 +28,19 @@ function htmlAlerta(empresa, nf, marco, baseUrl) {
 
   const titulo = marco === 25 ? "Sua NF vence em 5 dias"
               : marco === 30 ? "Sua NF venceu o prazo de pagamento hoje"
-              : marco === 45 ? "Sua NF esta atrasada ha 15 dias"
-              :                "Sua NF esta atrasada ha 30 dias - hora de cobrar formalmente";
+              : marco === 45 ? "Sua NF esta atrasada ha 15 dias - hora de pressionar"
+              :                "Sua NF esta atrasada ha 30 dias - escalone a cobranca";
 
   const corpo = marco === 25
-    ? `<p>Falta <b>1 semana</b> pro orgao publico cumprir o prazo legal de pagamento da sua NF nº ${nf.numero || "(sem numero)"}. Se passar do dia ${venc.toLocaleDateString("pt-BR")}, voce ja tem direito a correcao monetaria e juros.</p>`
+    ? `<p>Falta <b>1 semana</b> pro orgao publico cumprir o prazo legal de pagamento da sua NF nº ${nf.numero || "(sem numero)"} (vence em ${venc.toLocaleDateString("pt-BR")}).</p>`
     : marco === 30
-    ? `<p>Hoje <b>vence o prazo legal</b> de 30 dias (Lei 14.133, art. 141) pro orgao publico pagar a NF nº ${nf.numero || "(sem numero)"}. Se nao receber, ja pode cobrar com juros e correcao.</p>`
+    ? `<p>Hoje <b>vence o prazo legal</b> de 30 dias (Lei 14.133, art. 141) pro orgao publico pagar a NF nº ${nf.numero || "(sem numero)"}. Se nao receber nos proximos dias, comece a pressionar com um pedido via Lei de Acesso a Informacao - obriga o orgao a responder quando vai pagar.</p>`
     : marco === 45
-    ? `<p>O orgao <b>${nf.orgao_nome || "publico"}</b> esta com sua NF nº ${nf.numero || "(sem numero)"} em atraso ha <b>${venceuHa} dias</b>. Recomendamos enviar oficio formal de cobranca para preservar o seu direito de cobrar juros e correcao.</p><p>Total devido com correcao e juros: <b>${formatarBRL(calc.totalDevido)}</b>.</p>`
-    : `<p>Atraso passou de <b>30 dias</b> alem do prazo legal (NF nº ${nf.numero || "(sem numero)"}, orgao <b>${nf.orgao_nome || "publico"}</b>). E hora de considerar escalonar para um advogado parceiro especialista em contratos administrativos.</p><p>Total devido: <b>${formatarBRL(calc.totalDevido)}</b>.</p>`;
+    ? `<p>O orgao <b>${nf.orgao_nome || "publico"}</b> esta com sua NF nº ${nf.numero || "(sem numero)"} em atraso ha <b>${venceuHa} dias</b>.</p><p>Cobrar juros raramente funciona com prefeitura. O que destrava o pagamento e a <b>pressao administrativa</b>: registre um pedido na Ouvidoria e, se preciso, uma representacao ao Tribunal de Contas. O painel gera essas pecas prontas pra voce.</p>`
+    : `<p>Atraso passou de <b>30 dias</b> (NF nº ${nf.numero || "(sem numero)"}, orgao <b>${nf.orgao_nome || "publico"}</b>).</p><p>Considere a <b>representacao ao Tribunal de Contas</b> (o que gestor publico mais teme) ou <b>antecipar o recebivel</b> para receber a maior parte agora, em vez de seguir esperando.</p>`;
 
   const acao = marco >= 45
-    ? `<a href="${baseUrl}/recebiveis?c=${empresa.token}" style="display:inline-block;background:#4338ca;color:#fff;text-decoration:none;padding:13px 26px;border-radius:9px;font-weight:700;margin:14px 8px 0 0">Gerar oficio de cobranca</a>${marco === 60 ? `<a href="${baseUrl}/recebiveis?c=${empresa.token}#escalar=${nf.id}" style="display:inline-block;background:#059669;color:#fff;text-decoration:none;padding:13px 26px;border-radius:9px;font-weight:700;margin:14px 0 0 0">Falar com advogado parceiro</a>` : ""}`
+    ? `<a href="${baseUrl}/recebiveis?c=${empresa.token}#cobrar=${nf.id}" style="display:inline-block;background:#4338ca;color:#fff;text-decoration:none;padding:13px 26px;border-radius:9px;font-weight:700;margin:14px 0 0 0">Ver opcoes de cobranca</a>`
     : `<a href="${baseUrl}/recebiveis?c=${empresa.token}" style="display:inline-block;background:#4338ca;color:#fff;text-decoration:none;padding:13px 26px;border-radius:9px;font-weight:700;margin:14px 0 0 0">Ver no painel</a>`;
 
   return `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:540px;margin:0 auto;padding:30px 24px;color:#0f172a">
