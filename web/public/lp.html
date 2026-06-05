@@ -72,7 +72,10 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<!-- Fonte nao-bloqueante (melhora FCP no mobile). Com display=swap o texto
+     aparece na hora em fonte do sistema e troca para Inter quando o CSS chega. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" /></noscript>
 <style>
   :root {
     --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --roxo:#6d28d9;
