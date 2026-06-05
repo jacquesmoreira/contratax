@@ -8,8 +8,11 @@ import { upsertEditais, estatisticas } from "./db.mjs";
 export const MODALIDADES_INGEST = [6, 8, 9, 4, 12, 1];
 
 // Ingere o acervo nacional. `limitePaginas` permite rodadas curtas de teste.
+// diasAFrente: janela de captura (editais encerrando ate N dias). Padrao 45 -
+// mais antecedencia que o minimo legal de 8 dias uteis, traz mais editais pro
+// cliente se preparar. Configuravel via LICITA_DIAS_FRENTE.
 export async function ingerirNacional({
-  diasAFrente = 30,
+  diasAFrente = Number(process.env.LICITA_DIAS_FRENTE || 45),
   modalidades = MODALIDADES_INGEST,
   limitePaginas = Infinity,
   log = console.log,

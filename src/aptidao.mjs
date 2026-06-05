@@ -71,7 +71,7 @@ export async function conferirComIA(analiseEdital, empresa, opcoes = {}) {
 
 // Orquestra a conferencia completa de um edital para uma empresa.
 // Sempre devolve a saude documental (deterministica). A parte de IA roda se houver chave.
-export async function conferir(edital, empresa, { forcar = false } = {}) {
+export async function conferir(edital, empresa, { forcar = false, perfilToken = null } = {}) {
   const saude = saudeDocumental(empresa);
 
   if (!forcar) {
@@ -79,8 +79,8 @@ export async function conferir(edital, empresa, { forcar = false } = {}) {
     if (cache) return { ...cache.dados, saude, cache: true };
   }
 
-  const { analise } = await analisarEdital(edital); // Camada 3
-  const aptidao = await conferirComIA(analise, empresa, { meta: { etapa: "conferencia", editalId: edital.id, empresaId: empresa.id } }); // Camada 4
+  const { analise } = await analisarEdital(edital, { perfilToken }); // Camada 3
+  const aptidao = await conferirComIA(analise, empresa, { meta: { etapa: "conferencia", editalId: edital.id, empresaId: empresa.id, perfilToken } }); // Camada 4
   const dados = { aptidao, analiseResumo: analise.resumo };
   await salvarConferencia(edital.id, empresa.id, dados);
   return { ...dados, saude, cache: false };

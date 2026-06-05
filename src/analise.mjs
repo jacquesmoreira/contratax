@@ -7,7 +7,7 @@ import { salvarAnalise, carregarAnalise } from "./store.mjs";
 
 // Analisa um edital. Se ja houver analise em cache, devolve ela (a menos que force).
 // Retorna { analise, cache, pdf: {nome, bytes} }.
-export async function analisarEdital(edital, { forcar = false } = {}) {
+export async function analisarEdital(edital, { forcar = false, perfilToken = null } = {}) {
   if (!forcar) {
     const cache = await carregarAnalise(edital.id);
     if (cache) return { analise: cache.analise, cache: true };
@@ -17,7 +17,7 @@ export async function analisarEdital(edital, { forcar = false } = {}) {
   if (!pdfs.length) throw new Error("Nenhum PDF encontrado para este edital");
   const principal = pdfs[0]; // o maior costuma ser o edital
 
-  const analise = await analisarPdf(principal.buffer, { meta: { etapa: "leitura_edital", editalId: edital.id } });
+  const analise = await analisarPdf(principal.buffer, { meta: { etapa: "leitura_edital", editalId: edital.id, perfilToken } });
   await salvarAnalise(edital.id, analise);
 
   return { analise, cache: false, pdf: { nome: principal.nome, bytes: principal.buffer.length } };

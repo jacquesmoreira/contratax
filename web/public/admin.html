@@ -86,14 +86,20 @@ async function carregar() {
   </div>`;
 
   html += `<h2>Clientes e cadastros</h2><table><thead><tr>
-    <th>Empresa</th><th>Contato</th><th>Plano / Status</th><th>Análises</th><th>Equipe</th><th>Ações</th></tr></thead><tbody>`;
+    <th>Empresa</th><th>Contato</th><th>Plano / Status</th><th>Análises</th><th>Custo IA</th><th>Equipe</th><th>Ações</th></tr></thead><tbody>`;
   for (const c of cli.d.clientes) {
     const venc = c.diasRestantes != null ? `${c.diasRestantes}d` : "";
+    const ia = c.custoIA || { total: 0, mes: 0, chamadas: 0 };
+    const brlIA = (v) => "R$ " + (Number(v) || 0).toFixed(2).replace(".", ",");
+    // Receita mensal do plano pra calcular margem (Basico 197, Pro 297)
+    const receita = c.nivel === "pro" ? 297 : c.nivel === "assessoria10" ? 497 : c.nivel === "assessoria25" ? 897 : 197;
+    const margem = c.status === "ativo" ? Math.round(100 * (1 - ia.mes / receita)) : null;
     html += `<tr>
       <td><b>${esc(c.razaoSocial || c.nome)}</b><br><span class="mut">${esc(c.cnpj || "sem CNPJ")} · ${esc(c.uf || "BR")}</span><br><span class="mut">${esc(c.ramo || "")}</span></td>
       <td>${esc(c.email || "—")}<br><span class="mut">desde ${dataBR(c.criadoEm)}</span></td>
       <td><span class="pill ${c.status}">${esc(c.status)}</span> ${venc ? `<span class="mut">${venc}</span>` : ""}<br><span class="mut">${esc(c.planoNome)}${c.formaPagamento ? " · " + esc(c.formaPagamento) : ""}</span></td>
       <td>${c.uso.usados}/${c.uso.limite}${c.uso.avulsas ? ` <span class="mut">+${c.uso.avulsas} avulsas</span>` : ""}</td>
+      <td><b style="color:${ia.mes > receita*0.5 ? '#dc2626' : '#0f172a'}">${brlIA(ia.mes)}</b> <span class="mut">no mês</span><br><span class="mut">${brlIA(ia.total)} total · ${ia.chamadas} cham.${margem != null ? ` · margem ${margem}%` : ""}</span></td>
       <td>${c.equipe.usados}/${c.equipe.assentos}</td>
       <td><div class="acoes" data-token="${c.token}">
         <select class="sel-nivel"><option value="basico">Básico</option><option value="pro">Pro</option></select>

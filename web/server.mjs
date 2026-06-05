@@ -775,9 +775,13 @@ const servidor = createServer(async (req, res) => {
     if (rota === "/api/admin/clientes") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       const perfis = await lerPerfis();
+      // Custo de IA agregado por cliente (perfilToken).
+      let custoPorCliente = {};
+      try { custoPorCliente = (await resumoCustos())?.porCliente || {}; } catch {}
       const clientes = perfis.map((p) => {
         garantirUsuarios(p); // so em memoria, para contar a equipe
         const st = statusAtual(p);
+        const custo = custoPorCliente[p.token] || { brl: 0, brlMes: 0, chamadas: 0 };
         return {
           token: p.token, nome: p.nome, razaoSocial: p.razaoSocial ?? null, email: p.email ?? null,
           cnpj: p.cnpj ?? null, criadoEm: p.assinatura?.criadoEm ?? null,
@@ -785,6 +789,7 @@ const servidor = createServer(async (req, res) => {
           status: st.status, diasRestantes: st.diasRestantes, formaPagamento: st.formaPagamento ?? null,
           nivel: p.assinatura?.nivel ?? null, planoNome: planoDe(p).nome,
           uso: usoDe(p), equipe: { usados: p.usuarios.length, assentos: p.assentos || 1 },
+          custoIA: { total: custo.brl, mes: custo.brlMes, chamadas: custo.chamadas },
         };
       });
       const resumo = {
@@ -1104,7 +1109,7 @@ const servidor = createServer(async (req, res) => {
         const chk = checarAnalise(perfilT);
         if (!chk.ok) return json(res, 402, { erro: "Cota mensal esgotada", motivo: chk.motivo, paywall: true });
         try {
-          const tldr = await gerarTldr(edital);
+          const tldr = await gerarTldr(edital, { perfilToken: tokenT });
           await salvarTldr(id, tldr);
           await registrarAnalise(perfilT, { tipo: "tldr", editalId: id });
           return json(res, 200, { tldr, cache: false });
@@ -1152,7 +1157,7 @@ const servidor = createServer(async (req, res) => {
         }
       }
       try {
-        const { aptidao, cache } = await conferir(edital, empresa);
+        const { aptidao, cache } = await conferir(edital, empresa, { perfilToken: tokenA });
         // So conta como analise nova quando houve chamada de IA (cache miss).
         let uso = perfilA ? usoDe(perfilA) : null;
         if (perfilA && cache === false) uso = await registrarAnalise(tokenA);
@@ -1193,7 +1198,7 @@ const servidor = createServer(async (req, res) => {
         }
       }
       try {
-        const dossie = await gerarImpugnacao(edital);
+        const dossie = await gerarImpugnacao(edital, { perfilToken: tokenA });
         let uso = perfilA ? usoDe(perfilA) : null;
         if (perfilA && dossie.cache === false) uso = await registrarAnalise(tokenA);
         return json(res, 200, { impugnacao: dossie, uso });

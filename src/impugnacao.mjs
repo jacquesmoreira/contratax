@@ -40,14 +40,14 @@ ${JSON.stringify({
 }
 
 // Gera (ou recupera do cache) o dossie de impugnacao de um edital.
-export async function gerarImpugnacao(edital, { forcar = false } = {}) {
+export async function gerarImpugnacao(edital, { forcar = false, perfilToken = null } = {}) {
   if (!forcar) {
     const cache = await carregarImpugnacao(edital.id);
     if (cache) return { ...cache.dados, cache: true };
   }
-  const { analise } = await analisarEdital(edital); // usa o cache da Camada 3 se houver
+  const { analise } = await analisarEdital(edital, { perfilToken }); // usa o cache da Camada 3 se houver
   const dossie = extrairJson(await chamar(montarCorpoImpugnacao(analise), {
-    meta: { etapa: "impugnacao", editalId: edital.id },
+    meta: { etapa: "impugnacao", editalId: edital.id, perfilToken },
   }));
   await salvarImpugnacao(edital.id, dossie);
   return { ...dossie, cache: false };

@@ -56,7 +56,7 @@ function extrairJSON(texto) {
 // Cache global por edital (data/tldrs.json) ja protege contra custo repetido:
 // 1a chamada paga, todas as outras vem de cache.
 
-export async function gerarTldr(edital) {
+export async function gerarTldr(edital, { perfilToken = null } = {}) {
   if (!temChaveIA()) throw new Error("ANTHROPIC_API_KEY ausente");
 
   const pdfs = await obterPdfs(edital);
@@ -100,6 +100,7 @@ export async function gerarTldr(edital) {
       modelo: MODELO,
       etapa: "tldr",
       editalId: edital.id,
+      perfilToken,
       pdfKB: Math.round(principal.buffer.length / 1024),
     });
   } catch {}

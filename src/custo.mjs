@@ -58,10 +58,20 @@ export async function resumoCustos() {
 
   const brlTotal = linhas.reduce((s, l) => s + (l.brl || 0), 0);
   const porEtapa = {};
+  const porCliente = {};
+  const mesAtual = new Date().toISOString().slice(0, 7);
   for (const l of linhas) {
     const e = l.etapa || "ia";
     (porEtapa[e] ||= { chamadas: 0, brl: 0 }).chamadas++;
     porEtapa[e].brl += l.brl || 0;
+    // Agrega por cliente (perfilToken). Ignora tokens internos de teste.
+    const tk = l.perfilToken;
+    if (tk && !String(tk).startsWith("_")) {
+      const c = (porCliente[tk] ||= { chamadas: 0, brl: 0, brlMes: 0 });
+      c.chamadas++;
+      c.brl += l.brl || 0;
+      if (String(l.ts || "").slice(0, 7) === mesAtual) c.brlMes += l.brl || 0;
+    }
   }
   // Uma "analise" do ponto de vista do cliente = uma conferencia (cobra cota).
   // O custo medio por analise inclui a leitura do edital quando ela ocorreu.
@@ -80,6 +90,11 @@ export async function resumoCustos() {
     porEtapa: Object.fromEntries(Object.entries(porEtapa).map(([k, v]) => [k, {
       chamadas: v.chamadas, brl: Number(v.brl.toFixed(2)),
       medioBRL: Number((v.brl / v.chamadas).toFixed(4)),
+    }])),
+    porCliente: Object.fromEntries(Object.entries(porCliente).map(([k, v]) => [k, {
+      chamadas: v.chamadas,
+      brl: Number(v.brl.toFixed(2)),
+      brlMes: Number(v.brlMes.toFixed(2)),
     }])),
     usdBrl: USD_BRL,
   };
