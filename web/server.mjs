@@ -8,6 +8,9 @@ import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gzip as gzipCb } from "node:zlib";
+import { promisify } from "node:util";
+const gzip = promisify(gzipCb);
 import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao, carregarLeads, carregarTldr, salvarTldr } from "../src/store.mjs";
 import { gerarTldr } from "../src/tldr.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
@@ -16,7 +19,6 @@ import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
 import { renderizarArtigo, renderizarListagem, urlsBlog } from "../src/blog.mjs";
 import { renderizarAjuda, renderizarContato, processarContato } from "../src/ajuda.mjs";
 import { tentarUsoVisitante, ipDoRequest } from "../src/rateLimitVisitante.mjs";
-import { listarTemplates, gerarTemplate } from "../src/templates.mjs";
 import { paginaCasos, paginaStatus, paginaSeguranca } from "../src/paginasInstitucionais.mjs";
 import { injetarAnalytics, enviarConversao } from "../src/analytics.mjs";
 import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos } from "../src/db.mjs";
@@ -50,6 +52,7 @@ import { minutaProrrogacao, minutaAditivo, minutaReequilibrio } from "../src/min
 import { indicesDisponiveis, gatilhoReequilibrio } from "../src/indicesEconomicos.mjs";
 import { parsearXmlContrato, extrairContratoPdf, detectarTipo as detectarTipoArquivo } from "../src/extratorContrato.mjs";
 import { googleConfigurado, urlAutorizacao, processarCallback } from "../src/googleOAuth.mjs";
+import { solicitarReset, aplicarReset, verificarToken } from "../src/recuperarSenha.mjs";
 import { PLANOS, AVULSOS, planoDe } from "../src/planos.mjs";
 import { ativarPlano } from "../src/assinatura.mjs";
 import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura } from "../src/asaas.mjs";
@@ -115,8 +118,50 @@ async function perfilPorToken(token) {
   return perfis.find((p) => p.token === token) ?? null;
 }
 
+// Tipos de conteudo que valem a pena comprimir (texto). Binarios ja sao
+// comprimidos por natureza (PNG, PDF, XLSX) - gzip neles desperdica CPU.
+function compressivel(headers) {
+  const ct = (headers?.["Content-Type"] || "").toLowerCase();
+  return /text\/|application\/json|application\/javascript|application\/xml|image\/svg/.test(ct);
+}
+
+// Wrapper que bufferiza res.end() e aplica gzip quando o cliente aceita e o
+// content-type vale a pena. Transparente pra todas as rotas existentes.
+function ativarGzip(req, res) {
+  const aceita = String(req.headers["accept-encoding"] || "").toLowerCase();
+  if (!/\bgzip\b/.test(aceita)) return;
+  const writeHeadOriginal = res.writeHead.bind(res);
+  const endOriginal = res.end.bind(res);
+  let usar = false;
+  let codigo = 200, headersAtuais = {};
+  res.writeHead = (c, headers) => {
+    codigo = c;
+    headersAtuais = headers || {};
+    if (compressivel(headersAtuais)) {
+      usar = true;
+      headersAtuais["Content-Encoding"] = "gzip";
+      headersAtuais["Vary"] = headersAtuais["Vary"] ? headersAtuais["Vary"] + ", Accept-Encoding" : "Accept-Encoding";
+      delete headersAtuais["Content-Length"]; // tamanho muda
+    }
+    return writeHeadOriginal(codigo, headersAtuais);
+  };
+  res.end = async (data) => {
+    if (!usar || !data) return endOriginal(data);
+    try {
+      const buf = Buffer.isBuffer(data) ? data : Buffer.from(String(data));
+      // gzip so vale a pena pra > 200 bytes (sobrecabecalho da compressao).
+      if (buf.length < 200) return endOriginal(buf);
+      const comp = await gzip(buf);
+      return endOriginal(comp);
+    } catch {
+      return endOriginal(data);
+    }
+  };
+}
+
 const servidor = createServer(async (req, res) => {
   try {
+    ativarGzip(req, res);
     const url = new URL(req.url, "http://localhost");
     const rota = url.pathname;
 
@@ -125,6 +170,25 @@ const servidor = createServer(async (req, res) => {
       const uf = url.searchParams.get("uf") || null;
       const termo = url.searchParams.get("termo") || "";
       return json(res, 200, buscaPublica({ uf, termo, limite: 15 }));
+    }
+
+    // Recuperacao de senha - solicitar (sempre devolve sucesso pra nao revelar
+    // se o e-mail esta cadastrado).
+    if (rota === "/api/recuperar-senha" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      await solicitarReset({ email: corpo.email, baseUrl: BASE_PUBLICA });
+      return json(res, 200, { ok: true });
+    }
+
+    if (rota === "/api/verificar-reset") {
+      const r = await verificarToken(url.searchParams.get("t"));
+      return json(res, 200, r);
+    }
+
+    if (rota === "/api/redefinir-senha" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const r = await aplicarReset({ token: corpo.token, senhaNova: corpo.senhaNova });
+      return json(res, r.ok ? 200 : 400, r);
     }
 
     // Google OAuth: status (front consulta pra mostrar/esconder botao)
@@ -478,24 +542,9 @@ const servidor = createServer(async (req, res) => {
       return json(res, 200, { contratos: lista, escopo });
     }
 
-    // Templates: lista os disponiveis
-    if (rota === "/api/templates") {
-      return json(res, 200, { templates: listarTemplates() });
-    }
-    // Templates: baixa um (sem login — gratis pra qualquer um, sao genericos)
-    if (rota.startsWith("/api/templates/")) {
-      const id = rota.replace("/api/templates/", "");
-      const t = gerarTemplate(id);
-      if (!t) return json(res, 404, { erro: "Template nao encontrado" });
-      const ct = t.ext === "csv" ? "text/csv; charset=utf-8" : "text/markdown; charset=utf-8";
-      const nome = `contratax-${id}.${t.ext}`;
-      res.writeHead(200, {
-        "Content-Type": ct,
-        "Content-Disposition": `attachment; filename="${nome}"`,
-        "Cache-Control": "no-store",
-      });
-      return res.end(t.conteudo);
-    }
+    // (removidas em 2026-06: rotas /api/templates e /api/templates/<id>.
+    // Bloco de download no painel foi desativado; modulo src/templates.mjs
+    // ainda existe pra uso futuro, mas nao tem rota publica.)
 
     // Saude documental do perfil (lista de certidoes + dias para vencer).
     // Usado pelo painel pra mostrar popup de alerta quando algo vai vencer logo.
@@ -1096,14 +1145,45 @@ const servidor = createServer(async (req, res) => {
       } catch { /* nao existe: cai no 404 */ }
     }
 
-    // Assets estaticos da marca (svg/png/ico) servidos da pasta public.
-    if (/^\/[\w.-]+\.(svg|png|ico)$/.test(rota)) {
+    // Assets estaticos da marca (svg/png/ico/webp) servidos da pasta public.
+    // Cache de 30 dias - logo nao muda toda hora; quando trocar bumpa o arquivo.
+    if (/^\/[\w.-]+\.(svg|png|ico|webp|jpg|jpeg|js)$/.test(rota)) {
       try {
         const buf = await readFile(resolve(AQUI, "public", rota.slice(1)));
-        const tipo = rota.endsWith(".svg") ? "image/svg+xml" : rota.endsWith(".png") ? "image/png" : "image/x-icon";
-        res.writeHead(200, { "Content-Type": tipo, "Cache-Control": "public, max-age=86400" });
+        const tipo = rota.endsWith(".svg") ? "image/svg+xml"
+                  : rota.endsWith(".png") ? "image/png"
+                  : rota.endsWith(".webp") ? "image/webp"
+                  : rota.endsWith(".jpg") || rota.endsWith(".jpeg") ? "image/jpeg"
+                  : rota.endsWith(".js") ? "application/javascript; charset=utf-8"
+                  : "image/x-icon";
+        res.writeHead(200, {
+          "Content-Type": tipo,
+          // Service worker NAO deve ser cacheado pelo navegador (atualiza rapido)
+          "Cache-Control": rota === "/sw.js" ? "no-cache" : "public, max-age=2592000, immutable",
+        });
         return res.end(buf);
       } catch { /* nao existe: cai no 404 */ }
+    }
+
+    // Paginas estaticas de recuperacao de senha
+    if (rota === "/esqueci-senha" || rota === "/esqueci-senha.html") {
+      const html = await readFile(resolve(AQUI, "public", "esqueci-senha.html"), "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(html));
+    }
+    if (rota === "/redefinir-senha" || rota === "/redefinir-senha.html") {
+      const html = await readFile(resolve(AQUI, "public", "redefinir-senha.html"), "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(html));
+    }
+
+    // PWA manifest
+    if (rota === "/manifest.json") {
+      try {
+        const buf = await readFile(resolve(AQUI, "public", "manifest.json"));
+        res.writeHead(200, { "Content-Type": "application/manifest+json; charset=utf-8", "Cache-Control": "public, max-age=86400" });
+        return res.end(buf);
+      } catch { /* fall through */ }
     }
 
     // Landing comparativa (sem nomear concorrentes — risco juridico)

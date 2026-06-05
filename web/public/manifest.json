@@ -1,0 +1,34 @@
+{
+  "name": "ContrataX — Gestão Inteligente de Licitações",
+  "short_name": "ContrataX",
+  "description": "Acompanhe licitações públicas, cobre atrasos e gere minutas formais com base oficial do PNCP e do Tesouro Nacional.",
+  "start_url": "/painel",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8fafc",
+  "theme_color": "#4338ca",
+  "lang": "pt-BR",
+  "categories": ["business", "productivity", "finance"],
+  "icons": [
+    { "src": "/logo-favicon.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/logo-favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/logo-favicon.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Recebíveis",
+      "short_name": "Recebíveis",
+      "description": "Cobranças e NFs emitidas",
+      "url": "/recebiveis",
+      "icons": [{ "src": "/logo-favicon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Contratos",
+      "short_name": "Contratos",
+      "description": "Aditivos, prorrogações e reequilíbrio",
+      "url": "/contratos",
+      "icons": [{ "src": "/logo-favicon.png", "sizes": "192x192" }]
+    }
+  ]
+}

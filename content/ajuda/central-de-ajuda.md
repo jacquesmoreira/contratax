@@ -14,7 +14,7 @@ O cadastro é grátis e leva menos de 1 minuto. Acesse [/cadastro](/cadastro), i
 Não. O teste de 7 dias é totalmente livre, você não cadastra cartão, não precisa cancelar nada se não quiser continuar. Se gostar, assina pelo próprio painel ao final do período.
 
 ### Esqueci minha senha. Como recupero?
-Por enquanto, fale com a gente em [/contato](/contato) que reativamos seu acesso. Em breve teremos recuperação automática por e-mail.
+Em [/esqueci-senha](/esqueci-senha) informe o e-mail cadastrado. Você recebe em alguns minutos um link válido por 1 hora pra definir uma senha nova. Se não receber, confira o spam ou fale com a gente em [/contato](/contato).
 
 ### Como entro na minha conta?
 Em [/entrar](/entrar) com o seu e-mail ou CNPJ, mais a senha que você cadastrou. Você cai direto no painel.

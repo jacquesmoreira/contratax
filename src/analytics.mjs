@@ -40,11 +40,63 @@ function snippetBody() {
   return `<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${GTM_ID}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>`;
 }
 
-// Injeta os snippets no HTML antes de servir. Se nao ha analytics configurado,
-// devolve o HTML inalterado (sem custo).
+// Snippet PWA: manifest + theme-color + apple-touch-icon + register do SW.
+// Aplica em TODAS as paginas servidas via injetarAnalytics (inclusive sem GA),
+// pra que mobile reconheca como app instalavel ("Adicionar a tela inicial").
+const SNIPPET_PWA = `
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4338ca">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ContrataX">
+<link rel="apple-touch-icon" href="/logo-favicon.png">
+<style>
+/* Responsive base aplicado em TODAS as paginas via injecao - garante que
+   contas/cadastro/entrar/equipe e demais paginas funcionem bem no celular
+   mesmo sem media queries proprias. */
+@media (max-width: 760px) {
+  .wrap, .wrap-main, .card, .container { max-width: 100% !important; }
+  body { font-size: 15px; }
+  h1 { font-size: 22px !important; line-height: 1.25; }
+  h2 { font-size: 19px !important; }
+  h3 { font-size: 16px !important; }
+  input, textarea, select { font-size: 16px !important; }  /* evita zoom iOS */
+  .btn, button.btn, button[type="submit"] { padding: 13px 16px !important; font-size: 15px !important; }
+  /* Tabelas viram scrollaveis horizontalmente em vez de quebrar layout */
+  table { font-size: 13px !important; }
+  .tabela, .tabela-comp { overflow-x: auto; display: block; }
+  /* Grids viram coluna unica */
+  .grid2, .dores, .passos, .preco-grid { grid-template-columns: 1fr !important; }
+  /* Wrappers principais ganham padding lateral menor */
+  .wrap-main { padding: 22px 14px 50px !important; }
+  /* Forms full-width */
+  form input, form textarea, form select { width: 100% !important; }
+  /* Modais (recebiveis/contratos) caem pra full screen */
+  .modal-card { max-width: 100% !important; max-height: 96vh !important; padding: 20px !important; }
+}
+@media (max-width: 420px) {
+  h1 { font-size: 20px !important; }
+  .wrap-main { padding: 16px 12px 40px !important; }
+}
+</style>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
+  });
+}
+</script>
+`;
+
+// Injeta os snippets no HTML antes de servir. Sempre roda (analytics opcional,
+// mas PWA entra em tudo).
 export function injetarAnalytics(html) {
-  if (!temAnalytics()) return html;
   let novo = html;
+  // PWA: sempre. Evita duplicar se ja tem manifest no HTML.
+  if (!/rel=["']manifest["']/i.test(novo) && /<\/head>/i.test(novo)) {
+    novo = novo.replace(/<\/head>/i, SNIPPET_PWA + "</head>");
+  }
+  if (!temAnalytics()) return novo;
   const head = snippetHead();
   const body = snippetBody();
   if (head && /<\/head>/i.test(novo)) novo = novo.replace(/<\/head>/i, head + "</head>");

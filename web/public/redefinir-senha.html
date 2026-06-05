@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/logo-favicon.png" type="image/png" />
+<title>ContrataX — Definir nova senha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+:root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --vermelho:#dc2626; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:"Inter",-apple-system,sans-serif; background:var(--fundo); color:var(--tinta); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+.card { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:34px; max-width:420px; width:100%; box-shadow:0 6px 30px rgba(15,23,42,.06); }
+.logo { margin-bottom:18px; } .logo img { height:32px; }
+h1 { font-size:22px; font-weight:800; letter-spacing:-.4px; margin-bottom:6px; }
+.sub { color:var(--cinza); font-size:14px; line-height:1.5; margin-bottom:20px; }
+label { display:block; font-size:12px; font-weight:700; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin:12px 0 6px; }
+input { width:100%; padding:13px 14px; border:1px solid var(--linha); border-radius:10px; font-size:15px; font-family:inherit; outline:none; }
+input:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+.btn { width:100%; margin-top:18px; background:var(--indigo); color:#fff; border:none; padding:14px; border-radius:11px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; }
+.btn:hover { background:var(--indigo-d); }
+.btn:disabled { background:var(--cinza-c); cursor:default; }
+.erro { color:var(--vermelho); font-size:13.5px; margin-top:12px; }
+.ok { background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; padding:12px 14px; border-radius:9px; margin-top:12px; }
+.rodape { margin-top:22px; font-size:13.5px; color:var(--cinza); text-align:center; }
+.rodape a { color:var(--indigo); font-weight:700; text-decoration:none; }
+.spinner { display:inline-block; width:14px; height:14px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:girar .7s linear infinite; vertical-align:middle; margin-right:7px; }
+@keyframes girar { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo"><img src="/logo-horizontal.png" alt="ContrataX" /></div>
+    <h1>Definir nova senha</h1>
+    <div class="sub" id="sub">Escolha uma senha com ao menos 6 caracteres.</div>
+    <form id="form">
+      <label for="s1">Nova senha</label>
+      <input id="s1" type="password" minlength="6" required autofocus />
+      <label for="s2">Repita a nova senha</label>
+      <input id="s2" type="password" minlength="6" required />
+      <button class="btn" type="submit" id="btn">Salvar nova senha</button>
+      <div class="erro" id="erro"></div>
+    </form>
+    <div id="msg"></div>
+    <div class="rodape"><a href="/entrar">Voltar para entrar</a></div>
+  </div>
+<script>
+const token = new URLSearchParams(location.search).get("t");
+if (!token) location.href = "/esqueci-senha";
+
+// Valida token logo de cara
+fetch("/api/verificar-reset?t=" + encodeURIComponent(token)).then(r => r.json()).then(d => {
+  if (!d.ok) {
+    document.getElementById("form").style.display = "none";
+    document.getElementById("sub").innerHTML = "Esse link expirou ou já foi usado.";
+    document.getElementById("msg").innerHTML = '<div class="erro">Solicite um novo em <a href="/esqueci-senha" style="color:var(--indigo);font-weight:700">/esqueci-senha</a>.</div>';
+  } else if (d.email) {
+    document.getElementById("sub").innerHTML = "Redefinindo a senha de <b>" + d.email + "</b>.";
+  }
+});
+
+document.getElementById("form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const btn = document.getElementById("btn"), erro = document.getElementById("erro");
+  erro.textContent = "";
+  const s1 = document.getElementById("s1").value, s2 = document.getElementById("s2").value;
+  if (s1 !== s2) { erro.textContent = "As senhas não batem."; return; }
+  if (s1.length < 6) { erro.textContent = "Use ao menos 6 caracteres."; return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Salvando...';
+  try {
+    const r = await fetch("/api/redefinir-senha", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ token, senhaNova: s1 }) });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.erro || "Erro ao salvar");
+    document.getElementById("form").style.display = "none";
+    document.getElementById("sub").innerHTML = "Senha salva. Redirecionando...";
+    setTimeout(() => location.href = "/entrar", 1500);
+  } catch (e) {
+    erro.textContent = e.message;
+    btn.disabled = false; btn.textContent = "Salvar nova senha";
+  }
+});
+</script>
+</body>
+</html>
