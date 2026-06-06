@@ -132,12 +132,12 @@ textarea { resize:vertical; min-height:80px; }
 <div class="modal" id="m-xml">
   <div class="modal-card">
     <h3>Importar XML da NFe</h3>
-    <div class="cap">Arraste o arquivo XML que o seu emissor de notas gerou. Extraímos número, data, valor, órgão e descrição automaticamente.</div>
+    <div class="cap">Arraste <b>um ou vários</b> arquivos XML de uma vez. Extraímos número, data, valor, órgão e descrição de cada NF automaticamente.</div>
     <div class="drop" id="drop">
       <div class="icone">📎</div>
-      <b>Arraste o arquivo XML aqui</b>
-      <small>ou clique pra escolher do computador</small>
-      <input type="file" id="f-xml" accept=".xml" style="display:none" />
+      <b>Arraste os arquivos XML aqui</b>
+      <small>pode soltar vários de uma vez · ou clique pra escolher do computador</small>
+      <input type="file" id="f-xml" accept=".xml" multiple style="display:none" />
     </div>
     <div class="err" id="e-xml"></div>
     <div class="ok-msg" id="ok-xml"></div>
@@ -262,18 +262,29 @@ const inputXml = $("f-xml");
 drop.onclick = () => inputXml.click();
 drop.ondragover = (e) => { e.preventDefault(); drop.classList.add("hover"); };
 drop.ondragleave = () => drop.classList.remove("hover");
-drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove("hover"); processarXml(e.dataTransfer.files[0]); };
-inputXml.onchange = (e) => processarXml(e.target.files[0]);
+drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove("hover"); processarXmlLote(e.dataTransfer.files); };
+inputXml.onchange = (e) => processarXmlLote(e.target.files);
 
-async function processarXml(arq) {
-  if (!arq) return;
-  $("e-xml").textContent = ""; $("ok-xml").textContent = "Lendo XML...";
-  const xml = await arq.text();
-  const r = await fetch("/api/recebiveis/xml?c=" + encodeURIComponent(token), { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ xml }) });
-  const d = await r.json();
-  if (!r.ok) { $("ok-xml").textContent=""; $("e-xml").textContent = d.erro || "Erro ao processar."; return; }
-  $("ok-xml").textContent = `NF ${d.extraido.numero} de ${brl(d.extraido.valor)} importada.`;
-  setTimeout(() => { fechar("m-xml"); carregar(); }, 800);
+// Importacao em LOTE: processa todos os XMLs em sequencia e mostra o resumo.
+async function processarXmlLote(fileList) {
+  const arquivos = [...(fileList || [])].filter(f => /\.xml$/i.test(f.name));
+  if (!arquivos.length) { $("e-xml").textContent = "Solte arquivos .xml."; return; }
+  $("e-xml").textContent = "";
+  let ok = 0, falhas = 0;
+  const erros = [];
+  for (let i = 0; i < arquivos.length; i++) {
+    $("ok-xml").textContent = `Importando ${i + 1} de ${arquivos.length}...`;
+    try {
+      const xml = await arquivos[i].text();
+      const r = await fetch("/api/recebiveis/xml?c=" + encodeURIComponent(token), { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ xml }) });
+      const d = await r.json();
+      if (r.ok && d.ok) ok++;
+      else { falhas++; erros.push(`${arquivos[i].name}: ${d.erro || "erro"}`); }
+    } catch (e) { falhas++; erros.push(`${arquivos[i].name}: ${e.message}`); }
+  }
+  $("ok-xml").innerHTML = `<b>${ok}</b> nota${ok !== 1 ? "s" : ""} importada${ok !== 1 ? "s" : ""}${falhas ? ` · ${falhas} falha${falhas !== 1 ? "s" : ""}` : ""}.`;
+  if (erros.length) $("e-xml").innerHTML = erros.slice(0, 5).map(e => `<div style="font-size:12px">${e}</div>`).join("") + (erros.length > 5 ? `<div style="font-size:12px">…e mais ${erros.length - 5}</div>` : "");
+  if (ok) setTimeout(() => { if (!erros.length) fechar("m-xml"); carregar(); }, erros.length ? 100 : 1200);
 }
 
 async function marcarPaga(id) {
