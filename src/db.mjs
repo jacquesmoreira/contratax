@@ -418,3 +418,77 @@ export function consultar({ ufs = [], modalidades = [], valorMin = null, valorMa
     sequencial: l.sequencial,
   }));
 }
+
+// ===== Consultas para paginas SEO de orgaos =====
+
+// Lista os orgaos com mais editais/contratos no acervo (top N), agregando por
+// CNPJ do orgao (mais confiavel que nome). Usado pra gerar paginas /orgaos/<slug>.
+export function topOrgaos({ limite = 800, minimoContratos = 5 } = {}) {
+  const d = abrir();
+  // Une editais abertos + contratos historicos pra ranking de cobertura SEO.
+  // Agrupamos pelo CNPJ (estavel) e pegamos o nome mais frequente.
+  const linhas = d.prepare(`
+    SELECT orgao_cnpj AS cnpj, orgao AS nome, uf, municipio,
+           COUNT(*) AS contratos
+    FROM contratos
+    WHERE orgao_cnpj IS NOT NULL AND orgao_cnpj <> ''
+    GROUP BY orgao_cnpj
+    HAVING contratos >= ?
+    ORDER BY contratos DESC
+    LIMIT ?
+  `).all(minimoContratos, limite);
+  return linhas;
+}
+
+// Busca um orgao especifico pelo CNPJ (limpo, 14 digitos).
+export function orgaoPorCnpj(cnpj) {
+  const d = abrir();
+  const limpo = String(cnpj || "").replace(/\D+/g, "");
+  if (limpo.length !== 14) return null;
+  const linha = d.prepare(`
+    SELECT orgao_cnpj AS cnpj, orgao AS nome, uf, municipio,
+           COUNT(*) AS contratos,
+           MIN(publicacao) AS desde
+    FROM contratos WHERE orgao_cnpj = ?
+    GROUP BY orgao_cnpj
+  `).get(limpo);
+  if (!linha) return null;
+  // editais abertos do mesmo orgao
+  const editais = d.prepare(`
+    SELECT id, objeto, modalidade, valor AS valorEstimado,
+           encerramento, uf, municipio, link
+    FROM editais WHERE orgao_cnpj = ? AND encerramento >= ?
+    ORDER BY encerramento ASC LIMIT 20
+  `).all(limpo, new Date().toISOString());
+  // contratos recentes
+  const contratos = d.prepare(`
+    SELECT id, objeto, valor, fornecedor, vigencia_inicio AS vigenciaInicio
+    FROM contratos WHERE orgao_cnpj = ?
+    ORDER BY publicacao DESC LIMIT 20
+  `).all(limpo);
+  return { ...linha, editais, contratos };
+}
+
+// ===== Consultas para paginas SEO de CNAE =====
+
+// Editais que casam com palavras-chave do CNAE (na pratica, redirecionamos pro
+// mesmo motor de filtro de termos). Esta funcao apenas conta + retorna os ids
+// pra paginacao - a renderizacao usa as funcoes existentes.
+export function editaisPorTermos({ termos = [], uf = null, limite = 24 } = {}) {
+  const d = abrir();
+  const cand = d.prepare(`
+    SELECT id, orgao, orgao_cnpj AS orgaoCnpj, uf, municipio, objeto,
+           modalidade, valor AS valorEstimado, encerramento, link
+    FROM editais
+    WHERE encerramento >= ? ${uf ? "AND uf = ?" : ""}
+  `).all(new Date().toISOString(), ...(uf ? [uf] : []));
+  // Filtro de termos: cobre acentos/maiusculas (normaliza).
+  const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const termosN = termos.map((t) => norm(t)).filter(Boolean);
+  if (!termosN.length) return { total: cand.length, editais: cand.slice(0, limite) };
+  const casaram = cand.filter((e) => {
+    const txt = norm(e.objeto + " " + e.orgao);
+    return termosN.some((t) => txt.includes(t));
+  });
+  return { total: casaram.length, editais: casaram.slice(0, limite) };
+}

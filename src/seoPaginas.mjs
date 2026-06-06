@@ -157,6 +157,33 @@ export function paginaCategoria(slug, ufSigla = null) {
     : `<div class="sec"><h2>Veja também</h2><div class="chips"><a href="/licitacoes/${slug}">${esc(cat.nome)} no Brasil todo</a>${UFS.filter((u) => u.sigla !== uf.sigla).slice(0, 10).map((u) => `<a href="/licitacoes/${slug}/${u.sigla.toLowerCase()}">${esc(cat.nome)} em ${u.sigla}</a>`).join("")}</div></div>`;
   const outrosRamos = `<div class="sec"><h2>Outros ramos de licitação</h2><div class="chips">${CATEGORIAS.filter((c) => c.slug !== slug).slice(0, 16).map((c) => `<a href="/licitacoes/${c.slug}${uf ? "/" + uf.sigla.toLowerCase() : ""}">${esc(c.nome)}</a>`).join("")}</div></div>`;
 
+  // Schema Event para os editais listados - Google pode exibir data de
+  // encerramento e valor estimado direto no resultado da busca (rich snippet).
+  const eventos = editais.slice(0, 10).map((e) => {
+    const ev = {
+      "@type": "Event",
+      name: (e.objeto || "Licitação pública").slice(0, 140),
+      eventStatus: "https://schema.org/EventScheduled",
+      eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+      startDate: e.encerramento || undefined,
+      organizer: e.orgao ? { "@type": "Organization", name: e.orgao } : undefined,
+      location: e.municipio || e.uf ? {
+        "@type": "Place",
+        name: [e.municipio, e.uf].filter(Boolean).join(", "),
+        address: { "@type": "PostalAddress", addressLocality: e.municipio || undefined, addressRegion: e.uf || undefined, addressCountry: "BR" },
+      } : { "@type": "VirtualLocation", url: BASE + "/licitacoes" },
+      offers: e.valorEstimado > 0 ? {
+        "@type": "Offer",
+        price: e.valorEstimado,
+        priceCurrency: "BRL",
+        availability: "https://schema.org/InStock",
+        url: canonical,
+      } : undefined,
+    };
+    // Remove undefined recursivo (Schema valida)
+    return JSON.parse(JSON.stringify(ev));
+  });
+
   const jsonld = `<script type="application/ld+json">${JSON.stringify({
     "@context": "https://schema.org",
     "@graph": [
@@ -166,6 +193,12 @@ export function paginaCategoria(slug, ufSigla = null) {
         { "@type": "ListItem", position: 3, name: `${cat.nome} ${onde}`, item: canonical },
       ] },
       { "@type": "CollectionPage", name: title, description, url: canonical, inLanguage: "pt-BR" },
+      ...(eventos.length ? [{
+        "@type": "ItemList",
+        name: `Licitações de ${cat.nome} ${onde}`,
+        numberOfItems: total,
+        itemListElement: eventos.map((ev, i) => ({ "@type": "ListItem", position: i + 1, item: ev })),
+      }] : []),
     ],
   })}</script>`;
 

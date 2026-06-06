@@ -8,10 +8,14 @@
 //   LICITA_GTM_ID          ID do Google Tag Manager (opcional, ex: GTM-XXXXXXX)
 //   LICITA_META_PIXEL_ID   ID do Pixel da Meta (opcional, ex: 1234567890)
 
-const GA4_ID = process.env.LICITA_GA4_ID || "";
+// GA4 padrao do ContrataX em producao. Pode ser sobrescrito por env.
+const GA4_ID = process.env.LICITA_GA4_ID || "G-N79Q5SH624";
 const GA4_SECRET = process.env.LICITA_GA4_API_SECRET || "";
 const GTM_ID = process.env.LICITA_GTM_ID || "";
 const META_PIXEL = process.env.LICITA_META_PIXEL_ID || "";
+// Microsoft Clarity (heatmap + session replay, gratis). Configurar via env quando
+// criar o projeto em clarity.microsoft.com. Sem ID = nao injeta nada.
+const CLARITY_ID = process.env.LICITA_CLARITY_ID || "";
 
 export function temAnalytics() {
   return Boolean(GA4_ID || GTM_ID);
@@ -30,6 +34,9 @@ function snippetHead() {
   }
   if (META_PIXEL) {
     s += `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL}');fbq('track','PageView');</script>`;
+  }
+  if (CLARITY_ID) {
+    s += `<script>(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${CLARITY_ID}");</script>`;
   }
   return s;
 }

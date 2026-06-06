@@ -16,6 +16,8 @@ import { gerarTldr } from "../src/tldr.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
 import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
+import { paginaOrgao, paginaHubOrgaos, urlsOrgaos } from "../src/seoOrgaos.mjs";
+import { paginaCnae, paginaHubCnae, urlsCnae, cnaePorCodigo } from "../src/seoCnae.mjs";
 import { renderizarArtigo, renderizarListagem, urlsBlog } from "../src/blog.mjs";
 import { renderizarAjuda, renderizarContato, processarContato } from "../src/ajuda.mjs";
 import { tentarUsoVisitante, ipDoRequest } from "../src/rateLimitVisitante.mjs";
@@ -1517,6 +1519,34 @@ const servidor = createServer(async (req, res) => {
       // slug/uf invalido: cai no 404
     }
 
+    // ===== SEO programatico: paginas por ORGAO publico =====
+    if (rota === "/orgaos" || rota === "/orgaos/") {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(paginaHubOrgaos()));
+    }
+    if (rota.startsWith("/orgaos/")) {
+      const slug = rota.split("/").filter(Boolean)[1];
+      const html = await paginaOrgao(slug);
+      if (html) {
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+        return res.end(injetarAnalytics(html));
+      }
+    }
+
+    // ===== SEO programatico: paginas por CNAE =====
+    if (rota === "/cnae" || rota === "/cnae/") {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(paginaHubCnae()));
+    }
+    if (rota.startsWith("/cnae/")) {
+      const codigo = rota.split("/").filter(Boolean)[1];
+      const html = paginaCnae(codigo);
+      if (html) {
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+        return res.end(injetarAnalytics(html));
+      }
+    }
+
     // Arquivos de SEO.
     if (rota === "/robots.txt") {
       const txt = await readFile(resolve(AQUI, "public", "robots.txt"), "utf8");
@@ -1527,10 +1557,10 @@ const servidor = createServer(async (req, res) => {
     if (rota === "/sitemap.xml") {
       // Usa o dominio canonico (BASE_PUBLICA = com www) em tudo, alinhado com
       // os canonicals das paginas e com o redirect 301 do apex.
-      const caminhos = ["/", "/cadastro", "/entrar", "/ajuda", "/contato", "/lp/comparativo", "/casos", "/status", "/seguranca"];
+      const caminhos = ["/", "/cadastro", "/entrar", "/ajuda", "/contato", "/lp/comparativo", "/casos", "/status", "/seguranca", "/orgaos", "/cnae", "/privacidade", "/termos"];
       const base = caminhos.map((c) => BASE_PUBLICA + c);
       const blog = (await urlsBlog(BASE_PUBLICA)).map((b) => b.loc);
-      const urls = [...base, ...blog, ...urlsSEO()];
+      const urls = [...base, ...blog, ...urlsSEO(), ...urlsOrgaos(), ...urlsCnae()];
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc><changefreq>daily</changefreq></url>`).join("\n")}\n</urlset>`;
       res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
       return res.end(xml);
