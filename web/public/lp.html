@@ -209,8 +209,13 @@
   .preco-card .valor { font-size:58px; font-weight:900; letter-spacing:-2px; line-height:1; }
   .preco-card .valor small { font-size:19px; font-weight:600; color:var(--cinza); }
   .preco-card ul { list-style:none; text-align:left; margin:24px 0; display:flex; flex-direction:column; gap:13px; }
-  .preco-card ul li { display:flex; gap:11px; font-size:15.5px; }
-  .preco-card ul li::before { content:"✓"; color:var(--verde); font-weight:900; }
+  /* li NAO eh flex: o ✓ fica posicionado a esquerda (absolute) e o conteudo do
+     item (label + descricao) flui normal, empilhado um abaixo do outro, em vez
+     de cada elemento virar uma coluna lado a lado. */
+  .preco-card ul li { position:relative; padding-left:26px; font-size:15.5px; line-height:1.45; }
+  .preco-card ul li::before { content:"✓"; position:absolute; left:0; top:1px; color:var(--verde); font-weight:900; }
+  .preco-card ul li b { display:inline; }
+  .preco-card ul li div { display:block; }
 
   /* FAQ */
   .faq { max-width:740px; margin:0 auto; }
@@ -551,7 +556,7 @@
           <li><b>Busca e alertas ilimitados</b></li>
           <li>Reputação de pagamento do órgão</li>
           <li>Assistente de disputa (faixa de preço + margem)</li>
-          <li><div><b>3 leituras de edital com a ContrataX.IA por mês</b></div><div style="font-size:13px;color:var(--cinza);margin-top:2px">(degustação. Leitura completa e ilimitada nos planos abaixo.)</div></li>
+          <li><b>3 leituras de edital com a ContrataX.IA por mês</b><div style="font-size:13px;color:var(--cinza);margin-top:2px">Degustação. Leitura completa e ilimitada nos planos abaixo.</div></li>
         </ul>
         <a href="/cadastro" class="btn btn-fantasma btn-grande" style="width:100%">Começar teste grátis</a>
       </div>
@@ -562,13 +567,13 @@
         <ul>
           <li>Todas as licitações do seu ramo, no Brasil todo</li>
           <li>Alerta diário dos editais novos</li>
-          <li><div><b>50 pesquisas por mês</b></div><div style="font-size:13px;color:var(--cinza);margin-top:2px">(o sistema lê e confere a sua aptidão)</div></li>
+          <li><b>50 análises de edital por mês</b><div style="font-size:13px;color:var(--cinza);margin-top:2px">O sistema lê o edital e confere a sua aptidão.</div></li>
           <li>Declarações de habilitação prontas</li>
           <li>Dossiê de impugnação</li>
           <li>Histórico de contratos: quem ganhou e por quanto</li>
-          <li><b>Recebíveis e cobrança</b>: ofício formal com correção e juros, alerta automático de atraso</li>
-          <li><b>Contratos e prorrogação</b>: alerta 90/60/30 dias antes do fim + minuta pronta</li>
-          <li>Importação de contrato: XML do PNCP ilimitado + <b>5 extrações de PDF/mês</b></li>
+          <li><b>Recebíveis e cobrança</b><div style="font-size:13px;color:var(--cinza);margin-top:2px">Ofício formal com correção e juros, alerta automático de atraso.</div></li>
+          <li><b>Contratos e prorrogação</b><div style="font-size:13px;color:var(--cinza);margin-top:2px">Alerta 90/60/30 dias antes do fim, com minuta pronta.</div></li>
+          <li><b>Importação de contrato</b><div style="font-size:13px;color:var(--cinza);margin-top:2px">XML do PNCP ilimitado + 5 extrações de PDF por mês.</div></li>
         </ul>
         <a href="/cadastro" class="btn btn-primario btn-grande" style="width:100%">Começar teste grátis</a>
       </div>
@@ -578,12 +583,12 @@
         <div class="valor">R$ 297<small>/mês</small></div>
         <ul>
           <li>Tudo do Básico</li>
-          <li><b>100 pesquisas por mês</b></li>
+          <li><b>100 análises de edital por mês</b></li>
           <li>Acessos para a sua equipe</li>
           <li>Inteligência de concorrência por órgão</li>
           <li>Radar de renovação de contratos</li>
           <li>Histórico ilimitado de contratos e resultados</li>
-          <li>Importação de contrato: XML ilimitado + <b>20 extrações de PDF/mês</b></li>
+          <li><b>Importação de contrato</b><div style="font-size:13px;color:var(--cinza);margin-top:2px">XML ilimitado + 20 extrações de PDF por mês.</div></li>
         </ul>
         <a href="/cadastro" class="btn btn-primario btn-grande" style="width:100%">Começar teste grátis</a>
       </div>
