@@ -763,7 +763,49 @@ function referenciaHTML(r) {
       <div style="background:var(--fundo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--cinza-c);font-weight:700;text-transform:uppercase;letter-spacing:.3px">Máximo</div><div style="font-size:14px;font-weight:800;color:var(--tinta);margin-top:3px">${brl(s.max)}</div></div>
     </div>
     <div style="font-size:11.5px;color:var(--cinza-c);margin-top:10px;line-height:1.5">Faixa de valores praticados em contratos semelhantes (fonte: PNCP). Valores podem refletir preço unitário ou contrato inteiro, use como referência para dimensionar sua proposta.</div>
+
+    <div style="border-top:1px solid var(--linha);margin-top:16px;padding-top:16px">
+      <div style="font-weight:800;font-size:14px;margin-bottom:4px">🎯 Assistente de disputa</div>
+      <div style="font-size:12.5px;color:var(--cinza);margin-bottom:12px">Informe o seu custo para este contrato e veja sua margem em cada cenário de preço. Você decide o lance, com base em dado, não no chute.</div>
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px">
+        <div style="flex:1;min-width:180px">
+          <label style="display:block;font-size:11px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px">Seu custo total (R$)</label>
+          <input type="number" id="disp-custo" placeholder="quanto custa pra você entregar" data-min="${s.min}" data-p25="${s.p25}" data-mediana="${s.mediana}" style="width:100%;padding:11px 13px;border:1px solid var(--linha);border-radius:9px;font-size:15px;font-family:inherit;outline:none" oninput="calcDisputa(this)" />
+        </div>
+      </div>
+      <div id="disp-resultado" style="font-size:13px;color:var(--cinza-c)">Digite seu custo acima para ver a análise.</div>
+    </div>
   </div>`;
+}
+
+// Calculadora de disputa: compara o custo do cliente com a faixa de preco
+// praticada. Custo ZERO de IA - puro calculo sobre o historico que ja temos.
+function calcDisputa(input) {
+  const custo = Number(input.value) || 0;
+  const el = document.getElementById("disp-resultado");
+  if (!el) return;
+  if (custo <= 0) { el.innerHTML = "Digite seu custo acima para ver a análise."; return; }
+  const min = Number(input.dataset.min), p25 = Number(input.dataset.p25), mediana = Number(input.dataset.mediana);
+  const margem = (preco) => preco > 0 ? Math.round(100 * (preco - custo) / preco) : 0;
+  const linha = (rotulo, preco) => {
+    const m = margem(preco);
+    const cor = m >= 15 ? "#059669" : m >= 0 ? "#d97706" : "#dc2626";
+    const txt = m >= 0 ? `margem de ${m}%` : `prejuízo de ${Math.abs(m)}%`;
+    return `<tr><td style="padding:7px 0;font-size:13px;color:var(--tinta)">${rotulo}</td><td style="padding:7px 0;text-align:right;font-size:13px;font-weight:700">${brl(preco)}</td><td style="padding:7px 0;text-align:right;font-size:13px;font-weight:700;color:${cor}">${txt}</td></tr>`;
+  };
+  const venceMin = custo < min;
+  el.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+      <tr><td style="font-size:10.5px;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.3px">Cenário</td><td style="text-align:right;font-size:10.5px;color:var(--cinza-c);text-transform:uppercase">Preço</td><td style="text-align:right;font-size:10.5px;color:var(--cinza-c);text-transform:uppercase">Seu resultado</td></tr>
+      ${linha("Vencer no menor preço histórico", min)}
+      ${linha("Vencer 25% abaixo", p25)}
+      ${linha("Vencer na mediana", mediana)}
+    </table>
+    <div style="background:${venceMin ? "#ecfdf5" : "#fef2f2"};border:1px solid ${venceMin ? "#a7f3d0" : "#fecaca"};border-radius:9px;padding:11px 13px;font-size:13px;color:${venceMin ? "#065f46" : "#991b1b"}">
+      <b>Ponto de desistência: ${brl(custo)}.</b> ${venceMin
+        ? "Seu custo está abaixo do menor preço já praticado — há espaço pra competir com margem."
+        : "Atenção: seu custo está acima do menor preço já praticado nesse ramo. Vencer pode significar prejuízo. Reveja seu custo ou só dispute se conseguir condições melhores."}
+    </div>`;
 }
 
 function precoHTML(p) {
