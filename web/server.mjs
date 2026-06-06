@@ -910,6 +910,47 @@ const servidor = createServer(async (req, res) => {
       } catch (e) { return json(res, 400, { erro: e.message }); }
     }
 
+    // Admin: congela (suspende) ou reativa o acesso de um cliente. Reversivel.
+    if (rota === "/api/admin/suspender" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      const perfis = await lerPerfis();
+      const p = perfis.find((x) => x.token === corpo.token);
+      if (!p) return json(res, 404, { erro: "Conta nao encontrada" });
+      const congelar = corpo.congelar !== false; // default: congela
+      if (congelar) {
+        p._suspensoEm = new Date().toISOString();
+        p.assinatura = { ...(p.assinatura || {}), status: "inativo" };
+      } else {
+        delete p._suspensoEm;
+        // Reativa como teste pra o admin reativar o plano em seguida se quiser.
+        p.assinatura = { ...(p.assinatura || {}), status: "teste" };
+      }
+      await salvarPerfis(perfis);
+      return json(res, 200, { ok: true, suspenso: congelar });
+    }
+
+    // Admin: exclui (arquiva) um cliente. Soft-delete: marca como excluido e
+    // tira do acesso, mas preserva os dados num arquivo separado por seguranca,
+    // em vez de apagar de vez (recuperavel se for engano).
+    if (rota === "/api/admin/excluir" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      if (!corpo.token) return json(res, 400, { erro: "Token obrigatorio" });
+      const perfis = await lerPerfis();
+      const idx = perfis.findIndex((x) => x.token === corpo.token);
+      if (idx < 0) return json(res, 404, { erro: "Conta nao encontrada" });
+      const [removido] = perfis.splice(idx, 1);
+      removido._excluidoEm = new Date().toISOString();
+      await salvarPerfis(perfis);
+      // Arquiva o perfil removido (recuperavel) no diretorio de dados.
+      try {
+        const arq = resolve(process.env.LICITA_DATA_DIR || resolve(AQUI, "..", "data"), "perfis-excluidos.jsonl");
+        await import("node:fs/promises").then(({ appendFile }) => appendFile(arq, JSON.stringify(removido) + "\n", "utf8"));
+      } catch { /* arquivamento best-effort */ }
+      return json(res, 200, { ok: true, excluido: removido.nome || removido.token });
+    }
+
     // Catalogo de planos e pacotes avulsos (para a pagina de assinar).
     if (rota === "/api/planos") {
       return json(res, 200, {

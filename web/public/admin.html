@@ -110,6 +110,8 @@ async function carregar() {
         <input class="in-assentos" type="number" value="${c.equipe.assentos}" title="assentos" />
         <button class="btn-assentos sec">Assentos</button>
         <a href="/painel?c=${encodeURIComponent(c.token)}" target="_blank">Painel ↗</a>
+        ${c.status === "inativo" ? `<button class="btn-suspender sec" data-congelar="false" style="color:var(--verde);border-color:var(--verde)">Reativar</button>` : `<button class="btn-suspender sec" data-congelar="true" style="color:var(--ambar);border-color:var(--ambar)">Congelar</button>`}
+        <button class="btn-excluir" style="background:var(--vermelho)">Excluir</button>
       </div></td>
     </tr>`;
   }
@@ -143,6 +145,19 @@ function ligarAcoes() {
       const n = box.querySelector(".in-assentos").value;
       const r = await post("/api/admin/assentos", { token: tk, n });
       alert(r.ok ? `Assentos definidos: ${n}.` : "Erro: " + r.d.erro); if (r.ok) carregar();
+    };
+    const btnSusp = box.querySelector(".btn-suspender");
+    if (btnSusp) btnSusp.onclick = async () => {
+      const congelar = btnSusp.dataset.congelar === "true";
+      if (congelar && !confirm("Congelar o acesso desta empresa? Ela perde o acesso até ser reativada.")) return;
+      const r = await post("/api/admin/suspender", { token: tk, congelar });
+      alert(r.ok ? (congelar ? "Acesso congelado." : "Acesso reativado.") : "Erro: " + r.d.erro); if (r.ok) carregar();
+    };
+    box.querySelector(".btn-excluir").onclick = async () => {
+      if (!confirm("EXCLUIR esta empresa da base? Os dados são arquivados (recuperáveis), mas o acesso é removido. Confirma?")) return;
+      if (!confirm("Tem certeza mesmo? Esta ação remove a empresa da lista.")) return;
+      const r = await post("/api/admin/excluir", { token: tk });
+      alert(r.ok ? `Empresa excluída: ${r.d.excluido}.` : "Erro: " + r.d.erro); if (r.ok) carregar();
     };
   });
 }
