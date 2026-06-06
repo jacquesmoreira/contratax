@@ -3,6 +3,18 @@
 // creditos extras que nao expiram no virar do mes.
 
 export const PLANOS = {
+  // Plano de ENTRADA: busca e alerta ilimitados (custo zero), mas a leitura do
+  // edital pelo ContrataX.IA fica em DEGUSTACAO (3/mes). A IA e o gancho de
+  // upgrade pro Basico. Margem alta porque quase nao consome IA.
+  starter: {
+    id: "starter",
+    nome: "Starter",
+    preco: process.env.LICITA_PRECO_STARTER || "59,00",
+    analises: Number(process.env.LICITA_ANALISES_STARTER || 3), // degustacao
+    extracoesPdf: Number(process.env.LICITA_EXTRACOES_STARTER || 0),
+    empresas: 1,
+    degustacao: true, // sinaliza pra UI deixar claro que a IA e limitada
+  },
   basico: {
     id: "basico",
     nome: "Basico",
