@@ -6,6 +6,7 @@
 import "../src/env.mjs"; // carrega .env (chave da IA)
 import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzip as gzipCb } from "node:zlib";
