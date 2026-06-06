@@ -1429,6 +1429,17 @@ const servidor = createServer(async (req, res) => {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       return res.end(injetarAnalytics(paginaSeguranca()));
     }
+    // Paginas legais (LGPD): Politica de Privacidade e Termos de Uso.
+    if (rota === "/privacidade" || rota === "/privacidade.html") {
+      const html = await readFile(resolve(AQUI, "public", "privacidade.html"), "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(injetarAnalytics(html));
+    }
+    if (rota === "/termos" || rota === "/termos.html") {
+      const html = await readFile(resolve(AQUI, "public", "termos.html"), "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(injetarAnalytics(html));
+    }
 
     // ===== Central de Ajuda e Contato =====
     if (rota === "/ajuda" || rota === "/ajuda.html") {
