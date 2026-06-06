@@ -155,6 +155,24 @@ async function perfilPorToken(token) {
   return perfis.find((p) => p.token === token) ?? null;
 }
 
+// ===== Guard de acesso: bloqueia ferramentas pagas para conta vencida =====
+// Apos o fim do teste ou da carencia da assinatura, o cliente perde o acesso a
+// TODAS as ferramentas (recebiveis, contratos, documentos, historico,
+// declaracoes, analise). Sobra o minimo: ver status da conta e pagar.
+//
+// Prefixos de rota que exigem assinatura ativa. O token vem sempre em ?c= nessas
+// rotas. APIs respondem 403 paywall; paginas redirecionam pra /assinar.
+const ROTAS_PROTEGIDAS = [
+  "/api/recebiveis", "/api/contratos-meus", "/api/documentos", "/api/historico",
+  "/api/declaracoes", "/api/radar", "/api/contratos-fornecedor", "/api/saude-empresa",
+  "/api/equipe", "/api/exportar",
+  "/recebiveis", "/contratos", "/documentos", "/historico", "/declaracoes",
+  "/equipe", "/empresas",
+];
+function rotaProtegida(rota) {
+  return ROTAS_PROTEGIDAS.some((p) => rota === p || rota.startsWith(p + "/") || rota.startsWith(p + "."));
+}
+
 // Tipos de conteudo que valem a pena comprimir (texto). Binarios ja sao
 // comprimidos por natureza (PNG, PDF, XLSX) - gzip neles desperdica CPU.
 function compressivel(headers) {
@@ -227,6 +245,24 @@ const servidor = createServer(async (req, res) => {
     ativarGzip(req, res);
     const url = new URL(req.url, "http://localhost");
     const rota = url.pathname;
+
+    // Guard de acesso: ferramentas pagas exigem assinatura ativa. Conta vencida
+    // (teste expirado ou apos a carencia) e barrada aqui, antes de chegar na
+    // rota. Admin e contas com acesso passam direto.
+    if (rotaProtegida(rota)) {
+      const tkGuard = url.searchParams.get("c") || "";
+      if (tkGuard && tkGuard !== ADMIN) {
+        const pGuard = await perfilPorToken(tkGuard);
+        if (pGuard && !statusAtual(pGuard).temAcesso) {
+          if (rota.startsWith("/api/")) {
+            return json(res, 403, { erro: "Assinatura não ativa. Reative seu plano para usar esta ferramenta.", paywall: true });
+          }
+          // Pagina: manda pro paywall (assinar), preservando o token.
+          res.writeHead(302, { Location: `/assinar?c=${encodeURIComponent(tkGuard)}` });
+          return res.end();
+        }
+      }
+    }
 
     // Busca publica da landing page (por UF e termo, sem login).
     if (rota === "/api/busca-publica") {
