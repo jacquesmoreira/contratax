@@ -264,7 +264,7 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
 
 // Busca livre no acervo (usada pelo painel): por termo, UF e modalidade.
 // Devolve a lista de editais (nao so estatisticas), ranqueada por relevancia.
-export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termosParam = null, modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, limite = 60 } = {}) {
+export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termosParam = null, modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, limite = 60, pagina = null, porPag = null } = {}) {
   // Aceita ufs (array) ou uf (string simples, retrocompativel).
   const ufsArr = ufs && ufs.length ? ufs : (uf ? [uf] : []);
   const candidatos = consultar({ ufs: ufsArr, modalidades, apenasAbertos: true });
@@ -302,7 +302,16 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
   });
 
   const unicos = dedupEditais(casaram);
-  return { total: unicos.length, editais: unicos.slice(0, limite) };
+  const total = unicos.length;
+  // Modo paginado (pagina + porPag): devolve a fatia da pagina + metadados.
+  // Modo legado (so limite): devolve os primeiros `limite` (export do painel usa).
+  if (pagina && porPag) {
+    const pp = Math.max(1, Number(porPag));
+    const paginas = Math.max(1, Math.ceil(total / pp));
+    const p = Math.min(Math.max(1, Number(pagina)), paginas);
+    return { total, paginas, pagina: p, porPag: pp, editais: unicos.slice((p - 1) * pp, p * pp) };
+  }
+  return { total, editais: unicos.slice(0, limite) };
 }
 
 // Colapsa editais quase-identicos (mesma compra republicada no PNCP com sequenciais

@@ -1105,7 +1105,7 @@ document.getElementById("filtro-mod").innerHTML = '<option value="">Tipo: todos<
 const PRAZOS_P = [["","Prazo: qualquer"],["3","Encerra em 3 dias"],["7","Encerra em 7 dias"],["15","Encerra em 15 dias"],["30","Encerra em 30 dias"]];
 document.getElementById("filtro-prazo").innerHTML = PRAZOS_P.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
 
-async function buscarPainel() {
+async function buscarPainel(pagina = 1) {
   const termo = document.getElementById("busca").value.trim();
   const cidade = document.getElementById("filtro-cidade").value.trim();
   const ufsArr = [...ufsSelBusca];
@@ -1113,9 +1113,9 @@ async function buscarPainel() {
   const prazo = document.getElementById("filtro-prazo").value;
   if (!termo && !cidade && !ufsArr.length && !mod && !prazo) { carregar(); return; }
   const c = document.getElementById("conteudo");
-  c.innerHTML = `<div class="carregando"><span class="spinner"></span>Buscando no acervo nacional...</div>`;
+  if (pagina === 1) c.innerHTML = `<div class="carregando"><span class="spinner"></span>Buscando no acervo nacional...</div>`;
   try {
-    const params = new URLSearchParams({ termo, modalidade: mod, cidade, prazo });
+    const params = new URLSearchParams({ termo, modalidade: mod, cidade, prazo, pagina: String(pagina), porPag: "15" });
     ufsArr.forEach(u => params.append("uf", u)); // multi-uf: ?uf=SC&uf=SP
     const d = await (await fetch("/api/buscar?" + params)).json();
     const prazoTxt = prazo ? ` · encerra em até ${prazo} dias` : "";
@@ -1124,17 +1124,29 @@ async function buscarPainel() {
     // Banner persiste em qualquer tela: cliente em teste sempre vê o CTA
     let html = "";
     if (window.__acesso?.status === "teste") html += bannerTeste(window.__acesso);
+    const pAtual = d.pagina || 1, nPaginas = d.paginas || 1;
+    const faixaIni = d.total ? (pAtual - 1) * (d.porPag || 15) + 1 : 0;
+    const faixaFim = Math.min(pAtual * (d.porPag || 15), d.total);
     html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap">
       <span style="font-size:18px;font-weight:800">${d.total} resultado${d.total!==1?"s":""}${termo?' para "'+esc(termo)+'"':""}</span>
       <span style="color:var(--cinza)">em ${esc(onde)}</span>
       ${d.total ? `<a href="#" onclick="exportarBusca();return false" style="font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none">📊 Excel</a>` : ""}
       <a href="#" id="voltar-painel" style="margin-left:auto;color:var(--indigo);font-weight:700">← Voltar ao meu painel</a></div>`;
     html += d.editais.length ? d.editais.map(cardHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Nada encontrado. Tente outro termo, outra cidade ou amplie os filtros.</div>`;
+    // Controles de paginacao (so quando ha mais de 1 pagina)
+    if (nPaginas > 1) {
+      html += `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;flex-wrap:wrap">
+        <button class="pg-btn" data-pg="${pAtual - 1}" ${pAtual <= 1 ? "disabled" : ""} style="padding:9px 16px;border:1px solid var(--linha);background:#fff;border-radius:9px;font-weight:700;font-size:13.5px;cursor:pointer;${pAtual <= 1 ? "opacity:.4;cursor:default" : "color:var(--indigo)"}">← Anterior</button>
+        <span style="font-size:13.5px;color:var(--cinza);font-weight:600">Página ${pAtual} de ${nPaginas} <span style="color:var(--cinza-c)">(${faixaIni}–${faixaFim} de ${d.total})</span></span>
+        <button class="pg-btn" data-pg="${pAtual + 1}" ${pAtual >= nPaginas ? "disabled" : ""} style="padding:9px 16px;border:1px solid var(--linha);background:#fff;border-radius:9px;font-weight:700;font-size:13.5px;cursor:pointer;${pAtual >= nPaginas ? "opacity:.4;cursor:default" : "color:var(--indigo)"}">Próxima →</button>
+      </div>`;
+    }
     c.innerHTML = html;
     document.getElementById("voltar-painel").onclick = (e) => { e.preventDefault(); document.getElementById("busca").value=""; document.getElementById("filtro-cidade").value=""; limparUfs(); document.getElementById("filtro-mod").value=""; document.getElementById("filtro-prazo").value=""; carregar(); };
+    c.querySelectorAll(".pg-btn").forEach(b => b.onclick = () => { if (!b.disabled) { buscarPainel(Number(b.dataset.pg)); window.scrollTo({ top: 0, behavior: "smooth" }); } });
   } catch (e) { c.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`; }
 }
-document.getElementById("btn-buscar").onclick = buscarPainel;
+document.getElementById("btn-buscar").onclick = () => buscarPainel(1);
 
 // Exporta a view atual em CSV (Excel/Google Sheets abrem nativo, UTF-8 com BOM).
 // 'editais' = lista do meu ramo (perfil); 'radar' = renovacao; 'historico' fica
@@ -1155,10 +1167,10 @@ function exportarBusca() {
   [...ufsSelBusca].forEach(u => params.append("uf", u));
   location.href = "/api/exportar?" + params;
 }
-document.getElementById("busca").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(); });
-document.getElementById("filtro-cidade").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(); });
-document.getElementById("filtro-prazo").addEventListener("change", buscarPainel);
-document.getElementById("filtro-mod").addEventListener("change", buscarPainel);
+document.getElementById("busca").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(1); });
+document.getElementById("filtro-cidade").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(1); });
+document.getElementById("filtro-prazo").addEventListener("change", () => buscarPainel(1));
+document.getElementById("filtro-mod").addEventListener("change", () => buscarPainel(1));
 
 document.getElementById("conteudo").addEventListener("click", ev => {
   const card = ev.target.closest(".card");
