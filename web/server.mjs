@@ -1328,9 +1328,11 @@ const servidor = createServer(async (req, res) => {
       } catch { /* nao existe: cai no 404 */ }
     }
 
-    // Assets estaticos da marca (svg/png/ico/webp) servidos da pasta public.
+    // Assets estaticos da marca (svg/png/ico/webp) servidos da pasta public,
+    // inclusive em subpastas (ex: /portais/pncp.png). Bloqueia path traversal
+    // (".." na rota) por seguranca.
     // Cache de 30 dias - logo nao muda toda hora; quando trocar bumpa o arquivo.
-    if (/^\/[\w.-]+\.(svg|png|ico|webp|jpg|jpeg|js)$/.test(rota)) {
+    if (/^\/[\w./-]+\.(svg|png|ico|webp|jpg|jpeg|js)$/.test(rota) && !rota.includes("..")) {
       try {
         const buf = await readFile(resolve(AQUI, "public", rota.slice(1)));
         const tipo = rota.endsWith(".svg") ? "image/svg+xml"

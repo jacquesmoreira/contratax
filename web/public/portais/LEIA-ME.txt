@@ -1,0 +1,31 @@
+FAIXA DE LOGOS DOS PORTAIS (landing page)
+==========================================
+
+A faixa "Editais de todos os portais oficiais" na home (lp.html) mostra o NOME
+de cada portal em texto. Para virar LOGO, basta colocar o arquivo PNG aqui nesta
+pasta com o nome exato abaixo. A troca e automatica: assim que o arquivo existe,
+a faixa mostra a imagem no lugar do texto, sem mexer no codigo.
+
+ARQUIVOS ESPERADOS (PNG, fundo transparente, altura ~60-90px):
+  pncp.png
+  comprasnet.png
+  bll.png
+  bnc.png
+  licitar-digital.png
+  licitacoes-e.png
+  bbm.png
+  portal-de-compras.png
+  licitanet.png
+  compras-br.png
+  amm-licita.png
+  pe-integrado.png
+
+RECOMENDACAO SOBRE DIREITO DE MARCA:
+- PNCP, Comprasnet, gov.br: logos GOVERNAMENTAIS (publicas). Uso tranquilo.
+- BLL, BNC, BBM, Licitar Digital, etc.: marcas de empresas PRIVADAS. Usar a
+  logo pode exigir cuidado (sugerir parceria que nao existe e arriscado). Avalie
+  usar so as oficiais como imagem e manter as privadas em texto, OU assuma o
+  risco conscientemente. Para os que voce nao colocar arquivo, fica o texto.
+
+DICA: baixe as logos dos sites oficiais (rodape costuma ter "kit de marca" ou
+imagem em PNG/SVG). Mantenha fundo transparente e proporcao original.

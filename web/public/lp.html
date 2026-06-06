@@ -286,11 +286,32 @@
   </div></header>
 
   <!-- Faixa de portais: prova de cobertura. Honesto: o PNCP agrega os editais
-       de todos esses portais oficiais, e e dele que puxamos os dados. -->
+       de todos esses portais oficiais, e e dele que puxamos os dados.
+       Cada item tenta carregar a logo de /portais/<arquivo>.png; se o arquivo
+       ainda nao existe, o onerror troca a imagem pelo nome em texto. Assim a
+       faixa funciona com texto agora e vira logo quando os PNGs forem
+       adicionados, sem mexer no codigo. -->
+  <style>
+    .faixa-portais .portal { display:inline-flex; align-items:center; height:30px; }
+    .faixa-portais .portal img { max-height:30px; max-width:130px; width:auto; object-fit:contain; opacity:.78; filter:grayscale(20%); transition:opacity .15s; }
+    .faixa-portais .portal img:hover { opacity:1; }
+    .faixa-portais .portal .txt { font-weight:700; font-size:15px; color:var(--cinza); }
+  </style>
   <div class="faixa-portais" style="background:#fff;border-top:1px solid var(--linha);border-bottom:1px solid var(--linha);padding:22px 0;overflow:hidden">
     <div style="text-align:center;font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--cinza-c);margin-bottom:16px">Editais de todos os portais oficiais, reunidos para você</div>
-    <div class="portais-track" style="display:flex;gap:38px;white-space:nowrap;align-items:center;justify-content:center;flex-wrap:wrap;font-weight:700;font-size:15px;color:var(--cinza);padding:0 20px">
-      <span>PNCP</span><span>Comprasnet</span><span>BLL</span><span>BNC</span><span>Licitar Digital</span><span>Licitações-e</span><span>BBM Net</span><span>Portal de Compras</span><span>Licitanet</span><span>Compras BR</span><span>AMM Licita</span><span>PE Integrado</span>
+    <div class="portais-track" style="display:flex;gap:34px;align-items:center;justify-content:center;flex-wrap:wrap;padding:0 20px">
+      <span class="portal"><img src="/portais/pncp.png" alt="PNCP" onerror="this.outerHTML='<span class=\'txt\'>PNCP</span>'"></span>
+      <span class="portal"><img src="/portais/comprasnet.png" alt="Comprasnet" onerror="this.outerHTML='<span class=\'txt\'>Comprasnet</span>'"></span>
+      <span class="portal"><img src="/portais/bll.png" alt="BLL" onerror="this.outerHTML='<span class=\'txt\'>BLL</span>'"></span>
+      <span class="portal"><img src="/portais/bnc.png" alt="BNC" onerror="this.outerHTML='<span class=\'txt\'>BNC</span>'"></span>
+      <span class="portal"><img src="/portais/licitar-digital.png" alt="Licitar Digital" onerror="this.outerHTML='<span class=\'txt\'>Licitar Digital</span>'"></span>
+      <span class="portal"><img src="/portais/licitacoes-e.png" alt="Licitações-e" onerror="this.outerHTML='<span class=\'txt\'>Licitações-e</span>'"></span>
+      <span class="portal"><img src="/portais/bbm.png" alt="BBM Net" onerror="this.outerHTML='<span class=\'txt\'>BBM Net</span>'"></span>
+      <span class="portal"><img src="/portais/portal-de-compras.png" alt="Portal de Compras" onerror="this.outerHTML='<span class=\'txt\'>Portal de Compras</span>'"></span>
+      <span class="portal"><img src="/portais/licitanet.png" alt="Licitanet" onerror="this.outerHTML='<span class=\'txt\'>Licitanet</span>'"></span>
+      <span class="portal"><img src="/portais/compras-br.png" alt="Compras BR" onerror="this.outerHTML='<span class=\'txt\'>Compras BR</span>'"></span>
+      <span class="portal"><img src="/portais/amm-licita.png" alt="AMM Licita" onerror="this.outerHTML='<span class=\'txt\'>AMM Licita</span>'"></span>
+      <span class="portal"><img src="/portais/pe-integrado.png" alt="PE Integrado" onerror="this.outerHTML='<span class=\'txt\'>PE Integrado</span>'"></span>
     </div>
   </div>
 
