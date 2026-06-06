@@ -13,9 +13,9 @@ const GA4_ID = process.env.LICITA_GA4_ID || "G-N79Q5SH624";
 const GA4_SECRET = process.env.LICITA_GA4_API_SECRET || "";
 const GTM_ID = process.env.LICITA_GTM_ID || "";
 const META_PIXEL = process.env.LICITA_META_PIXEL_ID || "";
-// Microsoft Clarity (heatmap + session replay, gratis). Configurar via env quando
-// criar o projeto em clarity.microsoft.com. Sem ID = nao injeta nada.
-const CLARITY_ID = process.env.LICITA_CLARITY_ID || "";
+// Microsoft Clarity (heatmap + session replay, gratis). Project ID padrao do
+// ContrataX em producao. Sobrescreve via LICITA_CLARITY_ID se quiser trocar.
+const CLARITY_ID = process.env.LICITA_CLARITY_ID || "wrs09m31ps";
 
 export function temAnalytics() {
   return Boolean(GA4_ID || GTM_ID);
