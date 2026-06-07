@@ -94,6 +94,46 @@ export async function ativarPlano(token, nivel, dias = 30, formaPagamento = null
   return ativarPorToken(token, dias, nivel, formaPagamento);
 }
 
+// Calcula a diferenca pro-rata para upgrade de plano dentro do ciclo atual.
+// Devolve { permitido, valor, diasRestantes, precoNovo, precoAtual, descricao }.
+// Regra: cliente paga (preco_novo - preco_atual) * dias_restantes / 30.
+// Minimo R$ 5,00 (evita cobrancas irrisorias e custo de Pix). Se diferenca <= 0
+// (downgrade), nao permite upgrade — orientacao e usar downgrade agendado.
+export function calcularProRata(perfil, planoAtual, planoNovo) {
+  const status = statusAtual(perfil);
+  const precoNum = (s) => Number(String(s).replace(/\./g, "").replace(",", "."));
+  const precoAtual = precoNum(planoAtual.preco);
+  const precoNovo = precoNum(planoNovo.preco);
+  if (precoNovo <= precoAtual) {
+    return { permitido: false, motivo: "downgrade", precoAtual, precoNovo, valor: 0, diasRestantes: 0 };
+  }
+  let dias = status.diasRestantes;
+  if (dias == null || dias < 0) dias = 0;
+  if (dias > 30) dias = 30;
+  const valor = Math.max(5, Math.round((precoNovo - precoAtual) * (dias / 30) * 100) / 100);
+  return {
+    permitido: true,
+    precoAtual,
+    precoNovo,
+    diasRestantes: dias,
+    valor,
+    descricao: `Upgrade pro-rata: ${planoAtual.nome} -> ${planoNovo.nome} (${dias} dias)`,
+  };
+}
+
+// Aplica o upgrade no perfil (sobe o nivel e mantem expiraEm). Chamado pelo
+// webhook quando o pagamento da diferenca for confirmado.
+export async function aplicarUpgrade(token, novoNivel) {
+  const perfis = await lerPerfis();
+  const p = perfis.find((x) => x.token === token);
+  if (!p) throw new Error(`Token ${token} nao encontrado`);
+  if (!p.assinatura) p.assinatura = {};
+  p.assinatura.nivel = novoNivel;
+  p.assinatura.upgradeEm = new Date().toISOString();
+  await salvarPerfis(perfis);
+  return p;
+}
+
 // Cancelamento self-service: marca o perfil como cancelado, mas mantem o acesso
 // ate o fim do ciclo pago. Quem realmente para a cobranca recorrente e a chamada
 // ao Asaas (cancelarAssinaturaAsaas) feita na rota.

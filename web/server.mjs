@@ -60,8 +60,8 @@ import { googleConfigurado, urlAutorizacao, processarCallback } from "../src/goo
 import { solicitarReset, aplicarReset, verificarToken } from "../src/recuperarSenha.mjs";
 import { checarAuth, registrarTentativa, limparAuth, ipDoRequest as ipAuth } from "../src/rateLimitAuth.mjs";
 import { PLANOS, AVULSOS, planoDe } from "../src/planos.mjs";
-import { ativarPlano, cancelarPorToken } from "../src/assinatura.mjs";
-import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura, cancelarAssinaturaAsaas } from "../src/asaas.mjs";
+import { ativarPlano, cancelarPorToken, calcularProRata, aplicarUpgrade } from "../src/assinatura.mjs";
+import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura, cancelarAssinaturaAsaas, atualizarValorAssinatura } from "../src/asaas.mjs";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(AQUI, "..");
@@ -1114,6 +1114,31 @@ const servidor = createServer(async (req, res) => {
                 });
               }
             } catch (e) { console.error("[ga4]", e.message); }
+          } else if (tipo === "upgrade" && token) {
+            // Upgrade pro-rata pago. Sobe nivel imediatamente e atualiza o valor
+            // da assinatura recorrente no Asaas pras proximas cobrancas.
+            const novoNivel = PLANOS[id] ? id : null;
+            if (novoNivel) {
+              await aplicarUpgrade(token, novoNivel);
+              try {
+                const perfilU = await perfilPorToken(token);
+                const novoValor = precoNumero(PLANOS[novoNivel].preco);
+                if (perfilU?.asaasSubscriptionId) {
+                  await atualizarValorAssinatura(
+                    perfilU.asaasSubscriptionId,
+                    novoValor,
+                    `ContrataX — Plano ${PLANOS[novoNivel].nome}`,
+                  );
+                }
+                await enviarConversao(perfilU, {
+                  transactionId: pg.id || ref,
+                  value: pg.value || 0,
+                  planoId: "upgrade-" + novoNivel,
+                  planoNome: "Upgrade " + (PLANOS[novoNivel].nome || novoNivel),
+                  formaPagamento: pg.billingType || null,
+                });
+              } catch (e) { console.error("[upgrade]", e.message); }
+            }
           } else if (tipo === "avulso" && token) {
             const qtd = AVULSOS[id]?.analises || 0;
             if (qtd) await adicionarAvulsas(token, qtd);
@@ -1189,6 +1214,59 @@ const servidor = createServer(async (req, res) => {
         console.error("[webhook asaas]", e.message);
       }
       return json(res, 200, { ok: true }); // sempre 200 para o Asaas nao re-tentar em loop
+    }
+
+    // Pre-visualizacao do upgrade: quanto custa hoje pra subir de plano.
+    // GET /api/conta/upgrade-preview?c=token&novo=pro
+    if (rota === "/api/conta/upgrade-preview" && req.method === "GET") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
+      const novoId = url.searchParams.get("novo");
+      const novo = PLANOS[novoId];
+      if (!novo) return json(res, 400, { erro: "Plano invalido" });
+      const atualId = perfil.assinatura?.nivel || "starter";
+      const atual = PLANOS[atualId] || PLANOS.starter;
+      const calc = calcularProRata(perfil, atual, novo);
+      return json(res, 200, {
+        planoAtual: { id: atualId, nome: atual.nome, preco: atual.preco },
+        planoNovo: { id: novoId, nome: novo.nome, preco: novo.preco },
+        ...calc,
+      });
+    }
+
+    // Upgrade self-service: cria cobranca avulsa com a diferenca pro-rata e
+    // devolve o link de pagamento. Webhook PAYMENT_RECEIVED com externalReference
+    // "upgrade:token:nivel" aplica a subida de nivel e atualiza o valor da
+    // assinatura recorrente no Asaas.
+    if (rota === "/api/conta/upgrade" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfil = await perfilPorToken(corpo.c || url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
+      if (!asaasConfigurado()) return json(res, 400, { erro: "Gateway nao configurado" });
+      const novo = PLANOS[corpo.novo];
+      if (!novo) return json(res, 400, { erro: "Plano invalido" });
+      const atualId = perfil.assinatura?.nivel || "starter";
+      const atual = PLANOS[atualId] || PLANOS.starter;
+      const calc = calcularProRata(perfil, atual, novo);
+      if (!calc.permitido) return json(res, 400, { erro: "Upgrade nao aplicavel (downgrade ou mesmo plano)" });
+      try {
+        const clienteId = await obterOuCriarCliente({
+          nome: perfil.razaoSocial || perfil.nome, email: perfil.email, cnpj: perfil.cnpj, clienteId: perfil.asaasClienteId,
+        });
+        const BASE_URL = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
+        const successUrl = `${BASE_URL}/obrigado?c=${perfil.token}`;
+        const r = await criarCobrancaAvulsa({
+          clienteId,
+          valor: calc.valor,
+          descricao: `ContrataX — ${calc.descricao}`,
+          externalReference: `upgrade:${perfil.token}:${corpo.novo}`,
+          successUrl,
+        });
+        if (!r.invoiceUrl) return json(res, 502, { erro: "Gateway nao devolveu URL de pagamento" });
+        return json(res, 200, { url: r.invoiceUrl, valor: calc.valor, diasRestantes: calc.diasRestantes });
+      } catch (e) {
+        return json(res, 502, { erro: e.message });
+      }
     }
 
     // Cancelamento self-service: para a renovacao no Asaas e marca o perfil.

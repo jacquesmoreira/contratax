@@ -123,6 +123,15 @@
       <div class="erro" id="msg-erro"></div>
     </div>
 
+    <!-- Mudar de plano (upgrade pro-rata / downgrade agendado) -->
+    <div class="card" id="card-upgrade" style="display:none">
+      <h2>Mudar de plano</h2>
+      <div id="info-plano-atual" style="font-size:14px;color:var(--cinza);margin-bottom:14px;line-height:1.55"></div>
+      <div id="opcoes-planos" style="display:flex;gap:12px;flex-wrap:wrap"></div>
+      <div class="ok" id="upgrade-ok" style="margin-top:14px"></div>
+      <div class="erro" id="upgrade-erro" style="margin-top:14px"></div>
+    </div>
+
     <!-- Zona de cancelamento -->
     <div class="card" style="border-color:#fecaca;background:#fff">
       <h2 style="color:#991b1b">Cancelar assinatura</h2>
@@ -308,6 +317,76 @@ if (modoCompletar) {
 } else {
   carregar();
 }
+
+// ===== Mudar de plano (upgrade pro-rata) =====
+async function carregarCardPlano() {
+  try {
+    const r = await fetch("/api/acesso?c=" + encodeURIComponent(token));
+    const a = await r.json();
+    if (!a.encontrado || a.status !== "ativo") return;
+    const nivel = a.nivel || "basico";
+    const card = document.getElementById("card-upgrade");
+    if (!card) return;
+    card.style.display = "block";
+
+    const fmtDataBR = (iso) => { try { return new Date(iso).toLocaleDateString("pt-BR"); } catch { return ""; } };
+    const dataRenova = a.expiraEm ? fmtDataBR(a.expiraEm) : "—";
+    document.getElementById("info-plano-atual").innerHTML =
+      `Seu plano atual: <b>${nivel.replace(/^./, c => c.toUpperCase())}</b>. Renova em <b>${dataRenova}</b>.`;
+
+    // Hierarquia (so mostra upgrade)
+    const ordem = ["starter", "basico", "pro"];
+    const idxAtual = ordem.indexOf(nivel);
+    const opcoesEl = document.getElementById("opcoes-planos");
+    opcoesEl.innerHTML = "";
+
+    for (let i = idxAtual + 1; i < ordem.length; i++) {
+      const novoId = ordem[i];
+      const previewR = await fetch(`/api/conta/upgrade-preview?c=${encodeURIComponent(token)}&novo=${novoId}`);
+      const preview = await previewR.json();
+      if (preview.erro || !preview.permitido) continue;
+      const card = document.createElement("div");
+      card.style.cssText = "flex:1;min-width:220px;border:1.5px solid var(--linha);border-radius:12px;padding:18px;background:#fff";
+      card.innerHTML = `
+        <div style="font-size:13px;font-weight:700;color:var(--indigo);letter-spacing:.5px">UPGRADE</div>
+        <div style="font-size:18px;font-weight:800;margin:4px 0 8px">${preview.planoNovo.nome}</div>
+        <div style="font-size:13px;color:var(--cinza);margin-bottom:6px">R$ ${preview.planoNovo.preco}/mês a partir da próxima renovação</div>
+        <div style="font-size:14px;color:var(--tinta);background:#eef2ff;border-radius:9px;padding:10px 12px;margin:10px 0">
+          Diferença proporcional hoje:<br>
+          <b style="font-size:18px;color:var(--indigo)">R$ ${preview.valor.toFixed(2).replace(".", ",")}</b>
+          <span style="font-size:12px;color:var(--cinza-c)"> · ${preview.diasRestantes} dias restantes</span>
+        </div>
+        <button class="btn" data-novo="${novoId}" style="width:100%;margin-top:6px">Fazer upgrade para ${preview.planoNovo.nome}</button>
+      `;
+      card.querySelector("button").onclick = async () => {
+        if (!confirm(`Confirma upgrade para ${preview.planoNovo.nome}? Você paga R$ ${preview.valor.toFixed(2).replace(".", ",")} hoje (diferença proporcional) e o acesso ${preview.planoNovo.nome} libera assim que o pagamento confirmar.`)) return;
+        document.getElementById("upgrade-ok").textContent = "";
+        document.getElementById("upgrade-erro").textContent = "";
+        const btn = card.querySelector("button");
+        btn.disabled = true; btn.textContent = "Gerando link...";
+        try {
+          const r = await fetch("/api/conta/upgrade?c=" + encodeURIComponent(token), {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ c: token, novo: novoId }),
+          });
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.erro || "falha");
+          window.location.href = d.url;
+        } catch (e) {
+          document.getElementById("upgrade-erro").textContent = e.message;
+          btn.disabled = false; btn.textContent = `Fazer upgrade para ${preview.planoNovo.nome}`;
+        }
+      };
+      opcoesEl.appendChild(card);
+    }
+    if (!opcoesEl.children.length) {
+      opcoesEl.innerHTML = `<div style="font-size:14px;color:var(--cinza-c)">Você já está no plano mais alto. Para mudar de plano para um inferior, escreva para <a href="mailto:contato@contratax.com.br" style="color:var(--indigo);font-weight:700">contato@contratax.com.br</a> — o downgrade aplica na próxima renovação.</div>`;
+    }
+  } catch (e) {
+    console.error("[carregar card plano]", e);
+  }
+}
+if (!modoCompletar) carregarCardPlano();
 
 // ===== Cancelamento self-service =====
 const $abrir = $("abrir-cancelar"), $form = $("form-cancelar");

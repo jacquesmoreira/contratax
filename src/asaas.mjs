@@ -86,6 +86,20 @@ export async function externalReferenceDaAssinatura(subscriptionId) {
   catch { return null; }
 }
 
+// Atualiza o valor da assinatura recorrente no Asaas. Usado em upgrade de plano:
+// proximas cobrancas passam a vir no preco novo, sem cancelar/recriar.
+export async function atualizarValorAssinatura(subscriptionId, novoValor, descricao = null) {
+  if (!subscriptionId) return { ok: false, erro: "sem subscriptionId" };
+  try {
+    const corpo = { value: Number(novoValor) };
+    if (descricao) corpo.description = descricao;
+    await api(`/subscriptions/${subscriptionId}`, "PUT", corpo);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
 // Cancela a assinatura recorrente no Asaas (para a renovacao automatica).
 // O acesso do cliente continua valido ate o fim do periodo ja pago — quem decide
 // isso e o nosso codigo (assinatura.mjs), o Asaas so para de cobrar.

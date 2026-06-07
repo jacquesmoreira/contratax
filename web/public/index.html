@@ -344,13 +344,16 @@ function bannerUpgrade(acesso) {
   </div>`;
 }
 
-// Chip do plano no menu nav (sempre visivel)
+// Chip do plano no menu nav (sempre visivel). Para assinantes, exibe a data de
+// renovacao (dd/mm) no tooltip e na linha abaixo quando faltar <=7 dias.
 function chipPlano(acesso) {
   const el = document.getElementById("nav-plano");
   if (!el) return;
   el.href = "/assinar?c=" + encodeURIComponent(token);
   el.style.display = "inline-block";
   el.className = "";
+  el.removeAttribute("title");
+  const fmtDataBR = (iso) => { try { const d = new Date(iso); return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }); } catch { return ""; } };
   if (acesso.status === "teste") {
     const d = acesso.diasRestantes ?? 0;
     el.classList.add("chip-teste");
@@ -360,12 +363,24 @@ function chipPlano(acesso) {
     const nome = (acesso.nivel || "basico").replace(/^./, c => c.toUpperCase());
     const u = acesso.uso || {};
     const pct = u.limite > 0 ? u.usados / u.limite : 0;
-    if (pct >= 0.8 && (acesso.nivel || "") === "basico") {
+    const dias = acesso.diasRestantes;
+    const dataBR = acesso.expiraEm ? fmtDataBR(acesso.expiraEm) : "";
+    // Link prioritario: /conta tem o card de upgrade/cancelamento
+    el.href = "/conta?c=" + encodeURIComponent(token);
+    if (dias != null && dias <= 7) {
+      // Faltam 7 dias ou menos: amarelo (laranja se <=2). Mostra a data dura.
+      el.classList.add(dias <= 2 ? "chip-teste" : "chip-upgrade");
+      if (dias <= 2) el.classList.add("urgente");
+      el.textContent = `Renova em ${dataBR}`;
+      el.title = `Plano ${nome} · renova em ${dataBR}`;
+    } else if (pct >= 0.8 && (acesso.nivel || "") === "basico") {
       el.classList.add("chip-upgrade");
       el.textContent = "Upgrade para Pro";
+      if (dataBR) el.title = `Plano ${nome} · renova em ${dataBR}`;
     } else {
       el.classList.add("chip-ativo");
       el.textContent = "Plano " + nome;
+      if (dataBR) el.title = `Renova em ${dataBR}`;
     }
   } else if (acesso.status === "atrasado") {
     el.classList.add("chip-teste", "urgente");
