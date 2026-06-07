@@ -2,8 +2,8 @@
 
 > **Para qualquer outra IA ou desenvolvedor que pegue este projeto:** este documento contém TUDO que precisa pra continuar de onde paramos. Leitura: ~10 minutos.
 
-**Última atualização:** 2026-06-07 (sábado)
-**Status:** Pronto pra venda. Primeiro pagamento real processado com sucesso (R$ 59 via Pix).
+**Última atualização:** 2026-06-07 (sábado, final de tarde)
+**Status:** Pronto pra venda. Primeiro pagamento real processado com sucesso (R$ 59 via Pix). Termos de Uso 2.0 + clickwrap explícito implementados.
 
 ---
 
@@ -310,7 +310,15 @@ Cliente paga a diferença via cobrança avulsa Asaas → webhook reconhece `upgr
 
 ### Legal/Conformidade
 - [x] Política de Privacidade (`/privacidade`)
-- [x] Termos de Uso (`/termos`) com CDC art. 49 (7 dias arrependimento)
+- [x] **Termos de Uso 2.0** (`/termos`) com:
+  - CDC art. 49 (7 dias arrependimento + reembolso integral)
+  - Cláusula 6.1 — fonte secundária de dados (PNCP prevalece)
+  - Cláusula 6.2 — disclaimer reforçado de IA (Anthropic Claude)
+  - Cláusula 6.5 — **limitação de responsabilidade: teto de 12 meses pagos**
+  - Cláusula 6.6 — "como está", janelas de manutenção
+  - Cláusula 9 — alterações com **30 dias de antecedência**
+  - Cláusula 9-A — registro do aceite (IP/timestamp/versão)
+- [x] **Clickwrap explícito no cadastro**: checkbox obrigatório + log de IP (server-side), timestamp e versão dos termos salvos no perfil (`perfil.aceiteTermos`)
 - [x] LGPD (Lei 13.709/2018) cumprida no cookie banner
 - [x] DPO declarado (Jacques)
 
@@ -406,6 +414,7 @@ git add -A && git commit -m "..." && git push origin main
 | Depoimentos fabricados | ILEGAL (CDC + CONAR) — nunca |
 | Self-service downgrade | Arbitragem (subir, consumir, descer) |
 | Google Ads vertical saúde | Bloqueado pelo Google pra essa vertical |
+| **Lances pela plataforma** | **Risco existencial** sem ser leiloeiro oficial (Dec 21.981/1932). CDC art. 51 anula cláusulas que eximem responsabilidade em B2C. Cliente perdeu lance de R$ 1M? Patrimônio pessoal do MEI responde. Manter modelo "Bloomberg + corretora" (camada de inteligência, execução no portal oficial). Só revisar com LTDA + seguro E&O + advogado digital + infra multi-AZ. |
 
 ---
 
@@ -430,6 +439,10 @@ git add -A && git commit -m "..." && git push origin main
 - Página de status pública (status.contratax.com.br)
 - Upgrade no Asaas: marca site `https://www.contratax.com.br` (com www) ao invés de sem www
 - Bing Webmaster Tools (5-8% do tráfego)
+- Aceite explícito no fluxo Google OAuth (`/conta?completar=1`) — hoje só pula pelo cadastro tradicional
+- Contratar 1h com advogado de direito digital (R$ 500-800) para revisar termos 2.0 e privacidade
+- Migrar pra LTDA quando passar de R$ 50k MRR (proteção patrimonial)
+- Seguro de responsabilidade civil profissional (E&O) — só relevante se um dia mexer com lances ou volumes grandes
 
 ---
 
@@ -530,6 +543,57 @@ Token: e29744cdbda68bdd9877426d57d5a007 (NUNCA commitar)
 6. **Não sugerir outbound/cold call/networking** — contraria regra do fundador.
 7. **A próxima alavanca não é mais código.** É marketing orgânico, content, SEO. Se ele te pedir mais feature, pergunte se não é hora de divulgar.
 8. **MEI tem teto R$ 81k/ano.** Quando chegar perto, planejar migração pra LTDA com novo endereço comercial.
+
+---
+
+---
+
+## 19. Diário de bordo (cronológico)
+
+### 2026-06-07 (sábado)
+
+**Manhã/tarde** — Maratona de produção:
+- Configuração Asaas (chave de produção, domínio cadastrado)
+- Webhook configurado e validado em produção
+- Primeiro pagamento real recebido (R$ 59 Pix, processado em ~3 segundos automaticamente)
+- Cancelamento self-service validado em produção
+- Upgrade pro-rata implementado (calcularProRata + rota /api/conta/upgrade + UI em /conta)
+- E-mails de aviso de renovação (7d antes e 1d antes) implementados em src/avisoRenovacao.mjs
+- Chip do plano no nav agora mostra data exata de renovação (dd/mm/aaaa)
+- Trava anti-abuso TL;DR (30 cache-misses/dia/cliente, configurável)
+- TL;DR fora da cota mensal (vira gancho de ativação ilimitado)
+- Bug do TL;DR sumindo na tela corrigido
+- Service Worker v2: bypass de cross-origin (era a causa dos erros CSP em GA/Clarity/Fonts)
+- CSP liberou Clarity (script-src + connect-src) e Google Fonts (connect-src)
+- Toggle "mostrar/ocultar senha" em cadastro, entrar e redefinir-senha
+- Agrupamento de contratos corrigido (normalização YYYY-MM-DD na chave)
+- Página de erro 500 amigável (com ID rastreável)
+- Backup off-site automático diário (snapshot SQLite + gzip + email com link)
+- HANDOFF.md criado (este documento)
+
+**Final de tarde** — Reforço jurídico:
+- Discussão sobre contrato de adesão e proteção legal
+- Conclusão: NÃO implementar lances pela plataforma (risco existencial para MEI)
+- Termos de Uso 2.0 reescritos com:
+  - Cláusula 6 expandida (fonte secundária, IA, sem garantia, indisponibilidade de terceiros, limitação contratual de responsabilidade com teto de 12 meses, janelas de manutenção)
+  - Cláusula 9 reforçada (alterações com 30 dias de antecedência)
+  - Nova cláusula 9-A (registro do aceite com IP/timestamp/versão como prova jurídica)
+- Clickwrap explícito implementado no cadastro:
+  - Checkbox obrigatório (`#aceite-termos required`)
+  - Front envia `aceiteTermos: { em, versao, userAgent }`
+  - Backend valida + completa com `ip` capturado server-side
+  - `perfil.aceiteTermos` persistido no perfis.json (prova de consentimento)
+
+**Estado final:**
+- 27 tarefas concluídas em 1 dia
+- 14 commits no main
+- 1 cliente real ativo (Jacques)
+- Sistema 100% pronto pra vender + protegido juridicamente em nível "padrão SaaS bootstrap" (suficiente até 30-50 clientes ou contratação de advogado)
+
+**Pendente para segunda-feira (09/06):**
+- Post LinkedIn de lançamento (200 palavras)
+- 10 CNAEs com alta dor em editais públicos
+- (opcional) 3 mensagens pra rede sem cold call
 
 ---
 

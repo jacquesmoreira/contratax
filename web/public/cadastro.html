@@ -90,8 +90,11 @@
       <input id="ramo" type="text" placeholder="Ex: limpeza, conservação, asseio" required />
       <div class="dica">Separe por vírgula para incluir vários termos.</div>
 
+      <label style="display:flex;align-items:flex-start;gap:10px;margin-top:18px;font-size:13.5px;line-height:1.5;color:var(--cinza);cursor:pointer">
+        <input type="checkbox" id="aceite-termos" required style="margin-top:3px;width:18px;height:18px;accent-color:var(--indigo);cursor:pointer;flex-shrink:0" />
+        <span>Li e concordo com os <a href="/termos" target="_blank" style="color:var(--indigo);font-weight:700">Termos de Uso</a> e com a <a href="/privacidade" target="_blank" style="color:var(--indigo);font-weight:700">Política de Privacidade</a>. Estou ciente, em especial, das cláusulas 6 e 7 dos Termos, que tratam da natureza informacional dos dados, do uso de Inteligência Artificial e da limitação de responsabilidade do ContrataX.</span>
+      </label>
       <button class="btn" type="submit" id="btn">Criar meu painel</button>
-      <p style="font-size:12px;color:#64748b;text-align:center;margin-top:12px;line-height:1.5">Ao criar a conta, você concorda com os <a href="/termos" target="_blank" style="color:var(--indigo)">Termos de Uso</a> e a <a href="/privacidade" target="_blank" style="color:var(--indigo)">Política de Privacidade</a>.</p>
       <div class="erro" id="erro"></div>
     </form>
 
@@ -164,6 +167,11 @@ document.getElementById("form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const btn = document.getElementById("btn"), erro = document.getElementById("erro");
   erro.textContent = "";
+  // Clickwrap: aceite explicito obrigatorio. Sem checkbox marcada, nao envia.
+  if (!document.getElementById("aceite-termos").checked) {
+    erro.textContent = "Para continuar, você precisa marcar que leu e concorda com os Termos de Uso e a Política de Privacidade.";
+    return;
+  }
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Montando seu painel...';
   const ufsArr = [...selecionados];
   const corpo = {
@@ -174,6 +182,13 @@ document.getElementById("form").addEventListener("submit", async (ev) => {
     senha: document.getElementById("senha").value,
     uf: ufsArr.length === 1 ? ufsArr[0] : (ufsArr.length > 1 ? ufsArr : ""),
     ramo: document.getElementById("ramo").value,
+    // Registro do aceite (clickwrap): timestamp + versao + agente. O IP e
+    // capturado no servidor (mais confiavel que client-side).
+    aceiteTermos: {
+      em: new Date().toISOString(),
+      versao: "2.0",
+      userAgent: navigator.userAgent.slice(0, 200),
+    },
   };
   try {
     const r = await fetch("/api/cadastrar", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(corpo) });

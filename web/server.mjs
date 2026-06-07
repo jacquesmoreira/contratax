@@ -427,7 +427,9 @@ const servidor = createServer(async (req, res) => {
       registrarTentativa("cadastro", ipCad);
       const corpo = await lerCorpo(req);
       try {
-        const r = await criarPerfil(corpo);
+        // Repassa o IP (servidor-side) pro registro do clickwrap. Mais
+        // confiavel que client-side enviar IP fake.
+        const r = await criarPerfil({ ...corpo, ip: ipCad });
         return json(res, 200, r);
       } catch (e) {
         return json(res, 400, { erro: e.message });

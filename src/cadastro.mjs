@@ -52,11 +52,16 @@ export async function criarPerfilGoogle({ nome, email, googleSub }) {
   return { token, link: `/conta?c=${token}&completar=1`, nome: perfil.nome };
 }
 
-export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, cnpj, razaoSocial }) {
+export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, cnpj, razaoSocial, aceiteTermos, ip }) {
   if (!email || !/.+@.+\..+/.test(email)) throw new Error("E-mail invalido");
   if (!cnpj || !validarFormatoCNPJ(cnpj)) throw new Error("CNPJ invalido");
   if (!ramo || !ramo.trim()) throw new Error("Informe o ramo da empresa");
   if (!senha || senha.length < 6) throw new Error("A senha precisa de ao menos 6 caracteres");
+  // Clickwrap: o aceite explicito dos termos e obrigatorio. Sem ele, nao cria
+  // perfil. Protege juridicamente contra alegacao de "nao concordei".
+  if (!aceiteTermos || !aceiteTermos.em || !aceiteTermos.versao) {
+    throw new Error("Voce precisa aceitar os Termos de Uso e a Politica de Privacidade.");
+  }
 
   const cnpjLimpo = limparCNPJ(cnpj);
   const perfis = await lerPerfis();
@@ -118,6 +123,14 @@ export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, c
     modalidades: modalidades?.length ? modalidades : [6, 8, 9, 4],
     filtro: { termos, termosExcluir: [], valorMin: null, valorMax: null },
     assinatura: novaAssinaturaTeste(),
+    // Registro do clickwrap (prova juridica do consentimento). IP capturado
+    // pelo servidor (mais confiavel que client-side).
+    aceiteTermos: {
+      em: aceiteTermos.em,
+      versao: aceiteTermos.versao,
+      ip: ip || null,
+      userAgent: (aceiteTermos.userAgent || "").slice(0, 200),
+    },
   };
 
   perfis.push(perfil);
