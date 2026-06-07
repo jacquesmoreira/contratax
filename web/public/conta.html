@@ -132,6 +132,27 @@
       <div class="erro" id="upgrade-erro" style="margin-top:14px"></div>
     </div>
 
+    <!-- Meus dados (LGPD art. 18) -->
+    <div class="card">
+      <h2>Meus dados (LGPD)</h2>
+      <p style="font-size:14px;color:var(--cinza);margin-bottom:14px;line-height:1.55">
+        Conforme o art. 18 da LGPD, você tem direito de baixar todos os seus dados a qualquer momento. O arquivo inclui sua empresa, configurações, assinatura, equipe, uso e histórico.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a id="dl-json" class="btn" style="background:#fff;color:var(--indigo);border:1.5px solid var(--indigo);text-decoration:none;display:inline-block">Baixar em JSON</a>
+        <a id="dl-csv" class="btn" style="background:#fff;color:var(--indigo);border:1.5px solid var(--indigo);text-decoration:none;display:inline-block">Baixar em CSV</a>
+      </div>
+      <p style="font-size:12px;color:var(--cinza-c);margin-top:14px">Quer apagar todos os seus dados? Use o botão "Quero cancelar" abaixo e, depois, escreva para <a href="mailto:contato@contratax.com.br" style="color:var(--indigo);font-weight:700">contato@contratax.com.br</a> solicitando exclusão completa.</p>
+    </div>
+
+    <script>
+      (function(){
+        var j = document.getElementById("dl-json"), c = document.getElementById("dl-csv");
+        if (j) j.href = "/api/conta/meus-dados?formato=json&c=" + encodeURIComponent(token);
+        if (c) c.href = "/api/conta/meus-dados?formato=csv&c=" + encodeURIComponent(token);
+      })();
+    </script>
+
     <!-- Zona de cancelamento -->
     <div class="card" style="border-color:#fecaca;background:#fff">
       <h2 style="color:#991b1b">Cancelar assinatura</h2>

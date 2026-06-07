@@ -103,5 +103,10 @@ export async function digestLoop({ horaBR = 8, log = console.log } = {}) {
     // Apos o digest, dispara avisos de renovacao (7d e 1d antes do vencimento).
     try { await enviarAvisosRenovacaoDoDia({ log }); }
     catch (e) { log(`[renov] erro no ciclo: ${e.message}`); }
+    // Tambem 1x/dia: anonimiza IPs em logs/perfis com > LICITA_IP_RETENCAO_DIAS dias.
+    try {
+      const { anonimizarLogsAntigos } = await import("./anonimizarLogs.mjs");
+      await anonimizarLogsAntigos({ log });
+    } catch (e) { log(`[lgpd] erro no ciclo: ${e.message}`); }
   }
 }

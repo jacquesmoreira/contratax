@@ -133,8 +133,15 @@ function aplicarHeadersSeguranca(res) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=()");
+  res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()");
+  // Bloqueia que recursos do site sejam carregados como cross-origin: protege
+  // contra ataques de carregamento indevido (Spectre-like).
+  res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+  // Bloqueia o navegador de prefetchar DNS de links externos automaticamente.
+  res.setHeader("X-DNS-Prefetch-Control", "off");
+  // Bloqueia clients de navegacao XSS (legado IE/Edge), mas e zero custo manter.
+  res.setHeader("X-XSS-Protection", "1; mode=block");
   // CSP permissiva o suficiente pro que o site usa (Google Fonts, GTM/Analytics,
   // inline scripts/styles do proprio app), mas bloqueia object/base e fontes nao
   // listadas. Bloqueia carregamento de scripts de dominios desconhecidos.
@@ -354,6 +361,38 @@ const servidor = createServer(async (req, res) => {
         return json(res, codigo, { erro: r.motivo });
       }
       limparAuth("login", ip); // sucesso zera o contador
+      // Aviso de login bem-sucedido por email (anti-invasao). Best-effort:
+      // se Resend nao estiver configurado ou cliente sem email, pula silencioso.
+      try {
+        const { temEmailKey, enviar } = await import("../src/email.mjs");
+        if (r.perfil?.email && temEmailKey()) {
+          const ua = (req.headers["user-agent"] || "navegador desconhecido").slice(0, 100);
+          const agora = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+          const ipMasc = ip.replace(/\.(\d{1,3})\.(\d{1,3})$/, ".x.x"); // mascara nao mostra IP completo no email
+          const BASE = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
+          await enviar({
+            para: r.perfil.email,
+            assunto: `Acesso ao ContrataX em ${agora}`,
+            html: `<!DOCTYPE html><html><body style="margin:0;background:#f8fafc;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:24px 12px"><tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0">
+<tr><td style="padding:22px 26px;color:#0f172a;font-size:14px;line-height:1.6">
+<div style="font-size:13px;color:#64748b;font-weight:700;letter-spacing:.5px">ACESSO REGISTRADO</div>
+<div style="font-size:17px;font-weight:800;margin:6px 0 14px">Sua conta acabou de ser acessada</div>
+<table cellpadding="0" cellspacing="0" style="width:100%;font-size:13.5px;margin:8px 0">
+<tr><td style="padding:6px 0;color:#64748b">Data e hora</td><td style="padding:6px 0;font-weight:700">${agora}</td></tr>
+<tr><td style="padding:6px 0;color:#64748b">Regiao do IP</td><td style="padding:6px 0;font-family:monospace">${ipMasc}</td></tr>
+<tr><td style="padding:6px 0;color:#64748b;vertical-align:top">Dispositivo</td><td style="padding:6px 0;font-size:12.5px;color:#475569">${ua.replace(/[<>&]/g, "")}</td></tr>
+</table>
+<p style="font-size:13.5px;color:#475569;margin:18px 0 0"><b>Foi voce?</b> Se sim, pode ignorar este email. Ele e enviado por padrao a cada login pra sua seguranca.</p>
+<p style="font-size:13.5px;color:#475569;margin:8px 0 0"><b>Nao foi voce?</b> Troque a sua senha imediatamente.</p>
+<table cellpadding="0" cellspacing="0" border="0" style="margin:16px 0"><tr><td>
+<a href="${BASE}/esqueci-senha" style="display:inline-block;background:#dc2626;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 22px;border-radius:10px">Trocar minha senha</a>
+</td></tr></table>
+</td></tr></table></td></tr></table></body></html>`,
+          });
+        }
+      } catch (e) { console.error("[email pos-login]", e.message); }
       // Assessoria: direto pra /empresas (gestao multi-CNPJ)
       const destino = ehAssessoria(r.perfil) ? `/empresas?c=${r.perfil.token}` : `/painel?c=${r.perfil.token}`;
       return json(res, 200, { link: destino });
@@ -1269,6 +1308,86 @@ const servidor = createServer(async (req, res) => {
       } catch (e) {
         return json(res, 502, { erro: e.message });
       }
+    }
+
+    // LGPD art. 18: direito de portabilidade. Devolve TODOS os dados do
+    // cliente em formato estruturado (JSON ou CSV) para download.
+    if (rota === "/api/conta/meus-dados") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
+      const formato = (url.searchParams.get("formato") || "json").toLowerCase();
+      // Monta o pacote sanitizado (sem senha hash, sem token secreto).
+      const dados = {
+        empresa: {
+          nome: perfil.nome,
+          razaoSocial: perfil.razaoSocial,
+          cnpj: perfil.cnpj,
+          email: perfil.email,
+          endereco: perfil.endereco,
+          representante: perfil.representante,
+        },
+        configuracao: {
+          ramo: perfil.filtro?.termos || [],
+          excluir: perfil.filtro?.termosExcluir || [],
+          estados: perfil.ufs || [],
+          modalidades: perfil.modalidades || [],
+        },
+        assinatura: {
+          status: perfil.assinatura?.status,
+          nivel: perfil.assinatura?.nivel,
+          plano: perfil.assinatura?.plano,
+          formaPagamento: perfil.assinatura?.formaPagamento,
+          criadoEm: perfil.assinatura?.criadoEm,
+          ativadoEm: perfil.assinatura?.ativadoEm,
+          expiraEm: perfil.assinatura?.expiraEm,
+          canceladoEm: perfil.assinatura?.canceladoEm,
+        },
+        consentimento: {
+          termosVersao: perfil.aceiteTermos?.versao,
+          aceiteEm: perfil.aceiteTermos?.em,
+          ipAceite: perfil.aceiteTermos?.ip,
+        },
+        equipe: (perfil.usuarios || []).map((u) => ({
+          nome: u.nome, email: u.email, papel: u.papel, criadoEm: u.criadoEm,
+        })),
+        uso: {
+          analisesEsteMes: perfil.analises,
+          extracoesPdf: perfil.extracoesPdf,
+          avulsasCompradas: perfil._avulsasHist || [],
+        },
+        documentos: perfil.empresa?.certidoes || {},
+        contratos: perfil.contratos || [],
+        recebiveis: perfil.recebiveis || [],
+      };
+      if (formato === "csv") {
+        // CSV flat das principais tabelas (empresa + configuracao + contratos)
+        const linhas = [];
+        linhas.push("# ContrataX - Meus Dados (export LGPD art. 18)");
+        linhas.push(`# Gerado em: ${new Date().toISOString()}`);
+        linhas.push("");
+        linhas.push("Categoria,Campo,Valor");
+        const flatten = (obj, prefixo = "") => {
+          for (const [k, v] of Object.entries(obj || {})) {
+            const chave = prefixo ? `${prefixo}.${k}` : k;
+            if (v === null || v === undefined) continue;
+            if (typeof v === "object" && !Array.isArray(v)) flatten(v, chave);
+            else linhas.push(`"${chave.split(".")[0]}","${chave}","${String(Array.isArray(v) ? v.join("; ") : v).replace(/"/g, '""')}"`);
+          }
+        };
+        flatten(dados);
+        const csv = linhas.join("\n");
+        res.writeHead(200, {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="contratax-meus-dados-${perfil.cnpj || perfil.token}.csv"`,
+        });
+        return res.end(csv);
+      }
+      // Default JSON
+      res.writeHead(200, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Disposition": `attachment; filename="contratax-meus-dados-${perfil.cnpj || perfil.token}.json"`,
+      });
+      return res.end(JSON.stringify(dados, null, 2));
     }
 
     // Cancelamento self-service: para a renovacao no Asaas e marca o perfil.

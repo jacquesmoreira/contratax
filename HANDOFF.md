@@ -167,6 +167,9 @@ D:/Licita/
 - `LICITA_TRIAL_DIAS=7`
 - `LICITA_GRACA_DIAS=3` — carência após vencimento antes de bloquear
 
+**LGPD**
+- `LICITA_IP_RETENCAO_DIAS=30` — após esse prazo, IP em perfil é anonimizado (default 30)
+
 **Marketing/Tracking (com fallback no código)**
 - `LICITA_GA4_ID` — default `G-N79Q5SH624`
 - `LICITA_GA4_API_SECRET` — Measurement Protocol secret (Conversion API)
@@ -347,6 +350,14 @@ Cliente paga a diferença via cobrança avulsa Asaas → webhook reconhece `upgr
 - [x] Página 500 amigável (com ID rastreável)
 - [x] CSP configurada (libera Clarity, GA, Google Fonts, GTM)
 - [x] HTTPS via Railway
+
+### Seguranca e LGPD reforcadas
+- [x] Headers HTTP de seguranca: X-Content-Type-Options, X-Frame-Options SAMEORIGIN, Referrer-Policy, HSTS 2 anos+preload, Permissions-Policy (geolocation/microphone/camera/payment/usb/accelerometer/etc), Cross-Origin-Resource-Policy same-origin, X-DNS-Prefetch-Control off, X-XSS-Protection
+- [x] **Disclaimer permanente** em toda analise IA (texto amarelo no topo) + botao verde "Ver edital oficial no PNCP" destacado em cada analise
+- [x] **Anonimizacao automatica** de IP em perfis com > 30 dias (LICITA_IP_RETENCAO_DIAS configuravel). Mascara 189.45.67.123 -> 189.45.x.x. Roda 1x/dia no loop do digest.
+- [x] **Painel "Meus Dados" (LGPD art. 18)** em /conta: cliente baixa todos seus dados em JSON ou CSV (portabilidade)
+- [x] **Email automatico pos-login**: notifica cliente a cada login bem-sucedido com data, regiao do IP (mascarado), dispositivo. CTA "Trocar minha senha" se nao foi ele.
+- [ ] 2FA TOTP opcional (pendente — auth atual e token-based em URL, refator necessario)
 
 ### Legal/Conformidade
 - [x] Política de Privacidade (`/privacidade`)
