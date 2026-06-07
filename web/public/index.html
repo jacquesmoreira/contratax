@@ -174,7 +174,7 @@
     <div class="nav-id">
       <div style="min-width:0;flex:1">
         <div class="nav-id-nome" id="nav-cliente"></div>
-        <div class="nav-id-uso" id="nav-uso" title="Pesquisas usadas neste mês"></div>
+        <div class="nav-id-uso" id="nav-uso" title="Leituras completas de edital pela ContrataX.IA usadas neste mês. A busca, alertas e radar continuam ilimitados."></div>
       </div>
     </div>
     <div class="dir">
@@ -610,7 +610,7 @@ async function carregar() {
     })();
     if (acesso.uso) {
       const u = acesso.uso, n = document.getElementById("nav-uso");
-      n.innerHTML = `<b>${u.usados}/${u.limite}</b> pesquisas no mês`;
+      n.innerHTML = `<b>${u.usados}/${u.limite}</b> análises com ContrataX.IA`;
       if (u.restantes === 0) n.style.color = "#dc2626";
     }
     if (!acesso.temAcesso) { c.innerHTML = paywall(acesso); return; }
@@ -1052,7 +1052,7 @@ async function analisar(id) {
     if (!r.ok) throw new Error(d.erro || "falha");
     if (d.uso) {
       const n = document.getElementById("nav-uso");
-      if (n) { n.innerHTML = `<b>${d.uso.usados}/${d.uso.limite}</b> pesquisas no mês`; if (d.uso.restantes === 0) n.style.color = "#dc2626"; }
+      if (n) { n.innerHTML = `<b>${d.uso.usados}/${d.uso.limite}</b> análises com ContrataX.IA`; if (d.uso.restantes === 0) n.style.color = "#dc2626"; }
     }
     if (editalAtual === id) abrirDrawer(id);
   } catch (e) {
@@ -1073,7 +1073,7 @@ async function impugnar(id) {
       alert(d.erro); return;
     }
     if (!r.ok) throw new Error(d.erro || "falha");
-    if (d.uso) { const n = document.getElementById("nav-uso"); if (n) { n.innerHTML = `<b>${d.uso.usados}/${d.uso.limite}</b> pesquisas no mês`; if (d.uso.restantes === 0) n.style.color = "#dc2626"; } }
+    if (d.uso) { const n = document.getElementById("nav-uso"); if (n) { n.innerHTML = `<b>${d.uso.usados}/${d.uso.limite}</b> análises com ContrataX.IA`; if (d.uso.restantes === 0) n.style.color = "#dc2626"; } }
     if (editalAtual === id) abrirDrawer(id);
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = "⚖️ Gerar dossiê de impugnação"; }
