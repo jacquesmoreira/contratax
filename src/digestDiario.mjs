@@ -12,6 +12,7 @@ import { lerPerfis, salvarPerfis } from "./perfis.mjs";
 import { gerarDigest, enviar, temEmailKey } from "./email.mjs";
 import { statusAtual } from "./assinatura.mjs";
 import { monitorar } from "./monitor.mjs";
+import { enviarAvisosRenovacaoDoDia } from "./avisoRenovacao.mjs";
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -99,5 +100,8 @@ export async function digestLoop({ horaBR = 8, log = console.log } = {}) {
     await dormir(ms);
     try { await enviarDigestDoDia({ log }); }
     catch (e) { log(`[digest] erro no ciclo: ${e.message}`); }
+    // Apos o digest, dispara avisos de renovacao (7d e 1d antes do vencimento).
+    try { await enviarAvisosRenovacaoDoDia({ log }); }
+    catch (e) { log(`[renov] erro no ciclo: ${e.message}`); }
   }
 }
