@@ -610,7 +610,7 @@ async function carregar() {
     })();
     if (acesso.uso) {
       const u = acesso.uso, n = document.getElementById("nav-uso");
-      n.innerHTML = `<b>${u.usados}/${u.limite}</b> análises com ContrataX.IA`;
+      n.innerHTML = `<b>${u.usados}/${u.limite}</b> análises do edital com ContrataX.IA`;
       if (u.restantes === 0) n.style.color = "#dc2626";
     }
     if (!acesso.temAcesso) { c.innerHTML = paywall(acesso); return; }
@@ -1069,7 +1069,7 @@ async function analisar(id) {
     if (!r.ok) throw new Error(d.erro || "falha");
     if (d.uso) {
       const n = document.getElementById("nav-uso");
-      if (n) { n.innerHTML = `<b>${d.uso.usados}/${d.uso.limite}</b> análises com ContrataX.IA`; if (d.uso.restantes === 0) n.style.color = "#dc2626"; }
+      if (n) { n.innerHTML = `<b>${d.uso.usados}/${d.uso.limite}</b> análises do edital com ContrataX.IA`; if (d.uso.restantes === 0) n.style.color = "#dc2626"; }
     }
     if (editalAtual === id) abrirDrawer(id);
   } catch (e) {
@@ -1090,7 +1090,7 @@ async function impugnar(id) {
       alert(d.erro); return;
     }
     if (!r.ok) throw new Error(d.erro || "falha");
-    if (d.uso) { const n = document.getElementById("nav-uso"); if (n) { n.innerHTML = `<b>${d.uso.usados}/${d.uso.limite}</b> análises com ContrataX.IA`; if (d.uso.restantes === 0) n.style.color = "#dc2626"; } }
+    if (d.uso) { const n = document.getElementById("nav-uso"); if (n) { n.innerHTML = `<b>${d.uso.usados}/${d.uso.limite}</b> análises do edital com ContrataX.IA`; if (d.uso.restantes === 0) n.style.color = "#dc2626"; } }
     if (editalAtual === id) abrirDrawer(id);
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = "⚖️ Gerar dossiê de impugnação"; }
