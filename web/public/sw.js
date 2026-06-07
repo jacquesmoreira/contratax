@@ -7,7 +7,7 @@
 //   - GET de assets estaticos (.png/.svg/.ico/.webp/.css/.woff/.woff2) -> cache primeiro
 //   - POST e outras requisicoes nao sao cacheadas
 
-const VERSAO = "v1";
+const VERSAO = "v2";
 const CACHE_ESTATICO = `contratax-estatico-${VERSAO}`;
 const CACHE_DINAMICO = `contratax-dinamico-${VERSAO}`;
 
@@ -48,6 +48,10 @@ self.addEventListener("fetch", (ev) => {
   const req = ev.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+  // Cross-origin (GA, Clarity, Google Fonts, GTM, Asaas) NUNCA passa pelo SW.
+  // Se o SW fizer fetch desses, o navegador trata como "connect-src" no CSP
+  // da pagina, e a request e bloqueada. Deixa o navegador resolver direto.
+  if (url.origin !== self.location.origin) return;
   // Nunca cachear chamadas a API ou rotas com token (?c=...)
   if (url.pathname.startsWith("/api/")) return;
   if (url.searchParams.has("c")) return;
