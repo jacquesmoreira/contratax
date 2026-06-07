@@ -74,11 +74,18 @@ async function carregar() {
     <span id="digest-status" style="font-size:13px;color:var(--cinza);align-self:center"></span>
   </div>`;
 
+  // Contagem de alerta: clientes ativos com >=80% e >=100% de uso da cota
+  const ativos = cli.d.clientes.filter((c) => c.status === "ativo");
+  const acima80 = ativos.filter((c) => c.uso.limite > 0 && c.uso.usados / c.uso.limite >= 0.8 && c.uso.usados / c.uso.limite < 1).length;
+  const esgotados = ativos.filter((c) => c.uso.limite > 0 && c.uso.usados / c.uso.limite >= 1).length;
+
   html += `<div class="cards">
     <div class="c"><div class="n">${r.total}</div><div class="l">Clientes</div></div>
     <div class="c"><div class="n">${r.ativos}</div><div class="l">Ativos (pagantes)</div></div>
     <div class="c"><div class="n">${r.teste}</div><div class="l">Em teste</div></div>
     <div class="c"><div class="n" style="color:var(--vermelho)">${r.vencidos + r.atrasados}</div><div class="l">Vencidos/atrasados</div></div>
+    <div class="c" style="${acima80 > 0 ? "background:#fffbeb;border-color:#fde68a" : ""}"><div class="n" style="color:${acima80 > 0 ? "#d97706" : "#0f172a"}">${acima80}</div><div class="l">≥80% cota (alerta)</div></div>
+    <div class="c" style="${esgotados > 0 ? "background:#fef2f2;border-color:#fecaca" : ""}"><div class="n" style="color:${esgotados > 0 ? "#dc2626" : "#0f172a"}">${esgotados}</div><div class="l">Cota esgotada</div></div>
     <div class="c"><div class="n">${(s.editais?.abertos ?? 0).toLocaleString("pt-BR")}</div><div class="l">Editais abertos</div></div>
     <div class="c"><div class="n">${(s.contratos?.total ?? 0).toLocaleString("pt-BR")}</div><div class="l">Contratos no acervo</div></div>
     <div class="c"><div class="n">${cu.analises ?? 0}</div><div class="l">Análises por mês</div></div>
@@ -98,7 +105,13 @@ async function carregar() {
       <td><b>${esc(c.razaoSocial || c.nome)}</b><br><span class="mut">${esc(c.cnpj || "sem CNPJ")} · ${esc(c.uf || "BR")}</span><br><span class="mut">${esc(c.ramo || "")}</span></td>
       <td>${esc(c.email || "—")}<br><span class="mut">desde ${dataBR(c.criadoEm)}</span></td>
       <td><span class="pill ${c.status}">${esc(c.status)}</span> ${venc ? `<span class="mut">${venc}</span>` : ""}<br><span class="mut">${esc(c.planoNome)}${c.formaPagamento ? " · " + esc(c.formaPagamento) : ""}</span></td>
-      <td>${c.uso.usados}/${c.uso.limite}${c.uso.avulsas ? ` <span class="mut">+${c.uso.avulsas} avulsas</span>` : ""}</td>
+      <td>${(() => {
+        const pct = c.uso.limite > 0 ? c.uso.usados / c.uso.limite : 0;
+        const cor = pct >= 1 ? "#dc2626" : pct >= 0.8 ? "#d97706" : "#0f172a";
+        const bg = pct >= 0.8 ? (pct >= 1 ? "#fef2f2" : "#fffbeb") : "transparent";
+        const tag = pct >= 1 ? '<br><span style="background:#dc2626;color:#fff;font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:99px;letter-spacing:.3px">COTA ESGOTADA</span>' : pct >= 0.8 ? '<br><span style="background:#d97706;color:#fff;font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:99px;letter-spacing:.3px">≥80% USADO</span>' : '';
+        return `<div style="background:${bg};padding:4px 6px;border-radius:6px;display:inline-block"><b style="color:${cor}">${c.uso.usados}/${c.uso.limite}</b> <span style="color:${cor};font-size:11px">(${Math.round(pct*100)}%)</span>${c.uso.avulsas ? ` <span class="mut">+${c.uso.avulsas} avulsas</span>` : ""}${tag}</div>`;
+      })()}</td>
       <td><b style="color:${ia.mes > receita*0.5 ? '#dc2626' : '#0f172a'}">${brlIA(ia.mes)}</b> <span class="mut">no mês</span><br><span class="mut">${brlIA(ia.total)} total · ${ia.chamadas} cham.${margem != null ? ` · margem ${margem}%` : ""}</span></td>
       <td>${c.equipe.usados}/${c.equipe.assentos}</td>
       <td><div class="acoes" data-token="${c.token}">

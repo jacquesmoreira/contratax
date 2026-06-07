@@ -183,6 +183,34 @@ D:/Licita/
 
 ---
 
+## 6-A. Análise de margem (2026-06-07)
+
+Custos REAIS medidos no `data/custos-ia.jsonl`:
+- Leitura de edital nova (Sonnet 4.6, com cache write): R$ 1,42 - R$ 2,89
+- Conferência (cache read): R$ 0,17
+- Impugnação: R$ 0,35
+- TL;DR (Haiku 4.5, cache miss): ~R$ 0,05
+
+**Fórmula pessimista** (cliente usa 100% da cota):
+```
+custo = (cota × R$ 2,50) + R$ 2,25 TL;DR pico + 4% Asaas + R$ 1 infra
+margem 60% exige: receita >= (2,5 × cota + 3,25) / 0,36
+```
+
+**Diagnóstico dos planos atuais (PESSIMISTA, cliente usa 100%):**
+
+| Plano | Receita | Custo | Margem | Status |
+|---|---|---|---|---|
+| Starter (3) | R$ 59 | R$ 13 | 78% | OK |
+| Básico (50) | R$ 197 | R$ 141 | 28% | Crítico |
+| Pro (100) | R$ 297 | R$ 273 | 8% | Quase prejuízo |
+| Assessoria 10 (200) | R$ 497 | R$ 525 | -6% | Prejuízo |
+| Assessoria 25 (500) | R$ 897 | R$ 1.298 | -45% | Prejuízo grande |
+
+**Decisão pendente (Jacques precisa escolher):** Cenário A, B ou C para garantir margem mínima de 60% pessimista. Ver discussão completa no chat de 2026-06-07.
+
+---
+
 ## 6. Planos e modelo de cobrança
 
 ```
