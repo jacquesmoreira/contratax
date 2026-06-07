@@ -106,10 +106,10 @@ function winback2(perfil) {
     assunto: `${nome}, a conta que vale a pena fazer antes de desistir`,
     html: header() + `
       <h2 style="font-size:21px;font-weight:800;margin-bottom:12px">Quanto custa NÃO acompanhar</h2>
-      <p style="margin-bottom:14px">A assinatura é R$ 197/mês. Parece um custo. Mas pense no outro lado: um único contrato público que você não viu a tempo vale, em média, vários meses de assinatura.</p>
+      <p style="margin-bottom:14px">A assinatura é R$ 247/mês. Parece um custo. Mas pense no outro lado: um único contrato público que você não viu a tempo vale, em média, vários meses de assinatura.</p>
       <p style="margin-bottom:14px"><b>A conta real:</b><br>
       Um contrato pequeno de R$ 4.000 paga 20 meses do plano. Conferir editais na mão consome 1 a 2 horas por dia. O ContrataX faz isso em minutos, todo dia, e ainda lê cada edital e confere sua aptidão.</p>
-      <p style="margin-bottom:14px">Não é sobre gastar R$ 197. É sobre não perder o próximo contrato por falta de tempo de garimpar.</p>
+      <p style="margin-bottom:14px">Não é sobre gastar R$ 247. É sobre não perder o próximo contrato por falta de tempo de garimpar.</p>
       ${botao(link, "Ver os planos →")}
       <p style="font-size:13.5px;color:#475569;margin-top:18px">Sem fidelidade. Você cancela quando quiser, no próprio painel.</p>
     ` + footer(),

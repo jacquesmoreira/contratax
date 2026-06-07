@@ -103,13 +103,13 @@ export function email3(perfil, totalEditais, somaValor) {
   const ramo = (perfil.filtro?.termos ?? [])[0] || "seu ramo";
   const valorTxt = somaValor > 1e9 ? `R$ ${(somaValor/1e9).toFixed(1)} bilhões` : somaValor > 1e6 ? `R$ ${(somaValor/1e6).toFixed(1)} milhões` : `R$ ${Math.round(somaValor/1e3)} mil`;
   return {
-    assunto: `${nome}, seu teste termina em 24h. Vale R$ 197?`,
+    assunto: `${nome}, seu teste termina em 24h. Vale R$ 247?`,
     html: header() + `
       <h2 style="font-size:21px;font-weight:800;margin-bottom:12px;color:#0f172a">A conta direta</h2>
       <p style="margin-bottom:14px">Nos últimos 6 dias, o ContrataX monitorou <b>${totalEditais.toLocaleString("pt-BR")} licitações abertas</b> no segmento <b>${ramo}</b>, somando <b>${valorTxt}</b> em oportunidades.</p>
-      <p style="margin-bottom:14px">Seu teste grátis termina amanhã. A pergunta direta: vale R$ 197/mês continuar monitorando isso de forma organizada, com leitura completa de cada edital e alerta de certidão vencendo?</p>
+      <p style="margin-bottom:14px">Seu teste grátis termina amanhã. A pergunta direta: vale R$ 247/mês continuar monitorando isso de forma organizada, com leitura completa de cada edital e alerta de certidão vencendo?</p>
       <p style="margin-bottom:14px"><b>A conta da viabilidade:</b><br>
-      Um único contrato fechado em R$ 4.000 paga 20 meses da assinatura. 1 hora de consultor especializado custa R$ 250-800. R$ 197 cobre o mês inteiro de monitoramento + análise + alertas.</p>
+      Um único contrato fechado em R$ 4.000 paga 20 meses da assinatura. 1 hora de consultor especializado custa R$ 250-800. R$ 247 cobre o mês inteiro de monitoramento + análise + alertas.</p>
       <p style="margin-bottom:14px">Sem fidelidade. Cancela quando quiser, no próprio painel.</p>
       <table cellpadding="0" cellspacing="0" border="0" style="margin:24px auto"><tr>
         <td style="background:#4338ca;border-radius:11px;padding:14px 28px">

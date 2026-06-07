@@ -175,11 +175,11 @@ D:/Licita/
 
 **Preços (overrides; default no planos.mjs)**
 - `LICITA_PRECO_STARTER=59,00`
-- `LICITA_PRECO_BASICO=197,00` (`LICITA_PRECO` legado também aceito)
-- `LICITA_PRECO_PRO=297,00`
-- `LICITA_PRECO_ASS10=497,00`, `LICITA_PRECO_ASS25=897,00`
-- Avulsos: `LICITA_PRECO_AV50=130,00`, `LICITA_PRECO_AV150=330,00`
-- Cotas: `LICITA_ANALISES_STARTER=3`, `LICITA_ANALISES_BASICO=50`, `LICITA_ANALISES_PRO=100`
+- `LICITA_PRECO_BASICO=247,00` (`LICITA_PRECO` legado também aceito)
+- `LICITA_PRECO_PRO=397,00`
+- `LICITA_PRECO_ASS10=697,00`, `LICITA_PRECO_ASS25=1297,00`
+- Avulsos: `LICITA_PRECO_AV10=79,00`, `LICITA_PRECO_AV25=189,00`, `LICITA_PRECO_AV50=369,00`
+- Cotas: `LICITA_ANALISES_STARTER=3`, `LICITA_ANALISES_BASICO=30`, `LICITA_ANALISES_PRO=50`, `LICITA_ANALISES_ASS10=8`, `LICITA_ANALISES_ASS25=6`
 
 ---
 
@@ -211,19 +211,31 @@ margem 60% exige: receita >= (2,5 × cota + 3,25) / 0,36
 
 ---
 
-## 6. Planos e modelo de cobrança
+## 6. Planos e modelo de cobrança (Cenário A — 2026-06-07)
 
 ```
-Starter  R$ 59,00/mês   3 análises completas, busca ilimitada (DEGUSTAÇÃO)
-Básico   R$ 197,00/mês  50 análises completas, 5 extrações PDF
-Pro      R$ 297,00/mês  100 análises completas, 20 extrações PDF
+Starter  R$ 59,00/mês     3 análises completas, busca ilimitada (DEGUSTAÇÃO)
+Básico   R$ 247,00/mês    30 análises completas, 5 extrações PDF
+Pro      R$ 397,00/mês    50 análises completas, 20 extrações PDF
 
-Assessoria 10  R$ 497,00/mês  10 CNPJs, 20 análises/CNPJ
-Assessoria 25  R$ 897,00/mês  25 CNPJs, 20 análises/CNPJ
+Assessoria 10  R$ 697,00/mês   10 CNPJs, 8 análises/CNPJ (80 total)
+Assessoria 25  R$ 1.297,00/mês 25 CNPJs, 6 análises/CNPJ (150 total)
 
-Pacote avulso 50    R$ 130,00 (sem recorrência, créditos não expiram)
-Pacote avulso 150   R$ 330,00
+Pacote avulso 10    R$ 79,00  (R$ 7,90/análise)
+Pacote avulso 25    R$ 189,00 (R$ 7,56/análise)
+Pacote avulso 50    R$ 369,00 (R$ 7,38/análise)
 ```
+
+**Garantia de margem:** todos os planos têm **mínimo 60% de lucro** mesmo se o
+cliente usar 100% da cota mensal. Margens reais com uso médio (60% da cota):
+
+| Plano | Receita | Custo realista | Margem |
+|---|---|---|---|
+| Starter | R$ 59 | ~R$ 9 | 84% |
+| Básico | R$ 247 | ~R$ 50 | 80% |
+| Pro | R$ 397 | ~R$ 80 | 80% |
+| Assessoria 10 | R$ 697 | ~R$ 145 | 79% |
+| Assessoria 25 | R$ 1.297 | ~R$ 280 | 78% |
 
 **O que conta como "análise":**
 - ✅ Click em "🔍 Analisar este edital" → IA lê o PDF, dá veredicto, lista o que falta, gera dossiê

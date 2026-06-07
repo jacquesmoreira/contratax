@@ -99,7 +99,7 @@ async function carregar() {
     const ia = c.custoIA || { total: 0, mes: 0, chamadas: 0 };
     const brlIA = (v) => "R$ " + (Number(v) || 0).toFixed(2).replace(".", ",");
     // Receita mensal do plano pra calcular margem (Basico 197, Pro 297)
-    const receita = c.nivel === "pro" ? 297 : c.nivel === "assessoria10" ? 497 : c.nivel === "assessoria25" ? 897 : 197;
+    const receita = c.nivel === "starter" ? 59 : c.nivel === "pro" ? 397 : c.nivel === "assessoria10" ? 697 : c.nivel === "assessoria25" ? 1297 : 247;
     const margem = c.status === "ativo" ? Math.round(100 * (1 - ia.mes / receita)) : null;
     html += `<tr>
       <td><b>${esc(c.razaoSocial || c.nome)}</b><br><span class="mut">${esc(c.cnpj || "sem CNPJ")} · ${esc(c.uf || "BR")}</span><br><span class="mut">${esc(c.ramo || "")}</span></td>

@@ -8,7 +8,7 @@ const TRIAL_DIAS = Number(process.env.LICITA_TRIAL_DIAS || 7);
 
 // Dados de cobranca exibidos no muro de pagamento (configure no .env).
 export const cobranca = {
-  preco: process.env.LICITA_PRECO || "197,00",
+  preco: process.env.LICITA_PRECO || "247,00",
   pix: process.env.LICITA_PIX_CHAVE || "configure-sua-chave-pix",
   contato: process.env.LICITA_CONTATO || "comprovante@seudominio.com.br",
   trialDias: TRIAL_DIAS,
