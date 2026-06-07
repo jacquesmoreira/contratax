@@ -642,9 +642,59 @@ Token: e29744cdbda68bdd9877426d57d5a007 (NUNCA commitar)
 - Sistema 100% pronto pra vender + protegido juridicamente em nível "padrão SaaS bootstrap" (suficiente até 30-50 clientes ou contratação de advogado)
 
 **Pendente para segunda-feira (09/06):**
-- Post LinkedIn de lançamento (200 palavras)
-- 10 CNAEs com alta dor em editais públicos
-- (opcional) 3 mensagens pra rede sem cold call
+- ✅ Post LinkedIn de lançamento (3 versões prontas - escolher A, B ou C)
+- ✅ 10 CNAEs mapeados com alta dor
+- ✅ 3 mensagens pra rede sem cold call prontas
+- Tudo registrado no chat de 2026-06-07. Jacques posta quando bem entender.
+
+---
+
+## 20. Materiais de marketing (gerados em 07/06 noite)
+
+### Post LinkedIn (vencedor recomendado: variação B)
+
+> 27.270 licitações estão abertas no Brasil agora. Quase nenhuma pequena empresa sabe quais valem pra ela.
+>
+> Construí o ContrataX pra resolver 3 problemas que travam pequena empresa de vender pro governo:
+>
+> 1. Editais aparecem em centenas de portais por dia. Quem garimpa PNCP na mão perde tempo demais.
+> 2. Cada edital tem dezenas de exigências. Saber se sua empresa está apta dá trabalho.
+> 3. Quando descobre o edital, já é tarde pra impugnar irregularidade ou cotar preço.
+>
+> Como funciona: cadastra CNPJ, ramo e estados. O sistema monitora todos os editais do Brasil. A ContrataX.IA lê o PDF de cada edital e cruza com seus documentos. Em segundos diz: apto, apto com pendências, ou não apto.
+>
+> Sem fidelidade. R$ 59 pra começar. 7 dias grátis sem cartão.
+>
+> Bootstrap, MEI, solo. Sem investidor, sem time comercial.
+>
+> Se você vende ou quer vender pro governo, dá uma olhada. Vou agradecer feedback sincero.
+>
+> www.contratax.com.br
+
+**Hashtags:** `#licitações #saas #pncp` (max 3, sem spam)
+
+### 10 CNAEs com alta dor (priorizar comunicação)
+
+1. **8121-4-00** Limpeza e conservação predial
+2. **5620-1-01** Alimentação escolar (merenda)
+3. **8011-1-01** Vigilância patrimonial
+4. **4774-1-00** Material médico-hospitalar
+5. **1412-6-01** Vestuário/uniforme
+6. **7711-0-00** Locação de veículos sem motorista
+7. **7112-0-00** Engenharia consultiva
+8. **4313-4-00** Manutenção predial / obras menores
+9. **6201-5-01** Desenvolvimento de software
+10. **4647-8-01** Material de escritório/papelaria
+
+Plano: 1 post por semana focado em UM desses CNAEs, com link interno pro `/cnae/<codigo>` correspondente do SEO programático.
+
+### 3 mensagens prontas pra rede (texto completo no chat de 07/06 noite)
+
+- **Msg 1**: Pra alguém que VOCÊ CONHECE e vende pro governo. Tom: "preciso da sua opinião antes de divulgar".
+- **Msg 2**: Pra contador/consultor multiplicador. Tom: "plano Assessoria foi pensado pra você ofertar como serviço agregado".
+- **Msg 3**: Pra amigo geral. Tom: "favor rápido, só passar o link pra quem se encaixar".
+
+Todas sem cold call, sem venda dura, sem pressão. Pedem ação mínima (opinião, indicação, ou só compartilhamento).
 
 ---
 
