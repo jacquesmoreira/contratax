@@ -1467,17 +1467,18 @@ const servidor = createServer(async (req, res) => {
 
       const tokenT = url.searchParams.get("c") || "";
       const perfilT = await perfilPorToken(tokenT);
-      // Caminho 1: cliente PAGANTE — consome 1 da cota
+      // Caminho 1: cliente PAGANTE — TL;DR e gancho de ativacao, NAO consome
+      // cota (so a "Analisar este edital" completa, em /api/analisar, consome).
+      // Cache global por edital ja protege a margem: segundo cliente do mesmo
+      // edital nao gera nova chamada de IA. So edital INEDITO custa, e custo de
+      // TL;DR (Haiku, prompt curto) e ~10x menor que analise completa (Sonnet).
       if (perfilT && tokenT !== ADMIN) {
         if (!statusAtual(perfilT).temAcesso) {
           return json(res, 403, { erro: "Assinatura nao ativa", paywall: true });
         }
-        const chk = checarAnalise(perfilT);
-        if (!chk.ok) return json(res, 402, { erro: "Cota mensal esgotada", motivo: chk.motivo, paywall: true });
         try {
           const tldr = await gerarTldr(edital, { perfilToken: tokenT });
           await salvarTldr(id, tldr);
-          await registrarAnalise(perfilT, { tipo: "tldr", editalId: id });
           return json(res, 200, { tldr, cache: false });
         } catch (e) {
           return json(res, 500, { erro: e.message });

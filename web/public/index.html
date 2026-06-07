@@ -174,7 +174,7 @@
     <div class="nav-id">
       <div style="min-width:0;flex:1">
         <div class="nav-id-nome" id="nav-cliente"></div>
-        <div class="nav-id-uso" id="nav-uso" title="Leituras completas de edital pela ContrataX.IA usadas neste mês. A busca, alertas e radar continuam ilimitados."></div>
+        <div class="nav-id-uso" id="nav-uso" title="Análises COMPLETAS de edital pela ContrataX.IA usadas neste mês. Resumo rápido (TL;DR), busca, alertas e radar continuam ilimitados."></div>
       </div>
     </div>
     <div class="dir">
@@ -671,10 +671,12 @@ function tldrHTML(t, id) {
     </div>`;
   }
   if (t === "sem-cota") {
+    // Estado raro: TL;DR e ilimitado pra assinantes; so cai aqui se assinatura
+    // estiver bloqueada (ex: vencida apos carencia).
     return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid #b45309;background:linear-gradient(135deg,#fffbeb 0%,#fff 60%)">
       <h3>⚡ Resumo rápido do edital</h3>
-      <p style="font-size:14px;color:#78350f;margin:6px 0 12px">Sua cota mensal de leituras ContrataX.IA acabou. O resumo rápido também usa a IA.</p>
-      <a href="/assinar?c=${encodeURIComponent(token)}" style="display:inline-block;background:var(--indigo);color:#fff;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:14px">Ver planos ou comprar pacote avulso</a>
+      <p style="font-size:14px;color:#78350f;margin:6px 0 12px">Sua assinatura está pausada. Regularize o pagamento para ler editais.</p>
+      <a href="/assinar?c=${encodeURIComponent(token)}" style="display:inline-block;background:var(--indigo);color:#fff;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:14px">Regularizar</a>
     </div>`;
   }
   if (t === "erro") {
