@@ -38,9 +38,16 @@ input:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12)
     <div class="sub" id="sub">Escolha uma senha com ao menos 6 caracteres.</div>
     <form id="form">
       <label for="s1">Nova senha</label>
-      <input id="s1" type="password" minlength="6" required autofocus />
+      <div style="position:relative">
+        <input id="s1" type="password" minlength="6" required autofocus style="padding-right:64px" />
+        <button type="button" id="tg1" aria-label="Mostrar senha" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#4338ca;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;padding:6px 10px">Mostrar</button>
+      </div>
       <label for="s2">Repita a nova senha</label>
-      <input id="s2" type="password" minlength="6" required />
+      <div style="position:relative">
+        <input id="s2" type="password" minlength="6" required style="padding-right:64px" />
+        <button type="button" id="tg2" aria-label="Mostrar senha" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#4338ca;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;padding:6px 10px">Mostrar</button>
+      </div>
+      <script>(function(){["s1","s2"].forEach(function(id,k){var i=document.getElementById(id),b=document.getElementById("tg"+(k+1));if(i&&b)b.onclick=function(){var m=i.type==="text";i.type=m?"password":"text";b.textContent=m?"Mostrar":"Ocultar";};});})();</script>
       <button class="btn" type="submit" id="btn">Salvar nova senha</button>
       <div class="erro" id="erro"></div>
     </form>

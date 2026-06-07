@@ -42,7 +42,11 @@
       <label for="email">E-mail ou CNPJ da empresa</label>
       <input id="email" type="text" placeholder="voce@empresa.com.br ou 00.000.000/0001-00" required autofocus inputmode="email" />
       <label for="senha" style="margin-top:16px">Sua senha</label>
-      <input id="senha" type="password" placeholder="sua senha" required />
+      <div style="position:relative">
+        <input id="senha" type="password" placeholder="sua senha" required style="padding-right:64px" />
+        <button type="button" id="toggle-senha-entrar" aria-label="Mostrar senha" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#4338ca;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;padding:6px 10px">Mostrar</button>
+      </div>
+      <script>(function(){var i=document.getElementById("senha"),b=document.getElementById("toggle-senha-entrar");if(i&&b)b.onclick=function(){var m=i.type==="text";i.type=m?"password":"text";b.textContent=m?"Mostrar":"Ocultar";};})();</script>
       <button class="btn" type="submit" id="btn">Entrar</button>
       <div class="msg erro" id="erro"></div>
       <div style="text-align:right;margin-top:8px"><a href="/esqueci-senha" style="font-size:13px;color:var(--cinza);text-decoration:none">Esqueci minha senha</a></div>

@@ -133,10 +133,14 @@ export function contratosDoFornecedor({ termos = [], uf = null, orgaoCnpj = null
 //   - links: lista de links do PNCP (todos os itens)
 export function agruparContratos(lista) {
   const grupos = new Map();
+  // Normaliza data: pega so YYYY-MM-DD (corta hora/minuto). Sem isso, dois
+  // itens do MESMO contrato com timestamp diferindo em segundos nao agrupam.
+  const diaSo = (s) => String(s || "").slice(0, 10);
   for (const c of lista) {
     // Chave: orgao + vigencia. Sem vigencia, cai no proprio id (nao agrupa).
-    const chave = (c.vigenciaInicio || c.vigenciaFim)
-      ? `${c.orgaoCnpj || c.orgao || ""}|${c.vigenciaInicio || ""}|${c.vigenciaFim || ""}`
+    const di = diaSo(c.vigenciaInicio), df = diaSo(c.vigenciaFim);
+    const chave = (di || df)
+      ? `${c.orgaoCnpj || c.orgao || ""}|${di}|${df}`
       : `solo-${c.id}`;
     const g = grupos.get(chave);
     if (!g) {

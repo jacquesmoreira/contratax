@@ -85,3 +85,16 @@ export async function externalReferenceDaAssinatura(subscriptionId) {
   try { const s = await api(`/subscriptions/${subscriptionId}`, "GET"); return s.externalReference || null; }
   catch { return null; }
 }
+
+// Cancela a assinatura recorrente no Asaas (para a renovacao automatica).
+// O acesso do cliente continua valido ate o fim do periodo ja pago — quem decide
+// isso e o nosso codigo (assinatura.mjs), o Asaas so para de cobrar.
+export async function cancelarAssinaturaAsaas(subscriptionId) {
+  if (!subscriptionId) return { ok: false, erro: "sem subscriptionId" };
+  try {
+    await api(`/subscriptions/${subscriptionId}`, "DELETE");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}

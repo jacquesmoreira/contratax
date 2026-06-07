@@ -122,6 +122,26 @@
       <div class="ok" id="msg-ok"></div>
       <div class="erro" id="msg-erro"></div>
     </div>
+
+    <!-- Zona de cancelamento -->
+    <div class="card" style="border-color:#fecaca;background:#fff">
+      <h2 style="color:#991b1b">Cancelar assinatura</h2>
+      <p style="font-size:14px;color:var(--cinza);margin-bottom:14px;line-height:1.55">
+        Sem multa, sem fidelidade. A renovação para imediatamente e seu acesso continua valendo até o fim do período já pago. Se você contratou há menos de 7 dias, tem direito ao reembolso integral (CDC art. 49) — escreva para <a href="mailto:contato@contratax.com.br" style="color:var(--indigo);font-weight:700">contato@contratax.com.br</a>.
+      </p>
+      <button class="btn" id="abrir-cancelar" style="background:#fff;color:#991b1b;border:1.5px solid #fca5a5;margin-top:6px">Quero cancelar</button>
+
+      <div id="form-cancelar" style="display:none;margin-top:18px;border-top:1px solid var(--linha);padding-top:18px">
+        <label for="motivo-cancelar">Por que está cancelando? (opcional, ajuda a melhorar)</label>
+        <input id="motivo-cancelar" type="text" placeholder="Ex: ainda não fechei contratos, ficou caro, vou voltar depois..." />
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn" id="confirmar-cancelar" style="background:#dc2626">Confirmar cancelamento</button>
+          <button class="btn" id="desistir-cancelar" style="background:#f1f5f9;color:var(--tinta)">Voltar</button>
+        </div>
+        <div class="ok" id="cancelar-ok"></div>
+        <div class="erro" id="cancelar-erro"></div>
+      </div>
+    </div>
     </div><!-- /conteudo-normal -->
   </div>
 
@@ -287,6 +307,34 @@ if (modoCompletar) {
   };
 } else {
   carregar();
+}
+
+// ===== Cancelamento self-service =====
+const $abrir = $("abrir-cancelar"), $form = $("form-cancelar");
+if ($abrir) {
+  $abrir.onclick = () => { $form.style.display = "block"; $abrir.style.display = "none"; };
+  $("desistir-cancelar").onclick = () => { $form.style.display = "none"; $abrir.style.display = "inline-block"; $("cancelar-erro").textContent = ""; };
+  $("confirmar-cancelar").onclick = async () => {
+    if (!confirm("Confirmar o cancelamento? A renovação automática vai parar. Seu acesso continua até o fim do período já pago.")) return;
+    $("cancelar-ok").textContent = ""; $("cancelar-erro").textContent = "";
+    $("confirmar-cancelar").disabled = true;
+    $("confirmar-cancelar").textContent = "Processando...";
+    try {
+      const r = await fetch("/api/conta/cancelar?c=" + encodeURIComponent(token), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ c: token, motivo: $("motivo-cancelar").value }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.erro || "falha");
+      $("cancelar-ok").textContent = d.mensagem || "Cancelamento registrado.";
+      $("confirmar-cancelar").style.display = "none";
+      $("desistir-cancelar").textContent = "Fechar";
+    } catch (e) {
+      $("cancelar-erro").textContent = e.message;
+      $("confirmar-cancelar").disabled = false;
+      $("confirmar-cancelar").textContent = "Confirmar cancelamento";
+    }
+  };
 }
 </script>
 </body>

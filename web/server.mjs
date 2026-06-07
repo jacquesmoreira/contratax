@@ -60,8 +60,8 @@ import { googleConfigurado, urlAutorizacao, processarCallback } from "../src/goo
 import { solicitarReset, aplicarReset, verificarToken } from "../src/recuperarSenha.mjs";
 import { checarAuth, registrarTentativa, limparAuth, ipDoRequest as ipAuth } from "../src/rateLimitAuth.mjs";
 import { PLANOS, AVULSOS, planoDe } from "../src/planos.mjs";
-import { ativarPlano } from "../src/assinatura.mjs";
-import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura } from "../src/asaas.mjs";
+import { ativarPlano, cancelarPorToken } from "../src/assinatura.mjs";
+import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura, cancelarAssinaturaAsaas } from "../src/asaas.mjs";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(AQUI, "..");
@@ -140,11 +140,12 @@ function aplicarHeadersSeguranca(res) {
   // listadas. Bloqueia carregamento de scripts de dominios desconhecidos.
   res.setHeader("Content-Security-Policy", [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net",
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://www.clarity.ms https://*.clarity.ms",
+    "script-src-elem 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://www.clarity.ms https://*.clarity.ms",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https:",
-    "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com",
+    "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://fonts.googleapis.com https://fonts.gstatic.com",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "object-src 'none'",
@@ -883,6 +884,41 @@ const servidor = createServer(async (req, res) => {
       return json(res, 200, (await resumoCustos()) || { chamadas: 0 });
     }
 
+    // Download do backup diario. Protegido por token admin.
+    if (rota.startsWith("/admin/backup/")) {
+      if ((url.searchParams.get("t") || "") !== ADMIN) {
+        res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" });
+        return res.end("Apenas admin");
+      }
+      const data = rota.split("/").pop().replace(/[^0-9-]/g, "");
+      const { caminhoBackup } = await import("../src/backup.mjs");
+      const caminho = caminhoBackup(data);
+      try {
+        const buf = await readFile(caminho);
+        res.writeHead(200, {
+          "Content-Type": "application/gzip",
+          "Content-Disposition": `attachment; filename="contratax-${data}.db.gz"`,
+          "Content-Length": buf.length,
+        });
+        return res.end(buf);
+      } catch {
+        res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        return res.end("Backup nao encontrado para " + data);
+      }
+    }
+
+    // Forca um backup imediato (admin). Util para testar ou antes de manutencao.
+    if (rota === "/api/admin/backup/agora") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const { rodarBackup } = await import("../src/backup.mjs");
+        const meta = await rodarBackup();
+        return json(res, 200, { ok: true, meta });
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
+      }
+    }
+
     // ===== Painel admin (tudo gated por LICITA_ADMIN_TOKEN) =====
     if (rota === "/api/admin/clientes") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
@@ -1033,6 +1069,12 @@ const servidor = createServer(async (req, res) => {
           const pl = PLANOS[corpo.id];
           if (!pl) return json(res, 400, { erro: "Plano invalido" });
           r = await criarAssinatura({ clienteId, valor: precoNumero(pl.preco), descricao: `ContrataX — Plano ${pl.nome}`, externalReference: `sub:${perfil.token}:${pl.id}`, successUrl });
+          // Salva o subscriptionId no perfil pra permitir cancelamento self-service.
+          if (r.subscriptionId) {
+            const perfis2 = await lerPerfis();
+            const p2 = perfis2.find((x) => x.token === perfil.token);
+            if (p2) { p2.asaasSubscriptionId = r.subscriptionId; await salvarPerfis(perfis2); }
+          }
         }
         if (!r.invoiceUrl) return json(res, 502, { erro: "Gateway nao devolveu a URL de pagamento" });
         return json(res, 200, { automatico: true, url: r.invoiceUrl });
@@ -1089,11 +1131,104 @@ const servidor = createServer(async (req, res) => {
               }
             } catch (e) { console.error("[ga4]", e.message); }
           }
+        } else if (evento === "PAYMENT_OVERDUE") {
+          // Cobranca vencida: avisa o cliente com link pra atualizar o pagamento.
+          // Acesso continua na carencia (LICITA_GRACA_DIAS) ate ser cortado.
+          let ref = pg.externalReference;
+          if (!ref && pg.subscription) ref = await externalReferenceDaAssinatura(pg.subscription);
+          const [tipo, token] = String(ref || "").split(":");
+          if (token) {
+            try {
+              const perfil = await perfilPorToken(token);
+              const { temEmailKey, enviar } = await import("../src/email.mjs");
+              if (perfil?.email && temEmailKey()) {
+                const BASE = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
+                const valor = (Number(pg.value) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                const linkPg = pg.invoiceUrl || `${BASE}/assinar?c=${perfil.token}`;
+                await enviar({
+                  para: perfil.email,
+                  assunto: "Sua mensalidade do ContrataX ainda nao foi paga",
+                  html: `<!DOCTYPE html><html><body style="margin:0;background:#f8fafc;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:24px 12px"><tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0">
+<tr><td style="background:#fef3c7;padding:20px 26px;border-bottom:1px solid #fde68a">
+<div style="font-size:13px;color:#92400e;font-weight:700;letter-spacing:.5px">PAGAMENTO PENDENTE</div>
+<div style="font-size:18px;color:#78350f;font-weight:800;margin-top:4px">A renovacao do seu plano nao foi processada</div>
+</td></tr>
+<tr><td style="padding:24px 26px;color:#0f172a;font-size:15px;line-height:1.6">
+<p>Ola, ${perfil.nome || "cliente"}.</p>
+<p>A cobranca de <b>${valor}</b> referente a sua mensalidade do ContrataX nao foi confirmada no vencimento. Pode ter sido cartao recusado, saldo insuficiente ou problema temporario.</p>
+<p><b>O que acontece agora:</b> seu painel continua funcionando por mais alguns dias (carencia). Depois disso, o acesso e pausado ate o pagamento ser confirmado.</p>
+<table cellpadding="0" cellspacing="0" border="0" style="margin:20px 0"><tr><td align="center">
+<a href="${linkPg}" style="display:inline-block;background:#4338ca;color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 28px;border-radius:11px">Pagar agora</a>
+</td></tr></table>
+<p style="font-size:13.5px;color:#64748b">Se ja pagou nas ultimas horas, ignore este e-mail — a confirmacao pode levar alguns minutos.</p>
+<p style="font-size:13.5px;color:#64748b">Duvidas? Responda este e-mail ou escreva para <a href="mailto:contato@contratax.com.br" style="color:#4338ca">contato@contratax.com.br</a>.</p>
+</td></tr>
+<tr><td style="background:#f8fafc;padding:16px 26px;text-align:center;border-top:1px solid #e2e8f0">
+<div style="color:#64748b;font-size:12.5px">ContrataX, monitor de licitacoes publicas</div>
+</td></tr></table></td></tr></table></body></html>`,
+                });
+              }
+            } catch (e) { console.error("[email overdue]", e.message); }
+          }
+        } else if (evento === "PAYMENT_REFUNDED" || evento === "PAYMENT_CHARGEBACK_REQUESTED") {
+          // Estorno/chargeback: avisa o Jacques pra agir.
+          try {
+            const { temEmailKey, enviar } = await import("../src/email.mjs");
+            if (temEmailKey()) {
+              await enviar({
+                para: process.env.LICITA_CONTATO || "contato@contratax.com.br",
+                assunto: `[ContrataX] ${evento}: ${pg.id}`,
+                html: `<p>Evento Asaas: <b>${evento}</b></p><pre>${JSON.stringify(pg, null, 2).slice(0, 1500)}</pre>`,
+              });
+            }
+          } catch {}
         }
       } catch (e) {
         console.error("[webhook asaas]", e.message);
       }
       return json(res, 200, { ok: true }); // sempre 200 para o Asaas nao re-tentar em loop
+    }
+
+    // Cancelamento self-service: para a renovacao no Asaas e marca o perfil.
+    // O acesso continua valido ate o fim do periodo ja pago.
+    if (rota === "/api/conta/cancelar" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfil = await perfilPorToken(corpo.c || url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
+      try {
+        let asaasOk = true, asaasErro = null;
+        if (perfil.asaasSubscriptionId) {
+          const r = await cancelarAssinaturaAsaas(perfil.asaasSubscriptionId);
+          asaasOk = r.ok; asaasErro = r.erro || null;
+        }
+        await cancelarPorToken(perfil.token, corpo.motivo || "");
+        // Avisa o Jacques por email (opcional, se Resend configurado).
+        try {
+          const { temEmailKey, enviar } = await import("../src/email.mjs");
+          if (temEmailKey()) {
+            await enviar({
+              para: process.env.LICITA_CONTATO || "contato@contratax.com.br",
+              assunto: `[ContrataX] Cancelamento: ${perfil.nome || perfil.email}`,
+              html: `<p>Cliente <b>${perfil.nome || perfil.email}</b> (CNPJ ${perfil.cnpj || "?"}, token ${perfil.token}) cancelou a assinatura.</p>
+                     <p>Motivo informado: <i>${(corpo.motivo || "(nao informado)").slice(0, 240)}</i></p>
+                     <p>Asaas: ${asaasOk ? "renovacao parada" : "falha ao cancelar (" + asaasErro + ")"}</p>`,
+            });
+          }
+        } catch {}
+        const venc = perfil.assinatura?.expiraEm || null;
+        return json(res, 200, {
+          ok: true,
+          acessoAteFimDoCiclo: venc,
+          renovacaoParada: asaasOk,
+          mensagem: venc
+            ? `Cancelamento registrado. Seu acesso continua ate ${new Date(venc).toLocaleDateString("pt-BR")}.`
+            : "Cancelamento registrado.",
+        });
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
+      }
     }
 
     // Equipe: lista os acessos da empresa (membros, assentos usados/total).
@@ -1925,8 +2060,26 @@ const servidor = createServer(async (req, res) => {
     res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("Nao encontrado");
   } catch (err) {
-    res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
-    res.end("Erro interno: " + err.message);
+    // Gera ID curto para rastrear no log. Cliente ve o ID; o detalhe tecnico fica
+    // so no servidor (nao vaza stack/mensagem ao usuario).
+    const erroId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
+    console.error(`[500 ${erroId}] ${req.method} ${req.url}\n`, err);
+    // Se a rota e JSON (API), devolve JSON; senao serve a pagina HTML amigavel.
+    const rotaErr = req.url || "";
+    const querJson = rotaErr.startsWith("/api/") || /application\/json/i.test(req.headers.accept || "");
+    if (querJson) {
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      return res.end(JSON.stringify({ erro: "Erro interno do servidor", id: erroId }));
+    }
+    try {
+      const html = await readFile(resolve(AQUI, "public", "erro-500.html"), "utf8");
+      const comId = html.replace("ID: ...", "ID: " + erroId);
+      res.writeHead(500, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(injetarAnalytics(comId));
+    } catch {
+      res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end("Erro interno. ID: " + erroId);
+    }
   }
 });
 
@@ -1970,4 +2123,16 @@ if (process.env.LICITA_DIGEST) {
       return digestLoop({ horaBR });
     })
     .catch((e) => console.error("[digest] erro:", e.message));
+}
+
+// Opcional (Railway): backup off-site automatico. 1x ao dia, gera snapshot do
+// banco, gzipa, salva em /data/backups e manda resumo por email com link de
+// download (token admin). Ative com LICITA_BACKUP=1.
+if (process.env.LICITA_BACKUP) {
+  import("../src/backup.mjs")
+    .then(({ backupLoop }) => {
+      console.log(`[backup] ativado em background`);
+      return backupLoop({ adminToken: ADMIN });
+    })
+    .catch((e) => console.error("[backup] erro:", e.message));
 }

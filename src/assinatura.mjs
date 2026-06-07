@@ -94,6 +94,23 @@ export async function ativarPlano(token, nivel, dias = 30, formaPagamento = null
   return ativarPorToken(token, dias, nivel, formaPagamento);
 }
 
+// Cancelamento self-service: marca o perfil como cancelado, mas mantem o acesso
+// ate o fim do ciclo pago. Quem realmente para a cobranca recorrente e a chamada
+// ao Asaas (cancelarAssinaturaAsaas) feita na rota.
+export async function cancelarPorToken(token, motivo = "") {
+  const perfis = await lerPerfis();
+  const p = perfis.find((x) => x.token === token);
+  if (!p) throw new Error(`Token ${token} nao encontrado`);
+  if (!p.assinatura) p.assinatura = {};
+  p.assinatura.canceladoEm = new Date().toISOString();
+  p.assinatura.canceladoMotivo = String(motivo || "").slice(0, 240);
+  // NAO mexe em status nem em expiraEm: o cliente paga pelo periodo ja contratado.
+  // Quando expirar, o calculo natural de statusAtual joga pra "vencido" e nao
+  // renova porque a assinatura Asaas ja foi deletada.
+  await salvarPerfis(perfis);
+  return p;
+}
+
 // Lista todos os clientes com o estado da assinatura (para o admin).
 export async function listarClientes() {
   const perfis = await lerPerfis();

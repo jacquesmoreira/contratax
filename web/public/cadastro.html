@@ -66,7 +66,21 @@
       <input id="email" type="email" placeholder="voce@suaempresa.com.br" required />
 
       <label for="senha">Crie uma senha</label>
-      <input id="senha" type="password" placeholder="mínimo 6 caracteres" minlength="6" required />
+      <div style="position:relative">
+        <input id="senha" type="password" placeholder="mínimo 6 caracteres" minlength="6" required style="padding-right:64px" />
+        <button type="button" id="toggle-senha" aria-label="Mostrar senha" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#4338ca;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;padding:6px 10px">Mostrar</button>
+      </div>
+      <script>
+        (function(){
+          var inp = document.getElementById("senha"), btn = document.getElementById("toggle-senha");
+          if (inp && btn) btn.onclick = function(){
+            var mostrando = inp.type === "text";
+            inp.type = mostrando ? "password" : "text";
+            btn.textContent = mostrando ? "Mostrar" : "Ocultar";
+            btn.setAttribute("aria-label", mostrando ? "Mostrar senha" : "Ocultar senha");
+          };
+        })();
+      </script>
 
       <label>Estados onde você atua</label>
       <div class="ufs-wrap" id="ufs-chips"></div>
