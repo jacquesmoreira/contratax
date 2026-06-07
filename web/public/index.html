@@ -670,6 +670,19 @@ function tldrHTML(t, id) {
       <button id="btn-tldr-on" onclick="iniciarTldr('${id}')" style="background:var(--indigo);color:#fff;border:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer">Gerar resumo rápido</button>
     </div>`;
   }
+  if (t === "sem-cota") {
+    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid #b45309;background:linear-gradient(135deg,#fffbeb 0%,#fff 60%)">
+      <h3>⚡ Resumo rápido do edital</h3>
+      <p style="font-size:14px;color:#78350f;margin:6px 0 12px">Sua cota mensal de leituras ContrataX.IA acabou. O resumo rápido também usa a IA.</p>
+      <a href="/assinar?c=${encodeURIComponent(token)}" style="display:inline-block;background:var(--indigo);color:#fff;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:14px">Ver planos ou comprar pacote avulso</a>
+    </div>`;
+  }
+  if (t === "erro") {
+    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--cinza-c);background:#f8fafc">
+      <h3>⚡ Resumo rápido do edital</h3>
+      <p style="font-size:13.5px;color:var(--cinza);margin:6px 0 0">Não foi possível ler este edital automaticamente. Tente abrir o PDF no portal de origem.</p>
+    </div>`;
+  }
   if (!t) return `<div class="bloco" id="tldr-bloco"></div>`; // placeholder pra preencher
   const rotulo = {
     apto: ["#059669", "#ecfdf5", "✓ APTO"],
@@ -709,8 +722,12 @@ async function gerarTldrAsync(id) {
     const el = document.getElementById("tldr-bloco");
     if (!el || editalAtual !== id) return; // o cliente trocou de edital
     if (d.tldr) el.outerHTML = tldrHTML(d.tldr, id);
-    else el.outerHTML = ""; // falhou silencioso (nao polui a UI)
-  } catch { /* silencioso: TL;DR e gancho, nao bloqueia experiencia */ }
+    else if (d.paywall) el.outerHTML = tldrHTML("sem-cota", id);
+    else el.outerHTML = tldrHTML("erro", id);
+  } catch {
+    const el = document.getElementById("tldr-bloco");
+    if (el && editalAtual === id) el.outerHTML = tldrHTML("erro", id);
+  }
 }
 
 function reputacaoHTML(r) {
