@@ -656,7 +656,13 @@ fundo.onclick = fechar;
 const ICON = { atende: ['ok','✓'], valida: ['ok','✓'], nao_atende: ['no','✕'], vencida: ['no','✕'], ausente: ['no','✕'], confirmar: ['dd','?'] };
 function iconHTML(s){ const [cls,ch] = ICON[s] ?? ['dd','·']; return `<span class="ic ${cls}">${ch}</span>`; }
 
-function tldrHTML(t, id) {
+function tldrHTML(t, id, msg) {
+  if (t === "limite-dia") {
+    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid #d97706;background:linear-gradient(135deg,#fffbeb 0%,#fff 60%)">
+      <h3>⚡ Resumo rápido do edital</h3>
+      <p style="font-size:13.5px;color:#78350f;margin:6px 0 0;line-height:1.5">${esc(msg || "Limite diário atingido. Volta a funcionar amanhã.")}</p>
+    </div>`;
+  }
   if (t === "gerando") {
     return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--indigo);background:linear-gradient(135deg,#eef2ff 0%,#fff 60%)">
       <h3>⚡ Resumo rápido do edital</h3>
@@ -725,6 +731,7 @@ async function gerarTldrAsync(id) {
     if (!el || editalAtual !== id) return; // o cliente trocou de edital
     if (d.tldr) el.outerHTML = tldrHTML(d.tldr, id);
     else if (d.paywall) el.outerHTML = tldrHTML("sem-cota", id);
+    else if (r.status === 429) el.outerHTML = tldrHTML("limite-dia", id, d.mensagem);
     else el.outerHTML = tldrHTML("erro", id);
   } catch {
     const el = document.getElementById("tldr-bloco");

@@ -1468,17 +1468,36 @@ const servidor = createServer(async (req, res) => {
       const tokenT = url.searchParams.get("c") || "";
       const perfilT = await perfilPorToken(tokenT);
       // Caminho 1: cliente PAGANTE — TL;DR e gancho de ativacao, NAO consome
-      // cota (so a "Analisar este edital" completa, em /api/analisar, consome).
-      // Cache global por edital ja protege a margem: segundo cliente do mesmo
-      // edital nao gera nova chamada de IA. So edital INEDITO custa, e custo de
-      // TL;DR (Haiku, prompt curto) e ~10x menor que analise completa (Sonnet).
+      // cota mensal (so a "Analisar este edital" completa, em /api/analisar,
+      // consome). Cache global por edital protege a margem: segundo cliente do
+      // mesmo edital nao gera nova chamada de IA. So edital INEDITO custa, e
+      // custo de TL;DR (Haiku) e ~10x menor que analise completa (Sonnet).
+      //
+      // Trava anti-abuso: cap de TLDR_LIMITE_DIA TL;DRs com CACHE MISS por
+      // cliente por dia. Cache hit nao conta porque nao gera custo. Protege
+      // contra cliente que abre 1000 editais novos/dia.
+      const TLDR_LIMITE_DIA = Number(process.env.LICITA_TLDR_LIMITE_DIA || 30);
       if (perfilT && tokenT !== ADMIN) {
         if (!statusAtual(perfilT).temAcesso) {
           return json(res, 403, { erro: "Assinatura nao ativa", paywall: true });
         }
+        // Contador diario de cache-miss por cliente
+        const hoje = new Date().toISOString().slice(0, 10);
+        const perfis = await lerPerfis();
+        const p = perfis.find((x) => x.token === tokenT);
+        if (!p._tldrUso || p._tldrUso.dia !== hoje) p._tldrUso = { dia: hoje, n: 0 };
+        if (p._tldrUso.n >= TLDR_LIMITE_DIA) {
+          return json(res, 429, {
+            erro: "Limite diario de resumos rapidos atingido",
+            mensagem: `Para proteger contra abuso, ha um limite de ${TLDR_LIMITE_DIA} resumos novos por dia. O limite zera amanha. Editais ja lidos por voce ou outros clientes continuam aparecendo sem contar.`,
+            paywall: false,
+          });
+        }
         try {
           const tldr = await gerarTldr(edital, { perfilToken: tokenT });
           await salvarTldr(id, tldr);
+          p._tldrUso.n += 1;
+          await salvarPerfis(perfis);
           return json(res, 200, { tldr, cache: false });
         } catch (e) {
           return json(res, 500, { erro: e.message });
