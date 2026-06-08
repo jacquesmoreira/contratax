@@ -89,6 +89,14 @@
   .card-topo { display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
   .orgao { font-size:12.5px; color:var(--cinza); font-weight:700; }
   .selo-novo { background:var(--verde); color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; letter-spacing:.5px; }
+  /* Trilha do cliente: badges de "ja visto" e "analisado" aparecem so quando
+     a classe correspondente esta no card. Visual discreto (nao polui), mas
+     suficiente pro cliente nao se perder no scroll. */
+  .badge-trilha { display:none; font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:99px; letter-spacing:.3px; text-transform:uppercase; }
+  .card.ja-visto .badge-visto { display:inline-block; background:#e2e8f0; color:#475569; }
+  .card.ja-analisado .badge-analisado { display:inline-block; background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; }
+  .card.ja-visto { background:#fafbfc; }
+  .card.ja-analisado { border-left:3px solid #4338ca; }
   .prazo { margin-left:auto; font-size:12px; font-weight:700; padding:3px 11px; border-radius:999px; }
   .prazo.urgente { background:var(--vermelho-bg); color:var(--vermelho); }
   .prazo.medio { background:var(--ambar-bg); color:var(--ambar); }
@@ -241,12 +249,50 @@ function prazoHTML(iso) { const d = diasAte(iso); if (d == null) return ""; cons
 
 const store = {};
 const token = new URLSearchParams(location.search).get("c") || "";
+
+// Trilha do cliente: editais ja vistos (drawer aberto) e ja analisados (IA
+// rodou). "Vistos" e local ao navegador; "analisados" vem do cache global do
+// servidor (compartilhado entre todos os clientes).
+const CHAVE_VISTOS = "cx_vistos_" + token.slice(0, 8);
+function lerVistos() {
+  try { return new Set(JSON.parse(localStorage.getItem(CHAVE_VISTOS) || "[]")); }
+  catch { return new Set(); }
+}
+function marcarComoVisto(id) {
+  const s = lerVistos();
+  if (!s.has(id)) {
+    s.add(id);
+    // Mantem so os 500 mais recentes pra nao inflar localStorage
+    const arr = [...s];
+    if (arr.length > 500) arr.splice(0, arr.length - 500);
+    try { localStorage.setItem(CHAVE_VISTOS, JSON.stringify(arr)); } catch {}
+  }
+  // Atualiza visual do card na lista (se estiver visivel)
+  document.querySelectorAll(`.card[data-id="${CSS.escape(id)}"]`).forEach((c) => c.classList.add("ja-visto"));
+}
+function marcarComoAnalisado(id) {
+  document.querySelectorAll(`.card[data-id="${CSS.escape(id)}"]`).forEach((c) => c.classList.add("ja-analisado"));
+}
+// Apos renderizar a lista de cards, busca no backend quais ja foram analisados
+// (cache global) e marca visualmente. Batch unico.
+async function marcarAnalisadosDaLista(ids) {
+  if (!ids.length) return;
+  try {
+    const r = await fetch(`/api/editais-analisados?ids=${ids.slice(0, 200).join(",")}`);
+    const d = await r.json();
+    (d.analisados || []).forEach(marcarComoAnalisado);
+  } catch {}
+}
+
 function cardHTML(e) {
   store[e.id] = e;
   const local = `${esc(e.municipio) ?? "?"}/${esc(e.uf) ?? "?"}`;
-  return `<div class="card" data-id="${esc(e.id)}" data-texto="${esc((local+" "+(e.orgao||"")+" "+(e.objeto||"")).toLowerCase())}">
+  const visto = lerVistos().has(e.id) ? " ja-visto" : "";
+  return `<div class="card${visto}" data-id="${esc(e.id)}" data-texto="${esc((local+" "+(e.orgao||"")+" "+(e.objeto||"")).toLowerCase())}">
     <div class="card-topo"><span class="orgao">${local} · ${esc(e.orgao ?? e.unidade ?? "Órgão público")}</span>
-      ${e.novo ? '<span class="selo-novo">NOVO</span>' : ""}${prazoHTML(e.encerramento)}</div>
+      ${e.novo ? '<span class="selo-novo">NOVO</span>' : ""}${prazoHTML(e.encerramento)}
+      <span class="badge-trilha badge-visto">já visto</span>
+      <span class="badge-trilha badge-analisado">analisado pela ContrataX.IA</span></div>
     <div class="objeto">${esc(e.objeto)}</div>
     <div class="card-rodape"><span class="modalidade">${esc(e.modalidade)}</span>
       <span class="valor">${brl(e.valorEstimado)}</span><span class="abrir">Ver análise →</span></div>
@@ -643,6 +689,10 @@ async function carregar() {
     let radarBloco = "";
     try { const rd = await (await fetch(`/api/radar?c=${encodeURIComponent(token)}`)).json(); radarBloco = radarHTML(rd.radar); } catch {}
     c.innerHTML = banner + radarBloco + (perfis.length ? perfis.map(perfilHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Seu painel está sendo preparado.</div>`);
+    // Apos render, pergunta ao backend quais desses editais ja foram analisados
+    // (cache global). Marca visualmente os que sim.
+    const idsRender = [...c.querySelectorAll(".card[data-id]")].map((x) => x.dataset.id);
+    marcarAnalisadosDaLista(idsRender);
   } catch (e) { c.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`; }
 }
 
@@ -651,7 +701,12 @@ const drawer = document.getElementById("drawer"), fundo = document.getElementByI
 function abrir() { drawer.classList.add("aberto"); fundo.classList.add("aberto"); }
 function fechar() { drawer.classList.remove("aberto"); fundo.classList.remove("aberto"); }
 document.getElementById("btn-fechar").onclick = fechar;
-fundo.onclick = fechar;
+// IMPORTANTE: nao fechar mais o drawer ao clicar no fundo escurecido. Isso
+// evita o cliente perder a analise por acidente (problema relatado). Pra
+// fechar, so botao X no canto superior direito ou tecla ESC. O fundo
+// continua dando a sensacao de modal mas e inerte.
+fundo.style.cursor = "default";
+fundo.title = "Clique no X ou aperte ESC para fechar";
 
 const ICON = { atende: ['ok','✓'], valida: ['ok','✓'], nao_atende: ['no','✕'], vencida: ['no','✕'], ausente: ['no','✕'], confirmar: ['dd','?'] };
 function iconHTML(s){ const [cls,ch] = ICON[s] ?? ['dd','·']; return `<span class="ic ${cls}">${ch}</span>`; }
@@ -919,7 +974,7 @@ function copiarMinuta() {
 // 6.2 dos Termos).
 function disclaimerIA() {
   return `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:12.5px;color:#78350f;line-height:1.5">
-    <b>Aviso ContrataX.IA:</b> esta leitura foi gerada por inteligencia artificial (Claude da Anthropic) e e uma referencia para apoiar sua decisao. <b>Sempre confira no edital oficial no PNCP.</b> Em caso de divergencia, prevalece o edital oficial.
+    <b>Aviso ContrataX.IA:</b> esta leitura foi gerada pela nossa inteligencia artificial e e uma referencia para apoiar sua decisao. <b>Sempre confira no edital oficial no PNCP.</b> Em caso de divergencia, prevalece o edital oficial.
   </div>`;
 }
 // Botao destacado pra abrir o PNCP do edital. Mostrado junto com cada analise.
@@ -954,6 +1009,8 @@ function veredictoHTML(conf) {
 let editalAtual = null;
 async function abrirDrawer(id) {
   editalAtual = id;
+  // Marca como visto na trilha do cliente (visual + localStorage)
+  marcarComoVisto(id);
   const e = store[id] || {};
   document.getElementById("drawer-titulo").textContent = `${e.municipio ?? ""}/${e.uf ?? ""}, ${(e.objeto||"").slice(0,80)}`;
   const corpo = document.getElementById("drawer-corpo");
@@ -1096,6 +1153,8 @@ async function analisar(id) {
       const n = document.getElementById("nav-uso");
       if (n) { n.innerHTML = `<b>${d.uso.usados}/${d.uso.limite}</b> análises do edital com ContrataX.IA`; if (d.uso.restantes === 0) n.style.color = "#dc2626"; }
     }
+    // Edital virou analisado: marca o card na lista (trilha visual)
+    marcarComoAnalisado(id);
     if (editalAtual === id) abrirDrawer(id);
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = "🔍 Analisar este edital"; }

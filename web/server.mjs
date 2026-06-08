@@ -1310,6 +1310,22 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // Batch: dado uma lista de IDs de editais (separados por virgula), devolve
+    // quais ja tem analise completa no cache global. Permite a UI mostrar badge
+    // "Ja analisado" em cada card e o cliente nao re-analisar (e nao gastar cota).
+    if (rota === "/api/editais-analisados" && req.method === "GET") {
+      const idsParam = url.searchParams.get("ids") || "";
+      const ids = idsParam.split(",").filter(Boolean).slice(0, 200); // hard cap
+      const analisados = [];
+      for (const id of ids) {
+        try {
+          const c = await carregarAnalise(id);
+          if (c) analisados.push(id);
+        } catch {}
+      }
+      return json(res, 200, { analisados });
+    }
+
     // LGPD art. 18: direito de portabilidade. Devolve TODOS os dados do
     // cliente em formato estruturado (JSON ou CSV) para download.
     if (rota === "/api/conta/meus-dados") {
