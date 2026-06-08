@@ -1104,6 +1104,7 @@ async function abrirDrawer(id) {
         }
         det.innerHTML = d.contratos.map((c) => `
           <div style="padding:11px 0;border-top:1px solid var(--linha);font-size:13px">
+            <div style="font-size:11.5px;font-weight:700;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px">${esc(c.orgao || "Órgão público")}</div>
             <div style="color:var(--tinta);line-height:1.4;margin-bottom:5px">${esc((c.objeto || "").slice(0, 200))}${c.itens > 1 ? ` <span style="font-size:11px;font-weight:700;color:var(--indigo);background:#eef2ff;padding:2px 7px;border-radius:6px;white-space:nowrap">${c.itens} itens agrupados</span>` : ""}</div>
             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--cinza)">
               <span><b style="color:var(--tinta)">${brl(c.valor)}</b>${c.itens > 1 ? ` <span style="color:var(--cinza-c)">(total)</span>` : ""}</span>
