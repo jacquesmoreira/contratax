@@ -18,6 +18,7 @@ export const PLANOS = {
     preco: process.env.LICITA_PRECO_STARTER || "59,00",
     analises: Number(process.env.LICITA_ANALISES_STARTER || 3), // degustacao
     extracoesPdf: Number(process.env.LICITA_EXTRACOES_STARTER || 0),
+    tldrLimiteDia: Number(process.env.LICITA_TLDR_STARTER || 8),
     empresas: 1,
     degustacao: true, // sinaliza pra UI deixar claro que a IA e limitada
   },
@@ -27,6 +28,7 @@ export const PLANOS = {
     preco: process.env.LICITA_PRECO_BASICO || process.env.LICITA_PRECO || "247,00",
     analises: Number(process.env.LICITA_ANALISES_BASICO || 30),
     extracoesPdf: Number(process.env.LICITA_EXTRACOES_BASICO || 5),
+    tldrLimiteDia: Number(process.env.LICITA_TLDR_BASICO || 12),
     empresas: 1, // 1 CNPJ
   },
   pro: {
@@ -35,6 +37,7 @@ export const PLANOS = {
     preco: process.env.LICITA_PRECO_PRO || "397,00",
     analises: Number(process.env.LICITA_ANALISES_PRO || 50),
     extracoesPdf: Number(process.env.LICITA_EXTRACOES_PRO || 20),
+    tldrLimiteDia: Number(process.env.LICITA_TLDR_PRO || 18),
     empresas: 1,
   },
   // Planos para CONSULTORES / ASSESSORIAS de licitacao: 1 login que gerencia
@@ -46,6 +49,7 @@ export const PLANOS = {
     preco: process.env.LICITA_PRECO_ASS10 || "697,00",
     analises: Number(process.env.LICITA_ANALISES_ASS10 || 8), // por empresa (80 total)
     extracoesPdf: Number(process.env.LICITA_EXTRACOES_ASS10 || 5), // por empresa
+    tldrLimiteDia: Number(process.env.LICITA_TLDR_ASS10 || 30),
     empresas: Number(process.env.LICITA_EMPRESAS_ASS10 || 10),
     assessoria: true,
   },
@@ -55,6 +59,7 @@ export const PLANOS = {
     preco: process.env.LICITA_PRECO_ASS25 || "1297,00",
     analises: Number(process.env.LICITA_ANALISES_ASS25 || 6), // por empresa (150 total)
     extracoesPdf: Number(process.env.LICITA_EXTRACOES_ASS25 || 5), // por empresa
+    tldrLimiteDia: Number(process.env.LICITA_TLDR_ASS25 || 50),
     empresas: Number(process.env.LICITA_EMPRESAS_ASS25 || 25),
     assessoria: true,
   },

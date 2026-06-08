@@ -1610,14 +1610,16 @@ const servidor = createServer(async (req, res) => {
       // mesmo edital nao gera nova chamada de IA. So edital INEDITO custa, e
       // custo de TL;DR (Haiku) e ~10x menor que analise completa (Sonnet).
       //
-      // Trava anti-abuso: cap de TLDR_LIMITE_DIA TL;DRs com CACHE MISS por
-      // cliente por dia. Cache hit nao conta porque nao gera custo. Protege
-      // contra cliente que abre 1000 editais novos/dia.
-      const TLDR_LIMITE_DIA = Number(process.env.LICITA_TLDR_LIMITE_DIA || 30);
+      // Trava anti-abuso: cap diario de TL;DRs com CACHE MISS por cliente.
+      // Cache hit nao conta porque nao gera custo. Cap difere POR PLANO pra
+      // garantir margem 60%+ pessimista em todos: Starter 8/dia, Basico 12,
+      // Pro 18, Ass10 30, Ass25 50. Pode sobrescrever via env LICITA_TLDR_<PLANO>.
       if (perfilT && tokenT !== ADMIN) {
         if (!statusAtual(perfilT).temAcesso) {
           return json(res, 403, { erro: "Assinatura nao ativa", paywall: true });
         }
+        const planoAtual = planoDe(perfilT);
+        const TLDR_LIMITE_DIA = planoAtual.tldrLimiteDia || 30;
         // Contador diario de cache-miss por cliente
         const hoje = new Date().toISOString().slice(0, 10);
         const perfis = await lerPerfis();
@@ -1626,7 +1628,7 @@ const servidor = createServer(async (req, res) => {
         if (p._tldrUso.n >= TLDR_LIMITE_DIA) {
           return json(res, 429, {
             erro: "Limite diario de resumos rapidos atingido",
-            mensagem: `Para proteger contra abuso, ha um limite de ${TLDR_LIMITE_DIA} resumos novos por dia. O limite zera amanha. Editais ja lidos por voce ou outros clientes continuam aparecendo sem contar.`,
+            mensagem: `Voce atingiu ${TLDR_LIMITE_DIA} resumos novos hoje (cota do plano ${planoAtual.nome}). O limite zera amanha. Editais ja lidos por voce ou outros clientes continuam aparecendo sem contar.`,
             paywall: false,
           });
         }
