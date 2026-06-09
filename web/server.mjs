@@ -147,12 +147,12 @@ function aplicarHeadersSeguranca(res) {
   // listadas. Bloqueia carregamento de scripts de dominios desconhecidos.
   res.setHeader("Content-Security-Policy", [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://www.clarity.ms https://*.clarity.ms",
-    "script-src-elem 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://www.clarity.ms https://*.clarity.ms",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://www.google.com https://connect.facebook.net https://www.clarity.ms https://*.clarity.ms",
+    "script-src-elem 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://www.google.com https://connect.facebook.net https://www.clarity.ms https://*.clarity.ms",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.googletagmanager.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https:",
-    "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://fonts.googleapis.com https://fonts.gstatic.com",
+    "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://www.google.com https://www.clarity.ms https://*.clarity.ms https://fonts.googleapis.com https://fonts.gstatic.com",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "object-src 'none'",
