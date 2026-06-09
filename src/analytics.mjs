@@ -13,6 +13,11 @@ const GA4_ID = process.env.LICITA_GA4_ID || "G-N79Q5SH624";
 const GA4_SECRET = process.env.LICITA_GA4_API_SECRET || "";
 const GTM_ID = process.env.LICITA_GTM_ID || "";
 const META_PIXEL = process.env.LICITA_META_PIXEL_ID || "";
+// Google Ads (gtag de conversao). Mesma lib do GA4 (gtag.js).
+const GOOGLE_ADS_ID = process.env.LICITA_GOOGLE_ADS_ID || "AW-18226407023";
+// Label da acao de conversao "Cadastro" criada no painel do Google Ads.
+// Preencha apos criar a acao em Ferramentas > Conversoes (formato: "abc123XYZ").
+const GOOGLE_ADS_CADASTRO_LABEL = process.env.LICITA_GOOGLE_ADS_CADASTRO_LABEL || "";
 // Microsoft Clarity (heatmap + session replay, gratis). Project ID padrao do
 // ContrataX em producao. Sobrescreve via LICITA_CLARITY_ID se quiser trocar.
 const CLARITY_ID = process.env.LICITA_CLARITY_ID || "wrs09m31ps";
@@ -25,9 +30,13 @@ export function temAnalytics() {
 // Carrega o gtag.js (GA4) com Anonymize IP por padrao (LGPD-friendly).
 function snippetHead() {
   let s = "";
-  if (GA4_ID) {
-    s += `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","${GA4_ID}",{anonymize_ip:true});</script>`;
+  if (GA4_ID || GOOGLE_ADS_ID) {
+    const loaderId = GA4_ID || GOOGLE_ADS_ID;
+    s += `<script async src="https://www.googletagmanager.com/gtag/js?id=${loaderId}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());`;
+    if (GA4_ID) s += `gtag("config","${GA4_ID}",{anonymize_ip:true});`;
+    if (GOOGLE_ADS_ID) s += `gtag("config","${GOOGLE_ADS_ID}");`;
+    s += `</script>`;
   }
   if (GTM_ID) {
     s += `<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${GTM_ID}');</script>`;
