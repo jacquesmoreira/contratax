@@ -15,9 +15,9 @@ const GTM_ID = process.env.LICITA_GTM_ID || "";
 const META_PIXEL = process.env.LICITA_META_PIXEL_ID || "";
 // Google Ads (gtag de conversao). Mesma lib do GA4 (gtag.js).
 const GOOGLE_ADS_ID = process.env.LICITA_GOOGLE_ADS_ID || "AW-18226407023";
-// Label da acao de conversao "Cadastro" criada no painel do Google Ads.
-// Preencha apos criar a acao em Ferramentas > Conversoes (formato: "abc123XYZ").
-const GOOGLE_ADS_CADASTRO_LABEL = process.env.LICITA_GOOGLE_ADS_CADASTRO_LABEL || "";
+// Label da acao de conversao "Cadastro grátis" criada no painel do Google Ads.
+// Disparado quando o cadastro self-service completa (cadastro.html).
+const GOOGLE_ADS_CADASTRO_LABEL = process.env.LICITA_GOOGLE_ADS_CADASTRO_LABEL || "9vcrCNPh6LscEO_Mg_ND";
 // Microsoft Clarity (heatmap + session replay, gratis). Project ID padrao do
 // ContrataX em producao. Sobrescreve via LICITA_CLARITY_ID se quiser trocar.
 const CLARITY_ID = process.env.LICITA_CLARITY_ID || "wrs09m31ps";
@@ -36,6 +36,9 @@ function snippetHead() {
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());`;
     if (GA4_ID) s += `gtag("config","${GA4_ID}",{anonymize_ip:true});`;
     if (GOOGLE_ADS_ID) s += `gtag("config","${GOOGLE_ADS_ID}");`;
+    if (GOOGLE_ADS_ID && GOOGLE_ADS_CADASTRO_LABEL) {
+      s += `window.cxConversaoCadastro=function(v){try{gtag("event","conversion",{send_to:"${GOOGLE_ADS_ID}/${GOOGLE_ADS_CADASTRO_LABEL}",value:Number(v)||59,currency:"BRL"});}catch(e){}};`;
+    }
     s += `</script>`;
   }
   if (GTM_ID) {

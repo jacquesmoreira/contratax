@@ -194,6 +194,7 @@ document.getElementById("form").addEventListener("submit", async (ev) => {
     const r = await fetch("/api/cadastrar", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(corpo) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.erro || "falha");
+    try { window.cxConversaoCadastro && window.cxConversaoCadastro(59); } catch (e) {}
     const url = location.origin + d.link;
     document.getElementById("card").innerHTML = `
       <div class="sucesso">
