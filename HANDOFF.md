@@ -653,7 +653,7 @@ Token: e29744cdbda68bdd9877426d57d5a007 (NUNCA commitar)
 
 ### Post LinkedIn (vencedor recomendado: variação B)
 
-> 27.270 licitações estão abertas no Brasil agora. Quase nenhuma pequena empresa sabe quais valem pra ela.
+> 27 mil licitações estão abertas no Brasil agora. 1,2 milhão de contratos foram fechados nos últimos 18 meses. Quase nenhuma pequena empresa sabe quais valem pra ela.
 >
 > Construí o ContrataX pra resolver 3 problemas que travam pequena empresa de vender pro governo:
 >
