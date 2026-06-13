@@ -140,7 +140,8 @@ export async function renderizarArtigo(slug, baseUrl) {
   const url = `${baseUrl}/blog/${slug}`;
   const dataIso = post.date ? new Date(post.date).toISOString() : new Date().toISOString();
   const dataBR = post.date ? new Date(post.date).toLocaleDateString("pt-BR") : "";
-  const ld = {
+  // Schema BlogPosting (base)
+  const ldBlog = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: post.title,
@@ -154,6 +155,36 @@ export async function renderizarArtigo(slug, baseUrl) {
     },
     mainEntityOfPage: url,
   };
+  // Schema FAQPage: extrai perguntas e respostas do markdown se houver secao
+  // "Perguntas frequentes" ou "FAQ". Google pode mostrar as Q&A direto no SERP
+  // (rich snippet), aumentando CTR em 10-30%.
+  function extrairFAQ(md) {
+    const m = md.match(/##\s+(?:Perguntas frequentes|FAQ|Duvidas|Dúvidas)[^\n]*\n([\s\S]+?)(?=\n##\s+|$)/i);
+    if (!m) return null;
+    const bloco = m[1];
+    const faqs = [];
+    const re = /###\s+([^\n]+)\n([\s\S]+?)(?=\n###\s+|$)/g;
+    let q;
+    while ((q = re.exec(bloco)) !== null) {
+      const pergunta = q[1].trim();
+      // Resposta: remove markdown basico (negrito, links) pra texto limpo
+      const resposta = q[2].trim().replace(/\*\*(.+?)\*\*/g, "$1").replace(/\[(.+?)\]\([^)]+\)/g, "$1").replace(/\s+/g, " ");
+      if (pergunta && resposta) faqs.push({ pergunta, resposta });
+    }
+    if (faqs.length < 2) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.pergunta,
+        acceptedAnswer: { "@type": "Answer", text: f.resposta },
+      })),
+    };
+  }
+  const ldFaq = extrairFAQ(post.corpo);
+  // JSON-LD final: array com BlogPosting + FAQPage quando aplicavel
+  const ld = ldFaq ? [ldBlog, ldFaq] : ldBlog;
   // Sugere outros 3 artigos
   const todos = await listarArtigos();
   const outros = todos.filter((p) => p.slug !== slug).slice(0, 3);
