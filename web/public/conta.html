@@ -58,21 +58,37 @@
 
     <!-- Bloco de COMPLETAR CADASTRO (so aparece no fluxo Google: ?completar=1) -->
     <div class="card" id="card-completar" style="display:none;border:2px solid var(--indigo);background:linear-gradient(135deg,#eef2ff 0%,#fff 60%)">
-      <h2>Falta pouco para liberar seu painel</h2>
-      <div class="cap" style="font-size:13.5px;color:var(--cinza);margin-bottom:14px">Você entrou com o Google. Para começar a receber as licitações certas, informe o CNPJ da sua empresa e o que ela vende.</div>
+      <h2>Falta 1 minuto pra seu painel ficar pronto</h2>
+      <div class="cap" style="font-size:13.5px;color:var(--cinza);margin-bottom:14px">Você entrou com o Google. Conta rapidinho: que tipo de empresa você tem e o que vende. Em segundos seu painel mostra os editais do seu ramo.</div>
+
       <label for="cnpj-completar">CNPJ da sua empresa</label>
       <input id="cnpj-completar" type="text" placeholder="00.000.000/0000-00" inputmode="numeric" />
       <div class="dica" id="cnpj-status" style="min-height:18px"></div>
+      <button type="button" id="btn-sem-cnpj" style="background:transparent;border:none;color:var(--indigo);font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:underline;padding:0;margin-top:4px;font-family:inherit">Ainda não tenho CNPJ</button>
 
-      <label for="ramo-completar">O que a sua empresa vende (seu ramo)</label>
+      <label for="ramo-completar" style="margin-top:18px">O que a sua empresa vende (seu ramo)</label>
       <input id="ramo-completar" type="text" placeholder="Ex: material hospitalar, seringa, luva" />
-      <div class="dica">Separe por vírgula. São essas palavras que trazem as licitações para o seu painel.</div>
+      <div class="dica" style="margin-bottom:8px">Separe por vírgula. São essas palavras que trazem as licitações para o seu painel.</div>
+      <!-- Sugestoes clicaveis de ramo comuns. Tira a fricção do "nao sei o que escrever" -->
+      <div id="sugestoes-ramo" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+        <span class="dica" style="width:100%;margin-bottom:2px">Ou escolha um:</span>
+        <button type="button" class="sugestao-ramo" data-ramo="material hospitalar" style="background:#fff;border:1px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit">material hospitalar</button>
+        <button type="button" class="sugestao-ramo" data-ramo="limpeza, conservação" style="background:#fff;border:1px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit">limpeza</button>
+        <button type="button" class="sugestao-ramo" data-ramo="alimentação escolar, merenda" style="background:#fff;border:1px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit">merenda escolar</button>
+        <button type="button" class="sugestao-ramo" data-ramo="uniforme, vestuário" style="background:#fff;border:1px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit">uniforme</button>
+        <button type="button" class="sugestao-ramo" data-ramo="manutenção predial, obras" style="background:#fff;border:1px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit">manutenção predial</button>
+        <button type="button" class="sugestao-ramo" data-ramo="software, sistemas, TI" style="background:#fff;border:1px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit">software</button>
+        <button type="button" class="sugestao-ramo" data-ramo="papelaria, escritório" style="background:#fff;border:1px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit">papelaria</button>
+        <button type="button" class="sugestao-ramo" data-ramo="locação de veículos" style="background:#fff;border:1px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit">locação veículos</button>
+        <button type="button" class="sugestao-ramo" data-ramo="vigilância patrimonial" style="background:#fff;border:1px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit">vigilância</button>
+        <button type="button" class="sugestao-ramo" data-ramo="engenharia, projetos" style="background:#fff;border:1px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit">engenharia</button>
+      </div>
 
-      <label>Estados onde você atua</label>
+      <label style="margin-top:18px">Estados onde você atua</label>
       <div class="mods" id="ufs-chips-completar" style="gap:7px"></div>
-      <div class="dica">Clique para selecionar. Deixe em branco = Brasil todo.</div>
+      <div class="dica" title="Sem estado selecionado, o painel mostra editais do Brasil inteiro">💡 Deixe em branco para receber editais do Brasil todo</div>
 
-      <button class="btn" id="btn-completar" style="margin-top:18px">Liberar meu painel</button>
+      <button class="btn" id="btn-completar" style="margin-top:18px;width:100%">Liberar meu painel</button>
       <div class="ok" id="completar-ok"></div>
       <div class="erro" id="completar-erro"></div>
     </div>
@@ -285,6 +301,57 @@ if (modoCompletar) {
   document.getElementById("card-completar").style.display = "block";
   document.getElementById("conteudo-normal").style.display = "none";
   montarChipsCompletar();
+
+  // Sugestoes de ramo clicaveis: ao clicar, preenche o input. Reduz friction
+  // pra quem chegou via Google Ads e nao sabe o que escrever.
+  document.querySelectorAll(".sugestao-ramo").forEach((b) => {
+    b.onclick = () => {
+      $("ramo-completar").value = b.dataset.ramo;
+      $("ramo-completar").focus();
+      // Visual: marca como selecionado
+      document.querySelectorAll(".sugestao-ramo").forEach((x) => {
+        x.style.background = "#fff"; x.style.borderColor = "var(--linha)"; x.style.color = "var(--tinta)";
+      });
+      b.style.background = "var(--indigo)"; b.style.borderColor = "var(--indigo)"; b.style.color = "#fff";
+    };
+  });
+
+  // Botao "Ainda nao tenho CNPJ": mostra modal pedindo email pra contato e
+  // explicando que MEI/LTDA e necessario pra participar de licitacao. Quem
+  // chegou aqui sem CNPJ ainda pode virar cliente, mas nao agora.
+  const btnSemCnpj = document.getElementById("btn-sem-cnpj");
+  if (btnSemCnpj) btnSemCnpj.onclick = () => {
+    const ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px";
+    ov.innerHTML = `<div style="background:#fff;border-radius:18px;max-width:440px;width:100%;padding:30px 28px;box-shadow:0 30px 80px rgba(0,0,0,.35)">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:10px;color:#0f172a">CNPJ é obrigatório pra licitação pública</h2>
+      <p style="color:#475569;font-size:14.5px;margin-bottom:14px;line-height:1.55">Pelas regras do governo (Lei 14.133/2021), só empresas com CNPJ podem participar de licitações. <b>MEI também serve</b> e abre em 5 minutos no Portal do Empreendedor (gratuito).</p>
+      <p style="color:#475569;font-size:14.5px;margin-bottom:18px;line-height:1.55">Posso te avisar quando você tiver o CNPJ pronto pra ativar sua conta?</p>
+      <input type="email" id="email-avisar" placeholder="seu melhor email" style="width:100%;padding:13px;border:1px solid #e2e8f0;border-radius:10px;font-size:15px;margin-bottom:12px;font-family:inherit;outline:none" />
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button id="confirmar-avisar" class="btn" style="flex:1;background:var(--indigo);color:#fff;border:none;padding:13px;border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit">Me avise quando tiver</button>
+        <button id="fechar-avisar" class="btn" style="background:#f1f5f9;color:var(--tinta);border:none;padding:13px 20px;border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit">Voltar</button>
+      </div>
+      <p style="font-size:12px;color:#94a3b8;margin-top:14px;text-align:center">Quer abrir MEI agora? <a href="https://www.gov.br/empresas-e-negocios/pt-br/empreendedor" target="_blank" rel="noopener" style="color:var(--indigo);font-weight:700">gov.br/empreendedor</a></p>
+    </div>`;
+    document.body.appendChild(ov);
+    document.getElementById("fechar-avisar").onclick = () => ov.remove();
+    ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+    document.getElementById("confirmar-avisar").onclick = async () => {
+      const email = document.getElementById("email-avisar").value.trim();
+      if (!/.+@.+\..+/.test(email)) { alert("Email inválido"); return; }
+      try {
+        await fetch("/api/lead", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, termo: "sem-cnpj-completar", uf: null }) });
+        ov.innerHTML = `<div style="background:#fff;border-radius:18px;max-width:380px;width:100%;padding:30px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.35)">
+          <div style="font-size:50px;color:var(--verde)">✓</div>
+          <h2 style="font-size:18px;font-weight:800;margin:10px 0 8px">Salvo!</h2>
+          <p style="color:#475569;font-size:14.5px;line-height:1.5">Vou te avisar por email quando você tiver o CNPJ. Sem spam.</p>
+          <button onclick="this.closest('div').parentElement.remove()" style="margin-top:18px;background:var(--indigo);color:#fff;border:none;padding:11px 24px;border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit">Fechar</button>
+        </div>`;
+      } catch { alert("Erro de conexão"); }
+    };
+  };
 
   const inCnpj = $("cnpj-completar");
   inCnpj.addEventListener("input", () => { inCnpj.value = mascaraCNPJ(inCnpj.value); $("cnpj-status").textContent = ""; });

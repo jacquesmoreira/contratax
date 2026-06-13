@@ -29,7 +29,13 @@ export function temAnalytics() {
 // Snippet que vai no <head> de toda pagina (gtag + GTM + Pixel Meta opcional).
 // Carrega o gtag.js (GA4) com Anonymize IP por padrao (LGPD-friendly).
 function snippetHead() {
-  let s = "";
+  // Preconnect aos dominios de scripts externos: encurta handshake TLS, reduz
+  // tempo ate primeiro byte de cada script externo. Impacto direto no FCP/LCP.
+  let s = `<link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+<link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+<link rel="preconnect" href="https://www.clarity.ms" crossorigin>
+<link rel="dns-prefetch" href="https://www.googletagmanager.com">
+<link rel="dns-prefetch" href="https://www.clarity.ms">`;
   if (GA4_ID || GOOGLE_ADS_ID) {
     const loaderId = GA4_ID || GOOGLE_ADS_ID;
     s += `<script async src="https://www.googletagmanager.com/gtag/js?id=${loaderId}"></script>
@@ -48,7 +54,10 @@ function snippetHead() {
     s += `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL}');fbq('track','PageView');</script>`;
   }
   if (CLARITY_ID) {
-    s += `<script>(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${CLARITY_ID}");</script>`;
+    // Clarity carrega DEPOIS que a pagina ficar interativa (3s ou window load).
+    // Reduz TBT (Total Blocking Time) sem perder o session replay - so atrasa
+    // ~3s o registro inicial, mas grava o resto da sessao normalmente.
+    s += `<script>(function(c,l,a,r,i){function load(){var t=l.createElement("script");t.async=1;t.src="https://www.clarity.ms/tag/"+i;l.getElementsByTagName("script")[0].parentNode.insertBefore(t,l.getElementsByTagName("script")[0])}c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};if(c.requestIdleCallback){c.requestIdleCallback(load,{timeout:3000})}else{setTimeout(load,2500)}})(window,document,"clarity","script","${CLARITY_ID}");</script>`;
   }
   return s;
 }
@@ -99,10 +108,11 @@ const SNIPPET_PWA = `
 }
 </style>
 <script>
+// SW registra so depois que pagina ficar IDLE (~3s) - reduz TBT no primeiro paint.
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
-  });
+  var reg = function(){ navigator.serviceWorker.register("/sw.js",{scope:"/"}).catch(function(){}); };
+  if (window.requestIdleCallback) window.requestIdleCallback(reg,{timeout:5000});
+  else window.addEventListener("load", function(){ setTimeout(reg, 2000); });
 }
 // Banner de consentimento de cookies (LGPD). Aparece uma vez; o aceite fica
 // salvo em localStorage. Discreto, fixo no rodape.

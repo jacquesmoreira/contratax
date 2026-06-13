@@ -259,6 +259,14 @@
     <h1>Existe contrato público do seu ramo aberto agora. <span class="grad">Você só não está vendo.</span></h1>
     <p class="sub">Todo dia o governo abre milhares de licitações, espalhadas em dezenas de portais diferentes. As do seu ramo passam batido, porque conferir todas na mão é impossível.</p>
 
+    <!-- Prova social MOVIDA pra cima do card de busca (acima da dobra mobile).
+         Faz o visitante ver volume e seriedade antes de decidir interagir. -->
+    <div class="autoridade-hero-mobile" style="margin:0 0 18px;display:flex;gap:8px 22px;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--cinza);font-weight:600">
+      <span><b style="font-size:16px;color:var(--indigo)" id="stat-editais-topo">27 mil</b> licitações abertas agora</span>
+      <span><b style="font-size:16px;color:var(--indigo)">1,2 milhão</b> de contratos no acervo</span>
+      <span><b style="font-size:16px;color:var(--indigo)">5.570</b> municípios cobertos</span>
+    </div>
+
     <div class="busca-card">
       <div class="busca-titulo">Quantas licitações do seu ramo estão abertas agora?</div>
       <div class="busca-form">
@@ -281,10 +289,9 @@
       <span><span class="ok">✓</span> Cancele quando quiser, sem multa</span>
     </div>
 
-    <div class="autoridade" id="autoridade-hero" style="margin-top:24px;display:flex;gap:14px 30px;flex-wrap:wrap;justify-content:center;font-size:13.5px;color:var(--cinza);font-weight:600">
-      <span><b id="stat-editais" style="font-size:17px;color:var(--indigo)">26 mil+</b> licitações abertas agora</span>
-      <span><b style="font-size:17px;color:var(--indigo)">1,2 milhão</b> de contratos no histórico</span>
-      <span><b style="font-size:17px;color:var(--indigo)">5.570</b> municípios cobertos</span>
+    <div class="autoridade" id="autoridade-hero" style="margin-top:24px;display:none">
+      <!-- Prova social agora vive acima do card de busca (mobile-first).
+           Este bloco fica oculto pra nao duplicar. -->
     </div>
 
     <div id="resultados"></div>
@@ -751,7 +758,7 @@ fetch("/api/busca-publica").then(r=>r.json()).then(d=>{
   if (d.total) {
     const fmt = d.total.toLocaleString("pt-BR");
     document.getElementById("contador-topo").textContent = `${fmt} licitações abertas agora no Brasil`;
-    const se = document.getElementById("stat-editais");
+    const se = document.getElementById("stat-editais-topo");
     if (se) se.textContent = fmt;
   }
 }).catch(()=>{});
