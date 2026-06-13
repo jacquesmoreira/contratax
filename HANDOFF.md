@@ -641,6 +641,40 @@ Token: e29744cdbda68bdd9877426d57d5a007 (NUNCA commitar)
 - 1 cliente real ativo (Jacques)
 - Sistema 100% pronto pra vender + protegido juridicamente em nível "padrão SaaS bootstrap" (suficiente até 30-50 clientes ou contratação de advogado)
 
+## 🔴 PENDÊNCIA CRÍTICA — SEGUNDA 15/06/2026
+
+**Jacques precisa fazer no Google Ads (após 24h do vínculo GA4 feito em 13/06):**
+
+1. **Importar conversão purchase**
+   - Google Ads → Ferramentas → Conversões → +Nova ação de conversão
+   - "Importar" → "Google Analytics 4 propriedades"
+   - Marcar evento `purchase`
+   - Categoria: Compra | Valor: Usar valor das transações | Janela: 30 dias
+   - Incluir em "Conversões": SIM
+   - Salvar
+
+2. **Trocar estratégia de lance**
+   - Campanhas → Campaign #1 → Configurações → Lances
+   - "Alterar estratégia de lances"
+   - Escolher "Conversões" → "Maximizar conversões"
+   - CPA desejado: deixar em BRANCO (Google precisa aprender por 14 dias)
+   - Salvar
+
+3. **Religar campanha**
+   - Orçamento: R$ 30/dia
+   - Status: Ativada
+
+⚠️ **CRÍTICO**: depois de religar, NÃO mexer por 14 dias em:
+- Palavras-chave
+- Orçamento (drasticamente)
+- Anúncios
+- Público-alvo
+Senão reseta a fase de aprendizado do algoritmo.
+
+Resultado esperado em 14 dias: CPA estabilizado entre R$ 100-300. Se for até R$ 300, manter. Se passar, reavaliar palavras-chave.
+
+---
+
 **Pendente para segunda-feira (09/06):**
 - ✅ Post LinkedIn de lançamento (3 versões prontas - escolher A, B ou C)
 - ✅ 10 CNAEs mapeados com alta dor
