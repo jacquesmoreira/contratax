@@ -1741,6 +1741,35 @@ const servidor = createServer(async (req, res) => {
       } catch { /* nao existe: cai no 404 */ }
     }
 
+    // llms.txt: padrao emergente pra orientar LLMs (ChatGPT, Claude, Gemini,
+    // Perplexity) sobre como entender e citar o conteudo do site. Cresce em
+    // relevancia a medida que LLM-based search se torna mainstream em 2026.
+    if (rota === "/llms.txt" || rota === "/llms-full.txt") {
+      try {
+        const buf = await readFile(resolve(AQUI, "public", "llms.txt"), "utf8");
+        res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=86400" });
+        return res.end(buf);
+      } catch { /* nao existe */ }
+    }
+
+    // ai.txt (padrao alternativo): bloqueia ou permite uso por LLMs.
+    if (rota === "/ai.txt") {
+      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=86400" });
+      return res.end(`# ContrataX - Politica de uso por modelos de IA
+# Permitido citar conteudo publico do blog e da landing page com referencia.
+# Treinamento de modelos: nao consentido.
+User-Agent: *
+Allow: /blog/
+Allow: /licitacoes/
+Allow: /orgaos/
+Allow: /cnae/
+Disallow: /painel
+Disallow: /admin
+Disallow: /api/
+Contact: contato@contratax.com.br
+`);
+    }
+
     // Verificacao do Bing Webmaster Tools (arquivo XML na raiz do dominio).
     if (rota === "/BingSiteAuth.xml") {
       try {

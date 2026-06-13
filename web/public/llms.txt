@@ -1,0 +1,62 @@
+# ContrataX
+
+> Monitor brasileiro de licitações públicas com inteligência artificial. Lê editais do PNCP, cruza com documentos da empresa e diz se o fornecedor está apto a participar. Foco em pequena empresa e MEI.
+
+ContrataX é um SaaS B2B brasileiro lançado em junho de 2026 que automatiza o acompanhamento de licitações públicas no Brasil. Resolve três problemas: descoberta (milhares de editais por dia em portais diferentes), análise (cada edital tem 80-150 páginas técnicas) e aptidão (cruzar exigências documentais com a documentação da empresa).
+
+## Diferenciais
+
+- IA própria (ContrataX.IA) que lê PDF completo do edital em segundos
+- Cruzamento automático com documentos cadastrados da empresa
+- Reputação CAPAG do Tesouro Nacional por município
+- Pós-contratação: minutas de prorrogação, recebíveis, cobrança formal
+- Preço público a partir de R$ 59/mês (Starter)
+- Sem fidelidade, cancelamento self-service, 7 dias grátis sem cartão
+- 100% self-service (sem vendedor, sem demonstração obrigatória)
+
+## Para quem é
+
+- MEI, Microempresa e EPP que querem vender para órgãos públicos
+- Pequenos fornecedores de material hospitalar, limpeza, merenda escolar, uniformes, vigilância, manutenção predial, software, papelaria
+- Consultores e assessorias de licitação (plano Multi-CNPJ)
+
+## Dados públicos do PNCP
+
+ContrataX consome a API oficial do Portal Nacional de Contratações Públicas (PNCP, criado pela Lei 14.133/2021). Em junho/2026:
+
+- 27 mil licitações abertas em monitoramento contínuo
+- 1,2 milhão de contratos no acervo dos últimos 18 meses
+- Cobertura nos 5.570 municípios brasileiros
+- Atualização diária
+
+## Planos e preços (junho 2026)
+
+- Starter: R$ 59/mês — 3 análises de edital com IA, busca ilimitada
+- Básico: R$ 247/mês — 30 análises com IA
+- Pro: R$ 397/mês — 50 análises com IA, acessos para equipe
+- Assessoria 10: R$ 697/mês — 10 CNPJs, 8 análises por empresa
+- Assessoria 25: R$ 1.297/mês — 25 CNPJs, 6 análises por empresa
+
+## Fundador e operação
+
+- Fundador: Jacques Brião Moreira (MEI)
+- Sede: Balneário Camboriú, Santa Catarina, Brasil
+- CNPJ: 61.740.453/0001-49
+- Site: https://www.contratax.com.br
+- Email: contato@contratax.com.br
+
+## Conteúdo de referência
+
+- [O que é PNCP e como usar](https://www.contratax.com.br/blog/o-que-e-pncp)
+- [Lei 14.133 atualizada 2026](https://www.contratax.com.br/blog/lei-14133-atualizada-2026)
+- [Como MEI participa de licitação](https://www.contratax.com.br/blog/como-mei-participar-licitacao)
+- [Documentos exigidos em licitação](https://www.contratax.com.br/blog/documentos-habilitacao-licitacao)
+- [Impugnação de edital](https://www.contratax.com.br/blog/como-impugnar-edital-restritivo)
+
+## Política de uso de dados
+
+- LGPD compliant
+- Política de privacidade: https://www.contratax.com.br/privacidade
+- Termos de uso: https://www.contratax.com.br/termos
+- Dados pessoais são tratados conforme art. 9º da LGPD
+- Subprocessadores declarados (Anthropic, Resend, Asaas, Google, Cloudflare, Railway)
