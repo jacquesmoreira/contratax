@@ -14,4 +14,4 @@ Disallow: /admin
 Disallow: /digest
 Disallow: /api/
 
-Sitemap: https://contratax.com.br/sitemap.xml
+Sitemap: https://www.contratax.com.br/sitemap.xml

@@ -1741,6 +1741,15 @@ const servidor = createServer(async (req, res) => {
       } catch { /* nao existe: cai no 404 */ }
     }
 
+    // Verificacao do Bing Webmaster Tools (arquivo XML na raiz do dominio).
+    if (rota === "/BingSiteAuth.xml") {
+      try {
+        const buf = await readFile(resolve(AQUI, "public", "BingSiteAuth.xml"));
+        res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "no-store" });
+        return res.end(buf);
+      } catch { /* nao existe: cai no 404 */ }
+    }
+
     // Assets estaticos da marca (svg/png/ico/webp) servidos da pasta public,
     // inclusive em subpastas (ex: /portais/pncp.png). Bloqueia path traversal
     // (".." na rota) por seguranca.
