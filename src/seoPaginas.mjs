@@ -27,7 +27,21 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 const brl = (v) => (v == null || Number(v) === 0) ? "valor não informado" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 function diasAte(iso) { if (!iso) return null; const d = new Date(iso); return isNaN(d) ? null : Math.ceil((d - new Date()) / 864e5); }
 function prazo(iso) { const d = diasAte(iso); if (d == null) return ""; return d < 0 ? "encerrado" : d === 0 ? "encerra hoje" : d === 1 ? "encerra amanhã" : `encerra em ${d} dias`; }
-function portalUrl(e) { return e.link || (e.orgaoCnpj && e.ano && e.sequencial ? `https://pncp.gov.br/app/editais/${e.orgaoCnpj}/${e.ano}/${e.sequencial}` : "https://pncp.gov.br"); }
+// Normaliza URL do portal de origem: PNCP guarda alguns links sem protocolo
+// ("www.bll.org.br") ou ate como texto puro ("SITE OFICIAL DO MUNICIPIO"). Se
+// usado direto como href, o navegador interpreta como caminho relativo e gera
+// 404 (ex: /licitacoes/veiculos/www.bll.org.br - Google Search Console reportou
+// 8 dessas). Fallback sempre pro PNCP, que e canonico.
+function portalUrl(e) {
+  const link = (e.link || "").trim();
+  if (link && /^https?:\/\//i.test(link)) return link;
+  if (link && /^www\./i.test(link)) return "https://" + link;
+  // Link invalido ou ausente: gera URL canonica do PNCP
+  if (e.orgaoCnpj && e.ano && e.sequencial) {
+    return `https://pncp.gov.br/app/editais/${e.orgaoCnpj}/${e.ano}/${e.sequencial}`;
+  }
+  return "https://pncp.gov.br";
+}
 
 const CSS = `
 :root{--navy:#0f1e46;--azul:#2563eb;--azul-c:#1e40af;--tinta:#0f172a;--cinza:#475569;--cinza-c:#94a3b8;--linha:#e2e8f0;--fundo:#f8fafc;--verde:#059669;--verde-bg:#ecfdf5}
