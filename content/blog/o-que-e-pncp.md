@@ -1,8 +1,8 @@
 ---
 title: PNCP: o que é, como usar e como encontrar editais (guia 2026)
-description: Tudo sobre o Portal Nacional de Contratações Públicas em 2026 — o que é, o que aparece, como consultar passo a passo, limitações que ninguém te conta e como achar licitação do seu ramo sem perder tempo.
+description: Tudo sobre o Portal Nacional de Contratações Públicas (PNCP, às vezes escrito PNCB) em 2026 — o que é, como consultar passo a passo, diferença pro Comprasnet, limitações que ninguém te conta e como achar licitação do seu ramo sem perder tempo.
 date: 2026-06-13
-keywords: PNCP, o que é PNCP, portal nacional contratações públicas, como usar PNCP, consultar licitação, buscar edital, pncp.gov.br, lei 14133, licitação pública 2026
+keywords: PNCP, PNCB, o que é PNCP, portal nacional contratações públicas, como usar PNCP, pncp gov, pncp.gov.br, PNCP vs Comprasnet, consultar licitação, buscar edital, lei 14133, licitação pública 2026
 ---
 
 Se você está começando a vender pro governo brasileiro, vai esbarrar no **PNCP** em pouquíssimo tempo. Ele é a base oficial de todas as licitações públicas do país desde 2023. Saber usar bem o Portal Nacional de Contratações Públicas é o primeiro passo de qualquer empresa que quer fornecer pra prefeitura, ministério, estado, polícia ou escola pública.
@@ -11,7 +11,7 @@ Este guia explica em linguagem direta o que é o PNCP, o que aparece lá, como c
 
 ## O que é o PNCP
 
-O **Portal Nacional de Contratações Públicas (PNCP)** é o sistema oficial e centralizado da administração pública brasileira para divulgação de todas as licitações e contratos públicos. Foi criado pela [Lei 14.133/2021](https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14133.htm), conhecida como a Nova Lei de Licitações, e passou a ser obrigatório a partir de 2023.
+O **Portal Nacional de Contratações Públicas (PNCP)**, às vezes escrito incorretamente como **PNCB**, é o sistema oficial e centralizado da administração pública brasileira para divulgação de todas as licitações e contratos públicos. Foi criado pela [Lei 14.133/2021](https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14133.htm), conhecida como a Nova Lei de Licitações, e passou a ser obrigatório a partir de 2023.
 
 Endereço oficial: [pncp.gov.br](https://www.pncp.gov.br)
 
@@ -254,6 +254,15 @@ A impugnação é apresentada no órgão licitante, não no PNCP. Mas o PNCP é 
 
 ### O PNCP vai substituir o Comprasnet?
 Não. PNCP é a vitrine, Comprasnet (e os outros portais) é onde acontece o pregão em si. Os dois convivem, com papéis diferentes.
+
+### Qual a diferença entre PNCP e Compras.gov?
+**Compras.gov.br** é o portal oficial de compras do Governo Federal (administrado pelo Ministério da Gestão), que abriga o **Comprasnet** como plataforma de pregão eletrônico. O PNCP recebe os editais do Compras.gov + de estados + de municípios. Pra licitação federal, você participa via Comprasnet (lances) depois de achar o edital no PNCP (vitrine).
+
+### O que é Conlicitação?
+**Conlicitação** é uma empresa privada brasileira que oferece monitoramento de licitações há mais de uma década. Cobra mensalidade para entregar filtros automáticos, alertas e alguns relatórios. O **[ContrataX](https://www.contratax.com.br)** é uma alternativa mais barata (a partir de R$ 59/mês), mais moderna e com **IA própria** que lê o PDF completo do edital e cruza com seus documentos automaticamente.
+
+### O que é Licitanet e Licitar Digital?
+**Licitanet** e **Licitar Digital** (também conhecida como BNC) são plataformas privadas onde **acontecem os lances** de pregões eletrônicos de muitas prefeituras e órgãos estaduais (alternativa ao Comprasnet do governo federal). Não são fontes de descoberta de editais (o PNCP cumpre esse papel), mas onde a disputa em tempo real acontece. Você precisa estar cadastrado nelas para participar dos pregões que rodam ali.
 
 ### Como sei se um edital exige certidões que minha empresa não tem?
 Lendo o edital completo, na seção de **habilitação**. As exigências costumam estar nos artigos 62 a 70 da Lei 14.133/2021. Cada item da habilitação corresponde a uma certidão ou documento da sua empresa. Ferramentas como o ContrataX fazem essa conferência automaticamente.
