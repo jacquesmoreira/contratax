@@ -198,7 +198,11 @@ export function consultarContratos({ uf = null, categorias = [], mesesAtras = 18
   args.push(desdeISO, desdeISO);
 
   const where = cond.length ? `WHERE ${cond.join(" AND ")}` : "";
-  return d.prepare(`SELECT * FROM contratos ${where}`).all(...args).map(mapearContrato);
+  // LIMIT defensivo: tabela contratos tem 1.2M+ registros em producao. Sem
+  // limite, qualquer consulta sem UF estoura memoria (OOM em Railway).
+  // 10k contratos cobre uso real (matching por ramo + UF). Para volumes
+  // maiores, usar paginacao explicita.
+  return d.prepare(`SELECT * FROM contratos ${where} ORDER BY vigencia_inicio DESC LIMIT 10000`).all(...args).map(mapearContrato);
 }
 
 // Contratos que vencem dentro de `dentroMeses` meses (base do radar de renovacao).
@@ -394,7 +398,10 @@ export function consultar({ ufs = [], modalidades = [], valorMin = null, valorMa
   }
 
   const where = cond.length ? `WHERE ${cond.join(" AND ")}` : "";
-  const linhas = d.prepare(`SELECT * FROM editais ${where} ORDER BY encerramento ASC`).all(...args);
+  // LIMIT defensivo: protege contra OOM em consultas amplas (Brasil + multiplas
+  // modalidades pode retornar 27k+ editais). Usuarios reais nao processam alem
+  // de algumas centenas - o filtro fino e feito depois em JS via aplicarFiltro.
+  const linhas = d.prepare(`SELECT * FROM editais ${where} ORDER BY encerramento ASC LIMIT 8000`).all(...args);
 
   // Reconverte para o formato interno usado pelo resto do sistema.
   return linhas.map((l) => ({
@@ -476,11 +483,18 @@ export function orgaoPorCnpj(cnpj) {
 // pra paginacao - a renderizacao usa as funcoes existentes.
 export function editaisPorTermos({ termos = [], uf = null, limite = 24 } = {}) {
   const d = abrir();
+  // LIMIT defensivo: editais abertos podem chegar a 27k no Brasil. Carregar
+  // todos em memoria em cada request causa OOM (visto em logs Railway).
+  // 5000 editais cobre 99% dos casos reais de filtro por termo, e o JS depois
+  // filtra ainda mais (.filter). Caso usuario precise navegar alem disso, ja
+  // ha paginacao via "limite" no JS.
   const cand = d.prepare(`
     SELECT id, orgao, orgao_cnpj AS orgaoCnpj, uf, municipio, objeto,
            modalidade, valor AS valorEstimado, encerramento, link
     FROM editais
     WHERE encerramento >= ? ${uf ? "AND uf = ?" : ""}
+    ORDER BY encerramento ASC
+    LIMIT 5000
   `).all(new Date().toISOString(), ...(uf ? [uf] : []));
   // Filtro de termos: cobre acentos/maiusculas (normaliza).
   const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
