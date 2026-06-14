@@ -5,6 +5,7 @@
 const LIMITES = {
   tldr: Number(process.env.LICITA_VISITANTE_TLDR || 3),
   impugnacao: Number(process.env.LICITA_VISITANTE_IMPUGNACAO || 1),
+  chat: Number(process.env.LICITA_VISITANTE_CHAT || 15),
 };
 const JANELA_MS = Number(process.env.LICITA_VISITANTE_JANELA_MS || 24 * 60 * 60 * 1000);
 

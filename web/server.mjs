@@ -1588,6 +1588,34 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // Chat assincrono na LP: pergunta livre, ContrataX.IA responde com base na
+    // Central de Ajuda. Cacheada via prompt caching (Haiku 4.5). 15 perguntas/IP/24h.
+    if (rota === "/api/chat-ajuda" && req.method === "POST") {
+      const ip = ipDoRequest(req);
+      const rl = tentarUsoVisitante(ip, "chat");
+      if (!rl.ok) {
+        return json(res, 200, {
+          resposta: "Voce ja fez muitas perguntas hoje. Para continuar, escreva para contato@contratax.com.br ou abra /contato — respondemos em 1 dia util.",
+          bloqueado: true,
+        });
+      }
+      const body = await lerCorpo(req).catch(() => ({}));
+      const pergunta = String(body.pergunta || "").trim().slice(0, 600);
+      const historico = Array.isArray(body.historico) ? body.historico.slice(-6) : [];
+      if (!pergunta) return json(res, 400, { erro: "Pergunta vazia" });
+      try {
+        const { responder } = await import("../src/chatAjuda.mjs");
+        const r = await responder({ pergunta, historico });
+        return json(res, 200, { resposta: r.resposta, restantes: rl.restantes });
+      } catch (e) {
+        console.error("[chat-ajuda] excecao", e?.message);
+        return json(res, 200, {
+          resposta: "Tive um problema agora. Manda sua duvida para contato@contratax.com.br que respondemos em 1 dia util.",
+          erro: true,
+        });
+      }
+    }
+
     // TL;DR do edital (resumo rapido): gera sob demanda se nao houver cache.
     // - Visitante anonimo: 3 grátis por IP/24h (gancho). Depois bloqueia com paywall.
     // - Cliente pagante: cada TL;DR novo (sem cache) consome 1 da cota.
