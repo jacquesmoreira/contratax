@@ -242,6 +242,18 @@ export function estatisticasContratos() {
 // Busca publica da landing page: por UF e termo livre, devolve o total, a soma
 // dos valores e uma amostra dos editais abertos. Sem perfil, sem login.
 export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
+  // Sem filtro nem UF: contador nacional da LP. Usa COUNT direto pra evitar o
+  // LIMIT 8000 de consultar() — esse limite serve pra protecao OOM em buscas
+  // amplas, mas o contador da home tem que mostrar o numero real do acervo.
+  if (!uf && (!termo || !termo.trim())) {
+    const d = abrir();
+    const agora = new Date().toISOString();
+    const total = d.prepare("SELECT COUNT(*) AS n FROM editais WHERE encerramento >= ?").get(agora).n;
+    const somaValor = d.prepare("SELECT COALESCE(SUM(valor),0) AS s FROM editais WHERE encerramento >= ?").get(agora).s;
+    const comValor = d.prepare("SELECT COUNT(*) AS n FROM editais WHERE encerramento >= ? AND valor > 0").get(agora).n;
+    const range = d.prepare("SELECT MIN(encerramento) AS de, MAX(encerramento) AS ate FROM editais WHERE encerramento >= ?").get(agora);
+    return { total, somaValor, comValor, range: range.de ? range : null, amostra: [] };
+  }
   const candidatos = consultar({ ufs: uf ? [uf] : [], apenasAbertos: true });
   const termos = termo && termo.trim() ? [termo.trim()] : [];
   let casaram = aplicarFiltro(candidatos, { termos });
