@@ -1732,6 +1732,20 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // Healthcheck: Railway pode pingar /health pra confirmar que o processo
+    // esta vivo. Resposta rapida (sem tocar banco/cache), so confirma loop event.
+    if (rota === "/health" || rota === "/healthz" || rota === "/_health") {
+      const m = process.memoryUsage();
+      res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      return res.end(JSON.stringify({
+        ok: true,
+        uptime_s: Math.round(process.uptime()),
+        memory_mb: { rss: Math.round(m.rss / 1024 / 1024), heap: Math.round(m.heapUsed / 1024 / 1024) },
+        node: process.version,
+        ts: new Date().toISOString(),
+      }));
+    }
+
     // Verificacao do Google Search Console.
     if (/^\/google[\w-]+\.html$/.test(rota)) {
       try {
@@ -2361,6 +2375,59 @@ Contact: contato@contratax.com.br
 servidor.listen(PORTA, () => {
   console.log(`Painel Licita rodando em http://localhost:${PORTA}`);
 });
+
+// ============================================================================
+// PROTECOES CONTRA CRASH (Railway estava reiniciando o processo aleatoriamente)
+// ============================================================================
+
+// 1) Uncaught exceptions: LOGA e continua vivo. Antes derrubava o processo.
+process.on("uncaughtException", (err, origin) => {
+  console.error(`[CRASH PREVENIDO] uncaughtException em ${origin}:`, err);
+  // Nao mata o processo. Loga, segue vida. So nao tenta operacao critica
+  // se for erro de FS/SQLite (esses sao melhor reiniciar).
+  if (/SQLITE|ENOSPC|EACCES|EBUSY/.test(err.message || "")) {
+    console.error("[CRASH PREVENIDO] Erro critico de FS/DB - process.exit(1) pra Railway reiniciar limpo");
+    process.exit(1);
+  }
+});
+
+// 2) Unhandled promise rejections: idem.
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("[CRASH PREVENIDO] unhandledRejection:", reason);
+});
+
+// 3) Memory monitoring: a cada 5min, loga uso de memoria. Se passar de 80% do
+// limite Railway (~410MB no hobby), aciona GC manual e checkpoint SQLite.
+const MEM_LIMITE_MB = Number(process.env.LICITA_MEM_LIMITE_MB || 450);
+setInterval(() => {
+  const m = process.memoryUsage();
+  const rssMb = Math.round(m.rss / 1024 / 1024);
+  const heapMb = Math.round(m.heapUsed / 1024 / 1024);
+  if (rssMb > MEM_LIMITE_MB * 0.8) {
+    console.warn(`[MEM] alerta: RSS=${rssMb}MB heap=${heapMb}MB (limite ${MEM_LIMITE_MB}MB). Forcando GC e checkpoint.`);
+    try { if (global.gc) global.gc(); } catch {}
+    // Checkpoint do WAL do SQLite: reduz tamanho do arquivo -wal acumulado.
+    try {
+      import("./../src/db.mjs").then(({ abrir }) => {
+        try { abrir().exec("PRAGMA wal_checkpoint(TRUNCATE);"); } catch {}
+      });
+    } catch {}
+  } else if (rssMb > MEM_LIMITE_MB * 0.95) {
+    console.error(`[MEM] CRITICO: RSS=${rssMb}MB - reiniciando processo pra Railway.`);
+    process.exit(1);
+  }
+}, 5 * 60 * 1000);
+
+// 4) SIGTERM (Railway envia ao reiniciar): grava log limpo.
+process.on("SIGTERM", () => {
+  console.log("[SHUTDOWN] SIGTERM recebido. Fechando graceful.");
+  servidor.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 5000); // timeout forcado
+});
+
+// 5) Healthcheck endpoint pro Railway saber que esta vivo
+// (Railway pode pingar /health pra detectar travamento e reiniciar antes do timeout)
+// Ja existe rota /api no codigo, vou expor /health no proximo deploy via novo handler.
 
 // Opcional (Railway): roda o backfill continuo de contratos NO MESMO processo,
 // para compartilhar o mesmo volume/banco do servidor (volumes nao sao compartilhados
