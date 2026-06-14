@@ -2432,27 +2432,35 @@ process.on("SIGTERM", () => {
 // Opcional (Railway): roda o backfill continuo de contratos NO MESMO processo,
 // para compartilhar o mesmo volume/banco do servidor (volumes nao sao compartilhados
 // entre servicos no Railway). Ative com LICITA_BACKFILL=1.
+//
+// IMPORTANTE: backfill INICIA 60s APOS subida do servidor pra nao competir
+// memoria com atualizador, digest e backup no startup (causa de OOM em Hobby).
 if (process.env.LICITA_BACKFILL) {
-  import("../src/backfillContratos.mjs")
-    .then(({ backfillLoop }) => {
-      const meses = Number(process.env.LICITA_BACKFILL_MESES || 18);
-      const horas = Number(process.env.LICITA_BACKFILL_HORAS || 6);
-      console.log(`[backfill] ativado em background (${meses} meses, a cada ${horas}h)`);
-      return backfillLoop({ meses, intervaloHoras: horas });
-    })
-    .catch((e) => console.error("[backfill] erro:", e.message));
+  setTimeout(() => {
+    import("../src/backfillContratos.mjs")
+      .then(({ backfillLoop }) => {
+        const meses = Number(process.env.LICITA_BACKFILL_MESES || 18);
+        const horas = Number(process.env.LICITA_BACKFILL_HORAS || 6);
+        console.log(`[backfill] ativado em background (${meses} meses, a cada ${horas}h)`);
+        return backfillLoop({ meses, intervaloHoras: horas });
+      })
+      .catch((e) => console.error("[backfill] erro:", e.message));
+  }, 60 * 1000);
 }
 
 // Opcional (Railway): atualiza os EDITAIS no mesmo processo. Carrega o acervo na
 // subida e refaz a cada N horas. Ative com LICITA_ATUALIZAR=1.
+// Tambem escalonado: inicia 30s apos subida.
 if (process.env.LICITA_ATUALIZAR) {
-  import("../src/atualizador.mjs")
-    .then(({ atualizarLoop }) => {
-      const horas = Number(process.env.LICITA_ATUALIZAR_HORAS || 6);
-      console.log(`[atualizar] ativado em background (a cada ${horas}h)`);
-      return atualizarLoop({ intervaloHoras: horas });
-    })
-    .catch((e) => console.error("[atualizar] erro:", e.message));
+  setTimeout(() => {
+    import("../src/atualizador.mjs")
+      .then(({ atualizarLoop }) => {
+        const horas = Number(process.env.LICITA_ATUALIZAR_HORAS || 6);
+        console.log(`[atualizar] ativado em background (a cada ${horas}h)`);
+        return atualizarLoop({ intervaloHoras: horas });
+      })
+      .catch((e) => console.error("[atualizar] erro:", e.message));
+  }, 30 * 1000);
 }
 
 // Opcional (Railway): digest diario por e-mail. Envia 1x ao dia para cada cliente
