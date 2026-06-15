@@ -527,10 +527,11 @@ const servidor = createServer(async (req, res) => {
         const termos = customTermo
           ? customTermo.split(",").map(t => t.trim()).filter(Boolean)
           : (perfilEx?.filtro?.termos ?? []);
-        if (!termos.length) return json(res, 400, { erro: "Informe um termo para exportar" });
+        const termosIA = customTermo ? [] : (perfilEx?.filtro?.termosIA ?? []);
+        if (!termos.length && !termosIA.length) return json(res, 400, { erro: "Informe um termo para exportar" });
         const candidatos = (await import("../src/db.mjs")).consultarContratos({ uf, mesesAtras: meses });
         const { aplicarFiltro, normalizar } = await import("../src/filtro.mjs");
-        let todos = aplicarFiltro(candidatos, { termos }).filter(c => c.valor > 0);
+        let todos = aplicarFiltro(candidatos, { termos, termosIA }).filter(c => c.valor > 0);
         if (cidade.trim()) {
           const cn = normalizar(cidade.trim());
           todos = todos.filter(c => normalizar(c.municipio || "").includes(cn));
@@ -855,16 +856,21 @@ const servidor = createServer(async (req, res) => {
       const { consultarContratos } = await import("../src/db.mjs");
       const { aplicarFiltro, normalizar } = await import("../src/filtro.mjs");
       const candidatos = consultarContratos({ uf, mesesAtras: meses });
-      // Usa o termo digitado ou os termos do perfil (se logado).
+      // Usa o termo digitado ou os termos do perfil (se logado). Quando usa o
+      // ramo do perfil, aproveita tambem os termos relacionados da ContrataX.IA
+      // (mesma expansao semantica do painel de editais), pra o historico nao
+      // ficar mais estreito que o painel. Termo digitado fica literal (respeita
+      // exatamente o que a pessoa buscou).
       const customTermo = url.searchParams.get("termo");
       const termos = customTermo
         ? customTermo.split(",").map(t => t.trim()).filter(Boolean)
         : (perfil?.filtro?.termos ?? []);
+      const termosIA = customTermo ? [] : (perfil?.filtro?.termosIA ?? []);
       // Sem termo e sem perfil: pede que o usuario busque algo
-      if (!termos.length) {
+      if (!termos.length && !termosIA.length) {
         return json(res, 200, { total: 0, paginas: 0, pagina: 1, termos: [], licitacoes: [], aviso: "Digite um produto ou serviço para ver o histórico." });
       }
-      let todos = aplicarFiltro(candidatos, { termos }).filter(c => c.valor > 0);
+      let todos = aplicarFiltro(candidatos, { termos, termosIA }).filter(c => c.valor > 0);
       // Filtro por cidade
       if (cidade.trim()) {
         const cn = normalizar(cidade.trim());
