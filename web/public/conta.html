@@ -110,6 +110,12 @@
       <input id="ramo" type="text" placeholder="Ex: material hospitalar, seringa, luva" />
       <div class="dica">Separe por vírgula. São essas palavras que trazem as licitações para o seu painel.</div>
 
+      <div id="termos-ia-box" style="display:none;margin-top:10px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:12px 14px">
+        <div style="font-size:12.5px;font-weight:700;color:var(--indigo);margin-bottom:6px">A ContrataX.IA também busca por estes termos relacionados ao seu ramo</div>
+        <div id="termos-ia-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <div class="dica" style="margin-top:8px">Gerados automaticamente para você não perder editais com nomes diferentes. Atualizam sozinhos quando você muda o ramo acima.</div>
+      </div>
+
       <label for="excluir">Palavras a excluir (opcional)</label>
       <input id="excluir" type="text" placeholder="Ex: veterinário, usado" />
       <div class="dica">Editais que contenham essas palavras não aparecem.</div>
@@ -224,6 +230,15 @@ async function carregar() {
   $("nome").value = d.nome || "";
   $("ramo").value = d.ramo || "";
   $("excluir").value = d.excluir || "";
+  // Termos relacionados gerados pela ContrataX.IA (transparencia: o cliente ve
+  // por que recebe certos editais). So mostra se houver.
+  const iaBox = $("termos-ia-box"), iaChips = $("termos-ia-chips");
+  if (Array.isArray(d.termosIA) && d.termosIA.length) {
+    iaChips.innerHTML = d.termosIA.map((t) => `<span style="background:#fff;border:1px solid #ddd6fe;color:var(--indigo);font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px">${String(t).replace(/[&<>]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]))}</span>`).join("");
+    iaBox.style.display = "block";
+  } else {
+    iaBox.style.display = "none";
+  }
   // Marca chips de UF do perfil
   const ufsAtivas = Array.isArray(d.modalidades) ? [] : []; // reset
   (d.ufs || (d.uf ? [d.uf] : [])).forEach(u => {

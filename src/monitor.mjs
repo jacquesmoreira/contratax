@@ -31,6 +31,7 @@ export async function monitorar(perfil, { marcar = true } = {}) {
   // Recorte fino por palavra-chave (valor ja foi tratado no SQL).
   const casaram = aplicarFiltro(candidatos, {
     termos: filtro.termos ?? [],
+    termosIA: filtro.termosIA ?? [],
     termosExcluir: filtro.termosExcluir ?? [],
   });
 

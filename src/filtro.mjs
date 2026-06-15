@@ -60,13 +60,17 @@ export function termoCasa(termo, raizesObjeto, objetoNorm) {
 // Aplica todos os criterios de um perfil sobre a lista de editais.
 // filtro = { termos, termosExcluir, valorMin, valorMax }
 export function aplicarFiltro(editais, filtro = {}) {
-  const { termos = [], termosExcluir = [], valorMin = null, valorMax = null } = filtro;
+  const { termos = [], termosIA = [], termosExcluir = [], valorMin = null, valorMax = null } = filtro;
+  // Termos do cliente + termos relacionados gerados pela ContrataX.IA (expansao
+  // semantica do ramo). A busca casa se QUALQUER um deles casar. Os de exclusao
+  // continuam valendo sobre o conjunto todo.
+  const termosBusca = [...termos, ...termosIA];
 
   return editais.filter((e) => {
     const objeto = normalizar(e.objeto);
     const raizes = raizesDe(objeto);
 
-    if (termos.length && !termos.some((t) => termoCasa(t, raizes, objeto))) return false;
+    if (termosBusca.length && !termosBusca.some((t) => termoCasa(t, raizes, objeto))) return false;
     if (termosExcluir.length && termosExcluir.some((t) => termoCasa(t, raizes, objeto))) return false;
 
     const valor = e.valorEstimado;

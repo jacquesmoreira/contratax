@@ -796,6 +796,7 @@ const servidor = createServer(async (req, res) => {
         cnpj: perfil.cnpj ?? null,
         email: perfil.email ?? null,
         ramo: (perfil.filtro?.termos ?? []).join(", "),
+        termosIA: perfil.filtro?.termosIA ?? [],
         excluir: (perfil.filtro?.termosExcluir ?? []).join(", "),
         uf: (perfil.ufs ?? [])[0] ?? "",
         ufs: perfil.ufs ?? [],
@@ -815,9 +816,11 @@ const servidor = createServer(async (req, res) => {
       if (!termos.length) return json(res, 400, { erro: "Informe ao menos uma palavra do seu ramo" });
       if (termos.length > MAX_TERMOS) return json(res, 400, { erro: `Selecione no maximo ${MAX_TERMOS} ramos. Foque no que sua empresa realmente vende para receber so o que importa.` });
       if (corpo.nome && corpo.nome.trim()) p.nome = corpo.nome.trim();
+      const { expandirRamo } = await import("../src/expandirRamo.mjs");
       p.filtro = {
         ...(p.filtro || {}),
         termos,
+        termosIA: await expandirRamo(termos),
         termosExcluir: parseRamos(corpo.excluir),
       };
       // Aceita ufs (array) ou uf (string simples, retrocompativel).

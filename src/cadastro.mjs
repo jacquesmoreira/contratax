@@ -8,6 +8,7 @@ import { novaAssinaturaTeste } from "./assinatura.mjs";
 import { hashSenha } from "./senha.mjs";
 import { validarFormatoCNPJ, limparCNPJ, consultarCNPJ } from "./cnpj.mjs";
 import { lerPerfis, salvarPerfis } from "./perfis.mjs";
+import { expandirRamo } from "./expandirRamo.mjs";
 
 const slug = (s) =>
   (s || "cliente").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
@@ -143,7 +144,7 @@ export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, c
     analises: { mes: agora.slice(0, 7), usados: 0 },
     ufs: ufsArr,
     modalidades: modalidades?.length ? modalidades : [6, 8, 9, 4],
-    filtro: { termos, termosExcluir: [], valorMin: null, valorMax: null },
+    filtro: { termos, termosIA: await expandirRamo(termos), termosExcluir: [], valorMin: null, valorMax: null },
     assinatura: novaAssinaturaTeste(),
     // Registro do clickwrap (prova juridica do consentimento). IP capturado
     // pelo servidor (mais confiavel que client-side).
