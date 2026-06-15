@@ -57,12 +57,17 @@ Pode. A busca pública da nossa página inicial mostra os editais abertos por es
 ### Como funciona a leitura do edital?
 Quando você abre qualquer edital no painel, aparece um botão **Gerar resumo rápido**. Ao clicar, em 5 a 10 segundos você recebe: objeto, valor, prazo, principais exigências de habilitação e um veredito (apto / apto com pendências / não apto). O resumo é sob demanda para você não consumir a cota em editais que apenas abre pra olhar. Se cadastrar seus documentos, conferimos as exigências contra eles e mostramos exatamente o que falta.
 
-### Quantas análises posso fazer por mês?
-- **Plano Básico**: 100 análises/mês
-- **Plano Pro**: 250 análises/mês
-- **Planos Assessoria**: 100 análises por empresa cadastrada
+### Quantas análises de IA posso fazer por mês?
+A cota de leitura completa do edital por IA varia por plano:
+- **Starter**: 3 análises/mês (degustação da IA, ideal pra conhecer)
+- **Básico**: 30 análises/mês
+- **Pro**: 50 análises/mês
+- **Assessoria 10**: 8 análises por empresa cadastrada (80 no total)
+- **Assessoria 25**: 6 análises por empresa cadastrada (150 no total)
 
-Se precisar de mais em algum mês, você compra um pacote avulso (50 análises por R$ 130 ou 150 por R$ 330) que soma à sua cota e não expira.
+A **busca de editais e os alertas diários por e-mail são ilimitados em todos os planos**, inclusive no Starter. O que conta cota é só a análise profunda do PDF pela IA.
+
+Se precisar de mais em algum mês, você compra um pacote avulso (10 análises por R$ 79, 25 por R$ 189 ou 50 por R$ 369) que soma à sua cota e não expira.
 
 ### O veredito é confiável?
 Ele é um **apoio à decisão**: lê o edital e aponta as exigências, comparando com os seus documentos. A palavra final é sua. Use como filtro pra economizar horas de leitura e não disputar onde já sabe que não está apto.
@@ -110,12 +115,16 @@ Pix, cartão de crédito e boleto. A cobrança é mensal e automática (pelo gat
 Sim. Sem fidelidade, sem multa. Cancele no painel a qualquer momento, você fica com acesso até o fim do mês pago.
 
 ### Quais são os planos disponíveis?
-- **Básico**, R$ 197/mês, 100 análises, 1 CNPJ
-- **Pro**, R$ 297/mês, 250 análises, equipe, 1 CNPJ
-- **Assessoria 10**, R$ 497/mês, até 10 empresas
-- **Assessoria 25**, R$ 897/mês, até 25 empresas
+- **Starter**, R$ 59/mês, plano de entrada, 3 análises de IA/mês (degustação), busca e alertas ilimitados, 1 CNPJ. Ideal pra MEI e pra quem está começando.
+- **Básico**, R$ 247/mês, 30 análises de IA/mês, 5 extrações de PDF, 1 CNPJ
+- **Pro**, R$ 397/mês, 50 análises de IA/mês, 20 extrações de PDF, acessos para a equipe, 1 CNPJ
+- **Assessoria 10**, R$ 697/mês, até 10 empresas (8 análises por empresa), pra consultores
+- **Assessoria 25**, R$ 1.297/mês, até 25 empresas (6 análises por empresa)
 
-Veja detalhes na página de [/assinar](/assinar).
+Busca de editais e alertas diários por e-mail são **ilimitados em todos os planos**. Veja a comparação completa em [/assinar](/assinar).
+
+### Qual o plano mais barato pra começar?
+O **Starter, R$ 59/mês**, é o ponto de entrada. Você já recebe busca de editais e alerta diário ilimitados do seu ramo, mais 3 análises de IA por mês pra experimentar a leitura completa do edital. Se MEI ou empresa pequena começando em licitação, é por onde a maioria começa. Quando precisar de mais análises de IA no mês, dá pra subir pro Básico (30 análises) a qualquer momento, sem multa.
 
 ### Como compro um pacote avulso?
 Em [/assinar](/assinar), na seção "Precisa de mais análises num mês?", escolha 50 ou 150 análises. O valor é cobrado uma vez só (não vira mensalidade) e soma à sua cota.
@@ -126,8 +135,8 @@ Se for cartão e a cobrança falhar, tentamos algumas vezes e você recebe aviso
 ### Onde vejo o status do meu pagamento?
 No painel, no topo, aparece o chip do seu plano. E em **Minha conta**, o status detalhado da assinatura.
 
-### Posso fazer upgrade de Básico para Pro depois?
-Sim, a qualquer momento, em [/assinar](/assinar). A diferença é cobrada proporcional.
+### Posso fazer upgrade de plano depois?
+Sim, a qualquer momento, em [/assinar](/assinar). Você pode subir de Starter pra Básico, de Básico pra Pro, e assim por diante. A diferença é cobrada proporcional ao tempo restante do mês (pró-rata), então você não paga duas vezes.
 
 ---
 
