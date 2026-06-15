@@ -962,6 +962,31 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // Diagnostico de disco: lista os arquivos do volume e tamanhos (pra
+    // investigar volume cheio). GET /api/admin/disco?c=ADMIN
+    if (rota === "/api/admin/disco") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const { diagnosticoDisco } = await import("../src/backup.mjs");
+        return json(res, 200, await diagnosticoDisco());
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
+      }
+    }
+
+    // Limpeza de emergencia: WAL checkpoint TRUNCATE + remove orfaos de backup.
+    // POST /api/admin/disco/limpar?c=ADMIN  (use &vacuum=1 pra compactar tambem)
+    if (rota === "/api/admin/disco/limpar" && req.method === "POST") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const { limparDisco } = await import("../src/backup.mjs");
+        const vacuum = url.searchParams.get("vacuum") === "1";
+        return json(res, 200, await limparDisco({ vacuum }));
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
+      }
+    }
+
     // ===== Painel admin (tudo gated por LICITA_ADMIN_TOKEN) =====
     if (rota === "/api/admin/clientes") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });

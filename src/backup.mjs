@@ -64,20 +64,30 @@ async function gzip(origem) {
   return destino;
 }
 
-// Apaga snapshots antigos, mantendo os MANTER mais recentes.
+// Apaga snapshots antigos, mantendo os MANTER mais recentes. Tambem remove
+// orfaos: snapshots .db soltos (sobra de gzip que falhou) que antes ficavam
+// pra sempre no volume (45MB cada) e iam enchendo o disco.
 async function limparAntigos() {
   try {
-    const arquivos = (await readdir(BACKUP_DIR))
-      .filter((n) => n.endsWith(".gz"))
-      .map((n) => resolve(BACKUP_DIR, n));
-    if (arquivos.length <= MANTER) return;
-    const ordenados = await Promise.all(
-      arquivos.map(async (c) => ({ c, m: (await stat(c)).mtimeMs })),
-    );
-    ordenados.sort((a, b) => b.m - a.m);
-    const apagar = ordenados.slice(MANTER);
-    for (const x of apagar) {
-      try { await unlink(x.c); } catch {}
+    const nomes = await readdir(BACKUP_DIR);
+
+    // Remove .db soltos (sem o .gz correspondente) = orfaos de gzip incompleto
+    const gzBases = new Set(nomes.filter((n) => n.endsWith(".db.gz")).map((n) => n.replace(/\.gz$/, "")));
+    for (const n of nomes.filter((n) => n.endsWith(".db") && !gzBases.has(n))) {
+      try { await unlink(resolve(BACKUP_DIR, n)); } catch {}
+    }
+
+    // Poda por tipo (.gz e perfis-*.json), mantendo os MANTER mais recentes
+    for (const filtro of [(n) => n.endsWith(".gz"), (n) => /^perfis-.*\.json$/.test(n)]) {
+      const arquivos = nomes.filter(filtro).map((n) => resolve(BACKUP_DIR, n));
+      if (arquivos.length <= MANTER) continue;
+      const ordenados = await Promise.all(
+        arquivos.map(async (c) => ({ c, m: (await stat(c)).mtimeMs })),
+      );
+      ordenados.sort((a, b) => b.m - a.m);
+      for (const x of ordenados.slice(MANTER)) {
+        try { await unlink(x.c); } catch {}
+      }
     }
   } catch {}
 }
@@ -198,4 +208,92 @@ export async function backupLoop({ adminToken } = {}) {
 // Para servir o download: localiza o arquivo .db.gz por data.
 export function caminhoBackup(data) {
   return resolve(BACKUP_DIR, `contratax-${data}.db.gz`);
+}
+
+// ===== Diagnostico e limpeza de disco (pra investigar volume cheio) =====
+
+// Lista todos os arquivos do volume de dados (1 nivel + subpasta backups),
+// com tamanho, ordenado do maior pro menor. Inclui o WAL/SHM do SQLite, que
+// e o suspeito numero 1 de inchar quando o processo morre sem checkpoint.
+export async function diagnosticoDisco() {
+  const itens = [];
+  async function varrer(dir, prefixo) {
+    let nomes = [];
+    try { nomes = await readdir(dir); } catch { return; }
+    for (const n of nomes) {
+      const caminho = resolve(dir, n);
+      try {
+        const st = await stat(caminho);
+        if (st.isDirectory()) {
+          await varrer(caminho, prefixo + n + "/");
+        } else {
+          itens.push({ arquivo: prefixo + n, bytes: st.size });
+        }
+      } catch {}
+    }
+  }
+  await varrer(DATA_DIR, "");
+  itens.sort((a, b) => b.bytes - a.bytes);
+  const total = itens.reduce((s, x) => s + x.bytes, 0);
+  return {
+    total,
+    totalLegivel: tamanhoLegivel(total),
+    arquivos: itens.map((x) => ({ ...x, legivel: tamanhoLegivel(x.bytes) })),
+  };
+}
+
+// Limpeza de emergencia do volume. Faz, em ordem:
+// 1) WAL checkpoint TRUNCATE: zera o arquivo licita.db-wal (principal causa de
+//    inchaco quando o processo cai sem checkpoint limpo).
+// 2) Remove snapshots de backup ORFAOS (contratax-*.db sem .gz, sobra de um
+//    gzip que falhou) e copias de perfis antigas (perfis-*.json) alem do MANTER.
+// 3) VACUUM no banco pra recuperar paginas livres (opcional, mais lento).
+// Retorna antes/depois pra mostrar quanto liberou.
+export async function limparDisco({ vacuum = false } = {}) {
+  const antes = await diagnosticoDisco();
+  const acoes = [];
+
+  // 1) Checkpoint do WAL (TRUNCATE zera o arquivo .wal apos aplicar)
+  try {
+    const db = new DatabaseSync(resolve(DATA_DIR, "licita.db"));
+    try {
+      db.exec("PRAGMA journal_mode = WAL;");
+      const r = db.prepare("PRAGMA wal_checkpoint(TRUNCATE);").get();
+      acoes.push(`wal_checkpoint(TRUNCATE): ${JSON.stringify(r)}`);
+      if (vacuum) { db.exec("VACUUM;"); acoes.push("VACUUM concluido"); }
+    } finally { db.close(); }
+  } catch (e) { acoes.push(`checkpoint/vacuum falhou: ${e.message}`); }
+
+  // 2) Remove orfaos: snapshots .db sem gzip e perfis-*.json antigos
+  try {
+    const nomes = await readdir(BACKUP_DIR).catch(() => []);
+    const gzBases = new Set(nomes.filter((n) => n.endsWith(".db.gz")).map((n) => n.replace(/\.gz$/, "")));
+    let removidos = 0, bytesLiberados = 0;
+    for (const n of nomes) {
+      // .db solto (sem o .gz correspondente) = orfao de gzip que falhou
+      if (n.endsWith(".db") && !gzBases.has(n)) {
+        const c = resolve(BACKUP_DIR, n);
+        try { bytesLiberados += (await stat(c)).size; await unlink(c); removidos++; } catch {}
+      }
+    }
+    // perfis-*.json: mantem so os MANTER mais recentes
+    const perfisJson = nomes.filter((n) => /^perfis-.*\.json$/.test(n)).map((n) => resolve(BACKUP_DIR, n));
+    if (perfisJson.length > MANTER) {
+      const ord = await Promise.all(perfisJson.map(async (c) => ({ c, m: (await stat(c)).mtimeMs })));
+      ord.sort((a, b) => b.m - a.m);
+      for (const x of ord.slice(MANTER)) {
+        try { bytesLiberados += (await stat(x.c)).size; await unlink(x.c); removidos++; } catch {}
+      }
+    }
+    acoes.push(`orfaos removidos: ${removidos} (${tamanhoLegivel(bytesLiberados)})`);
+  } catch (e) { acoes.push(`limpeza de orfaos falhou: ${e.message}`); }
+
+  const depois = await diagnosticoDisco();
+  return {
+    acoes,
+    antes: antes.totalLegivel,
+    depois: depois.totalLegivel,
+    liberado: tamanhoLegivel(Math.max(0, antes.total - depois.total)),
+    arquivos: depois.arquivos.slice(0, 15),
+  };
 }
