@@ -56,6 +56,29 @@ const esc = (s) => String(s ?? "").replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&l
 const brl = (n) => "R$ " + Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dataBR = (s) => s ? new Date(s).toLocaleDateString("pt-BR") : "—";
 
+// Ramos podem ter dezenas/centenas de termos e poluem a tabela. Mostra os
+// primeiros e esconde o resto atras de um "+N mais" (toggle).
+const RAMO_RESUMO = 6;
+function ramoCell(ramo) {
+  const termos = String(ramo || "").split(/[,;]/).map((t) => t.trim()).filter(Boolean);
+  if (!termos.length) return "";
+  if (termos.length <= RAMO_RESUMO) return `<span class="mut">${esc(termos.join(", "))}</span>`;
+  const resumo = esc(termos.slice(0, RAMO_RESUMO).join(", "));
+  const full = esc(termos.join(", "));
+  const restante = termos.length - RAMO_RESUMO;
+  return `<span class="mut ramo-wrap"><span class="ramo-resumo">${resumo}…</span><span class="ramo-full" style="display:none">${full}</span> <a href="#" class="ramo-toggle" data-mais="+${restante} mais" onclick="return toggleRamo(this)" style="color:var(--indigo);font-weight:700;white-space:nowrap">+${restante} mais</a></span>`;
+}
+function toggleRamo(a) {
+  const wrap = a.closest(".ramo-wrap");
+  const resumo = wrap.querySelector(".ramo-resumo");
+  const full = wrap.querySelector(".ramo-full");
+  const aberto = full.style.display !== "none";
+  full.style.display = aberto ? "none" : "inline";
+  resumo.style.display = aberto ? "inline" : "none";
+  a.textContent = aberto ? a.dataset.mais : "menos";
+  return false;
+}
+
 async function api(path) { const r = await fetch(path + (path.includes("?") ? "&" : "?") + "c=" + encodeURIComponent(token)); return { ok: r.ok, d: await r.json() }; }
 async function post(path, corpo) {
   const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...corpo, c: token }) });
@@ -102,7 +125,7 @@ async function carregar() {
     const receita = c.nivel === "starter" ? 59 : c.nivel === "pro" ? 397 : c.nivel === "assessoria10" ? 697 : c.nivel === "assessoria25" ? 1297 : 247;
     const margem = c.status === "ativo" ? Math.round(100 * (1 - ia.mes / receita)) : null;
     html += `<tr>
-      <td><b>${esc(c.razaoSocial || c.nome)}</b><br><span class="mut">${esc(c.cnpj || "sem CNPJ")} · ${esc(c.uf || "BR")}</span><br><span class="mut">${esc(c.ramo || "")}</span></td>
+      <td><b>${esc(c.razaoSocial || c.nome)}</b><br><span class="mut">${esc(c.cnpj || "sem CNPJ")} · ${esc(c.uf || "BR")}</span><br>${ramoCell(c.ramo)}</td>
       <td>${esc(c.email || "—")}<br><span class="mut">desde ${dataBR(c.criadoEm)}</span></td>
       <td><span class="pill ${c.status}">${esc(c.status)}</span> ${venc ? `<span class="mut">${venc}</span>` : ""}<br><span class="mut">${esc(c.planoNome)}${c.formaPagamento ? " · " + esc(c.formaPagamento) : ""}</span></td>
       <td>${(() => {
