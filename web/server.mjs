@@ -544,7 +544,7 @@ const servidor = createServer(async (req, res) => {
         };
         const grupos = new Map();
         for (const c of todos) {
-          const ch = `${c.orgao || ""}|${normalizar(c.objeto || "").slice(0, 50)}`;
+          const ch = `${c.orgaoCnpj || c.orgao || ""}|${normalizar(c.objeto || "").replace(/\s+/g, " ").trim().slice(0, 80)}`;
           const g = grupos.get(ch) || { orgao: c.orgao, municipio: c.municipio, uf: c.uf, objeto: c.objeto, data: dataValidaExp(c), fornecedores: new Map(), valorTotal: 0, qtdContratos: 0 };
           if ((c.objeto || "").length > (g.objeto || "").length) g.objeto = c.objeto;
           const f = c.fornecedor || "Nao informado";
@@ -888,7 +888,13 @@ const servidor = createServer(async (req, res) => {
       };
       const grupos = new Map();
       for (const c of todos) {
-        const chave = normalizar(c.objeto || "").replace(/\s+/g, " ").trim().slice(0, 60);
+        // Agrupa por ORGAO + objeto. Antes era so objeto (60 chars): como muitos
+        // municipios usam o MESMO titulo padrao ("MATERIAIS AMBULATORIAIS E
+        // INSUMOS HOSPITALARES - LEI 14.133/2021"), 122 compras de 122 orgaos
+        // colapsavam numa linha so e o cliente perdia "quem ganhou onde". Com o
+        // orgao na chave, cada compra de cada orgao vira sua linha (com seu
+        // vencedor); fragmentos de item do MESMO orgao seguem colapsados.
+        const chave = (c.orgaoCnpj || c.orgao || "") + "|" + normalizar(c.objeto || "").replace(/\s+/g, " ").trim().slice(0, 80);
         const g = grupos.get(chave) || {
           objeto: c.objeto, orgao: c.orgao, municipio: c.municipio, uf: c.uf,
           data: dataValida(c), vigenciaFim: c.vigenciaFim,
