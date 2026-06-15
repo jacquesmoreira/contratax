@@ -913,9 +913,12 @@ const servidor = createServer(async (req, res) => {
           .map(([fornecedor, valor]) => ({ fornecedor, valor })),
       }));
       const total = lista.length;
+      // Soma de contratos de TODOS os grupos (cada "compra"/objeto agrupa N
+      // contratos): mostra que "5 compras" pode significar centenas de contratos.
+      const totalContratos = lista.reduce((s, g) => s + (g.qtdContratos || 0), 0);
       const paginas = Math.ceil(total / porPag);
       const licitacoes = lista.slice((pag - 1) * porPag, pag * porPag);
-      return json(res, 200, { total, paginas, pagina: pag, termos, licitacoes });
+      return json(res, 200, { total, totalContratos, paginas, pagina: pag, termos, licitacoes });
     }
 
     // Declaracoes de habilitacao preenchidas com os dados da empresa.

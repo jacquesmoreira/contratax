@@ -124,7 +124,10 @@ async function carregar(pag = 1) {
   }
 
   $("topo").style.display = "flex";
-  $("count").innerHTML = `<b>${d.total.toLocaleString("pt-BR")}</b> licitações encontradas <span>· página ${d.pagina} de ${d.paginas} · filtro: ${esc(d.termos.join(", ") || "todos")}</span>`;
+  const contratosTxt = (d.totalContratos && d.totalContratos > d.total)
+    ? ` <span>(${d.totalContratos.toLocaleString("pt-BR")} contratos no total)</span>`
+    : "";
+  $("count").innerHTML = `<b>${d.total.toLocaleString("pt-BR")}</b> compra${d.total === 1 ? "" : "s"} encontrada${d.total === 1 ? "" : "s"}${contratosTxt} <span>· página ${d.pagina} de ${d.paginas} · filtro: ${esc(d.termos.join(", ") || "todos")}</span>`;
 
   $("lista").innerHTML = d.licitacoes.map(l => {
     const vs = l.vencedores.map((v, i) => `
