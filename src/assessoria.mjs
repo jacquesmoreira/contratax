@@ -9,6 +9,7 @@ import { randomBytes } from "node:crypto";
 import { lerPerfis, salvarPerfis } from "./perfis.mjs";
 import { limparCNPJ, validarFormatoCNPJ } from "./cnpj.mjs";
 import { planoDe } from "./planos.mjs";
+import { MAX_TERMOS } from "./cadastro.mjs";
 
 const slug = (s) =>
   (s || "empresa").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
@@ -56,6 +57,7 @@ export async function adicionarEmpresa(tokenGerente, dados) {
 
   const termos = ramo.split(/[,;]/).map((t) => t.trim()).filter(Boolean);
   if (!termos.length) throw new Error("Informe pelo menos uma palavra-chave do ramo");
+  if (termos.length > MAX_TERMOS) throw new Error(`Selecione no maximo ${MAX_TERMOS} ramos por empresa. Foque no que ela realmente vende para receber so o que importa.`);
 
   const ufsArr = Array.isArray(ufs) ? ufs.filter(Boolean) : (ufs ? [ufs] : []);
   const token = randomBytes(16).toString("hex");

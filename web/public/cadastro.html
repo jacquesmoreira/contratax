@@ -88,7 +88,7 @@
 
       <label for="ramo">O que a sua empresa vende</label>
       <input id="ramo" type="text" placeholder="Ex: limpeza, conservação, asseio" required />
-      <div class="dica">Separe por vírgula para incluir vários termos.</div>
+      <div class="dica" id="ramo-dica">Separe por vírgula para incluir vários termos.</div>
 
       <label style="display:flex;align-items:flex-start;gap:10px;margin-top:18px;font-size:13.5px;line-height:1.5;color:var(--cinza);cursor:pointer">
         <input type="checkbox" id="aceite-termos" required style="margin-top:3px;width:18px;height:18px;accent-color:var(--indigo);cursor:pointer;flex-shrink:0" />
@@ -163,8 +163,30 @@ cnpjInput.addEventListener("input", () => {
   if (cnpjInput.value.replace(/\D/g,"").length === 14) consultarCNPJ();
 });
 
+// Contador de ramos ao vivo: educa o cliente que muitos ramos reduzem a
+// precisao do filtro (selecionar tudo = recebe quase todo edital da UF).
+const AVISO_TERMOS = 15, MAX_TERMOS = 50;
+const ramoInput = document.getElementById("ramo"), ramoDica = document.getElementById("ramo-dica");
+function contarRamos() {
+  const n = ramoInput.value.split(/[,;]/).map((t) => t.trim()).filter(Boolean).length;
+  if (n > MAX_TERMOS) {
+    ramoDica.innerHTML = `<b style="color:#dc2626">${n} ramos.</b> O máximo é ${MAX_TERMOS}. Foque no que sua empresa realmente vende para receber só o que importa.`;
+  } else if (n >= AVISO_TERMOS) {
+    ramoDica.innerHTML = `<b style="color:#b45309">${n} ramos selecionados.</b> Quanto mais amplo, menos preciso fica o filtro. O ideal é focar no que você realmente vende.`;
+  } else {
+    ramoDica.textContent = "Separe por vírgula para incluir vários termos.";
+  }
+}
+ramoInput.addEventListener("input", contarRamos);
+
 document.getElementById("form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
+  // Trava cliente: bloqueia envio acima do teto (o backend tambem valida).
+  const nRamos = document.getElementById("ramo").value.split(/[,;]/).map((t) => t.trim()).filter(Boolean).length;
+  if (nRamos > MAX_TERMOS) {
+    document.getElementById("erro").textContent = `Selecione no máximo ${MAX_TERMOS} ramos. Foque no que sua empresa realmente vende para receber só o que importa.`;
+    return;
+  }
   const btn = document.getElementById("btn"), erro = document.getElementById("erro");
   erro.textContent = "";
   // Clickwrap: aceite explicito obrigatorio. Sem checkbox marcada, nao envia.

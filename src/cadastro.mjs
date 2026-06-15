@@ -13,6 +13,13 @@ const slug = (s) =>
   (s || "cliente").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30);
 
+// Teto rigido de ramos por perfil. Acima disso, a curadoria perde sentido
+// (recebe quase todo edital da UF). Exportado pra UI usar o mesmo numero.
+export const MAX_TERMOS = Number(process.env.LICITA_MAX_TERMOS || 50);
+// A partir daqui a UI mostra aviso educativo (sem bloquear) que muitos ramos
+// reduzem a precisao do filtro.
+export const AVISO_TERMOS = Number(process.env.LICITA_AVISO_TERMOS || 15);
+
 // Cria um perfil a partir dos dados do formulario e devolve o link do painel.
 // Cria um perfil "stub" via Google OAuth, sem exigir CNPJ/ramo/senha. O cliente
 // e direcionado a /conta apos o primeiro login para completar o cadastro.
@@ -90,6 +97,12 @@ export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, c
 
   const termos = ramo.split(/[,;]/).map((t) => t.trim()).filter(Boolean);
   if (!termos.length) throw new Error("Informe ao menos uma palavra do seu ramo");
+  // Teto rigido de ramos: selecionar tudo destroi a curadoria (o cliente recebe
+  // praticamente todo edital da UF e acha que o filtro nao funciona = churn).
+  // 50 e folgado pra qualquer empresa real; acima disso e "marquei tudo".
+  if (termos.length > MAX_TERMOS) {
+    throw new Error(`Selecione no maximo ${MAX_TERMOS} ramos. Foque no que sua empresa realmente vende para receber so o que importa.`);
+  }
   const token = randomBytes(16).toString("hex");
   const id = `${slug(email.split("@")[0])}-${Date.now().toString(36)}`;
   const agora = new Date().toISOString();
