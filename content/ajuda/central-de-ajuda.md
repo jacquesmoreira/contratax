@@ -108,6 +108,18 @@ Sim. Em **Declarações**, no painel, geramos as 5 declarações padrão (idonei
 
 ## Pagamento e Planos
 
+### Como faço pra assinar um plano? (passo a passo)
+A assinatura é feita de dentro da sua conta. O caminho é:
+1. Crie sua conta grátis em [/cadastro](/cadastro) (CNPJ, senha, ramo, estados). Já libera o teste de 7 dias, sem cartão.
+2. Use a plataforma à vontade nos 7 dias.
+3. Quando quiser assinar, clique no botão **Assinar** em destaque no topo do painel.
+4. Escolha o plano e a forma de pagamento (Pix, cartão ou boleto). Pronto, conta ativada.
+
+Você não paga numa página solta: a página de planos só funciona logada, a partir do painel. Se já tem conta, é só entrar em [/entrar](/entrar) e clicar em **Assinar** no painel.
+
+### Posso começar no Starter e fazer upgrade depois?
+Pode. Comece no **Starter (R$ 59/mês)** e suba pro Básico, Pro ou Assessoria quando precisar de mais análises, a qualquer momento, direto no painel. Você paga só a diferença proporcional ao tempo que falta no mês (pró-rata), sem multa e sem perder nada.
+
 ### Quais formas de pagamento aceitam?
 Pix, cartão de crédito e boleto. A cobrança é mensal e automática (pelo gateway Asaas). O cartão renova sozinho. No Pix e no boleto, você recebe o aviso de cobrança alguns dias antes do vencimento e tem 3 dias de carência após o vencimento para regularizar sem perda de acesso.
 
