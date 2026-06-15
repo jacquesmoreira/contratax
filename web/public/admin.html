@@ -94,8 +94,11 @@ async function carregar() {
   // Ações globais (rodar digest manual, etc)
   let html = `<div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
     <button onclick="rodarDigest()" style="background:var(--indigo);color:#fff;border:none;padding:9px 14px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">📧 Enviar digest agora</button>
+    <button onclick="verDisco()" style="background:#0f172a;color:#fff;border:none;padding:9px 14px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">💾 Ver uso de disco</button>
+    <button onclick="limparDisco()" style="background:#b45309;color:#fff;border:none;padding:9px 14px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">🧹 Limpar disco</button>
     <span id="digest-status" style="font-size:13px;color:var(--cinza);align-self:center"></span>
-  </div>`;
+  </div>
+  <div id="disco-saida" style="display:none;background:#0f172a;color:#e2e8f0;font-family:monospace;font-size:12px;padding:14px 16px;border-radius:10px;margin-bottom:18px;white-space:pre-wrap;line-height:1.5;max-height:340px;overflow:auto"></div>`;
 
   // Contagem de alerta: clientes ativos com >=80% e >=100% de uso da cota
   const ativos = cli.d.clientes.filter((c) => c.status === "ativo");
@@ -215,6 +218,37 @@ async function rodarDigest() {
   } catch (e) {
     s.textContent = "⚠️ " + e.message;
     s.style.color = "var(--vermelho)";
+  }
+}
+
+// Diagnostico de disco: mostra o que esta ocupando o volume do Railway.
+async function verDisco() {
+  const box = document.getElementById("disco-saida");
+  box.style.display = "block";
+  box.textContent = "Lendo volume...";
+  try {
+    const r = await api("/api/admin/disco");
+    if (!r.ok) throw new Error(r.d.erro || "falha");
+    const linhas = r.d.arquivos.map((a) => `${String(a.legivel).padStart(11)}  ${a.arquivo}`).join("\n");
+    box.textContent = `VOLUME: ${r.d.totalLegivel} em ${r.d.arquivos.length} arquivos\n\n${linhas}`;
+  } catch (e) {
+    box.textContent = "Erro: " + e.message;
+  }
+}
+
+// Limpeza de emergencia: remove orfaos + WAL checkpoint. Pergunta sobre VACUUM.
+async function limparDisco() {
+  if (!confirm("Limpar disco?\n\nRemove backups orfaos e zera o WAL do banco (seguro). Use quando o volume estiver cheio.")) return;
+  const vacuum = confirm("Rodar VACUUM tambem? (compacta o banco, mais lento, precisa de algum espaco livre)\n\nOK = com VACUUM · Cancelar = so limpeza rapida");
+  const box = document.getElementById("disco-saida");
+  box.style.display = "block";
+  box.textContent = "Limpando" + (vacuum ? " + VACUUM" : "") + "... pode levar 1-2 min.";
+  try {
+    const r = await post("/api/admin/disco/limpar", { vacuum });
+    if (!r.ok) throw new Error(r.d.erro || "falha");
+    box.textContent = `LIMPEZA CONCLUIDA\nAntes: ${r.d.antes}  ->  Depois: ${r.d.depois}  (liberado: ${r.d.liberado})\n\n${r.d.acoes.join("\n")}\n\nMaiores arquivos agora:\n${r.d.arquivos.map((a) => `${String(a.legivel).padStart(11)}  ${a.arquivo}`).join("\n")}`;
+  } catch (e) {
+    box.textContent = "Erro: " + e.message;
   }
 }
 

@@ -253,18 +253,8 @@ export async function limparDisco({ vacuum = false } = {}) {
   const antes = await diagnosticoDisco();
   const acoes = [];
 
-  // 1) Checkpoint do WAL (TRUNCATE zera o arquivo .wal apos aplicar)
-  try {
-    const db = new DatabaseSync(resolve(DATA_DIR, "licita.db"));
-    try {
-      db.exec("PRAGMA journal_mode = WAL;");
-      const r = db.prepare("PRAGMA wal_checkpoint(TRUNCATE);").get();
-      acoes.push(`wal_checkpoint(TRUNCATE): ${JSON.stringify(r)}`);
-      if (vacuum) { db.exec("VACUUM;"); acoes.push("VACUUM concluido"); }
-    } finally { db.close(); }
-  } catch (e) { acoes.push(`checkpoint/vacuum falhou: ${e.message}`); }
-
-  // 2) Remove orfaos: snapshots .db sem gzip e perfis-*.json antigos
+  // 1) PRIMEIRO remove orfaos (deletes puros, liberam espaco na hora). Num
+  // volume 100% cheio, isso da o respiro necessario pro checkpoint do passo 2.
   try {
     const nomes = await readdir(BACKUP_DIR).catch(() => []);
     const gzBases = new Set(nomes.filter((n) => n.endsWith(".db.gz")).map((n) => n.replace(/\.gz$/, "")));
@@ -287,6 +277,18 @@ export async function limparDisco({ vacuum = false } = {}) {
     }
     acoes.push(`orfaos removidos: ${removidos} (${tamanhoLegivel(bytesLiberados)})`);
   } catch (e) { acoes.push(`limpeza de orfaos falhou: ${e.message}`); }
+
+  // 2) Checkpoint do WAL (TRUNCATE zera o licita.db-wal apos aplicar). Roda
+  // depois dos orfaos pra ter espaco. VACUUM so se pedido (precisa de espaco).
+  try {
+    const db = new DatabaseSync(resolve(DATA_DIR, "licita.db"));
+    try {
+      db.exec("PRAGMA journal_mode = WAL;");
+      const r = db.prepare("PRAGMA wal_checkpoint(TRUNCATE);").get();
+      acoes.push(`wal_checkpoint(TRUNCATE): ${JSON.stringify(r)}`);
+      if (vacuum) { db.exec("VACUUM;"); acoes.push("VACUUM concluido"); }
+    } finally { db.close(); }
+  } catch (e) { acoes.push(`checkpoint/vacuum falhou: ${e.message}`); }
 
   const depois = await diagnosticoDisco();
   return {

@@ -974,14 +974,14 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
-    // Limpeza de emergencia: WAL checkpoint TRUNCATE + remove orfaos de backup.
-    // POST /api/admin/disco/limpar?c=ADMIN  (use &vacuum=1 pra compactar tambem)
+    // Limpeza de emergencia: remove orfaos + WAL checkpoint TRUNCATE.
+    // POST /api/admin/disco/limpar  body: { c: ADMIN, vacuum: true? }
     if (rota === "/api/admin/disco/limpar" && req.method === "POST") {
-      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       try {
         const { limparDisco } = await import("../src/backup.mjs");
-        const vacuum = url.searchParams.get("vacuum") === "1";
-        return json(res, 200, await limparDisco({ vacuum }));
+        return json(res, 200, await limparDisco({ vacuum: corpo.vacuum === true }));
       } catch (e) {
         return json(res, 500, { erro: e.message });
       }
