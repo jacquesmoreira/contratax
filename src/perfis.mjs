@@ -10,9 +10,23 @@ import { PERFIS } from "./caminhos.mjs";
 
 export { PERFIS };
 
+// Mesmo separador de ramos usado no cadastro (inline aqui pra evitar import
+// circular com cadastro.mjs). Auto-cura perfis cujos termos foram salvos como
+// 1 string gigante com bullets (cliente colou lista com • em vez de virgula).
+const SEP_RAMOS = /[,;•·|\n\r]+/;
+function normalizarTermos(perfis) {
+  for (const p of perfis) {
+    const t = p?.filtro?.termos;
+    if (Array.isArray(t) && t.some((x) => SEP_RAMOS.test(x))) {
+      p.filtro.termos = t.flatMap((x) => String(x).split(SEP_RAMOS)).map((s) => s.trim()).filter(Boolean);
+    }
+  }
+  return perfis;
+}
+
 export async function lerPerfis() {
   try {
-    return JSON.parse(await readFile(PERFIS, "utf8"));
+    return normalizarTermos(JSON.parse(await readFile(PERFIS, "utf8")));
   } catch (e) {
     if (e.code === "ENOENT") {
       // Arquivo nao existe ainda (primeiro uso). Retorna lista vazia SEM criar

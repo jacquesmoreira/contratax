@@ -60,7 +60,7 @@ const dataBR = (s) => s ? new Date(s).toLocaleDateString("pt-BR") : "—";
 // primeiros e esconde o resto atras de um "+N mais" (toggle).
 const RAMO_RESUMO = 6;
 function ramoCell(ramo) {
-  const termos = String(ramo || "").split(/[,;]/).map((t) => t.trim()).filter(Boolean);
+  const termos = String(ramo || "").split(/[,;•·|\n\r]+/).map((t) => t.trim()).filter(Boolean);
   if (!termos.length) return "";
   if (termos.length <= RAMO_RESUMO) return `<span class="mut">${esc(termos.join(", "))}</span>`;
   const resumo = esc(termos.slice(0, RAMO_RESUMO).join(", "));

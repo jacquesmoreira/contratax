@@ -27,7 +27,7 @@ import { injetarAnalytics, enviarConversao } from "../src/analytics.mjs";
 import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
 import { temChave } from "../src/ia.mjs";
-import { criarPerfil, MAX_TERMOS } from "../src/cadastro.mjs";
+import { criarPerfil, MAX_TERMOS, parseRamos } from "../src/cadastro.mjs";
 import { gerarDigest, enviar, temEmailKey } from "../src/email.mjs";
 import { statusAtual, cobranca } from "../src/assinatura.mjs";
 import { precoVencedores, contratosDoFornecedor } from "../src/preco.mjs";
@@ -711,7 +711,7 @@ const servidor = createServer(async (req, res) => {
         });
       }
 
-      const termos = String(corpo.ramo || "").split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+      const termos = parseRamos(corpo.ramo);
       if (!termos.length) return json(res, 400, { erro: "Informe ao menos uma palavra do seu ramo" });
       if (termos.length > MAX_TERMOS) return json(res, 400, { erro: `Selecione no maximo ${MAX_TERMOS} ramos. Foque no que sua empresa realmente vende para receber so o que importa.` });
 
@@ -811,14 +811,14 @@ const servidor = createServer(async (req, res) => {
       const perfis = await lerPerfis();
       const p = perfis.find((x) => x.token === token);
       if (!p) return json(res, 404, { erro: "Conta nao encontrada" });
-      const termos = (corpo.ramo || "").split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+      const termos = parseRamos(corpo.ramo);
       if (!termos.length) return json(res, 400, { erro: "Informe ao menos uma palavra do seu ramo" });
       if (termos.length > MAX_TERMOS) return json(res, 400, { erro: `Selecione no maximo ${MAX_TERMOS} ramos. Foque no que sua empresa realmente vende para receber so o que importa.` });
       if (corpo.nome && corpo.nome.trim()) p.nome = corpo.nome.trim();
       p.filtro = {
         ...(p.filtro || {}),
         termos,
-        termosExcluir: (corpo.excluir || "").split(/[,;]/).map((s) => s.trim()).filter(Boolean),
+        termosExcluir: parseRamos(corpo.excluir),
       };
       // Aceita ufs (array) ou uf (string simples, retrocompativel).
       if (Array.isArray(corpo.ufs) && corpo.ufs.length > 0) {

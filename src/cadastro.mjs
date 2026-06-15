@@ -13,6 +13,15 @@ const slug = (s) =>
   (s || "cliente").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30);
 
+// Separa a string de ramos em termos. Aceita virgula, ponto-e-virgula, bullet
+// (• e ·), barra vertical e quebra de linha. Antes so quebrava em virgula, e
+// quem colava uma lista com bullets (•) virava 1 termo gigante: a trava nao
+// pegava, o painel nao colapsava e o filtro nao casava. Separador unico aqui.
+export const SEP_RAMOS = /[,;•·|\n\r]+/;
+export function parseRamos(str) {
+  return String(str || "").split(SEP_RAMOS).map((t) => t.trim()).filter(Boolean);
+}
+
 // Teto rigido de ramos por perfil. Acima disso, a curadoria perde sentido
 // (recebe quase todo edital da UF). Exportado pra UI usar o mesmo numero.
 export const MAX_TERMOS = Number(process.env.LICITA_MAX_TERMOS || 50);
@@ -95,7 +104,7 @@ export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, c
     if (/situacao cadastral ativa/.test(e.message)) throw e;
   }
 
-  const termos = ramo.split(/[,;]/).map((t) => t.trim()).filter(Boolean);
+  const termos = parseRamos(ramo);
   if (!termos.length) throw new Error("Informe ao menos uma palavra do seu ramo");
   // Teto rigido de ramos: selecionar tudo destroi a curadoria (o cliente recebe
   // praticamente todo edital da UF e acha que o filtro nao funciona = churn).
