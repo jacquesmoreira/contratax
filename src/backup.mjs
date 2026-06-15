@@ -75,9 +75,11 @@ async function limparAntigos() {
   try {
     const nomes = await readdir(BACKUP_DIR);
 
-    // Remove .db soltos (sem o .gz correspondente) = orfaos de gzip incompleto
-    const gzBases = new Set(nomes.filter((n) => n.endsWith(".db.gz")).map((n) => n.replace(/\.gz$/, "")));
-    for (const n of nomes.filter((n) => n.endsWith(".db") && !gzBases.has(n))) {
+    // Remove TODO snapshot .db cru. Eles sao transientes: o backup gera o .db,
+    // gzipa pra .gz e deveria apagar o .db. Se sobrou (gzip ou unlink falhou),
+    // e lixo de centenas de MB. O backup que importa e sempre o .gz, entao
+    // qualquer .db na pasta pode ir embora, COM ou SEM .gz ao lado.
+    for (const n of nomes.filter((n) => n.endsWith(".db") && !n.endsWith(".db.gz"))) {
       try { await unlink(resolve(BACKUP_DIR, n)); } catch {}
     }
 
