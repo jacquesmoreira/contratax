@@ -23,7 +23,11 @@ import { DATA_DIR, PERFIS } from "./caminhos.mjs";
 import { enviar, temEmailKey } from "./email.mjs";
 
 const BACKUP_DIR = resolve(DATA_DIR, "backups");
-const MANTER = Number(process.env.LICITA_BACKUP_MANTER || 7);
+// Quantos backups manter no volume. Cada snapshot gzipado pode ter centenas de
+// MB (o banco cresce com o backfill de contratos). Num volume de 5GB que ja
+// tem o banco vivo (>1GB), guardar 7 backups = ~2GB so de historico = volume
+// estoura. 3 e suficiente: os backups tambem vao por e-mail (link de download).
+const MANTER = Number(process.env.LICITA_BACKUP_MANTER || 3);
 const ADMIN_EMAIL = process.env.LICITA_CONTATO || "contato@contratax.com.br";
 const BASE = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
 
@@ -253,33 +257,17 @@ export async function limparDisco({ vacuum = false } = {}) {
   const antes = await diagnosticoDisco();
   const acoes = [];
 
-  // 1) PRIMEIRO remove orfaos (deletes puros, liberam espaco na hora). Num
+  // 1) PRIMEIRO poda os arquivos (deletes puros, liberam espaco na hora). Num
   // volume 100% cheio, isso da o respiro necessario pro checkpoint do passo 2.
+  // Reusa a mesma poda do backup: remove .db orfaos (gzip que falhou) + mantem
+  // so os MANTER backups .gz e copias de perfis mais recentes.
   try {
-    const nomes = await readdir(BACKUP_DIR).catch(() => []);
-    const gzBases = new Set(nomes.filter((n) => n.endsWith(".db.gz")).map((n) => n.replace(/\.gz$/, "")));
-    let removidos = 0, bytesLiberados = 0;
-    for (const n of nomes) {
-      // .db solto (sem o .gz correspondente) = orfao de gzip que falhou
-      if (n.endsWith(".db") && !gzBases.has(n)) {
-        const c = resolve(BACKUP_DIR, n);
-        try { bytesLiberados += (await stat(c)).size; await unlink(c); removidos++; } catch {}
-      }
-    }
-    // perfis-*.json: mantem so os MANTER mais recentes
-    const perfisJson = nomes.filter((n) => /^perfis-.*\.json$/.test(n)).map((n) => resolve(BACKUP_DIR, n));
-    if (perfisJson.length > MANTER) {
-      const ord = await Promise.all(perfisJson.map(async (c) => ({ c, m: (await stat(c)).mtimeMs })));
-      ord.sort((a, b) => b.m - a.m);
-      for (const x of ord.slice(MANTER)) {
-        try { bytesLiberados += (await stat(x.c)).size; await unlink(x.c); removidos++; } catch {}
-      }
-    }
-    acoes.push(`orfaos removidos: ${removidos} (${tamanhoLegivel(bytesLiberados)})`);
-  } catch (e) { acoes.push(`limpeza de orfaos falhou: ${e.message}`); }
+    await limparAntigos();
+    acoes.push(`poda de backups: mantidos ${MANTER} mais recentes, orfaos removidos`);
+  } catch (e) { acoes.push(`poda falhou: ${e.message}`); }
 
   // 2) Checkpoint do WAL (TRUNCATE zera o licita.db-wal apos aplicar). Roda
-  // depois dos orfaos pra ter espaco. VACUUM so se pedido (precisa de espaco).
+  // depois da poda pra ter espaco. VACUUM so se pedido (precisa de espaco).
   try {
     const db = new DatabaseSync(resolve(DATA_DIR, "licita.db"));
     try {
