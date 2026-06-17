@@ -1175,7 +1175,14 @@ const servidor = createServer(async (req, res) => {
     // Webhook do Asaas: ativa a conta automaticamente quando o pagamento confirma.
     if (rota === "/api/webhook/asaas" && req.method === "POST") {
       const segredo = process.env.ASAAS_WEBHOOK_TOKEN;
-      if (segredo && req.headers["asaas-access-token"] !== segredo) {
+      // FALHA FECHADA: sem segredo configurado, REJEITA (antes aceitava qualquer
+      // requisicao, permitindo forjar PAYMENT_CONFIRMED e ativar plano de graca).
+      // Configure ASAAS_WEBHOOK_TOKEN no Railway com o mesmo valor do painel Asaas.
+      if (!segredo) {
+        console.error("[webhook asaas] ASAAS_WEBHOOK_TOKEN nao configurado: rejeitando webhook por seguranca. Defina a variavel no Railway (mesmo valor do Asaas).");
+        return json(res, 503, { erro: "webhook nao configurado" });
+      }
+      if (req.headers["asaas-access-token"] !== segredo) {
         return json(res, 401, { erro: "token invalido" });
       }
       const corpo = await lerCorpo(req);
