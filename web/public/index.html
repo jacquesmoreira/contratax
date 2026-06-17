@@ -105,7 +105,9 @@
   .card-rodape { display:flex; align-items:center; gap:16px; flex-wrap:wrap; font-size:13.5px; }
   .modalidade { color:var(--cinza-c); }
   .valor { font-weight:800; }
-  .abrir { margin-left:auto; color:var(--indigo); font-weight:800; }
+  .abrir { color:var(--indigo); font-weight:800; }
+  .baixar-edital { margin-left:auto; color:var(--indigo); font-weight:700; text-decoration:none; border:1px solid var(--linha); padding:5px 11px; border-radius:8px; font-size:12.5px; white-space:nowrap; }
+  .baixar-edital:hover { background:#eef2ff; border-color:var(--indigo); }
 
   /* Estado vazio */
   .vazio { background:#fff; border:1px dashed var(--cinza-c); border-radius:16px; padding:44px 28px; text-align:center; color:var(--cinza); }
@@ -295,7 +297,9 @@ function cardHTML(e) {
       <span class="badge-trilha badge-analisado">analisado pela ContrataX.IA</span></div>
     <div class="objeto">${esc(e.objeto)}</div>
     <div class="card-rodape"><span class="modalidade">${esc(e.modalidade)}</span>
-      <span class="valor">${brl(e.valorEstimado)}</span><span class="abrir">Ver análise →</span></div>
+      <span class="valor">${brl(e.valorEstimado)}</span>
+      <a class="baixar-edital" href="/api/baixar-edital?id=${encodeURIComponent(e.id)}" onclick="event.stopPropagation()" title="Baixar o PDF do edital direto, sem abrir o painel">⬇ Edital</a>
+      <span class="abrir">Ver análise →</span></div>
   </div>`;
 }
 function perfilHTML(p) {

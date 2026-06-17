@@ -1614,6 +1614,26 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // Baixar o EDITAL principal direto (1 clique, sem abrir o painel). Usa o
+    // obterPdfs (acha o PDF do edital entre os arquivos do PNCP) e serve o maior.
+    if (rota === "/api/baixar-edital") {
+      const edital = buscarPorId(url.searchParams.get("id"));
+      if (!edital) { res.writeHead(404); return res.end("Edital nao encontrado"); }
+      try {
+        const { obterPdfs } = await import("../src/documentos.mjs");
+        const pdfs = await obterPdfs(edital);
+        if (!pdfs.length) {
+          res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+          return res.end("Este edital nao tem PDF disponivel no PNCP. Acesse pelo portal de origem.");
+        }
+        const nome = (pdfs[0].nome || "edital").replace(/[^\w.\-]+/g, "_").replace(/\.pdf$/i, "").slice(0, 80) + ".pdf";
+        res.writeHead(200, { "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="${nome}"` });
+        return res.end(pdfs[0].buffer);
+      } catch (e) {
+        res.writeHead(502); return res.end("Falha ao baixar: " + e.message);
+      }
+    }
+
     // Calendario .ics: gera evento do encerramento do edital com lembretes
     // automaticos (3 dias e 1 hora antes). Aberto a qualquer um (sem token).
     if (rota === "/api/calendario") {
