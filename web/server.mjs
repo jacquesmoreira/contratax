@@ -1294,14 +1294,28 @@ const servidor = createServer(async (req, res) => {
             } catch (e) { console.error("[email overdue]", e.message); }
           }
         } else if (evento === "PAYMENT_REFUNDED" || evento === "PAYMENT_CHARGEBACK_REQUESTED") {
-          // Estorno/chargeback: avisa o Jacques pra agir.
+          // Estorno/chargeback: REVOGA o acesso automaticamente (antes so avisava
+          // o Jacques, deixando o vetor de abuso: pagar -> ativar -> estornar ->
+          // manter acesso). Se for chargeback contestado e vencido depois, o
+          // Jacques reativa manual no admin.
+          let ref = pg.externalReference;
+          if (!ref && pg.subscription) ref = await externalReferenceDaAssinatura(pg.subscription);
+          const [tipo, tokenR] = String(ref || "").split(":");
+          if (tipo === "sub" && tokenR) {
+            try {
+              const { atualizarPerfil } = await import("../src/perfis.mjs");
+              await atualizarPerfil(tokenR, (p) => {
+                p.assinatura = { ...(p.assinatura || {}), status: "inativo", revogadoEm: new Date().toISOString(), revogadoMotivo: evento };
+              });
+            } catch (e) { console.error("[webhook revogar]", e.message); }
+          }
           try {
             const { temEmailKey, enviar } = await import("../src/email.mjs");
             if (temEmailKey()) {
               await enviar({
                 para: process.env.LICITA_CONTATO || "contato@contratax.com.br",
-                assunto: `[ContrataX] ${evento}: ${pg.id}`,
-                html: `<p>Evento Asaas: <b>${evento}</b></p><pre>${JSON.stringify(pg, null, 2).slice(0, 1500)}</pre>`,
+                assunto: `[ContrataX] ${evento} (acesso revogado): ${pg.id}`,
+                html: `<p>Evento Asaas: <b>${evento}</b>. Acesso do cliente foi <b>revogado automaticamente</b>.</p><pre>${JSON.stringify(pg, null, 2).slice(0, 1500)}</pre>`,
               });
             }
           } catch {}
