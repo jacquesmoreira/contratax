@@ -16,6 +16,11 @@ import { enviar, temEmailKey } from "./email.mjs";
 import { statusAtual } from "./assinatura.mjs";
 import { consultar } from "./db.mjs";
 import { aplicarFiltro } from "./filtro.mjs";
+import { PLANOS } from "./planos.mjs";
+
+// Precos vindos da fonte unica (planos.mjs). Evita e-mail com preco velho.
+const PRECO_STARTER = PLANOS.starter.preco; // entrada (ex: "59,00")
+const PRECO_BASICO = PLANOS.basico.preco;   // recomendado, com IA completa
 
 const BASE = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
 
@@ -103,13 +108,27 @@ export function email3(perfil, totalEditais, somaValor) {
   const ramo = (perfil.filtro?.termos ?? [])[0] || "seu ramo";
   const valorTxt = somaValor > 1e9 ? `R$ ${(somaValor/1e9).toFixed(1)} bilhões` : somaValor > 1e6 ? `R$ ${(somaValor/1e6).toFixed(1)} milhões` : `R$ ${Math.round(somaValor/1e3)} mil`;
   return {
-    assunto: `${nome}, seu teste termina em 24h. Vale R$ 247?`,
+    assunto: `${nome}, seu teste termina em 24h. A partir de R$ ${PRECO_STARTER}/mês`,
     html: header() + `
       <h2 style="font-size:21px;font-weight:800;margin-bottom:12px;color:#0f172a">A conta direta</h2>
       <p style="margin-bottom:14px">Nos últimos 6 dias, o ContrataX monitorou <b>${totalEditais.toLocaleString("pt-BR")} licitações abertas</b> no segmento <b>${ramo}</b>, somando <b>${valorTxt}</b> em oportunidades.</p>
-      <p style="margin-bottom:14px">Seu teste grátis termina amanhã. A pergunta direta: vale R$ 247/mês continuar monitorando isso de forma organizada, com leitura completa de cada edital e alerta de certidão vencendo?</p>
+      <p style="margin-bottom:14px">Seu teste grátis termina amanhã. E você escolhe por onde continuar:</p>
+      <table cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:6px 0 18px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+        <tr>
+          <td style="padding:12px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0">
+            <b style="color:#0f172a">Starter, R$ ${PRECO_STARTER}/mês</b><br>
+            <span style="font-size:13.5px;color:#475569">Busca e alertas diários ilimitados do seu ramo. Ideal pra começar e pra MEI.</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:12px 14px">
+            <b style="color:#4338ca">Básico, R$ ${PRECO_BASICO}/mês</b><br>
+            <span style="font-size:13.5px;color:#475569">Tudo do Starter + a IA lendo o edital completo e dizendo se você está apto (30 análises/mês).</span>
+          </td>
+        </tr>
+      </table>
       <p style="margin-bottom:14px"><b>A conta da viabilidade:</b><br>
-      Um único contrato fechado em R$ 4.000 paga 20 meses da assinatura. 1 hora de consultor especializado custa R$ 250-800. R$ 247 cobre o mês inteiro de monitoramento + análise + alertas.</p>
+      Um único contrato fechado em R$ 4.000 paga dezenas de meses da assinatura. 1 hora de consultor especializado custa R$ 250-800. A partir de R$ ${PRECO_STARTER} você cobre o mês inteiro de monitoramento e alertas.</p>
       <p style="margin-bottom:14px">Sem fidelidade. Cancela quando quiser, no próprio painel.</p>
       <table cellpadding="0" cellspacing="0" border="0" style="margin:24px auto"><tr>
         <td style="background:#4338ca;border-radius:11px;padding:14px 28px">
