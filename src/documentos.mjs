@@ -96,17 +96,42 @@ export async function baixarArquivo(edital, indice) {
 // PNCP em que o "documento" e um ZIP contendo o edital e anexos.
 // Devolve [{ nome, buffer }] ordenado do maior para o menor (o edital costuma ser o maior).
 export async function obterPdfs(edital) {
-  const doc = await baixarDocumentoPrincipal(edital);
-  if (!doc) return [];
+  let arquivos = [];
+  try { arquivos = await listarArquivos(edital); } catch { return []; }
+  if (!Array.isArray(arquivos) || !arquivos.length) return [];
 
-  let pdfs = [];
-  if (ehPdf(doc.buffer)) {
-    pdfs = [{ nome: `${doc.nome}.pdf`, buffer: doc.buffer }];
-  } else if (ehZip(doc.buffer)) {
-    pdfs = extrairZip(doc.buffer)
-      .filter((a) => /\.pdf$/i.test(a.nome) || ehPdf(a.dados))
-      .map((a) => ({ nome: a.nome, buffer: a.dados }));
+  // Ordena: arquivos com "edital" no titulo primeiro (mais provavel ser o PDF
+  // certo), capa por ultimo. Antes so tentava 1 arquivo (o "principal"); se ele
+  // nao fosse PDF (orgao que publica no BLL/Comprasnet e so linka), retornava
+  // vazio. Agora varre ate achar PDF, com teto pra nao baixar o acervo inteiro.
+  const ordenados = [...arquivos].sort((a, b) => {
+    const ed = (x) => /edital/i.test(x.titulo ?? "") || /edital/i.test(x.tipoDocumentoNome ?? "");
+    const capa = (x) => /capa/i.test(x.titulo ?? "");
+    return (capa(a) - capa(b)) || (ed(b) - ed(a));
+  });
+
+  const MAX_TENTATIVAS = Number(process.env.LICITA_MAX_ARQUIVOS_EDITAL || 5);
+  for (const a of ordenados.slice(0, MAX_TENTATIVAS)) {
+    const link = a.url ?? a.uri ?? a.linkDownload;
+    if (!link) continue;
+    let buffer;
+    try {
+      const r = await fetch(link, { headers: { Accept: "*/*" } });
+      if (!r.ok) continue;
+      buffer = Buffer.from(await r.arrayBuffer());
+    } catch { continue; }
+
+    if (ehPdf(buffer)) {
+      return [{ nome: `${a.titulo ?? "edital"}.pdf`, buffer }];
+    }
+    if (ehZip(buffer)) {
+      const pdfs = extrairZip(buffer)
+        .filter((x) => /\.pdf$/i.test(x.nome) || ehPdf(x.dados))
+        .map((x) => ({ nome: x.nome, buffer: x.dados }))
+        .sort((x, y) => y.buffer.length - x.buffer.length);
+      if (pdfs.length) return pdfs;
+    }
+    // Nao e PDF nem ZIP (provavel HTML/link da plataforma de origem): tenta o proximo.
   }
-
-  return pdfs.sort((a, b) => b.buffer.length - a.buffer.length);
+  return [];
 }
