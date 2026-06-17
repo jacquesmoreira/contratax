@@ -165,7 +165,15 @@ export async function chamar(corpo, { tentativas = 3, meta = null } = {}) {
       continue;
     }
 
-    throw new Error(`Claude API ${r.status}: ${(await r.text()).slice(0, 300)}`);
+    const corpoErro = (await r.text()).slice(0, 400);
+    // PDF grande demais (ata de registro de precos com centenas de itens/paginas
+    // estoura o limite de contexto). Erro amigavel em vez do JSON cru da API.
+    if (r.status === 400 && /prompt is too long|context length|too many|maximum.*length/i.test(corpoErro)) {
+      const e = new Error("Este documento é muito extenso para a leitura automática (provavelmente uma ata de registro de preços com centenas de itens). Cadastre os dados principais manualmente, leva menos de 1 minuto.");
+      e.codigo = "pdf_muito_grande";
+      throw e;
+    }
+    throw new Error(`Claude API ${r.status}: ${corpoErro}`);
   }
 }
 
