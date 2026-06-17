@@ -807,6 +807,29 @@ async function gerarTldrAsync(id) {
   }
 }
 
+// Pergunte ao Edital: manda a pergunta, a IA responde com base no PDF do edital.
+async function perguntarEdital(id) {
+  const inp = document.getElementById("pe-input");
+  const box = document.getElementById("pe-respostas");
+  if (!inp || !box) return;
+  const pergunta = inp.value.trim();
+  if (pergunta.length < 3) { inp.focus(); return; }
+  inp.value = "";
+  const item = document.createElement("div");
+  item.style.cssText = "border:1px solid var(--linha);border-radius:10px;padding:11px 13px;margin-bottom:10px;font-size:13.5px";
+  item.innerHTML = `<div style="font-weight:700;color:var(--tinta);margin-bottom:6px">${esc(pergunta)}</div><div style="color:var(--cinza)"><span class="spinner"></span>Lendo o edital pra te responder...</div>`;
+  box.prepend(item);
+  try {
+    const r = await fetch("/api/perguntar-edital?id=" + encodeURIComponent(id) + "&c=" + encodeURIComponent(token),
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pergunta }) });
+    const d = await r.json();
+    const resp = d.resposta || d.erro || "Não consegui responder agora. Tente de novo.";
+    item.querySelector("div:last-child").innerHTML = `<span style="color:var(--indigo);font-weight:700">ContrataX.IA:</span> ${esc(resp).replace(/\n/g, "<br>")}`;
+  } catch {
+    item.querySelector("div:last-child").textContent = "Erro de conexão. Tente de novo.";
+  }
+}
+
 function reputacaoHTML(r) {
   if (!r) return "";
   const cor = r.classificacao === "rapido" ? "#059669"
@@ -1052,6 +1075,18 @@ async function abrirDrawer(id) {
     // Em vez de disparar automaticamente (consome IA mesmo se o cliente
     // nao quer ler o resumo), exibimos um botao "Gerar resumo rapido".
     html += tldrHTML("sob-demanda", ed.id);
+  }
+  // Pergunte ao Edital (so pra cliente logado com chave de IA disponivel).
+  if (token && d.temChave) {
+    html += `<div class="bloco" style="border-left:4px solid var(--indigo)">
+      <h3>💬 Pergunte ao Edital</h3>
+      <p style="font-size:13px;color:var(--cinza);margin:4px 0 10px">Tire dúvidas direto do edital. Ex: "exige atestado de capacidade técnica?", "qual o prazo de entrega?", "aceita ME/EPP?"</p>
+      <div style="display:flex;gap:8px">
+        <input id="pe-input" type="text" placeholder="Sua pergunta sobre este edital..." style="flex:1;padding:11px 13px;border:1px solid var(--linha);border-radius:10px;font-size:14px;font-family:inherit;outline:none" onkeydown="if(event.key==='Enter')perguntarEdital('${ed.id}')" />
+        <button onclick="perguntarEdital('${ed.id}')" style="background:var(--indigo);color:#fff;border:none;padding:0 18px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">Perguntar</button>
+      </div>
+      <div id="pe-respostas" style="margin-top:12px"></div>
+    </div>`;
   }
   html += `<div class="bloco"><h3>Edital</h3>
     <div class="linha-info"><span>Órgão</span><span style="text-align:right">${esc(ed.orgao)}</span></div>

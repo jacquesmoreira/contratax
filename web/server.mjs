@@ -1764,6 +1764,56 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // "Pergunte ao Edital": cliente pagante faz pergunta livre sobre o edital, a
+    // IA responde com base no PDF. Fecha o gap competitivo (ConLicitacao/Licitei).
+    // Cota: exige assinatura ativa + cap diario por plano (reusa tldrLimiteDia,
+    // que ja garante margem). Cada pergunta envia o PDF (caro), entao o cap
+    // protege custo; prompt caching barateia perguntas seguidas no mesmo edital.
+    if (rota === "/api/perguntar-edital" && req.method === "POST") {
+      const id = url.searchParams.get("id");
+      const edital = buscarPorId(id);
+      if (!edital) return json(res, 404, { erro: "Edital nao encontrado" });
+      if (!temChave()) return json(res, 400, { erro: "Leitura por IA nao configurada" });
+      const corpoP = await lerCorpo(req);
+      const pergunta = String(corpoP.pergunta || "").trim();
+      if (pergunta.length < 3) return json(res, 400, { erro: "Escreva uma pergunta" });
+
+      const tokenP = url.searchParams.get("c") || "";
+      const perfilP = await perfilPorToken(tokenP);
+      if (!perfilP) return json(res, 403, { erro: "Faca login para usar o Pergunte ao Edital", paywall: true });
+      if (tokenP !== ADMIN) {
+        if (!statusAtual(perfilP).temAcesso) {
+          return json(res, 403, { erro: "O Pergunte ao Edital faz parte do plano. Assine para liberar.", paywall: true });
+        }
+        const planoP = planoDe(perfilP);
+        const LIMITE = planoP.tldrLimiteDia || 30;
+        const hojeP = new Date().toISOString().slice(0, 10);
+        const perfisP = await lerPerfis();
+        const pp = perfisP.find((x) => x.token === tokenP);
+        if (!pp._perguntaUso || pp._perguntaUso.dia !== hojeP) pp._perguntaUso = { dia: hojeP, n: 0 };
+        if (pp._perguntaUso.n >= LIMITE) {
+          return json(res, 429, { erro: `Voce atingiu ${LIMITE} perguntas hoje (cota do plano ${planoP.nome}). O limite zera amanha.` });
+        }
+        try {
+          const { perguntarEdital } = await import("../src/perguntarEdital.mjs");
+          const { resposta } = await perguntarEdital(edital, pergunta, { perfilToken: tokenP });
+          pp._perguntaUso.n += 1;
+          await salvarPerfis(perfisP);
+          return json(res, 200, { resposta });
+        } catch (e) {
+          return json(res, e.codigo === "sem_pdf" ? 200 : 502, { erro: e.message, codigo: e.codigo || null });
+        }
+      }
+      // Admin: sem trava
+      try {
+        const { perguntarEdital } = await import("../src/perguntarEdital.mjs");
+        const { resposta } = await perguntarEdital(edital, pergunta, { perfilToken: tokenP });
+        return json(res, 200, { resposta });
+      } catch (e) {
+        return json(res, e.codigo === "sem_pdf" ? 200 : 502, { erro: e.message, codigo: e.codigo || null });
+      }
+    }
+
     // Dispara a analise de IA (Camadas 3 e 4) sob demanda.
     if (rota === "/api/analisar" && req.method === "POST") {
       const id = url.searchParams.get("id");
