@@ -78,11 +78,35 @@ export function parsearXmlContrato(xml) {
   };
 }
 
+// Estimativa BARATA (zero-dependency) de quantas paginas um PDF tem: conta os
+// objetos "/Type /Page" (ignorando "/Type /Pages", que e o no-arvore). Nao e
+// exato, mas serve pra detectar uma ata de registro de precos gigante antes de
+// gastar a chamada de IA (que estouraria o limite de contexto).
+function estimarPaginasPdf(buffer) {
+  try {
+    const txt = buffer.toString("latin1");
+    const m = txt.match(/\/Type\s*\/Page(?![s])/g);
+    return m ? m.length : 0;
+  } catch { return 0; }
+}
+
+// Acima disso, e quase certo que e uma ata/registro completo, nao o contrato.
+const MAX_PAGINAS_CONTRATO = Number(process.env.LICITA_MAX_PAGINAS_CONTRATO || 40);
+
 // 2) Extracao de PDF via Claude Haiku (barato).
 export async function extrairContratoPdf(pdfBuffer) {
   if (!temChave()) throw new Error("ANTHROPIC_API_KEY nao definida");
   if (!Buffer.isBuffer(pdfBuffer)) throw new Error("Esperado Buffer");
   if (pdfBuffer.length > 30 * 1024 * 1024) throw new Error("PDF maior que 30 MB");
+
+  // Heuristica: PDF com paginas demais e ata/registro de precos completo, nao o
+  // contrato. Avisa de forma especifica (e sem gastar IA que estouraria o limite).
+  const paginas = estimarPaginasPdf(pdfBuffer);
+  if (paginas > MAX_PAGINAS_CONTRATO) {
+    const e = new Error(`Este arquivo parece ser uma ata ou registro de precos completo (cerca de ${paginas} paginas), nao o contrato. Para importar automaticamente, suba apenas o CONTRATO assinado (em geral 2 a 12 paginas). Ou cadastre os dados principais manualmente, leva menos de 1 minuto.`);
+    e.codigo = "pdf_muitas_paginas";
+    throw e;
+  }
   const corpo = {
     model: MODELO_EXTRACAO,
     max_tokens: 2000,
