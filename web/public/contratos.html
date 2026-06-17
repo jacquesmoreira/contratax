@@ -95,6 +95,10 @@ textarea { resize:vertical; min-height:70px; }
     <div class="cap">Você precisa apenas dos dados básicos. Pode editar depois.</div>
     <label>Número do contrato</label>
     <input id="f-num" placeholder="ex: 045/2025" />
+    <label>Número do pregão / licitação (opcional)</label>
+    <input id="f-pregao" placeholder="ex: PE 159/2025" />
+    <label>Número do processo (opcional)</label>
+    <input id="f-processo" placeholder="ex: Processo 332/2024" />
     <label>Nome do órgão</label>
     <input id="f-org" placeholder="ex: Prefeitura de Florianópolis" />
     <label>CNPJ do órgão (opcional)</label>
@@ -229,6 +233,7 @@ function renderLista(lista) {
       <div class="top">
         <div>
           <div class="num">Contrato ${c.numero || "—"}</div>
+          ${(c.pregao || c.processo) ? `<div style="font-size:12px;color:var(--cinza);margin-top:2px">${c.pregao ? `Pregão: <b>${c.pregao}</b>` : ""}${c.pregao && c.processo ? " · " : ""}${c.processo ? `Processo: <b>${c.processo}</b>` : ""}</div>` : ""}
           <div class="org">${c.orgao_nome || "Órgão não informado"}</div>
         </div>
         <span class="tag ${c.situacao}">${LBL_SIT[c.situacao] || "—"}</span>
@@ -253,7 +258,7 @@ function renderLista(lista) {
 function abrir(id) { $(id).classList.add("open"); }
 function fechar(id) { $(id).classList.remove("open"); }
 
-$("btn-novo").onclick = () => { ["f-num","f-org","f-cnpj","f-obj","f-val"].forEach(i=>$(i).value=""); $("f-idx").value=""; $("f-ini").value = new Date().toISOString().slice(0,10); abrir("m-novo"); };
+$("btn-novo").onclick = () => { ["f-num","f-pregao","f-processo","f-org","f-cnpj","f-obj","f-val"].forEach(i=>$(i).value=""); $("f-idx").value=""; $("f-ini").value = new Date().toISOString().slice(0,10); abrir("m-novo"); };
 
 // === Importar contrato (PDF ou XML) ===
 $("btn-importar").onclick = () => { $("f-arquivo").value=""; $("status-import").innerHTML=""; abrir("m-import"); };
@@ -289,6 +294,8 @@ async function processarArquivo(arq) {
     // Preenche modal "novo" com o que veio
     const x = d.dados;
     $("f-num").value = x.numero || "";
+    $("f-pregao").value = x.pregao || "";
+    $("f-processo").value = x.processo || "";
     $("f-org").value = x.orgaoNome || "";
     $("f-cnpj").value = x.orgaoCnpj || "";
     $("f-obj").value = x.objeto || "";
@@ -311,7 +318,8 @@ async function processarArquivo(arq) {
 
 $("b-salvar").onclick = async () => {
   const d = {
-    numero: $("f-num").value, orgaoNome: $("f-org").value, orgaoCnpj: $("f-cnpj").value,
+    numero: $("f-num").value, pregao: $("f-pregao").value, processo: $("f-processo").value,
+    orgaoNome: $("f-org").value, orgaoCnpj: $("f-cnpj").value,
     objeto: $("f-obj").value, dataInicio: $("f-ini").value, dataFim: $("f-fim").value,
     valorTotal: $("f-val").value, indiceReajuste: $("f-idx").value,
   };

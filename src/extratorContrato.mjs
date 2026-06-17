@@ -18,6 +18,8 @@ const INSTRUCAO = `Voce esta lendo o PDF de um CONTRATO ADMINISTRATIVO firmado e
 
 {
   "numero": "numero do contrato como aparece (ex: '045/2025' ou '12.345.6/789')",
+  "pregao": "numero do pregao/licitacao que originou o contrato (ex: 'PE 159/2025', 'Pregao Eletronico 26/2026') ou null se nao constar",
+  "processo": "numero do processo administrativo (ex: 'Processo 332/2024', '10.2026') ou null se nao constar",
   "orgaoNome": "nome completo do orgao contratante (a CONTRATANTE), ex: 'PREFEITURA MUNICIPAL DE FLORIANOPOLIS'",
   "orgaoCnpj": "CNPJ do orgao (somente digitos, 14 chars)",
   "objeto": "descricao do objeto do contrato (1-3 frases)",
@@ -42,6 +44,11 @@ export function parsearXmlContrato(xml) {
   const pegar = (re) => { const m = xml.match(re); return m ? m[1].trim() : null; };
   const numero = pegar(/<numero[^>]*>([^<]+)<\/numero>/i)
     || pegar(/<numeroContrato[^>]*>([^<]+)<\/numeroContrato>/i);
+  const pregao = pegar(/<numeroProcessoLicitacao[^>]*>([^<]+)<\/numeroProcessoLicitacao>/i)
+    || pegar(/<numeroCompra[^>]*>([^<]+)<\/numeroCompra>/i)
+    || pegar(/<identificadorCompra[^>]*>([^<]+)<\/identificadorCompra>/i);
+  const processo = pegar(/<processo[^>]*>([^<]+)<\/processo>/i)
+    || pegar(/<numeroProcesso[^>]*>([^<]+)<\/numeroProcesso>/i);
   const orgaoNome = pegar(/<orgao[^>]*>([\s\S]*?)<\/orgao>/i)?.match(/<nome[^>]*>([^<]+)<\/nome>/i)?.[1]
     || pegar(/<orgaoNome[^>]*>([^<]+)<\/orgaoNome>/i)
     || pegar(/<razaoSocial[^>]*>([^<]+)<\/razaoSocial>/i);
@@ -58,6 +65,8 @@ export function parsearXmlContrato(xml) {
   if (!numero && !orgaoNome && !valor) return null;
   return {
     numero,
+    pregao: pregao || null,
+    processo: processo || null,
     orgaoNome,
     orgaoCnpj: orgaoCnpj ? orgaoCnpj.replace(/\D+/g, "") : null,
     objeto,

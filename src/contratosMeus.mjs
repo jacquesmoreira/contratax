@@ -24,6 +24,8 @@ function abrir() {
       id              INTEGER PRIMARY KEY AUTOINCREMENT,
       perfil_token    TEXT NOT NULL,
       numero          TEXT,
+      pregao          TEXT,
+      processo        TEXT,
       orgao_nome      TEXT,
       orgao_cnpj      TEXT,
       objeto          TEXT,
@@ -39,6 +41,11 @@ function abrir() {
   `);
   _db.exec("CREATE INDEX IF NOT EXISTS idx_ct_perfil ON contratos_meus(perfil_token);");
   _db.exec("CREATE INDEX IF NOT EXISTS idx_ct_fim ON contratos_meus(data_fim);");
+  // Migracao: adiciona colunas pregao/processo em tabelas ja existentes
+  // (cliente que organiza por numero do pregao, nao so do contrato).
+  for (const col of ["pregao", "processo"]) {
+    try { _db.exec(`ALTER TABLE contratos_meus ADD COLUMN ${col} TEXT;`); } catch {}
+  }
   return _db;
 }
 
@@ -81,13 +88,15 @@ export function cadastrarContrato(token, d) {
   const db = abrir();
   const stmt = db.prepare(`
     INSERT INTO contratos_meus
-      (perfil_token, numero, orgao_nome, orgao_cnpj, objeto, valor_total,
+      (perfil_token, numero, pregao, processo, orgao_nome, orgao_cnpj, objeto, valor_total,
        data_inicio, data_fim, indice_reajuste, observacoes, criado_em)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const r = stmt.run(
     token,
     d.numero ?? null,
+    d.pregao ?? null,
+    d.processo ?? null,
     d.orgaoNome ?? null,
     d.orgaoCnpj ?? null,
     d.objeto ?? null,
