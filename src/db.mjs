@@ -280,7 +280,7 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
 
 // Busca livre no acervo (usada pelo painel): por termo, UF e modalidade.
 // Devolve a lista de editais (nao so estatisticas), ranqueada por relevancia.
-export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termosParam = null, modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, limite = 60, pagina = null, porPag = null } = {}) {
+export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termosParam = null, modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, pubDe = null, pubAte = null, limite = 60, pagina = null, porPag = null } = {}) {
   // Aceita ufs (array) ou uf (string simples, retrocompativel).
   const ufsArr = ufs && ufs.length ? ufs : (uf ? [uf] : []);
   const candidatos = consultar({ ufs: ufsArr, modalidades, apenasAbertos: true });
@@ -304,6 +304,13 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
   if (dataAte) {
     const fim = dataAte.length === 10 ? dataAte + "T23:59:59.999Z" : dataAte;
     casaram = casaram.filter((e) => e.encerramento && e.encerramento <= fim);
+  }
+  // Filtro por DATA DE PUBLICACAO/INCLUSAO (quando o edital entrou no PNCP), nao
+  // o prazo. Pedido de cliente: achar editais "publicados hoje/ontem/no periodo".
+  if (pubDe) casaram = casaram.filter((e) => e.publicacao && e.publicacao >= pubDe);
+  if (pubAte) {
+    const fim = pubAte.length === 10 ? pubAte + "T23:59:59.999Z" : pubAte;
+    casaram = casaram.filter((e) => e.publicacao && e.publicacao <= fim);
   }
 
   // Ordenacao: PRAZO primeiro (urgencia), relevancia como desempate.

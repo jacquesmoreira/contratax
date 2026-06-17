@@ -224,6 +224,15 @@
       </div>
       <select id="filtro-mod"></select>
       <select id="filtro-prazo"></select>
+      <select id="filtro-pub" title="Filtra por quando o edital foi publicado no PNCP (data de inclusão), não pelo prazo">
+        <option value="">Publicado: qualquer data</option>
+        <option value="0">Publicado hoje</option>
+        <option value="1">Hoje e ontem</option>
+        <option value="3">Últimos 3 dias</option>
+        <option value="7">Últimos 7 dias</option>
+        <option value="15">Últimos 15 dias</option>
+        <option value="30">Últimos 30 dias</option>
+      </select>
       <button id="btn-buscar">Buscar</button>
     </div>
     <div class="dica-busca" style="font-size:12.5px;color:rgba(255,255,255,.8);margin-top:8px">
@@ -1232,11 +1241,19 @@ async function buscarPainel(pagina = 1) {
   const ufsArr = [...ufsSelBusca];
   const mod = document.getElementById("filtro-mod").value;
   const prazo = document.getElementById("filtro-prazo").value;
-  if (!termo && !cidade && !ufsArr.length && !mod && !prazo) { carregar(); return; }
+  const pub = document.getElementById("filtro-pub").value;
+  if (!termo && !cidade && !ufsArr.length && !mod && !prazo && !pub) { carregar(); return; }
+  // Converte "publicado nos ultimos N dias" em data de corte (pubDe).
+  let pubDe = "";
+  if (pub !== "") {
+    const d0 = new Date(); d0.setHours(0,0,0,0); d0.setDate(d0.getDate() - Number(pub));
+    pubDe = d0.toISOString().slice(0,10);
+  }
   const c = document.getElementById("conteudo");
   if (pagina === 1) c.innerHTML = `<div class="carregando"><span class="spinner"></span>Buscando no acervo nacional...</div>`;
   try {
     const params = new URLSearchParams({ termo, modalidade: mod, cidade, prazo, pagina: String(pagina), porPag: "15" });
+    if (pubDe) params.set("pubDe", pubDe);
     ufsArr.forEach(u => params.append("uf", u)); // multi-uf: ?uf=SC&uf=SP
     const d = await (await fetch("/api/buscar?" + params)).json();
     const prazoTxt = prazo ? ` · encerra em até ${prazo} dias` : "";
@@ -1263,7 +1280,7 @@ async function buscarPainel(pagina = 1) {
       </div>`;
     }
     c.innerHTML = html;
-    document.getElementById("voltar-painel").onclick = (e) => { e.preventDefault(); document.getElementById("busca").value=""; document.getElementById("filtro-cidade").value=""; limparUfs(); document.getElementById("filtro-mod").value=""; document.getElementById("filtro-prazo").value=""; carregar(); };
+    document.getElementById("voltar-painel").onclick = (e) => { e.preventDefault(); document.getElementById("busca").value=""; document.getElementById("filtro-cidade").value=""; limparUfs(); document.getElementById("filtro-mod").value=""; document.getElementById("filtro-prazo").value=""; document.getElementById("filtro-pub").value=""; carregar(); };
     c.querySelectorAll(".pg-btn").forEach(b => b.onclick = () => { if (!b.disabled) { buscarPainel(Number(b.dataset.pg)); window.scrollTo({ top: 0, behavior: "smooth" }); } });
   } catch (e) { c.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`; }
 }
