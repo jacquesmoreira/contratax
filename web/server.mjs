@@ -17,6 +17,7 @@ import { gerarTldr } from "../src/tldr.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
 import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
+import { categoriaPorSlug, ufPorSigla } from "../src/categorias.mjs";
 import { paginaOrgao, paginaHubOrgaos, urlsOrgaos } from "../src/seoOrgaos.mjs";
 import { paginaCnae, paginaHubCnae, urlsCnae, cnaePorCodigo } from "../src/seoCnae.mjs";
 import { renderizarArtigo, renderizarListagem, urlsBlog } from "../src/blog.mjs";
@@ -2036,7 +2037,21 @@ Contact: contato@contratax.com.br
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
         return res.end(injetarAnalytics(html));
       }
-      // slug/uf invalido: cai no 404
+      // Recuperacao de URLs-lixo do Search Console: quando a CATEGORIA e valida
+      // mas vem sujeira depois (ex: /licitacoes/veiculos/sai.io.org.br/... que o
+      // PNCP guardava como "link" sem protocolo, ja corrigido na origem), faz
+      // 301 pra pagina limpa da categoria (recupera o link, mata o 404). Se a
+      // 2a parte for UF valida, leva pra categoria+UF; senao, categoria Brasil.
+      const cat = categoriaPorSlug(partes[1]);
+      if (cat) {
+        const uf = ufPorSigla(partes[2] || "");
+        const destino = `/licitacoes/${cat.slug}${uf ? "/" + uf.sigla.toLowerCase() : ""}`;
+        if (destino !== rota) {
+          res.writeHead(301, { Location: destino, "Cache-Control": "no-store" });
+          return res.end();
+        }
+      }
+      // slug invalido: cai no 404
     }
 
     // ===== SEO programatico: paginas por ORGAO publico =====
