@@ -20,7 +20,11 @@
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--fundo); color:var(--tinta); line-height:1.55; -webkit-font-smoothing:antialiased; }
-  .wrap { max-width:940px; margin:0 auto; padding:0 22px; }
+  .wrap { max-width:1320px; margin:0 auto; padding:0 26px; }
+  /* Cards de editais em grade: usa a largura da tela (2-3 colunas) em vez de
+     uma coluna unica esticada. Inspirado no layout full-width do mercado. */
+  .cards-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(430px, 1fr)); gap:14px; }
+  @media (max-width:760px){ .cards-grid { grid-template-columns:1fr; } }
   a { color:inherit; text-decoration:none; }
 
   /* Nav */
@@ -324,7 +328,7 @@ function perfilHTML(p) {
       ${editais.length ? `<a href="#" onclick="exportar('editais');return false" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Exportar resultado para Excel/CSV">📊 Excel</a>` : ""}
     </div>`;
   const corpo = editais.length
-    ? editais.map(cardHTML).join("")
+    ? `<div class="cards-grid">${editais.map(cardHTML).join("")}</div>`
     : `<div class="vazio"><span class="emoji">🔭</span>Nenhum edital do seu ramo está aberto agora.<br>Assim que surgir, aparece aqui e você recebe por e-mail.<br><br><b>Dica:</b> termos mais amplos pegam mais oportunidades (ex: <b>"hospitalar"</b> em vez de "material hospitalar").</div>`;
   return `<section class="perfil">${cabecalho}${corpo}</section>`;
 }
@@ -1305,7 +1309,7 @@ async function buscarPainel(pagina = 1) {
       <span style="color:var(--cinza)">em ${esc(onde)}</span>
       ${d.total ? `<a href="#" onclick="exportarBusca();return false" style="font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none">📊 Excel</a>` : ""}
       <a href="#" id="voltar-painel" style="margin-left:auto;color:var(--indigo);font-weight:700">← Voltar ao meu painel</a></div>`;
-    html += d.editais.length ? d.editais.map(cardHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Nada encontrado. Tente outro termo, outra cidade ou amplie os filtros.</div>`;
+    html += d.editais.length ? `<div class="cards-grid">${d.editais.map(cardHTML).join("")}</div>` : `<div class="vazio"><span class="emoji">🔭</span>Nada encontrado. Tente outro termo, outra cidade ou amplie os filtros.</div>`;
     // Controles de paginacao (so quando ha mais de 1 pagina)
     if (nPaginas > 1) {
       html += `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;flex-wrap:wrap">
