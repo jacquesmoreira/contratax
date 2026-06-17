@@ -4,7 +4,7 @@
 // Centraliza a leitura/escrita e a migracao de contas antigas (que tinham um unico
 // login no topo do perfil) para o novo modelo com lista de usuarios.
 
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import { dirname } from "node:path";
 import { PERFIS } from "./caminhos.mjs";
 
@@ -37,9 +37,47 @@ export async function lerPerfis() {
   }
 }
 
+// Fila de escrita: serializa salvarPerfis pra duas requisicoes nao escreverem
+// o arquivo ao mesmo tempo (interleave de await). Node e single-thread, mas os
+// awaits podem se intercalar; a fila garante uma escrita por vez.
+let _filaEscrita = Promise.resolve();
+
+// Escrita ATOMICA: grava num .tmp e renomeia. O rename e atomico no SO, entao
+// o perfis.json nunca fica truncado/corrompido se o processo cair no meio da
+// escrita (era o risco catastrofico: arquivo corrompido = todas as contas).
 export async function salvarPerfis(perfis) {
-  await mkdir(dirname(PERFIS), { recursive: true });
-  await writeFile(PERFIS, JSON.stringify(perfis, null, 2), "utf8");
+  const tarefa = _filaEscrita.then(async () => {
+    await mkdir(dirname(PERFIS), { recursive: true });
+    const tmp = `${PERFIS}.tmp`;
+    await writeFile(tmp, JSON.stringify(perfis, null, 2), "utf8");
+    await rename(tmp, PERFIS);
+  });
+  // Mantem a fila viva mesmo se uma escrita falhar (nao trava as proximas).
+  _filaEscrita = tarefa.catch(() => {});
+  return tarefa;
+}
+
+// Atualizacao RACE-SAFE de UM perfil: le, muta so esse e grava, tudo dentro da
+// fila serializada. Use isto em caminhos quentes (digest, webhook, edicao) pra
+// evitar lost-update (um salvarPerfis(array) sobrescrevendo o de outra request).
+// mutador(perfil) recebe o perfil encontrado e o altera in-place; retorna o
+// proprio perfil atualizado, ou null se nao achou.
+export async function atualizarPerfil(token, mutador) {
+  let resultado = null;
+  const tarefa = _filaEscrita.then(async () => {
+    const perfis = await lerPerfis();
+    const p = perfis.find((x) => x.token === token);
+    if (!p) return;
+    mutador(p);
+    resultado = p;
+    await mkdir(dirname(PERFIS), { recursive: true });
+    const tmp = `${PERFIS}.tmp`;
+    await writeFile(tmp, JSON.stringify(perfis, null, 2), "utf8");
+    await rename(tmp, PERFIS);
+  });
+  _filaEscrita = tarefa.catch(() => {});
+  await tarefa;
+  return resultado;
 }
 
 export const normEmail = (e) => (e || "").trim().toLowerCase();
