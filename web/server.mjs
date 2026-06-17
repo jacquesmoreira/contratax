@@ -17,7 +17,7 @@ import { gerarTldr } from "../src/tldr.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
 import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
-import { categoriaPorSlug, ufPorSigla } from "../src/categorias.mjs";
+import { categoriaPorSlug, ufPorSigla, CATEGORIAS } from "../src/categorias.mjs";
 import { paginaOrgao, paginaHubOrgaos, urlsOrgaos } from "../src/seoOrgaos.mjs";
 import { paginaCnae, paginaHubCnae, urlsCnae, cnaePorCodigo } from "../src/seoCnae.mjs";
 import { renderizarArtigo, renderizarListagem, urlsBlog } from "../src/blog.mjs";
@@ -2083,6 +2083,11 @@ Contact: contato@contratax.com.br
     }
 
     // ===== SEO programatico: paginas publicas de licitacoes por ramo/estado =====
+    // Segmentos (ramos prontos) pra busca por clique no painel: o "cliente
+    // preguicoso" clica em vez de digitar. Reusa o catalogo de CATEGORIAS.
+    if (rota === "/api/segmentos") {
+      return json(res, 200, { segmentos: CATEGORIAS.map((c) => ({ nome: c.nome, termo: c.termo })) });
+    }
     if (rota === "/licitacoes" || rota === "/licitacoes/") {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(injetarAnalytics(paginaHub()));
