@@ -302,10 +302,6 @@
       </div>
     </section>
     <div id="conteudo"><div class="carregando"><span class="spinner"></span>Carregando o seu painel...</div></div>
-    <div style="text-align:center;margin:34px 0 10px;padding-top:22px;border-top:1px solid var(--linha)">
-      <span style="font-size:13.5px;color:var(--cinza)">Tem uma ideia pra melhorar ou uma dúvida?</span>
-      <button type="button" onclick="abrirFeedback()" style="margin-left:8px;background:none;border:1px solid var(--indigo);color:var(--indigo);font-weight:700;font-size:13px;padding:7px 14px;border-radius:9px;cursor:pointer;font-family:inherit">💬 Fale com a gente</button>
-    </div>
   </main>
 
   <div class="fundo-escuro" id="fundo"></div>
@@ -1532,14 +1528,30 @@ carregar();
 // Botão flutuante "Precisa de ajuda?" + modal com formulário pré-preenchido
 // (token, navegador, URL atual). Envia via POST /contato JSON.
 (function instalarWidgetSuporte() {
+  // Barra flutuante fixa (sempre visivel): sugestao + ajuda lado a lado.
+  const barra = document.createElement("div");
+  barra.style.cssText = "position:fixed;bottom:22px;right:22px;z-index:90;display:flex;gap:10px;align-items:center";
+  document.body.appendChild(barra);
+
+  // Botao de SUGESTAO/feedback (cai na "Voz do cliente" do admin).
+  const btnSug = document.createElement("button");
+  btnSug.id = "btn-sugestao";
+  btnSug.title = "Enviar sugestão ou dúvida";
+  btnSug.innerHTML = "💡 Sugestão";
+  btnSug.style.cssText = "background:#fff;color:#4338ca;border:1.5px solid #4338ca;border-radius:99px;padding:12px 20px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(67,56,202,.2);font-family:inherit;display:flex;align-items:center;gap:6px";
+  btnSug.onmouseover = () => { btnSug.style.background = "#eef2ff"; btnSug.style.transform = "translateY(-2px)"; };
+  btnSug.onmouseout = () => { btnSug.style.background = "#fff"; btnSug.style.transform = ""; };
+  btnSug.onclick = () => abrirFeedback();
+  barra.appendChild(btnSug);
+
   const btn = document.createElement("button");
   btn.id = "btn-suporte";
   btn.title = "Precisa de ajuda?";
   btn.innerHTML = "💬 Ajuda";
-  btn.style.cssText = "position:fixed;bottom:22px;right:22px;background:#4338ca;color:#fff;border:none;border-radius:99px;padding:13px 22px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(67,56,202,.35);z-index:90;font-family:inherit;display:flex;align-items:center;gap:6px";
+  btn.style.cssText = "background:#4338ca;color:#fff;border:none;border-radius:99px;padding:13px 22px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(67,56,202,.35);font-family:inherit;display:flex;align-items:center;gap:6px";
   btn.onmouseover = () => { btn.style.background = "#312e81"; btn.style.transform = "translateY(-2px)"; };
   btn.onmouseout = () => { btn.style.background = "#4338ca"; btn.style.transform = ""; };
-  document.body.appendChild(btn);
+  barra.appendChild(btn);
 
   btn.onclick = () => {
     const ov = document.createElement("div");
