@@ -3,7 +3,7 @@
 // mensal de analises novas; analise repetida vem do cache e NAO consome cota.
 
 import { statusAtual } from "./assinatura.mjs";
-import { lerPerfis, salvarPerfis } from "./perfis.mjs";
+import { lerPerfis, salvarPerfis, atualizarPerfil } from "./perfis.mjs";
 import { planoDe } from "./planos.mjs";
 
 // Cota mensal de analises no teste gratis (0 por padrao: recurso aparece mas pede
@@ -111,6 +111,24 @@ export async function registrarExtracaoPdf(token) {
   p.extracoesPdf.usados += 1;
   await salvarPerfis(perfis);
   return usoExtracoesDe(p);
+}
+
+// === Engajamento: resumos rapidos (TL;DR) servidos ao cliente ===
+// Mede uso de IA percebido pelo cliente, incluindo CACHE HIT (R$0). Sem isso
+// o engajamento fica invisivel no admin: o caso comum e cache hit, que nao
+// gera custo nem consome cota e por isso nao aparece em nenhum contador. Nao
+// e cota nem cobra nada; e so um medidor. Write race-safe e barato (perfis.json
+// e pequeno). NAO conta no custo em R$ (cache hit nao chama IA).
+export async function registrarResumo(token) {
+  await atualizarPerfil(token, (p) => {
+    if (!p._resumos) p._resumos = { n: 0, ultimo: null };
+    p._resumos.n += 1;
+    p._resumos.ultimo = new Date().toISOString();
+  });
+}
+
+export function resumosDe(perfil) {
+  return { n: perfil._resumos?.n || 0, ultimo: perfil._resumos?.ultimo || null };
 }
 
 // Adiciona creditos avulsos (chamado pelo webhook de pagamento de pacote avulso).

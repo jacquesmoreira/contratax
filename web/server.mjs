@@ -42,9 +42,9 @@ import { listarDocumentos, baixarArquivo } from "../src/documentos.mjs";
 import { verificarSenha } from "../src/senha.mjs";
 import { consultarCNPJ } from "../src/cnpj.mjs";
 import { autenticarUsuario, convidarMembro, removerMembro, listarMembros, definirAssentos } from "../src/equipe.mjs";
-import { lerPerfis, salvarPerfis, PERFIS, garantirUsuarios } from "../src/perfis.mjs";
+import { lerPerfis, salvarPerfis, atualizarPerfil, PERFIS, garantirUsuarios } from "../src/perfis.mjs";
 import { monitorar } from "../src/monitor.mjs";
-import { usoDe, registrarAnalise, checarAnalise, adicionarAvulsas, usoExtracoesDe, podeExtrairPdf, registrarExtracaoPdf } from "../src/uso.mjs";
+import { usoDe, registrarAnalise, checarAnalise, adicionarAvulsas, usoExtracoesDe, podeExtrairPdf, registrarExtracaoPdf, registrarResumo, resumosDe } from "../src/uso.mjs";
 import { resumoCustos } from "../src/custo.mjs";
 import { listarNotas, obterNota, cadastrarNota, marcarPaga, removerNota, estatisticasRecebiveis } from "../src/recebiveis.mjs";
 import { parsearNFe } from "../src/parserNFe.mjs";
@@ -1027,6 +1027,7 @@ const servidor = createServer(async (req, res) => {
           nivel: p.assinatura?.nivel ?? null, planoNome: planoDe(p).nome,
           uso: usoDe(p), equipe: { usados: p.usuarios.length, assentos: p.assentos || 1 },
           custoIA: { total: custo.brl, mes: custo.brlMes, chamadas: custo.chamadas },
+          resumos: resumosDe(p),
         };
       });
       const resumo = {
@@ -1715,7 +1716,15 @@ const servidor = createServer(async (req, res) => {
       if (!edital) return json(res, 404, { erro: "Edital nao encontrado" });
       // Cache global: devolve direto sem custo (e sem consumir cota)
       const cache = await carregarTldr(id);
-      if (cache) return json(res, 200, { tldr: cache.tldr, cache: true });
+      if (cache) {
+        // Mede ENGAJAMENTO: conta o resumo servido mesmo no cache hit (R$0),
+        // senao o uso de IA do cliente fica invisivel no admin. Cache hit e o
+        // caso mais comum (edital ja resumido por alguem). So registra se for
+        // cliente logado (token != admin); escrita race-safe e barata.
+        const ct = url.searchParams.get("c") || "";
+        if (ct && ct !== ADMIN) await registrarResumo(ct);
+        return json(res, 200, { tldr: cache.tldr, cache: true });
+      }
 
       if (!temChave()) return json(res, 400, { erro: "Sem chave de leitura configurada" });
 
@@ -1753,6 +1762,10 @@ const servidor = createServer(async (req, res) => {
           const tldr = await gerarTldr(edital, { perfilToken: tokenT });
           await salvarTldr(id, tldr);
           p._tldrUso.n += 1;
+          // Engajamento: conta o resumo novo no mesmo write do contador diario.
+          if (!p._resumos) p._resumos = { n: 0, ultimo: null };
+          p._resumos.n += 1;
+          p._resumos.ultimo = new Date().toISOString();
           await salvarPerfis(perfis);
           return json(res, 200, { tldr, cache: false });
         } catch (e) {
