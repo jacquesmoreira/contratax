@@ -12,7 +12,12 @@
 
 import { chamar, extrairJson, temChave } from "./ia.mjs";
 
+// Modelo padrao (barato) pra contrato normal. Haiku 4.5 = janela de 200K tokens.
 const MODELO_EXTRACAO = process.env.LICITA_MODELO_EXTRATOR || "claude-haiku-4-5-20251001";
+// Modelo de FALLBACK pra PDF grande (ata de registro de precos). Sonnet 4.6 =
+// janela de 1 MILHAO de tokens, cabe a ata gigante que estoura o Haiku. Custa
+// mais (~5x), mas so e usado no caso raro de documento extenso.
+const MODELO_EXTRACAO_GRANDE = process.env.LICITA_MODELO_EXTRATOR_GRANDE || "claude-sonnet-4-6";
 
 const INSTRUCAO = `Voce esta lendo o PDF de um CONTRATO ADMINISTRATIVO firmado entre uma empresa privada e um orgao publico brasileiro. Extraia os campos abaixo e devolva APENAS JSON valido, sem comentarios:
 
@@ -90,25 +95,31 @@ function estimarPaginasPdf(buffer) {
   } catch { return 0; }
 }
 
-// Acima disso, e quase certo que e uma ata/registro completo, nao o contrato.
-const MAX_PAGINAS_CONTRATO = Number(process.env.LICITA_MAX_PAGINAS_CONTRATO || 40);
+// Acima deste tamanho o PDF provavelmente estoura a janela do Haiku (200K) -> usa
+// o Sonnet (1M). ~40 paginas densas de ata ja passam de 200K tokens.
+const LIMIAR_SONNET = Number(process.env.LICITA_LIMIAR_SONNET_PAGINAS || 40);
+// Acima disso nem o Sonnet (1M) garante caber: ai sim avisa pra cadastrar manual.
+const MAX_PAGINAS_CONTRATO = Number(process.env.LICITA_MAX_PAGINAS_CONTRATO || 250);
 
-// 2) Extracao de PDF via Claude Haiku (barato).
+// 2) Extracao de PDF via IA. Pequeno -> Haiku (barato); grande (ata de registro
+// de precos) -> Sonnet 4.6 (janela de 1M), que cabe onde o Haiku estoura.
 export async function extrairContratoPdf(pdfBuffer) {
   if (!temChave()) throw new Error("ANTHROPIC_API_KEY nao definida");
   if (!Buffer.isBuffer(pdfBuffer)) throw new Error("Esperado Buffer");
   if (pdfBuffer.length > 30 * 1024 * 1024) throw new Error("PDF maior que 30 MB");
 
-  // Heuristica: PDF com paginas demais e ata/registro de precos completo, nao o
-  // contrato. Avisa de forma especifica (e sem gastar IA que estouraria o limite).
   const paginas = estimarPaginasPdf(pdfBuffer);
+  // Documento absurdamente grande: nem 1M de contexto cabe. Avisa pra cadastrar
+  // manual (caso extremo; uma ata normal nao chega perto disso).
   if (paginas > MAX_PAGINAS_CONTRATO) {
-    const e = new Error(`Este arquivo parece ser uma ata ou registro de precos completo (cerca de ${paginas} paginas), nao o contrato. Para importar automaticamente, suba apenas o CONTRATO assinado (em geral 2 a 12 paginas). Ou cadastre os dados principais manualmente, leva menos de 1 minuto.`);
+    const e = new Error(`Este arquivo e muito extenso (cerca de ${paginas} paginas) para a leitura automatica. Suba apenas o CONTRATO assinado, ou cadastre os dados principais manualmente.`);
     e.codigo = "pdf_muitas_paginas";
     throw e;
   }
+  // Escolhe o modelo pelo tamanho: ata grande -> Sonnet (1M); resto -> Haiku.
+  const modelo = paginas > LIMIAR_SONNET ? MODELO_EXTRACAO_GRANDE : MODELO_EXTRACAO;
   const corpo = {
-    model: MODELO_EXTRACAO,
+    model: modelo,
     max_tokens: 2000,
     messages: [{
       role: "user",
