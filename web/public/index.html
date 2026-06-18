@@ -381,11 +381,14 @@ function cardHTML(e) {
 function perfilHTML(p) {
   const editais = [...(p.editais ?? [])].sort((a,b) => { const da = diasAte(a.encerramento) ?? 9999, db = diasAte(b.encerramento) ?? 9999; return da !== db ? da - db : (b.novo?1:0)-(a.novo?1:0); });
   const novos = editais.filter(e => e.novo).length;
+  const hojeStr = new Date().toISOString().slice(0, 10);
+  const novasHoje = editais.filter(e => (e.publicacao || "").slice(0, 10) === hojeStr).length;
   const at = p.atualizadoEm ? new Date(p.atualizadoEm).toLocaleString("pt-BR") : "?";
   const cabecalho = `<div class="perfil-cab">
       <span class="perfil-nome">${esc(p.nome ?? p.id)}</span>
       ${p.uf ? `<span class="chip chip-uf">${esc(p.uf)}</span>` : ""}
       <span class="chip chip-stat">${editais.length} editais</span>
+      ${novasHoje ? `<span class="chip" style="background:#dcfce7;color:#166534;font-weight:800">🆕 ${novasHoje} ${novasHoje > 1 ? "novas hoje" : "nova hoje"}</span>` : ""}
       ${novos ? `<span class="chip chip-novo">${novos} novos</span>` : ""}
       <span class="perfil-atualizado">atualizado ${at}</span>
       ${editais.length ? `<a href="#" onclick="exportar('editais');return false" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Exportar resultado para Excel/CSV">📊 Excel</a>` : ""}
