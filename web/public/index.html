@@ -354,6 +354,13 @@ async function marcarAnalisadosDaLista(ids) {
   } catch {}
 }
 
+// Selo de reputacao de pagamento do orgao (vem do /api/editais, versao leve).
+// Verde = paga rapido, azul = em dia, ambar = devagar. Sinal de quem honra prazo.
+function repBadge(r) {
+  if (!r || !r.classificacao) return "";
+  const cor = r.classificacao === "rapido" ? ["#065f46", "#d1fae5"] : r.classificacao === "lento" ? ["#b45309", "#fef3c7"] : ["#1e40af", "#dbeafe"];
+  return `<span title="Estimativa de prazo de pagamento do órgão (~${r.diasMedios} dias). Veja o detalhe abrindo o edital." style="font-size:10.5px;font-weight:800;color:${cor[0]};background:${cor[1]};padding:2px 8px;border-radius:99px;white-space:nowrap">💰 ${esc(r.rotulo)}</span>`;
+}
 function cardHTML(e) {
   store[e.id] = e;
   const local = `${esc(e.municipio) ?? "?"}/${esc(e.uf) ?? "?"}`;
@@ -366,6 +373,7 @@ function cardHTML(e) {
     <div class="objeto">${esc(e.objeto)}</div>
     <div class="card-rodape"><span class="modalidade">${esc(e.modalidade)}</span>
       <span class="valor">${brl(e.valorEstimado)}</span>
+      ${repBadge(e.reputacao)}
       <a class="baixar-edital" href="/api/baixar-edital?id=${encodeURIComponent(e.id)}" onclick="event.stopPropagation()" title="Baixar o PDF do edital direto, sem abrir o painel">⬇ Edital</a>
       <span class="abrir">Ver análise →</span></div>
   </div>`;

@@ -90,6 +90,26 @@ const CONTEXTOS_CAPAG = {
   "D-": "CAPAG D- - situacao critica. Inadimplencia recorrente, recomenda-se cautela ao disputar.",
 };
 
+// Versao LEVE pro selo no card da lista: so CAPAG (Map em memoria) + heuristica,
+// SEM o SQL de NFs proprias. Barata o suficiente pra rodar em todos os editais
+// da lista de uma vez. A versao completa (com dados proprios) fica no drawer.
+// Devolve { classificacao, diasMedios, rotulo } ou null se nao der pra estimar.
+export async function reputacaoLeve({ nome, uf, municipio }) {
+  let capagRegistro = null;
+  if (uf && municipio) capagRegistro = await capagDoMunicipio(uf, municipio);
+  if (!capagRegistro && uf) capagRegistro = await capagPorNomeOrgao(uf, nome);
+  const cap = estimarPorCapag(capagRegistro);
+  if (cap) {
+    return { classificacao: cap.classificacao, diasMedios: cap.diasMedios, rotulo: rotuloPagamento(cap.classificacao), fonte: "capag" };
+  }
+  const h = heuristicaFinal(nome);
+  return { classificacao: h.classificacao, diasMedios: h.diasMedios, rotulo: rotuloPagamento(h.classificacao), fonte: "estimativa" };
+}
+
+function rotuloPagamento(classe) {
+  return classe === "rapido" ? "Paga rápido" : classe === "lento" ? "Paga devagar" : "Paga em dia";
+}
+
 // API publica (assincrona por causa do CAPAG, que e lazy-loaded)
 export async function reputacaoDoOrgao({ cnpj, nome, uf, municipio }) {
   // 1) Dados proprios (>=2 NFs pagas registradas)

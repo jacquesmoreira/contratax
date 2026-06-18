@@ -52,7 +52,7 @@ import { gerarOficioHtml } from "../src/oficioCobranca.mjs";
 import { escalarParaAdvogado } from "../src/escalonamentoJuridico.mjs";
 import { gerarLaiHtml, gerarTceHtml, gerarOuvidoriaHtml } from "../src/escalonamentoCobranca.mjs";
 import { solicitarAntecipacao, estimativaAntecipacao } from "../src/antecipacaoRecebivel.mjs";
-import { reputacaoDoOrgao } from "../src/reputacaoOrgaos.mjs";
+import { reputacaoDoOrgao, reputacaoLeve } from "../src/reputacaoOrgaos.mjs";
 import { listarContratos, obterContrato, cadastrarContrato, removerContrato } from "../src/contratosMeus.mjs";
 import { minutaProrrogacao, minutaAditivo, minutaReequilibrio } from "../src/minutasContrato.mjs";
 import { indicesDisponiveis, gatilhoReequilibrio } from "../src/indicesEconomicos.mjs";
@@ -658,6 +658,18 @@ const servidor = createServer(async (req, res) => {
       let editais = [];
       try { editais = (await monitorar(perfil, { marcar: false, salvar: false })).filtrados; }
       catch (e) { console.error("[api/editais] monitorar:", e.message); }
+      // Selo de reputacao de pagamento no card (versao leve, so CAPAG/heuristica).
+      // Cache por UF|municipio: orgaos repetem, evita recomputar. Best-effort.
+      try {
+        const cacheRep = new Map();
+        for (const ed of editais) {
+          const chave = `${ed.uf || ""}|${ed.municipio || ""}|${ed.orgao || ""}`;
+          if (!cacheRep.has(chave)) {
+            cacheRep.set(chave, await reputacaoLeve({ nome: ed.orgao, uf: ed.uf, municipio: ed.municipio }));
+          }
+          ed.reputacao = cacheRep.get(chave);
+        }
+      } catch (e) { console.error("[api/editais] reputacao:", e.message); }
       return json(res, 200, {
         [perfil.id]: {
           nome: perfil.nome,
