@@ -57,6 +57,39 @@ export function termoCasa(termo, raizesObjeto, objetoNorm) {
   return subTermos.some((sub) => subTermoCasa(sub, raizesObjeto, objetoNorm));
 }
 
+// Palavras genericas de licitacao que NAO identificam um ramo sozinhas. Num
+// termo de duas palavras, sao a parte "ruido"; a outra e a que importa.
+const GENERICOS = new Set([
+  "material", "materiais", "produto", "produtos", "servico", "servicos",
+  "equipamento", "equipamentos", "insumo", "insumos", "aquisicao", "fornecimento",
+  "contratacao", "prestacao", "locacao", "item", "itens", "peca", "pecas",
+  "kit", "kits", "sistema", "sistemas", "artigo", "artigos", "suprimento",
+  "suprimentos", "consumo", "genero", "generos",
+  "de", "da", "do", "das", "dos", "para", "com", "por", "sob",
+]);
+
+// Para um termo de cadastro com mais de uma palavra onde SOBRA exatamente uma
+// palavra distintiva (depois de tirar as genericas), devolve essa palavra. Ex:
+// "material hospitalar" -> "hospitalar"; "equipamento de informatica" ->
+// "informatica". Serve pra AMPLIAR a abertura do painel pro ramo inteiro, sem
+// exigir as duas palavras juntas. Termos ja especificos (1 palavra, ou 2+
+// distintivas como "uniforme escolar") nao sao ampliados (evita ruido).
+export function palavraDistintiva(termo) {
+  const t = (termo ?? "").trim();
+  if (/^".*"$/.test(t)) return null; // frase exata: respeita
+  const palavras = normalizar(t).split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
+  if (palavras.length <= 1) return null;
+  const distintas = palavras.filter((w) => !GENERICOS.has(w));
+  return distintas.length === 1 && distintas[0].length >= 4 ? distintas[0] : null;
+}
+
+// Lista de palavras distintivas derivadas dos termos crus (dedup).
+export function termosAmplos(termos = []) {
+  const out = new Set();
+  for (const t of termos) { const d = palavraDistintiva(t); if (d) out.add(d); }
+  return [...out];
+}
+
 // Aplica todos os criterios de um perfil sobre a lista de editais.
 // filtro = { termos, termosExcluir, valorMin, valorMax }
 export function aplicarFiltro(editais, filtro = {}) {

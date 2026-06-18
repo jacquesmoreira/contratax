@@ -3,7 +3,7 @@
 // por isso e instantaneo e serve todos os clientes a partir de um unico acervo.
 
 import { consultar } from "./db.mjs";
-import { aplicarFiltro } from "./filtro.mjs";
+import { aplicarFiltro, termosAmplos } from "./filtro.mjs";
 import { carregarVistos, marcarVistos, salvarResultados } from "./store.mjs";
 
 // perfil = {
@@ -29,9 +29,14 @@ export async function monitorar(perfil, { marcar = true } = {}) {
   });
 
   // Recorte fino por palavra-chave (valor ja foi tratado no SQL).
+  // termosIA = expansao semantica (sinonimos do ramo) + palavras distintivas
+  // derivadas dos termos crus. Isto amplia a ABERTURA do painel pro ramo
+  // inteiro (ex: "material hospitalar" tambem traz "produtos hospitalares"),
+  // que e o que o cliente quer ao logar. A busca manual continua literal.
+  const termos = filtro.termos ?? [];
   const casaram = aplicarFiltro(candidatos, {
-    termos: filtro.termos ?? [],
-    termosIA: filtro.termosIA ?? [],
+    termos,
+    termosIA: [...(filtro.termosIA ?? []), ...termosAmplos(termos)],
     termosExcluir: filtro.termosExcluir ?? [],
   });
 
