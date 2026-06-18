@@ -24,7 +24,7 @@ import { capagPorNomeOrgao, capagDoMunicipio, estimarPorCapag } from "./capag.mj
 
 const ARQUIVO = resolve(DATA_DIR, "licita.db");
 let _db;
-function abrir() { if (_db) return _db; _db = new DatabaseSync(ARQUIVO); return _db; }
+function abrir() { if (_db) return _db; _db = new DatabaseSync(ARQUIVO); _db.exec("PRAGMA journal_size_limit = 67108864;"); return _db; }
 
 function digitos(s) { return String(s || "").replace(/\D+/g, ""); }
 function normalizar(s) {

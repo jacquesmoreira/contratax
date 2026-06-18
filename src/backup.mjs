@@ -27,7 +27,7 @@ const BACKUP_DIR = resolve(DATA_DIR, "backups");
 // MB (o banco cresce com o backfill de contratos). Num volume de 5GB que ja
 // tem o banco vivo (>1GB), guardar 7 backups = ~2GB so de historico = volume
 // estoura. 3 e suficiente: os backups tambem vao por e-mail (link de download).
-const MANTER = Number(process.env.LICITA_BACKUP_MANTER || 3);
+const MANTER = Number(process.env.LICITA_BACKUP_MANTER || 2);
 const ADMIN_EMAIL = process.env.LICITA_CONTATO || "contato@contratax.com.br";
 const BASE = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
 

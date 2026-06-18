@@ -19,6 +19,12 @@ export function abrir() {
   mkdirSync(DIR_DADOS, { recursive: true });
   db = new DatabaseSync(CAMINHO);
   db.exec("PRAGMA journal_mode = WAL;");
+  // Cap do WAL: sem journal_size_limit o arquivo cresce no backfill (1.7GB) e
+  // NUNCA encolhe, mesmo apos o checkpoint aplicar as mudancas. Com o limite, o
+  // WAL e truncado a ~64MB depois de cada checkpoint. autocheckpoint garante
+  // checkpoints frequentes (a cada ~4MB de escrita) pra nao deixar acumular.
+  db.exec("PRAGMA wal_autocheckpoint = 1000;");
+  db.exec("PRAGMA journal_size_limit = 67108864;");
   db.exec(`
     CREATE TABLE IF NOT EXISTS editais (
       id            TEXT PRIMARY KEY,

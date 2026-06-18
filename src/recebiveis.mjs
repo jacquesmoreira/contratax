@@ -13,6 +13,7 @@ let _db;
 function abrir() {
   if (_db) return _db;
   _db = new DatabaseSync(ARQUIVO);
+  _db.exec("PRAGMA journal_size_limit = 67108864;"); // cap do WAL (evita balloon)
   _db.exec(`
     CREATE TABLE IF NOT EXISTS notas_fiscais (
       id             INTEGER PRIMARY KEY AUTOINCREMENT,
