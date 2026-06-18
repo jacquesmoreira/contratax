@@ -302,6 +302,10 @@
       </div>
     </section>
     <div id="conteudo"><div class="carregando"><span class="spinner"></span>Carregando o seu painel...</div></div>
+    <div style="text-align:center;margin:34px 0 10px;padding-top:22px;border-top:1px solid var(--linha)">
+      <span style="font-size:13.5px;color:var(--cinza)">Tem uma ideia pra melhorar ou uma dúvida?</span>
+      <button type="button" onclick="abrirFeedback()" style="margin-left:8px;background:none;border:1px solid var(--indigo);color:var(--indigo);font-weight:700;font-size:13px;padding:7px 14px;border-radius:9px;cursor:pointer;font-family:inherit">💬 Fale com a gente</button>
+    </div>
   </main>
 
   <div class="fundo-escuro" id="fundo"></div>
@@ -1334,6 +1338,65 @@ function toggleUfDrop() {
 function rolarEditais() {
   const alvo = document.getElementById("conteudo");
   if (alvo) alvo.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// Canal "Fale com a gente": sugestao de melhoria ou duvida/suporte. Cai no
+// admin pra Jacques analisar uma a uma. Modal simples, sem dependencia.
+function abrirFeedback() {
+  const ov = document.createElement("div");
+  ov.id = "fb-ov";
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:120;padding:18px";
+  ov.innerHTML = `<div style="background:#fff;border-radius:18px;max-width:480px;width:100%;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.3)">
+    <h2 style="margin:0 0 4px;font-size:19px;font-weight:800">Fale com a gente</h2>
+    <p style="margin:0 0 16px;font-size:13.5px;color:var(--cinza)">Sua opinião molda o ContrataX. Lemos uma a uma.</p>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button type="button" id="fb-t-sug" class="fb-tipo" data-t="sugestao" style="flex:1;padding:10px;border:1.5px solid var(--indigo);background:var(--indigo);color:#fff;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">💡 Sugestão de melhoria</button>
+      <button type="button" id="fb-t-sup" class="fb-tipo" data-t="suporte" style="flex:1;padding:10px;border:1.5px solid var(--linha);background:#fff;color:var(--tinta);border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">❓ Dúvida ou suporte</button>
+    </div>
+    <textarea id="fb-msg" rows="5" placeholder="Escreva aqui..." style="width:100%;padding:12px;border:1.5px solid var(--linha);border-radius:11px;font-size:14px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+    <div id="fb-erro" style="color:#dc2626;font-size:12.5px;margin-top:6px;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button type="button" onclick="document.getElementById('fb-ov').remove()" style="flex:1;padding:11px;border:1px solid var(--linha);background:#fff;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit">Cancelar</button>
+      <button type="button" id="fb-enviar" style="flex:1.4;padding:11px;border:none;background:var(--indigo);color:#fff;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">Enviar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  let tipo = "sugestao";
+  ov.querySelectorAll(".fb-tipo").forEach((b) => b.addEventListener("click", () => {
+    tipo = b.dataset.t;
+    ov.querySelectorAll(".fb-tipo").forEach((x) => {
+      const on = x === b;
+      x.style.background = on ? "var(--indigo)" : "#fff";
+      x.style.color = on ? "#fff" : "var(--tinta)";
+      x.style.borderColor = on ? "var(--indigo)" : "var(--linha)";
+    });
+  }));
+  ov.addEventListener("click", (e) => { if (e.target === ov) ov.remove(); });
+  ov.querySelector("#fb-enviar").addEventListener("click", () => enviarFeedback(tipo));
+}
+async function enviarFeedback(tipo) {
+  const ov = document.getElementById("fb-ov");
+  const msg = ov.querySelector("#fb-msg").value.trim();
+  const erro = ov.querySelector("#fb-erro");
+  if (msg.length < 3) { erro.textContent = "Escreva sua mensagem."; erro.style.display = "block"; return; }
+  const btn = ov.querySelector("#fb-enviar");
+  btn.disabled = true; btn.textContent = "Enviando...";
+  try {
+    const r = await fetch("/api/feedback", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ c: token, tipo, mensagem: msg }),
+    });
+    if (!r.ok) throw new Error((await r.json()).erro || "Falha ao enviar");
+    ov.querySelector("div").innerHTML = `<div style="text-align:center;padding:14px 4px">
+      <div style="font-size:40px">✅</div>
+      <h2 style="margin:10px 0 6px;font-size:19px;font-weight:800">Recebido, obrigado!</h2>
+      <p style="margin:0 0 18px;font-size:14px;color:var(--cinza)">Sua mensagem chegou pra gente. Toda ideia ajuda a melhorar o ContrataX.</p>
+      <button type="button" onclick="document.getElementById('fb-ov').remove()" style="padding:11px 26px;border:none;background:var(--indigo);color:#fff;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">Fechar</button>
+    </div>`;
+  } catch (e) {
+    erro.textContent = e.message; erro.style.display = "block";
+    btn.disabled = false; btn.textContent = "Enviar";
+  }
 }
 function fecharUfDrop() {
   document.getElementById("uf-drop").style.display = "none";

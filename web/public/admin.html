@@ -85,6 +85,13 @@ async function post(path, corpo) {
   return { ok: r.ok, d: await r.json() };
 }
 
+// Marca/desmarca um feedback como lido e recarrega a lista.
+async function fbLido(id, btn) {
+  btn.disabled = true;
+  const r = await post("/api/admin/feedback-lido", { id });
+  if (r.ok) carregar(); else btn.disabled = false;
+}
+
 async function carregar() {
   const cli = await api("/api/admin/clientes");
   if (!cli.ok) { $("conteudo").innerHTML = `<div class="erro">Acesso negado. Use o link com o token de admin: <code>/admin?c=SEU_TOKEN</code></div>`; return; }
@@ -160,8 +167,26 @@ async function carregar() {
   }
   html += `</tbody></table>`;
 
+  const fbs = s.feedbacks || [];
+  const naoLidos = fbs.filter(f => !f.lido).length;
+  html += `<h2>Voz do cliente${naoLidos ? ` — <span style="color:#dc2626">${naoLidos} não lido${naoLidos>1?"s":""}</span>` : ` — ${fbs.length}`}</h2><div class="leads">${
+    fbs.length ? fbs.map(f => {
+      const sup = f.tipo === "suporte";
+      const cor = sup ? "#b45309" : "#4338ca", bg = sup ? "#fffbeb" : "#eef2ff";
+      const tag = sup ? "❓ Dúvida/suporte" : "💡 Sugestão";
+      return `<div style="${f.lido ? "opacity:.5" : ""};display:flex;gap:10px;align-items:flex-start;padding:10px 0">
+        <span style="flex-shrink:0;font-size:10.5px;font-weight:800;color:${cor};background:${bg};padding:3px 8px;border-radius:99px;white-space:nowrap">${tag}</span>
+        <div style="flex:1;min-width:0">
+          <div style="white-space:pre-wrap;font-size:13.5px;color:#0f172a">${esc(f.mensagem)}</div>
+          <div class="mut" style="margin-top:3px;font-size:11.5px">${esc(f.empresa || "cliente")}${f.email ? " · " + esc(f.email) : ""} · ${dataBR(f.em)}</div>
+        </div>
+        <button onclick="fbLido('${f.id}', this)" style="flex-shrink:0;background:none;border:1px solid var(--linha);border-radius:7px;font-size:11.5px;font-weight:700;color:var(--cinza);padding:5px 9px;cursor:pointer">${f.lido ? "↺ não lido" : "✓ lido"}</button>
+      </div>`;
+    }).join("") : '<span class="mut">Nenhuma sugestão ou dúvida ainda.</span>'
+  }</div>`;
+
   const leads = s.leads || [];
-  html += `<h2>Interessados (leads) — ${leads.length}</h2><div class="leads">${
+  html += `<h2 style="margin-top:26px">Interessados (leads) — ${leads.length}</h2><div class="leads">${
     leads.length ? leads.slice().reverse().slice(0, 50).map(l => `<div>${esc(l.email)} <span class="mut">· ${esc(l.termo || "")} ${esc(l.uf || "")} · ${dataBR(l.em)}</span></div>`).join("") : '<span class="mut">Nenhum lead ainda.</span>'
   }</div>`;
 

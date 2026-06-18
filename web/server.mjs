@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { gzip as gzipCb } from "node:zlib";
 import { promisify } from "node:util";
 const gzip = promisify(gzipCb);
-import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao, carregarLeads, carregarTldr, salvarTldr } from "../src/store.mjs";
+import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao, carregarLeads, carregarTldr, salvarTldr, salvarFeedback, carregarFeedbacks, alternarFeedbackLido } from "../src/store.mjs";
 import { gerarTldr } from "../src/tldr.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
@@ -484,6 +484,24 @@ const servidor = createServer(async (req, res) => {
       }
       await salvarLead({ email: corpo.email, uf: corpo.uf ?? null, termo: corpo.termo ?? null });
       return json(res, 200, { ok: true });
+    }
+
+    // Voz do cliente: sugestao de melhoria ou duvida/suporte, enviada de dentro
+    // do painel. Exige cliente logado (token valido). Cai no admin pra analise.
+    if (rota === "/api/feedback" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfil = await perfilPorToken(corpo.c || "");
+      if (!perfil) return json(res, 403, { erro: "Sessao invalida" });
+      const msg = String(corpo.mensagem || "").trim();
+      if (msg.length < 3) return json(res, 400, { erro: "Escreva sua mensagem" });
+      const item = await salvarFeedback({
+        token: perfil.token,
+        empresa: perfil.razaoSocial || perfil.nome || null,
+        email: perfil.email || null,
+        tipo: corpo.tipo === "suporte" ? "suporte" : "sugestao",
+        mensagem: msg,
+      });
+      return json(res, 200, { ok: true, id: item.id });
     }
 
     // Busca livre no acervo (painel): qualquer produto + filtros de UF e modalidade.
@@ -1042,7 +1060,17 @@ const servidor = createServer(async (req, res) => {
     if (rota === "/api/admin/stats") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       let leads = []; try { leads = await carregarLeads(); } catch {}
-      return json(res, 200, { editais: estatisticas(), contratos: estatisticasContratos(), leads });
+      let feedbacks = []; try { feedbacks = await carregarFeedbacks(); } catch {}
+      // Mais recentes primeiro; nao-lidos sempre no topo.
+      feedbacks.sort((a, b) => (a.lido === b.lido ? (b.em || "").localeCompare(a.em || "") : a.lido ? 1 : -1));
+      return json(res, 200, { editais: estatisticas(), contratos: estatisticasContratos(), leads, feedbacks });
+    }
+    // Admin: marca um feedback como lido/nao-lido.
+    if (rota === "/api/admin/feedback-lido" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      const it = await alternarFeedbackLido(corpo.id || "");
+      return it ? json(res, 200, { ok: true, lido: it.lido }) : json(res, 404, { erro: "Nao encontrado" });
     }
     // Admin: dispara o digest do dia manualmente (para testar sem esperar 8h).
     if (rota === "/api/admin/digest" && req.method === "POST") {

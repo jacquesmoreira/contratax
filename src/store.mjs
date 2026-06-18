@@ -140,3 +140,39 @@ export async function salvarLead(lead) {
 export async function carregarLeads() {
   return lerJSON(ARQUIVO_LEADS, []);
 }
+
+const ARQUIVO_FEEDBACK = resolve(DATA_DIR, "feedbacks.json");
+
+// Voz do cliente: sugestoes de melhoria e duvidas/suporte enviadas de dentro do
+// painel. Cada item: { id, token, empresa, email, tipo, mensagem, em, lido }.
+// tipo = "sugestao" | "suporte". Fica visivel no admin pra Jacques analisar.
+export async function salvarFeedback(fb) {
+  const lista = await lerJSON(ARQUIVO_FEEDBACK, []);
+  const item = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    token: fb.token ?? null,
+    empresa: fb.empresa ?? null,
+    email: fb.email ?? null,
+    tipo: fb.tipo === "suporte" ? "suporte" : "sugestao",
+    mensagem: String(fb.mensagem || "").slice(0, 4000),
+    em: new Date().toISOString(),
+    lido: false,
+  };
+  lista.push(item);
+  await gravarJSON(ARQUIVO_FEEDBACK, lista);
+  return item;
+}
+
+export async function carregarFeedbacks() {
+  return lerJSON(ARQUIVO_FEEDBACK, []);
+}
+
+// Marca um feedback como lido/nao-lido (toggle) no admin.
+export async function alternarFeedbackLido(id) {
+  const lista = await lerJSON(ARQUIVO_FEEDBACK, []);
+  const it = lista.find((x) => x.id === id);
+  if (!it) return null;
+  it.lido = !it.lido;
+  await gravarJSON(ARQUIVO_FEEDBACK, lista);
+  return it;
+}
