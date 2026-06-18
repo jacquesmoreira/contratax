@@ -27,6 +27,24 @@
   @media (max-width:760px){ .cards-grid { grid-template-columns:1fr; } }
   a { color:inherit; text-decoration:none; }
 
+  /* Bloco "Suas ferramentas": agrupa os recursos em cartoes rotulados
+     (estilo dashboard ConLicitacao, sem robo de lance). Fica no topo do
+     painel, acima da lista de editais. */
+  .ferr-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; }
+  .ferr-card { background:#fff; border:1px solid var(--linha); border-radius:16px; padding:18px 18px 16px; box-shadow:var(--sombra); }
+  .ferr-card.ferr-ia { background:linear-gradient(180deg,#f5f3ff 0%,#fff 70%); border-color:#ddd6fe; }
+  .ferr-cab { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:800; letter-spacing:-.2px; color:var(--tinta); margin-bottom:12px; }
+  .ferr-badge { font-size:10px; font-weight:800; background:var(--indigo); color:#fff; padding:2px 7px; border-radius:99px; letter-spacing:.4px; }
+  .ferr-desc { font-size:12.5px; color:var(--cinza); margin:0 0 12px; line-height:1.45; }
+  .ferr-tiles { display:flex; flex-direction:column; gap:7px; }
+  .ferr-tiles a { display:flex; align-items:center; gap:9px; padding:9px 11px; border:1px solid var(--linha); border-radius:10px; font-size:13.5px; font-weight:600; color:var(--tinta); background:var(--fundo); transition:all .12s; }
+  .ferr-tiles a:hover { border-color:var(--indigo); background:#fff; transform:translateX(2px); }
+  .ferr-ia-itens { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:13px; }
+  .ferr-ia-itens span { font-size:11.5px; font-weight:600; color:#5b21b6; background:#ede9fe; padding:4px 9px; border-radius:99px; }
+  .ferr-acao { width:100%; padding:10px; border:none; border-radius:10px; background:var(--indigo); color:#fff; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .ferr-acao:hover { filter:brightness(1.07); }
+  .ferr-toggle { background:none; border:none; color:var(--indigo); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; padding:4px 8px; }
+
   /* Nav */
   nav { background:#fff; border-bottom:1px solid var(--linha); position:sticky; top:0; z-index:20; box-shadow:0 1px 0 rgba(15,23,42,.02); }
   nav .wrap { display:flex; align-items:center; height:64px; gap:18px; }
@@ -250,6 +268,39 @@
 
   <main class="wrap">
     <div id="onb-banner"></div>
+    <section id="ferramentas-painel" style="display:none;margin:22px 0 6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px">
+        <h2 style="font-size:17px;font-weight:800;letter-spacing:-.4px;margin:0">Suas ferramentas</h2>
+        <button id="ferr-toggle" class="ferr-toggle" type="button">Ocultar ▴</button>
+      </div>
+      <div id="ferr-grid" class="ferr-grid">
+        <div class="ferr-card ferr-ia">
+          <div class="ferr-cab">🤖 Inteligência Artificial <span class="ferr-badge">IA</span></div>
+          <p class="ferr-desc">Resumo, perguntas, análise de risco e conferência de documentos — tudo <b>dentro de cada edital</b>, com um clique.</p>
+          <div class="ferr-ia-itens">
+            <span>Resumo do edital</span><span>Pergunte ao edital</span><span>Análise &amp; impugnação</span><span>Conferência de docs</span>
+          </div>
+          <button class="ferr-acao" type="button" onclick="rolarEditais()">Abrir um edital →</button>
+        </div>
+        <div class="ferr-card">
+          <div class="ferr-cab">📁 Gestão de contratos</div>
+          <div class="ferr-tiles">
+            <a id="ferr-receb" href="#">💰 Recebíveis <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">cobrança de NFs</span></a>
+            <a id="ferr-contratos" href="#">📄 Meus contratos <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">vigência &amp; reajuste</span></a>
+            <a id="ferr-docs" href="#">🗂️ Documentos <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">habilitação</span></a>
+            <a id="ferr-declaracoes" href="#">✍️ Declarações <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">gerar na hora</span></a>
+          </div>
+        </div>
+        <div class="ferr-card">
+          <div class="ferr-cab">📊 Acompanhamento &amp; conta</div>
+          <div class="ferr-tiles">
+            <a id="ferr-historico" href="#">🕑 Histórico <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">o que você já viu</span></a>
+            <a id="ferr-equipe" href="#">👥 Equipe <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">vários usuários</span></a>
+            <a id="ferr-conta" href="#">⚙️ Conta &amp; plano <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">assinatura</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
     <div id="conteudo"><div class="carregando"><span class="spinner"></span>Carregando o seu painel...</div></div>
   </main>
 
@@ -667,6 +718,23 @@ async function carregar() {
     document.getElementById("nav-conta").href = "/conta?c=" + encodeURIComponent(token);
     document.getElementById("nav-historico").href = "/historico?c=" + encodeURIComponent(token);
     document.getElementById("nav-declaracoes").href = "/declaracoes?c=" + encodeURIComponent(token);
+    // Bloco "Suas ferramentas": mesmos destinos do nav, em cartoes agrupados.
+    (function(){
+      const c = encodeURIComponent(token);
+      const ligar = (id, url) => { const el = document.getElementById(id); if (el) el.href = url + "?c=" + c; };
+      ligar("ferr-receb", "/recebiveis"); ligar("ferr-contratos", "/contratos");
+      ligar("ferr-docs", "/documentos"); ligar("ferr-declaracoes", "/declaracoes");
+      ligar("ferr-historico", "/historico"); ligar("ferr-equipe", "/equipe");
+      ligar("ferr-conta", "/conta");
+      const sec = document.getElementById("ferramentas-painel");
+      if (sec) sec.style.display = "block";
+      const tg = document.getElementById("ferr-toggle"), grid = document.getElementById("ferr-grid");
+      if (tg && grid) tg.addEventListener("click", () => {
+        const escondido = grid.style.display === "none";
+        grid.style.display = escondido ? "grid" : "none";
+        tg.textContent = escondido ? "Ocultar ▴" : "Mostrar ▾";
+      });
+    })();
     // Dropdown "Mais": click no botao alterna .open (toque/mobile). Fora fecha.
     (function(){
       const dd = document.getElementById("dd-mais"); if (!dd) return;
@@ -1260,6 +1328,12 @@ function atualizarBtnUf() {
 function toggleUfDrop() {
   const d = document.getElementById("uf-drop");
   d.style.display = d.style.display === "none" ? "block" : "none";
+}
+// Botao "Abrir um edital" do bloco de IA: rola ate a lista de editais (as
+// ferramentas de IA vivem dentro de cada edital, nao como pagina avulsa).
+function rolarEditais() {
+  const alvo = document.getElementById("conteudo");
+  if (alvo) alvo.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 function fecharUfDrop() {
   document.getElementById("uf-drop").style.display = "none";
