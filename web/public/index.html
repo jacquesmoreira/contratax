@@ -1170,6 +1170,18 @@ async function abrirDrawer(id) {
     <div class="linha-info"><span>Valor estimado</span><span>${brl(ed.valorEstimado)}</span></div>
     <div class="linha-info"><span>Encerra</span><span>${dataBR(ed.encerramento)}</span></div>
     ${portalUrl ? `<div class="linha-info"><span>Portal</span><span><a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="color:var(--indigo);font-weight:700">abrir →</a></span></div>` : ""}</div>`;
+  // Anotacoes privadas do cliente neste edital (so quem tem token edita).
+  if (token) {
+    html += `<div class="bloco">
+      <h3>📝 Minhas anotações</h3>
+      <p style="font-size:12.5px;color:var(--cinza);margin:2px 0 8px">Anote o que quiser sobre esta licitação (prazo de entrega, contato, decisão...). Fica salvo só pra você.</p>
+      <textarea id="nota-txt" rows="3" placeholder="Escreva uma anotação..." style="width:100%;padding:11px;border:1px solid var(--linha);border-radius:10px;font-size:14px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box">${esc(d.nota || "")}</textarea>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+        <button onclick="salvarNotaEdital('${ed.id}')" style="background:var(--indigo);color:#fff;border:none;padding:9px 18px;border-radius:9px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit">Salvar anotação</button>
+        <span id="nota-status" style="font-size:12.5px;color:var(--cinza)"></span>
+      </div>
+    </div>`;
+  }
   html += reputacaoHTML(d.reputacao);
   // Botao de adicionar ao calendario (Google/Outlook/Apple) com lembretes auto
   if (ed.encerramento) {
@@ -1334,6 +1346,24 @@ function toggleUfDrop() {
 function rolarEditais() {
   const alvo = document.getElementById("conteudo");
   if (alvo) alvo.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+// Salva a anotacao privada do cliente neste edital.
+async function salvarNotaEdital(id) {
+  const txt = document.getElementById("nota-txt");
+  const status = document.getElementById("nota-status");
+  if (!txt) return;
+  status.textContent = "Salvando...";
+  try {
+    const r = await fetch("/api/nota", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ c: token, id, texto: txt.value }),
+    });
+    if (!r.ok) throw new Error("falha");
+    status.textContent = "✓ Salvo";
+    setTimeout(() => { if (status) status.textContent = ""; }, 2500);
+  } catch {
+    status.textContent = "Erro ao salvar. Tente de novo.";
+  }
 }
 
 // Canal "Fale com a gente": sugestao de melhoria ou duvida/suporte. Cai no

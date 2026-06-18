@@ -176,3 +176,24 @@ export async function alternarFeedbackLido(id) {
   await gravarJSON(ARQUIVO_FEEDBACK, lista);
   return it;
 }
+
+const ARQUIVO_NOTAS = resolve(DATA_DIR, "notas.json");
+
+// Anotacoes do cliente por edital (bloco de notas privado da empresa). Estrutura:
+// { [token]: { [editalId]: { texto, em } } }. Privado: so o dono ve/edita.
+export async function salvarNota(token, editalId, texto) {
+  if (!token || !editalId) return null;
+  const tudo = await lerJSON(ARQUIVO_NOTAS, {});
+  tudo[token] = tudo[token] || {};
+  const t = String(texto || "").slice(0, 4000).trim();
+  if (t) tudo[token][editalId] = { texto: t, em: new Date().toISOString() };
+  else delete tudo[token][editalId]; // texto vazio = apaga a nota
+  await gravarJSON(ARQUIVO_NOTAS, tudo);
+  return tudo[token][editalId] || null;
+}
+
+export async function carregarNota(token, editalId) {
+  if (!token || !editalId) return null;
+  const tudo = await lerJSON(ARQUIVO_NOTAS, {});
+  return tudo[token]?.[editalId] ?? null;
+}

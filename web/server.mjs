@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { gzip as gzipCb } from "node:zlib";
 import { promisify } from "node:util";
 const gzip = promisify(gzipCb);
-import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao, carregarLeads, carregarTldr, salvarTldr, salvarFeedback, carregarFeedbacks, alternarFeedbackLido } from "../src/store.mjs";
+import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao, carregarLeads, carregarTldr, salvarTldr, salvarFeedback, carregarFeedbacks, alternarFeedbackLido, salvarNota, carregarNota } from "../src/store.mjs";
 import { gerarTldr } from "../src/tldr.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
@@ -502,6 +502,16 @@ const servidor = createServer(async (req, res) => {
         mensagem: msg,
       });
       return json(res, 200, { ok: true, id: item.id });
+    }
+
+    // Anotacao privada do cliente num edital (bloco de notas da empresa).
+    if (rota === "/api/nota" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfil = await perfilPorToken(corpo.c || "");
+      if (!perfil) return json(res, 403, { erro: "Sessao invalida" });
+      if (!corpo.id) return json(res, 400, { erro: "Edital nao informado" });
+      const nota = await salvarNota(perfil.token, String(corpo.id), corpo.texto || "");
+      return json(res, 200, { ok: true, em: nota?.em ?? null });
     }
 
     // Busca livre no acervo (painel): qualquer produto + filtros de UF e modalidade.
@@ -1636,8 +1646,10 @@ const servidor = createServer(async (req, res) => {
         uf: edital.uf,
         municipio: edital.municipio,
       });
+      const nota = perfil ? await carregarNota(perfil.token, id) : null;
       return json(res, 200, {
         edital,
+        nota: nota?.texto ?? "",
         analise: analiseCache?.analise ?? null,
         conferencia: confCache?.dados ?? null,
         impugnacao: impugCache?.dados ?? null,
