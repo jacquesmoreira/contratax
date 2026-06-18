@@ -2153,10 +2153,29 @@ Contact: contato@contratax.com.br
     }
 
     // ===== SEO programatico: paginas publicas de licitacoes por ramo/estado =====
-    // Segmentos (ramos prontos) pra busca por clique no painel: o "cliente
-    // preguicoso" clica em vez de digitar. Reusa o catalogo de CATEGORIAS.
+    // Segmentos (ramos prontos) pra busca por clique no painel. Mostra APENAS
+    // os nichos que o cliente cadastrou (filtro.termos), nao o catalogo inteiro:
+    // o painel e dele, entao os atalhos sao do ramo dele. Sem token (ou sem
+    // termos), cai no catalogo geral (ex: visitante).
     if (rota === "/api/segmentos") {
-      return json(res, 200, { segmentos: CATEGORIAS.map((c) => ({ nome: c.nome, termo: c.termo })) });
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      const termos = perfil?.filtro?.termos ?? [];
+      if (termos.length) {
+        const vistos = new Set();
+        const segmentos = [];
+        for (const t of termos) {
+          const termo = String(t).trim();
+          const chave = termo.toLowerCase();
+          if (!termo || vistos.has(chave)) continue;
+          vistos.add(chave);
+          // Nome bonito: 1a letra de cada palavra em maiuscula (split por espaco
+          // pra nao tropecar em acentos, que o \b do regex trata mal).
+          const nome = termo.split(/\s+/).map((w) => w ? w[0].toUpperCase() + w.slice(1) : w).join(" ");
+          segmentos.push({ nome, termo });
+        }
+        return json(res, 200, { segmentos, doCliente: true });
+      }
+      return json(res, 200, { segmentos: CATEGORIAS.map((c) => ({ nome: c.nome, termo: c.termo })), doCliente: false });
     }
     if (rota === "/licitacoes" || rota === "/licitacoes/") {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });

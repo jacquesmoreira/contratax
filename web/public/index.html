@@ -1470,17 +1470,29 @@ document.getElementById("btn-buscar").onclick = () => buscarPainel(1);
 // digitar. Preenche a busca com o termo do segmento e roda a pesquisa.
 (async function carregarSegmentos() {
   try {
-    const d = await (await fetch("/api/segmentos")).json();
+    const d = await (await fetch("/api/segmentos?c=" + encodeURIComponent(token))).json();
     if (!d.segmentos?.length) return;
     const lista = document.getElementById("segmentos-lista");
-    lista.innerHTML = d.segmentos.map((s) =>
-      `<button type="button" class="seg-chip" data-termo="${esc(s.termo)}" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:99px;cursor:pointer;font-family:inherit">${esc(s.nome)}</button>`
-    ).join("");
-    lista.querySelectorAll(".seg-chip").forEach((b) => b.onclick = () => {
-      document.getElementById("busca").value = b.dataset.termo;
-      buscarPainel(1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
+    const LIMITE = 18; // evita parede de chips quando o cadastro tem dezenas
+    const chip = (s) =>
+      `<button type="button" class="seg-chip" data-termo="${esc(s.termo)}" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:99px;cursor:pointer;font-family:inherit">${esc(s.nome)}</button>`;
+    function pintar(todos) {
+      const visiveis = todos ? d.segmentos : d.segmentos.slice(0, LIMITE);
+      lista.innerHTML = visiveis.map(chip).join("") + (!todos && d.segmentos.length > LIMITE
+        ? `<button type="button" id="seg-mais" style="background:none;border:1px dashed rgba(255,255,255,.5);color:#fff;font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:99px;cursor:pointer;font-family:inherit">+${d.segmentos.length - LIMITE} mais</button>`
+        : "");
+      lista.querySelectorAll(".seg-chip").forEach((b) => b.onclick = () => {
+        document.getElementById("busca").value = b.dataset.termo;
+        buscarPainel(1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      const mais = document.getElementById("seg-mais");
+      if (mais) mais.onclick = () => pintar(true);
+    }
+    pintar(false);
+    // Rotulo: do cliente vs catalogo geral (visitante).
+    const rotulo = document.querySelector("#segmentos-chips > div");
+    if (rotulo) rotulo.textContent = d.doCliente ? "Seus segmentos cadastrados" : "Ou clique no seu segmento";
     document.getElementById("segmentos-chips").style.display = "block";
   } catch {}
 })();
