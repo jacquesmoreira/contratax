@@ -636,11 +636,26 @@ const servidor = createServer(async (req, res) => {
     // Lista de editais do cliente (filtrada pelo token ?c=). Token admin ve tudo.
     if (rota === "/api/editais") {
       const token = url.searchParams.get("c") || "";
-      const todos = await carregarResultados();
-      if (token === ADMIN) return json(res, 200, todos);
+      if (token === ADMIN) return json(res, 200, await carregarResultados());
       const perfil = await perfilPorToken(token);
-      if (!perfil || !todos[perfil.id]) return json(res, 200, {}); // token invalido = nada
-      return json(res, 200, { [perfil.id]: todos[perfil.id] });
+      if (!perfil) return json(res, 200, {}); // token invalido = nada
+      // Calcula AO VIVO (matching e so consulta no banco, instantaneo). Antes
+      // lia do resultados.json pre-computado, que so era regenerado a cada 6h:
+      // qualquer mudanca no matching (ou cadastro recente) demorava a aparecer e
+      // o painel abria vazio. Ao vivo reflete o acervo atual + o ramo ampliado
+      // (termosAmplos/termosIA) na hora. marcar:false preserva a flag "novo" do
+      // digest diario.
+      let editais = [];
+      try { editais = (await monitorar(perfil, { marcar: false, salvar: false })).filtrados; }
+      catch (e) { console.error("[api/editais] monitorar:", e.message); }
+      return json(res, 200, {
+        [perfil.id]: {
+          nome: perfil.nome,
+          uf: (perfil.ufs ?? [])[0] ?? perfil.uf ?? null,
+          atualizadoEm: new Date().toISOString(),
+          editais,
+        },
+      });
     }
 
     // Radar de renovacao: contratos do ramo do cliente que vao vencer.

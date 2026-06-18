@@ -15,7 +15,7 @@ import { carregarVistos, marcarVistos, salvarResultados } from "./store.mjs";
 //   total     = quantos editais passaram no recorte grosso (UF/modalidade/valor)
 //   filtrados = os que tambem casaram com as palavras-chave (cada um com flag `novo`)
 //   novos     = subconjunto ainda nao mostrado em rodadas anteriores
-export async function monitorar(perfil, { marcar = true } = {}) {
+export async function monitorar(perfil, { marcar = true, salvar = true } = {}) {
   const ufs = perfil.ufs ?? (perfil.uf ? [perfil.uf] : []);
   const filtro = perfil.filtro ?? {};
 
@@ -44,7 +44,8 @@ export async function monitorar(perfil, { marcar = true } = {}) {
   const filtrados = casaram.map((e) => ({ ...e, novo: !vistos.has(e.id) }));
   const novos = filtrados.filter((e) => e.novo);
 
-  await salvarResultados(perfil, filtrados);
+  // salvar:false quando e leitura ao vivo do painel (evita escrita por abertura).
+  if (salvar) await salvarResultados(perfil, filtrados);
   if (marcar) {
     await marcarVistos(perfil.id, filtrados.map((e) => e.id));
   }
