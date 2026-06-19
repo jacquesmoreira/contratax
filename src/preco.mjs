@@ -63,6 +63,14 @@ export function precoVencedores({ termos = [], uf = null, municipio = null, orga
     if (naCidade.length >= MIN_MUNICIPIO) { casaram = naCidade; escopo = "municipio"; local = municipio; }
   }
 
+  // Fornecedores DISTINTOS no escopo: inteligencia de concorrencia honesta.
+  // Nao e contagem de licitantes (nao temos), e quem GANHOU contratos do ramo
+  // na regiao nos ultimos `meses`. Poucos = mercado concentrado.
+  const fornecedoresDistintos = new Set(
+    casaram.map((c) => (c.fornecedorNi || "").replace(/\D/g, "") || normalizar(c.fornecedor || ""))
+      .filter(Boolean)
+  ).size;
+
   return {
     total: casaram.length,
     meses,
@@ -71,6 +79,7 @@ export function precoVencedores({ termos = [], uf = null, municipio = null, orga
     municipio: local,
     orgao: nomeOrgao,
     escopo, // "orgao" | "municipio" | "uf" | "nacional"
+    fornecedoresDistintos,
     stats: estatisticas(casaram.map((c) => c.valor)),
     topFornecedores: rankear(casaram, limite),
     contratosCasaram: casaram, // mantem a lista pra detalhamento
