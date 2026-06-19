@@ -74,6 +74,23 @@ export function email1(perfil) {
   };
 }
 
+// Boas-vindas IMEDIATAS (no cadastro), igual fazem os concorrentes. Manda o
+// e-mail 1 na hora e marca _onboardEmail1Em pra a sequencia nao repetir. Best-
+// effort: sem chave de e-mail ou sem endereco, ignora silenciosamente.
+export async function boasVindasImediato(perfil) {
+  if (!temEmailKey() || !perfil?.email) return false;
+  try {
+    const m = email1(perfil);
+    await enviar({ para: perfil.email, assunto: m.assunto, html: m.html });
+    const { atualizarPerfil } = await import("./perfis.mjs");
+    await atualizarPerfil(perfil.token, (p) => { p._onboardEmail1Em = new Date().toISOString(); });
+    return true;
+  } catch (e) {
+    console.error("[boas-vindas]", e.message);
+    return false;
+  }
+}
+
 // E-mail 2 (dia 3): abre 1a licitacao do ramo e mostra como funciona o veredito
 export function email2(perfil, exemploEdital) {
   const link = `${BASE}/painel?c=${perfil.token}`;

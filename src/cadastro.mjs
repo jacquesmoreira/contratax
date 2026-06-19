@@ -162,5 +162,10 @@ export async function criarPerfil({ nome, email, uf, ramo, modalidades, senha, c
   // Matching imediato (le do banco, instantaneo) para o painel ja ter conteudo.
   const { filtrados } = await monitorar(perfil);
 
+  // Boas-vindas na hora (nao bloqueia a resposta do cadastro).
+  import("./onboardingEmails.mjs")
+    .then(({ boasVindasImediato }) => boasVindasImediato(perfil))
+    .catch(() => {});
+
   return { token, link: `/painel?c=${token}`, total: filtrados.length, nome: perfil.nome };
 }
