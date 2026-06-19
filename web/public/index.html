@@ -373,8 +373,8 @@ function cardHTML(e) {
   store[e.id] = e;
   const local = `${esc(e.municipio) ?? "?"}/${esc(e.uf) ?? "?"}`;
   const visto = lerVistos().has(e.id) ? " ja-visto" : "";
-  return `<div class="card${visto}" data-id="${esc(e.id)}" data-texto="${esc((local+" "+(e.orgao||"")+" "+(e.objeto||"")).toLowerCase())}">
-    <div class="card-topo"><span class="orgao">${local} · ${esc(e.orgao ?? e.unidade ?? "Órgão público")}</span>
+  return `<div class="card${visto}" data-id="${esc(e.id)}" data-fav="${e.favorito ? 1 : 0}" data-texto="${esc((local+" "+(e.orgao||"")+" "+(e.objeto||"")).toLowerCase())}">
+    <div class="card-topo"><button class="fav-btn" onclick="event.stopPropagation();toggleFavorito('${esc(e.id)}',this)" title="Favoritar este edital" style="background:none;border:none;cursor:pointer;font-size:17px;line-height:1;padding:0;color:${e.favorito ? "#f59e0b" : "var(--cinza-c)"}">${e.favorito ? "★" : "☆"}</button><span class="orgao">${local} · ${esc(e.orgao ?? e.unidade ?? "Órgão público")}</span>
       ${e.novo ? '<span class="selo-novo">NOVO</span>' : ""}${e.situacao === "Suspensa" ? '<span style="background:#fef3c7;color:#b45309;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px" title="Edital suspenso pelo órgão. Pode ser retomado ou cancelado — confira no portal antes de investir tempo.">⚠️ SUSPENSA</span>' : ""}${prazoHTML(e.encerramento)}
       <span class="badge-trilha badge-visto">já visto</span>
       <span class="badge-trilha badge-analisado">analisado pela ContrataX.IA</span></div>
@@ -399,7 +399,8 @@ function perfilHTML(p) {
       ${novasHoje ? `<span class="chip" style="background:#dcfce7;color:#166534;font-weight:800">🆕 ${novasHoje} ${novasHoje > 1 ? "novas hoje" : "nova hoje"}</span>` : ""}
       ${novos ? `<span class="chip chip-novo">${novos} novos</span>` : ""}
       <span class="perfil-atualizado">atualizado ${at}</span>
-      ${editais.length ? `<a href="#" onclick="exportar('editais');return false" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Exportar resultado para Excel/CSV">📊 Excel</a>` : ""}
+      ${editais.length ? `<button type="button" onclick="alternarSoFavoritos(this)" style="margin-left:auto;background:#eef2ff;border:1px solid #c7d2fe;color:var(--indigo);font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:8px;cursor:pointer;font-family:inherit" title="Mostrar só os editais que você favoritou">★ Só favoritos</button>` : ""}
+      ${editais.length ? `<a href="#" onclick="exportar('editais');return false" style="font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Exportar resultado para Excel/CSV">📊 Excel</a>` : ""}
     </div>`;
   const corpo = editais.length
     ? `<div class="cards-grid">${editais.map(cardHTML).join("")}</div>`
@@ -1453,6 +1454,32 @@ function rolarEditais() {
   const alvo = document.getElementById("conteudo");
   if (alvo) alvo.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+// Favorita/desfavorita um edital (estrela no card). Atualiza visual na hora.
+async function toggleFavorito(id, btn) {
+  try {
+    const r = await fetch("/api/favorito", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ c: token, id }) });
+    if (!r.ok) return;
+    const fav = (await r.json()).favorito;
+    if (btn) { btn.textContent = fav ? "★" : "☆"; btn.style.color = fav ? "#f59e0b" : "var(--cinza-c)"; }
+    const card = btn?.closest(".card"); if (card) card.dataset.fav = fav ? "1" : "0";
+    if (store[id]) store[id].favorito = fav;
+    // Se o filtro "so favoritos" estiver ligado e desfavoritou, some o card.
+    if (window._soFavoritos && !fav && card) card.style.display = "none";
+  } catch {}
+}
+// Filtro "so favoritos": mostra/esconde os cards sem estrela.
+function alternarSoFavoritos(btn) {
+  window._soFavoritos = !window._soFavoritos;
+  document.querySelectorAll(".card[data-id]").forEach((c) => {
+    c.style.display = (window._soFavoritos && c.dataset.fav !== "1") ? "none" : "";
+  });
+  if (btn) {
+    btn.style.background = window._soFavoritos ? "#f59e0b" : "#eef2ff";
+    btn.style.color = window._soFavoritos ? "#fff" : "var(--indigo)";
+    btn.textContent = window._soFavoritos ? "★ Mostrando favoritos" : "★ Só favoritos";
+  }
+}
+
 // Carrega e mostra os itens da licitacao (lazy, ao clicar).
 async function verItens(id) {
   const bloco = document.getElementById("itens-bloco");

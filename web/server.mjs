@@ -554,6 +554,23 @@ const servidor = createServer(async (req, res) => {
       return json(res, 200, { ok: true, buscas: out });
     }
 
+    // Favoritar/desfavoritar um edital (estrela). Guardado no perfil.
+    if (rota === "/api/favorito" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfil = await perfilPorToken(corpo.c || "");
+      if (!perfil) return json(res, 403, { erro: "Sessao invalida" });
+      const id = String(corpo.id || "");
+      if (!id) return json(res, 400, { erro: "Edital nao informado" });
+      let favorito = false;
+      await atualizarPerfil(perfil.token, (p) => {
+        p._favoritos = Array.isArray(p._favoritos) ? p._favoritos : [];
+        if (p._favoritos.includes(id)) p._favoritos = p._favoritos.filter((x) => x !== id);
+        else { p._favoritos.unshift(id); favorito = true; }
+        p._favoritos = p._favoritos.slice(0, 500);
+      });
+      return json(res, 200, { ok: true, favorito });
+    }
+
     // Anotacao privada do cliente num edital (bloco de notas da empresa).
     if (rota === "/api/nota" && req.method === "POST") {
       const corpo = await lerCorpo(req);
@@ -721,6 +738,9 @@ const servidor = createServer(async (req, res) => {
           ed.reputacao = cacheRep.get(chave);
         }
       } catch (e) { console.error("[api/editais] reputacao:", e.message); }
+      // Marca os favoritados do cliente (estrela no card).
+      const favSet = new Set(perfil._favoritos || []);
+      for (const ed of editais) ed.favorito = favSet.has(ed.id);
       // Pre-aquece o resumo (TL;DR) dos editais mais urgentes em segundo plano,
       // pra abrir instantaneo (como o concorrente faz pre-gerando tudo). Diferenca:
       // so os top-N do painel, nao os 426k -> custo controlado. NAO bloqueia a
