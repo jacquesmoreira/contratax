@@ -25,7 +25,7 @@ import { renderizarAjuda, renderizarContato, processarContato } from "../src/aju
 import { tentarUsoVisitante, ipDoRequest } from "../src/rateLimitVisitante.mjs";
 import { paginaCasos, paginaStatus, paginaSeguranca } from "../src/paginasInstitucionais.mjs";
 import { injetarAnalytics, enviarConversao } from "../src/analytics.mjs";
-import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos } from "../src/db.mjs";
+import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos, analiseConcorrente } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
 import { temChave } from "../src/ia.mjs";
 import { criarPerfil, MAX_TERMOS, parseRamos } from "../src/cadastro.mjs";
@@ -201,9 +201,9 @@ async function perfilPorToken(token) {
 const ROTAS_PROTEGIDAS = [
   "/api/recebiveis", "/api/contratos-meus", "/api/documentos", "/api/historico",
   "/api/declaracoes", "/api/radar", "/api/contratos-fornecedor", "/api/saude-empresa",
-  "/api/equipe", "/api/exportar",
+  "/api/equipe", "/api/exportar", "/api/concorrente",
   "/recebiveis", "/contratos", "/documentos", "/historico", "/declaracoes",
-  "/equipe", "/empresas",
+  "/equipe", "/empresas", "/concorrentes",
 ];
 function rotaProtegida(rota) {
   return ROTAS_PROTEGIDAS.some((p) => rota === p || rota.startsWith(p + "/") || rota.startsWith(p + "."));
@@ -552,6 +552,16 @@ const servidor = createServer(async (req, res) => {
         out = p._buscas;
       });
       return json(res, 200, { ok: true, buscas: out });
+    }
+
+    // Analise de concorrente por CNPJ (contratos que ele ganhou). Cliente logado.
+    if (rota === "/api/concorrente") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 403, { erro: "Sessao invalida" });
+      const cnpj = url.searchParams.get("cnpj") || "";
+      const r = analiseConcorrente({ cnpj });
+      if (!r) return json(res, 400, { erro: "CNPJ invalido (informe ao menos a raiz de 8 digitos)" });
+      return json(res, 200, r);
     }
 
     // Favoritar/desfavoritar um edital (estrela). Guardado no perfil.
@@ -2594,6 +2604,11 @@ Contact: contato@contratax.com.br
     // Pagina /recebiveis
     if (rota === "/recebiveis" || rota === "/recebiveis.html") {
       const html = await readFile(resolve(AQUI, "public", "recebiveis.html"), "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(html));
+    }
+    if (rota === "/concorrentes" || rota === "/concorrentes.html") {
+      const html = await readFile(resolve(AQUI, "public", "concorrentes.html"), "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(injetarAnalytics(html));
     }

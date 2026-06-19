@@ -80,8 +80,48 @@ export function abrir() {
   db.exec("CREATE INDEX IF NOT EXISTS idx_contr_uf ON contratos(uf);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_contr_vigfim ON contratos(vigencia_fim);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_contr_cat ON contratos(categoria_id);");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_contr_forn ON contratos(fornecedor_ni);"); // analise de concorrentes
 
   return db;
+}
+
+// Analise de um concorrente pelo CNPJ: contratos que ELE ganhou (qualquer ramo,
+// qualquer UF). Dado publico do PNCP. Aceita CNPJ completo (14 digitos) ou a
+// raiz (8 digitos = todas as filiais).
+export function analiseConcorrente({ cnpj, limite = 60 } = {}) {
+  const ni = String(cnpj || "").replace(/\D/g, "");
+  if (ni.length < 8) return null;
+  const d = abrir();
+  const cond = ni.length >= 14 ? "fornecedor_ni = ?" : "fornecedor_ni LIKE ?";
+  const arg = ni.length >= 14 ? ni : ni.slice(0, 8) + "%";
+  const linhas = d.prepare(
+    `SELECT * FROM contratos WHERE ${cond} ORDER BY vigencia_inicio DESC LIMIT 3000`
+  ).all(arg);
+  if (!linhas.length) return { ni, encontrado: false, nome: null, total: 0, valorTotal: 0, porOrgao: [], porAno: [], contratos: [] };
+
+  const nome = linhas.find((l) => l.fornecedor && !/^\d/.test(l.fornecedor))?.fornecedor || linhas[0].fornecedor;
+  let valorTotal = 0;
+  const orgaos = new Map();
+  const anos = new Map();
+  for (const l of linhas) {
+    const v = Number(l.valor) || 0;
+    valorTotal += v;
+    const o = l.orgao || "Órgão não informado";
+    const ro = orgaos.get(o) || { orgao: o, uf: l.uf, qtd: 0, valor: 0 };
+    ro.qtd += 1; ro.valor += v; orgaos.set(o, ro);
+    const ano = l.ano || (l.vigencia_inicio || "").slice(0, 4) || "?";
+    anos.set(ano, (anos.get(ano) || 0) + v);
+  }
+  return {
+    ni, encontrado: true, nome,
+    total: linhas.length, valorTotal,
+    porOrgao: [...orgaos.values()].sort((a, b) => b.valor - a.valor).slice(0, 10),
+    porAno: [...anos.entries()].map(([ano, valor]) => ({ ano, valor })).sort((a, b) => String(b.ano).localeCompare(String(a.ano))).slice(0, 6),
+    contratos: linhas.slice(0, limite).map((l) => ({
+      objeto: l.objeto, orgao: l.orgao, uf: l.uf, municipio: l.municipio,
+      valor: l.valor, vigenciaInicio: l.vigencia_inicio, vigenciaFim: l.vigencia_fim, id: l.id,
+    })),
+  };
 }
 
 // Insere ou atualiza um lote de editais. Dedupe pela chave id (numeroControlePNCP).

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/logo-favicon.png" type="image/png" />
+<title>ContrataX — Análise de Concorrentes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+:root { --indigo:#4338ca; --indigo-d:#312e81; --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif; background:var(--fundo); color:var(--tinta); }
+nav { background:#fff; border-bottom:1px solid var(--linha); }
+nav .wrap { width:min(1320px,95vw); margin:0 auto; display:flex; align-items:center; height:60px; gap:18px; padding:0 20px; }
+.logo img { height:30px; display:block; }
+nav .dir { margin-left:auto; display:flex; gap:18px; font-size:14px; font-weight:600; }
+nav .dir a { color:var(--cinza); text-decoration:none; }
+nav .dir a:hover { color:var(--tinta); }
+.wrap-main { width:min(1320px,95vw); margin:0 auto; padding:30px 20px 60px; }
+h1 { font-size:26px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px; }
+.sub { color:var(--cinza); font-size:15px; margin-bottom:24px; max-width:680px; }
+.busca { display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap; }
+.busca input { flex:1; min-width:240px; padding:13px 15px; border:1.5px solid var(--linha); border-radius:11px; font-size:16px; font-family:inherit; outline:none; }
+.busca input:focus { border-color:var(--indigo); }
+.btn { background:var(--indigo); color:#fff; border:none; padding:13px 24px; border-radius:11px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; }
+.btn:hover { background:var(--indigo-d); }
+.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px; }
+@media(max-width:680px){ .stats { grid-template-columns:1fr; } }
+.stat { background:#fff; border:1px solid var(--linha); border-radius:12px; padding:16px; }
+.stat .lbl { font-size:11.5px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--cinza-c); margin-bottom:6px; }
+.stat .v { font-size:22px; font-weight:900; }
+.card { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:22px; margin-bottom:18px; }
+.card h2 { font-size:17px; font-weight:800; margin-bottom:14px; }
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--cinza-c); padding:0 8px 8px; }
+td { padding:9px 8px; border-top:1px solid var(--linha); font-size:13.5px; vertical-align:top; }
+.mut { color:var(--cinza-c); font-size:12px; }
+.vazio { text-align:center; color:var(--cinza); padding:40px 20px; }
+.right { text-align:right; white-space:nowrap; }
+.disc { font-size:12px; color:var(--cinza-c); margin-top:16px; }
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="logo" href="#" id="link-painel"><img src="/logo-horizontal.png" alt="ContrataX" /></a>
+  <div class="dir"><a href="#" id="voltar">← Voltar ao painel</a></div>
+</div></nav>
+
+<div class="wrap-main">
+  <h1>Análise de Concorrentes</h1>
+  <div class="sub">Digite o CNPJ de um concorrente e veja os contratos públicos que ele já ganhou — órgãos, valores e objetos. Dados oficiais do PNCP.</div>
+
+  <div class="busca">
+    <input id="cnpj" type="text" placeholder="Digite o CNPJ do concorrente (ex: 12.345.678/0001-90)" />
+    <button class="btn" onclick="buscar()">Buscar</button>
+  </div>
+
+  <div id="resultado"></div>
+</div>
+
+<script>
+const token = new URLSearchParams(location.search).get("c") || "";
+document.getElementById("link-painel").href = "/painel?c=" + encodeURIComponent(token);
+document.getElementById("voltar").href = "/painel?c=" + encodeURIComponent(token);
+const esc = s => (s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const brl = v => (v == null || Number(v) === 0) ? "—" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+const dataBR = iso => { if (!iso) return "—"; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString("pt-BR"); };
+
+document.getElementById("cnpj").addEventListener("keydown", e => { if (e.key === "Enter") buscar(); });
+
+async function buscar() {
+  const cnpj = document.getElementById("cnpj").value.trim();
+  if (cnpj.replace(/\D/g, "").length < 8) { alert("Informe ao menos a raiz do CNPJ (8 dígitos)."); return; }
+  const res = document.getElementById("resultado");
+  res.innerHTML = `<div class="vazio">Buscando contratos no acervo...</div>`;
+  try {
+    const d = await (await fetch("/api/concorrente?c=" + encodeURIComponent(token) + "&cnpj=" + encodeURIComponent(cnpj))).json();
+    if (d.erro) { res.innerHTML = `<div class="vazio">${esc(d.erro)}</div>`; return; }
+    if (!d.encontrado) {
+      res.innerHTML = `<div class="vazio">Nenhum contrato encontrado para esse CNPJ no nosso acervo do PNCP.<br><span class="mut">Talvez a empresa não tenha contratos públicos recentes, ou ganhe por outro CNPJ.</span></div>`;
+      return;
+    }
+    const orgaos = d.porOrgao.map(o => `<tr><td>${esc(o.orgao)} <span class="mut">${esc(o.uf || "")}</span></td><td class="right">${o.qtd}</td><td class="right">${brl(o.valor)}</td></tr>`).join("");
+    const contratos = d.contratos.map(c => `<tr>
+      <td>${esc(c.objeto || "—")}</td>
+      <td>${esc(c.orgao || "—")} <span class="mut">${esc(c.municipio || "")}/${esc(c.uf || "")}</span></td>
+      <td class="right">${brl(c.valor)}</td>
+      <td class="right mut">${dataBR(c.vigenciaInicio)}</td>
+    </tr>`).join("");
+    res.innerHTML = `
+      <div class="stats">
+        <div class="stat"><div class="lbl">Empresa</div><div class="v" style="font-size:16px">${esc(d.nome || "—")}</div></div>
+        <div class="stat"><div class="lbl">Contratos ganhos (acervo)</div><div class="v">${d.total}</div></div>
+        <div class="stat"><div class="lbl">Valor total</div><div class="v" style="color:var(--verde)">${brl(d.valorTotal)}</div></div>
+      </div>
+      <div class="card"><h2>🏛️ Onde ele mais ganha</h2>
+        <table><thead><tr><th>Órgão</th><th class="right">Contratos</th><th class="right">Valor</th></tr></thead><tbody>${orgaos}</tbody></table>
+      </div>
+      <div class="card"><h2>📄 Contratos (mais recentes)</h2>
+        <table><thead><tr><th>Objeto</th><th>Órgão</th><th class="right">Valor</th><th class="right">Início</th></tr></thead><tbody>${contratos}</tbody></table>
+        <div class="disc">Mostrando até ${d.contratos.length} dos ${d.total} contratos encontrados. Fonte: dados públicos do PNCP. Use como inteligência de mercado.</div>
+      </div>`;
+  } catch (e) {
+    res.innerHTML = `<div class="vazio">Erro ao buscar. Tente de novo.</div>`;
+  }
+}
+// CNPJ vindo por querystring (?cnpj=) ja busca direto
+const pre = new URLSearchParams(location.search).get("cnpj");
+if (pre) { document.getElementById("cnpj").value = pre; buscar(); }
+</script>
+</body>
+</html>
