@@ -66,6 +66,30 @@ import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, cr
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(AQUI, "..");
+
+// Pre-aquecimento do resumo (TL;DR): gera em segundo plano os top-N editais mais
+// urgentes do painel, pra abrir instantaneo. So os do painel (nao os 426k) e so
+// os SEM cache -> custo controlado; cache global aproveita pra todos os clientes.
+// Teto configuravel; 0 desliga. Guard contra geracao concorrente do mesmo edital.
+const PREWARM_N = Number(process.env.LICITA_PREWARM_TLDR ?? 8);
+const _prewarmAtivos = new Set();
+async function preaquecerTldrs(editais) {
+  if (!PREWARM_N || !temChave() || !editais?.length) return;
+  // Mais urgentes primeiro (mais provaveis de o cliente abrir).
+  const top = [...editais]
+    .sort((a, b) => (a.encerramento || "9999").localeCompare(b.encerramento || "9999"))
+    .slice(0, PREWARM_N);
+  for (const ed of top) {
+    if (_prewarmAtivos.has(ed.id)) continue;
+    try {
+      if (await carregarTldr(ed.id)) continue; // ja em cache
+      _prewarmAtivos.add(ed.id);
+      const tldr = await gerarTldr(ed);
+      await salvarTldr(ed.id, tldr);
+    } catch { /* best-effort: 1a abertura sob demanda ainda funciona */ }
+    finally { _prewarmAtivos.delete(ed.id); }
+  }
+}
 const INDEX = resolve(AQUI, "public", "index.html");
 const LP = resolve(AQUI, "public", "lp.html");
 const CADASTRO = resolve(AQUI, "public", "cadastro.html");
@@ -697,6 +721,11 @@ const servidor = createServer(async (req, res) => {
           ed.reputacao = cacheRep.get(chave);
         }
       } catch (e) { console.error("[api/editais] reputacao:", e.message); }
+      // Pre-aquece o resumo (TL;DR) dos editais mais urgentes em segundo plano,
+      // pra abrir instantaneo (como o concorrente faz pre-gerando tudo). Diferenca:
+      // so os top-N do painel, nao os 426k -> custo controlado. NAO bloqueia a
+      // resposta. Cache global: o 1o cliente aquece pra todos.
+      preaquecerTldrs(editais).catch(() => {});
       return json(res, 200, {
         [perfil.id]: {
           nome: perfil.nome,
