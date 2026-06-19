@@ -504,6 +504,32 @@ const servidor = createServer(async (req, res) => {
       return json(res, 200, { ok: true, id: item.id });
     }
 
+    // Buscas salvas do cliente (guardadas no perfil). Lista.
+    if (rota === "/api/buscas" && req.method === "GET") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      return json(res, 200, { buscas: perfil?._buscas || [] });
+    }
+    // Salvar ou remover uma busca salva.
+    if (rota === "/api/buscas" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfil = await perfilPorToken(corpo.c || "");
+      if (!perfil) return json(res, 403, { erro: "Sessao invalida" });
+      let out = [];
+      await atualizarPerfil(perfil.token, (p) => {
+        p._buscas = Array.isArray(p._buscas) ? p._buscas : [];
+        if (corpo.acao === "remover") {
+          p._buscas = p._buscas.filter((b) => b.id !== corpo.id);
+        } else {
+          const nome = String(corpo.nome || "").slice(0, 60).trim() || "Busca salva";
+          const params = (corpo.params && typeof corpo.params === "object") ? corpo.params : {};
+          p._buscas.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), nome, params, em: new Date().toISOString() });
+          p._buscas = p._buscas.slice(0, 20); // teto
+        }
+        out = p._buscas;
+      });
+      return json(res, 200, { ok: true, buscas: out });
+    }
+
     // Anotacao privada do cliente num edital (bloco de notas da empresa).
     if (rota === "/api/nota" && req.method === "POST") {
       const corpo = await lerCorpo(req);

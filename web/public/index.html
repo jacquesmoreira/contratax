@@ -262,6 +262,13 @@
       <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px">Ou clique no seu segmento</div>
       <div id="segmentos-lista" style="display:flex;flex-wrap:wrap;gap:7px"></div>
     </div>
+    <div style="margin-top:12px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span id="buscas-rotulo" style="display:none;font-size:12px;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.4px">Buscas salvas</span>
+        <button type="button" id="btn-salvar-busca" onclick="salvarBusca()" style="display:none;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;cursor:pointer;font-family:inherit">💾 Salvar esta busca</button>
+      </div>
+      <div id="buscas-salvas" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:7px"></div>
+    </div>
     <div class="dica-busca" style="font-size:12.5px;color:rgba(255,255,255,.8);margin-top:10px">
       Dica: use <b>aspas</b> para a busca exata. <b>"material escolar"</b> traz só o que tem essa expressão; sem aspas, traz tudo que cita <i>material</i> ou <i>escolar</i>.
     </div>
@@ -1355,6 +1362,82 @@ function atualizarBtnUf() {
   const n = ufsSelBusca.size;
   btn.textContent = n === 0 ? "Estado: Brasil todo ▾" : n <= 3 ? [...ufsSelBusca].join(", ") + " ▾" : `${n} estados ▾`;
 }
+
+// ---- Buscas salvas (guardadas no perfil do cliente) ----
+const _buscasMap = {};
+function paramsAtuais() {
+  return {
+    termo: document.getElementById("busca").value.trim(),
+    cidade: document.getElementById("filtro-cidade").value.trim(),
+    numeroEdital: document.getElementById("filtro-numero").value.trim(),
+    ufs: [...ufsSelBusca],
+    mod: document.getElementById("filtro-mod").value,
+    prazo: document.getElementById("filtro-prazo").value,
+    pub: document.getElementById("filtro-pub").value,
+  };
+}
+function descreverBusca(p) {
+  const partes = [];
+  if (p.termo) partes.push('"' + p.termo + '"');
+  if (p.numeroEdital) partes.push("nº " + p.numeroEdital);
+  if (p.cidade) partes.push(p.cidade);
+  if (p.ufs && p.ufs.length) partes.push(p.ufs.join("/"));
+  return partes.join(" · ") || "Minha busca";
+}
+async function salvarBusca() {
+  const p = paramsAtuais();
+  if (!p.termo && !p.cidade && !p.numeroEdital && !p.ufs.length && !p.mod && !p.prazo && !p.pub) {
+    alert("Faça uma busca primeiro pra poder salvar."); return;
+  }
+  const nome = prompt("Dê um nome pra esta busca salva:", descreverBusca(p));
+  if (nome === null) return;
+  try {
+    await fetch("/api/buscas", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ c: token, acao: "salvar", nome, params: p }) });
+    carregarBuscasSalvas();
+  } catch {}
+}
+async function removerBusca(id) {
+  try {
+    await fetch("/api/buscas", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ c: token, acao: "remover", id }) });
+    carregarBuscasSalvas();
+  } catch {}
+}
+function aplicarBuscaId(id) {
+  const p = _buscasMap[id]; if (!p) return;
+  document.getElementById("busca").value = p.termo || "";
+  document.getElementById("filtro-cidade").value = p.cidade || "";
+  document.getElementById("filtro-numero").value = p.numeroEdital || "";
+  document.getElementById("filtro-mod").value = p.mod || "";
+  document.getElementById("filtro-prazo").value = p.prazo || "";
+  document.getElementById("filtro-pub").value = p.pub || "";
+  ufsSelBusca.clear();
+  (p.ufs || []).forEach((u) => ufsSelBusca.add(u));
+  document.querySelectorAll(".uf-chip-busca").forEach((c) => c.classList.toggle("sel", ufsSelBusca.has(c.dataset.uf)));
+  atualizarBtnUf();
+  buscarPainel(1);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+async function carregarBuscasSalvas() {
+  try {
+    const d = await (await fetch("/api/buscas?c=" + encodeURIComponent(token))).json();
+    const lista = d.buscas || [];
+    const cont = document.getElementById("buscas-salvas");
+    const btn = document.getElementById("btn-salvar-busca");
+    if (btn) btn.style.display = "inline-block";
+    const rot = document.getElementById("buscas-rotulo");
+    if (rot) rot.style.display = lista.length ? "inline" : "none";
+    if (!cont) return;
+    for (const k of Object.keys(_buscasMap)) delete _buscasMap[k];
+    cont.innerHTML = lista.map((b) => {
+      _buscasMap[b.id] = b.params || {};
+      return `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:12.5px;font-weight:600;padding:4px 5px 4px 12px;border-radius:99px">
+        <button type="button" onclick="aplicarBuscaId('${b.id}')" style="background:none;border:none;color:#fff;font:inherit;font-weight:600;cursor:pointer;padding:0">🔖 ${esc(b.nome)}</button>
+        <button type="button" onclick="removerBusca('${b.id}')" title="Remover busca salva" style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:15px;line-height:1;padding:0 4px">×</button>
+      </span>`;
+    }).join("");
+  } catch {}
+}
+carregarBuscasSalvas();
 function toggleUfDrop() {
   const d = document.getElementById("uf-drop");
   d.style.display = d.style.display === "none" ? "block" : "none";
