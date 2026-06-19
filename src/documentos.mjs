@@ -28,6 +28,29 @@ function identificadores(edital) {
   };
 }
 
+// Lista os ITENS da contratacao (o que esta sendo comprado: descricao,
+// quantidade, unidade, valor unitario/total). Pedido de cliente "Ver itens".
+// PNCP: /orgaos/{cnpj}/compras/{ano}/{sequencial}/itens
+export async function listarItens(edital) {
+  const { cnpj, ano, sequencial } = identificadores(edital);
+  if (!cnpj || !ano || !sequencial) throw new Error(`Identificadores incompletos para ${edital.id}`);
+  const url = `${API}/orgaos/${cnpj}/compras/${ano}/${sequencial}/itens`;
+  const r = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(12000) });
+  if (!r.ok) throw new Error(`PNCP itens respondeu ${r.status}`);
+  const bruto = await r.json();
+  const lista = Array.isArray(bruto) ? bruto : (bruto?.itens ?? []);
+  return lista.map((i) => ({
+    numero: i.numeroItem ?? null,
+    descricao: i.descricao ?? i.materialOuServicoNome ?? "Item sem descrição",
+    quantidade: i.quantidade ?? null,
+    unidade: i.unidadeMedida ?? null,
+    valorUnitario: i.valorUnitarioEstimado ?? null,
+    valorTotal: i.valorTotal ?? null,
+    tipo: i.materialOuServicoNome ?? (i.materialOuServico === "S" ? "Serviço" : i.materialOuServico === "M" ? "Material" : null),
+    beneficioMeEpp: i.tipoBeneficioNome ?? null,
+  }));
+}
+
 // Lista os arquivos (metadados) de um edital.
 export async function listarArquivos(edital) {
   const { cnpj, ano, sequencial } = identificadores(edital);

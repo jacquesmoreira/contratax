@@ -38,7 +38,7 @@ import { icsEdital, nomeIcs } from "../src/calendario.mjs";
 import { ehAssessoria, limiteEmpresas, listarEmpresasGerenciadas, adicionarEmpresa, removerEmpresa } from "../src/assessoria.mjs";
 import { checklist as onboardingChecklist } from "../src/onboarding.mjs";
 import { radarRenovacao } from "../src/radar.mjs";
-import { listarDocumentos, baixarArquivo } from "../src/documentos.mjs";
+import { listarDocumentos, baixarArquivo, listarItens } from "../src/documentos.mjs";
 import { verificarSenha } from "../src/senha.mjs";
 import { consultarCNPJ } from "../src/cnpj.mjs";
 import { autenticarUsuario, convidarMembro, removerMembro, listarMembros, definirAssentos } from "../src/equipe.mjs";
@@ -1741,6 +1741,18 @@ const servidor = createServer(async (req, res) => {
         return json(res, 200, { documentos: await listarDocumentos(edital) });
       } catch (e) {
         return json(res, 200, { documentos: [], erro: e.message });
+      }
+    }
+
+    // Itens da licitacao (o que esta sendo comprado). Lazy: so busca quando o
+    // cliente clica "Ver itens" no drawer. Dado publico do PNCP, sem custo de IA.
+    if (rota === "/api/edital-itens") {
+      const edital = buscarPorId(url.searchParams.get("id"));
+      if (!edital) return json(res, 404, { erro: "Edital nao encontrado" });
+      try {
+        return json(res, 200, { itens: await listarItens(edital) });
+      } catch (e) {
+        return json(res, 200, { itens: [], erro: e.message });
       }
     }
 
