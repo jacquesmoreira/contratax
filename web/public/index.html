@@ -271,9 +271,9 @@
     <section id="ferramentas-painel" style="display:none;margin:22px 0 6px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px">
         <h2 style="font-size:17px;font-weight:800;letter-spacing:-.4px;margin:0">Suas ferramentas</h2>
-        <button id="ferr-toggle" class="ferr-toggle" type="button">Mostrar ▾</button>
+        <button id="ferr-toggle" class="ferr-toggle" type="button">Ocultar ▴</button>
       </div>
-      <div id="ferr-grid" class="ferr-grid" style="display:none">
+      <div id="ferr-grid" class="ferr-grid">
         <div class="ferr-card ferr-ia">
           <div class="ferr-cab">🤖 Inteligência Artificial <span class="ferr-badge">IA</span></div>
           <p class="ferr-desc">Resumo, perguntas, análise de risco e conferência de documentos — tudo <b>dentro de cada edital</b>, com um clique.</p>
@@ -1045,7 +1045,13 @@ function precoHTML(p) {
   const btnExportar = p.escopo === "orgao" && editalAtual
     ? `<a href="/api/exportar?tipo=concorrentes&editalId=${encodeURIComponent(editalAtual)}&c=${encodeURIComponent(token)}" style="font-size:12.5px;font-weight:700;color:var(--indigo);text-decoration:none;display:inline-flex;align-items:center;gap:5px;background:#eef2ff;padding:6px 11px;border-radius:8px;border:1px solid #c7d2fe;margin-left:auto;white-space:nowrap" title="Baixar planilha com os contratos analisados">📊 Baixar contratos</a>`
     : "";
+  const conc = p.fornecedoresDistintos || 0;
+  const concBox = conc ? `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:11px 13px;margin-bottom:12px;font-size:13px;color:#1e3a5f;line-height:1.5">
+      <b>🎯 Concorrência no seu ramo:</b> ${conc} ${conc > 1 ? "empresas diferentes ganharam" : "empresa ganhou"} contratos ${localFrase} ${periodo}.${conc <= 5 ? " <b>Mercado concentrado</b> — poucos fornecedores dominam aqui." : ""}
+      <div style="font-size:11.5px;color:#64748b;margin-top:5px">Quem ganhou contrato, não quantos disputaram. Use como leitura do mercado.</div>
+    </div>` : "";
   return `<div class="bloco"><h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${titulo}${btnExportar}</h3>
+    ${concBox}
     <div style="font-size:13px;color:var(--cinza);margin-bottom:10px">As empresas que mais venceram contratos do seu ramo ${localFrase} (${p.total} contratos analisados ${periodo}). Clique em cada uma pra ver os contratos:</div>
     <ul class="itens" id="lista-fornecedores">${p.topFornecedores.map((f, i) => `
       <li style="flex-direction:column;align-items:stretch;padding:0;border:1px solid var(--linha);border-radius:10px;margin-bottom:8px;overflow:hidden">
