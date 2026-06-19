@@ -233,6 +233,7 @@
     <div class="busca-box">
       <input id="busca" type="text" placeholder="Buscar qualquer produto ou serviço (ex: computador, merenda, vigilância)..." />
       <input id="filtro-cidade" type="text" placeholder="Cidade (opcional)" style="max-width:170px" />
+      <input id="filtro-numero" type="text" placeholder="Nº do edital (ex: 3/2026)" style="max-width:160px" title="Busca pelo número do edital do órgão" />
       <div style="position:relative">
         <button type="button" id="btn-uf" style="padding:10px 13px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:9px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;min-width:130px;text-align:left" onclick="toggleUfDrop()">Estado: Brasil todo ▾</button>
         <div id="uf-drop" style="display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:100;background:#fff;border:1px solid var(--linha);border-radius:12px;padding:10px;box-shadow:0 8px 30px rgba(0,0,0,.15);min-width:320px">
@@ -1461,11 +1462,12 @@ document.getElementById("filtro-prazo").innerHTML = PRAZOS_P.map(([v,l])=>`<opti
 async function buscarPainel(pagina = 1) {
   const termo = document.getElementById("busca").value.trim();
   const cidade = document.getElementById("filtro-cidade").value.trim();
+  const numeroEdital = document.getElementById("filtro-numero").value.trim();
   const ufsArr = [...ufsSelBusca];
   const mod = document.getElementById("filtro-mod").value;
   const prazo = document.getElementById("filtro-prazo").value;
   const pub = document.getElementById("filtro-pub").value;
-  if (!termo && !cidade && !ufsArr.length && !mod && !prazo && !pub) { carregar(); return; }
+  if (!termo && !cidade && !numeroEdital && !ufsArr.length && !mod && !prazo && !pub) { carregar(); return; }
   // Converte "publicado nos ultimos N dias" em data de corte (pubDe).
   let pubDe = "";
   if (pub !== "") {
@@ -1476,6 +1478,7 @@ async function buscarPainel(pagina = 1) {
   if (pagina === 1) c.innerHTML = `<div class="carregando"><span class="spinner"></span>Buscando no acervo nacional...</div>`;
   try {
     const params = new URLSearchParams({ termo, modalidade: mod, cidade, prazo, pagina: String(pagina), porPag: "15" });
+    if (numeroEdital) params.set("numeroEdital", numeroEdital);
     if (pubDe) params.set("pubDe", pubDe);
     ufsArr.forEach(u => params.append("uf", u)); // multi-uf: ?uf=SC&uf=SP
     const d = await (await fetch("/api/buscar?" + params)).json();
@@ -1561,6 +1564,7 @@ function exportarBusca() {
 }
 document.getElementById("busca").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(1); });
 document.getElementById("filtro-cidade").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(1); });
+document.getElementById("filtro-numero").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(1); });
 document.getElementById("filtro-prazo").addEventListener("change", () => buscarPainel(1));
 document.getElementById("filtro-mod").addEventListener("change", () => buscarPainel(1));
 

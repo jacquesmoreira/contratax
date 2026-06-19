@@ -49,6 +49,8 @@ export function abrir() {
       visto_em      TEXT
     );
   `);
+  // Migracao: numero "amigavel" do edital do orgao (ex: 3/2026), pra busca por Nº.
+  try { db.exec("ALTER TABLE editais ADD COLUMN numero_compra TEXT;"); } catch {}
   db.exec("CREATE INDEX IF NOT EXISTS idx_uf ON editais(uf);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_encerramento ON editais(encerramento);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_modalidade ON editais(modalidade_id);");
@@ -92,14 +94,15 @@ export function upsertEditais(editais) {
     INSERT INTO editais
       (id, orgao, orgao_cnpj, unidade, uf, municipio, objeto, objeto_norm,
        modalidade, modalidade_id, valor, abertura, encerramento, situacao,
-       publicacao, link, srp, ano, sequencial, visto_em)
+       publicacao, link, srp, ano, sequencial, numero_compra, visto_em)
     VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       valor = excluded.valor,
       encerramento = excluded.encerramento,
       situacao = excluded.situacao,
-      link = excluded.link
+      link = excluded.link,
+      numero_compra = COALESCE(excluded.numero_compra, editais.numero_compra)
   `);
 
   d.exec("BEGIN");
@@ -109,7 +112,7 @@ export function upsertEditais(editais) {
         e.id, e.orgao, e.orgaoCnpj, e.unidade, e.uf, e.municipio, e.objeto,
         normalizar(e.objeto), e.modalidade, e.modalidadeId, e.valorEstimado,
         e.abertura, e.encerramento, e.situacao, e.publicacao, e.link,
-        e.srp ? 1 : 0, e.ano, e.sequencial, agora
+        e.srp ? 1 : 0, e.ano, e.sequencial, e.numeroCompra ?? null, agora
       );
     }
     d.exec("COMMIT");
@@ -131,6 +134,7 @@ export function buscarPorId(id) {
     modalidadeId: l.modalidade_id, valorEstimado: l.valor, abertura: l.abertura,
     encerramento: l.encerramento, situacao: l.situacao, publicacao: l.publicacao,
     link: l.link, srp: Boolean(l.srp), ano: l.ano, sequencial: l.sequencial,
+    numeroCompra: l.numero_compra,
   };
 }
 
@@ -286,7 +290,7 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
 
 // Busca livre no acervo (usada pelo painel): por termo, UF e modalidade.
 // Devolve a lista de editais (nao so estatisticas), ranqueada por relevancia.
-export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termosParam = null, modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, pubDe = null, pubAte = null, limite = 60, pagina = null, porPag = null } = {}) {
+export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termosParam = null, modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, pubDe = null, pubAte = null, numeroEdital = null, limite = 60, pagina = null, porPag = null } = {}) {
   // Aceita ufs (array) ou uf (string simples, retrocompativel).
   const ufsArr = ufs && ufs.length ? ufs : (uf ? [uf] : []);
   const candidatos = consultar({ ufs: ufsArr, modalidades, apenasAbertos: true });
@@ -317,6 +321,16 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
   if (pubAte) {
     const fim = pubAte.length === 10 ? pubAte + "T23:59:59.999Z" : pubAte;
     casaram = casaram.filter((e) => e.publicacao && e.publicacao <= fim);
+  }
+  // Filtro por Nº do edital do orgao (ex: "3/2026"). Casa no numero amigavel e,
+  // como reforco, no numero de controle PNCP (id) — cobre acervo antigo sem o
+  // numero_compra preenchido ainda.
+  if (numeroEdital && numeroEdital.trim()) {
+    const q = normalizar(numeroEdital.trim()).replace(/\s+/g, "");
+    casaram = casaram.filter((e) =>
+      normalizar(e.numeroCompra || "").replace(/\s+/g, "").includes(q) ||
+      String(e.id || "").toLowerCase().includes(q)
+    );
   }
 
   // Ordenacao: PRAZO primeiro (urgencia), relevancia como desempate.
@@ -451,6 +465,7 @@ export function consultar({ ufs = [], modalidades = [], valorMin = null, valorMa
     srp: Boolean(l.srp),
     ano: l.ano,
     sequencial: l.sequencial,
+    numeroCompra: l.numero_compra,
   }));
 }
 

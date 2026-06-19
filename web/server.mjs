@@ -638,9 +638,10 @@ const servidor = createServer(async (req, res) => {
       const pubAte = url.searchParams.get("pubAte") || null;
       const modParam = url.searchParams.get("modalidade") || "";
       const modalidades = modParam ? [Number(modParam)] : [];
+      const numeroEdital = url.searchParams.get("numeroEdital") || null;
       const pagina = Number(url.searchParams.get("pagina") || 1);
       const porPag = Math.min(50, Math.max(5, Number(url.searchParams.get("porPag") || 15)));
-      return json(res, 200, buscarEditais({ uf, ufs, termo, modalidades, cidade, prazoDias, dataDe, dataAte, pubDe, pubAte, pagina, porPag }));
+      return json(res, 200, buscarEditais({ uf, ufs, termo, modalidades, cidade, prazoDias, dataDe, dataAte, pubDe, pubAte, numeroEdital, pagina, porPag }));
     }
 
     // Lista de editais do cliente (filtrada pelo token ?c=). Token admin ve tudo.

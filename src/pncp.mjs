@@ -43,6 +43,7 @@ export function normalizarEdital(raw) {
     srp: Boolean(raw.srp),
     ano: raw.anoCompra ?? null, // identificadores para a API de documentos
     sequencial: raw.sequencialCompra ?? null,
+    numeroCompra: raw.numeroCompra ?? null, // numero "amigavel" do orgao (ex: 3/2026)
   };
 }
 
