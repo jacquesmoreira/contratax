@@ -367,7 +367,7 @@ function cardHTML(e) {
   const visto = lerVistos().has(e.id) ? " ja-visto" : "";
   return `<div class="card${visto}" data-id="${esc(e.id)}" data-texto="${esc((local+" "+(e.orgao||"")+" "+(e.objeto||"")).toLowerCase())}">
     <div class="card-topo"><span class="orgao">${local} · ${esc(e.orgao ?? e.unidade ?? "Órgão público")}</span>
-      ${e.novo ? '<span class="selo-novo">NOVO</span>' : ""}${prazoHTML(e.encerramento)}
+      ${e.novo ? '<span class="selo-novo">NOVO</span>' : ""}${e.situacao === "Suspensa" ? '<span style="background:#fef3c7;color:#b45309;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px" title="Edital suspenso pelo órgão. Pode ser retomado ou cancelado — confira no portal antes de investir tempo.">⚠️ SUSPENSA</span>' : ""}${prazoHTML(e.encerramento)}
       <span class="badge-trilha badge-visto">já visto</span>
       <span class="badge-trilha badge-analisado">analisado pela ContrataX.IA</span></div>
     <div class="objeto">${esc(e.objeto)}</div>

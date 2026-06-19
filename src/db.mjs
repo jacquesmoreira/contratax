@@ -420,6 +420,9 @@ export function consultar({ ufs = [], modalidades = [], valorMin = null, valorMa
   if (apenasAbertos) {
     cond.push("encerramento >= ?");
     args.push(new Date().toISOString());
+    // Nao mostra edital MORTO (revogado/anulado) como oportunidade viva. Suspensa
+    // fica (pode voltar) e recebe selo de aviso no card.
+    cond.push("(situacao IS NULL OR situacao NOT IN ('Revogada', 'Anulada'))");
   }
 
   const where = cond.length ? `WHERE ${cond.join(" AND ")}` : "";
