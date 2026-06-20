@@ -56,10 +56,15 @@ export async function enviarDigestDoDia({ log = console.log } = {}) {
         continue;
       }
 
-      // Recalcula os editais do ramo (sem marcar como vistos ainda)
-      const { filtrados, novos } = await monitorar(p, { marcar: false });
+      // Editais do ramo PUBLICADOS desde o ultimo digest. Antes usavamos a flag
+      // "ainda nao visto", mas o atualizador (a cada 6h) marcava tudo como visto
+      // e o digest nunca achava "novos". Agora e por DATA DE PUBLICACAO, que e
+      // independente do mecanismo de vistos -> o digest funciona de verdade.
+      const { filtrados } = await monitorar(p, { marcar: false });
+      const corte = p._ultimoDigestEm || new Date(Date.now() - 36 * 3600 * 1000).toISOString();
+      const novos = filtrados.filter((e) => e.publicacao && e.publicacao >= corte);
       if (!novos.length) {
-        log(`[digest] ${p.nome}: sem editais novos hoje.`);
+        log(`[digest] ${p.nome}: sem editais novos desde o ultimo envio.`);
         continue;
       }
 
@@ -67,9 +72,8 @@ export async function enviarDigestDoDia({ log = console.log } = {}) {
       const { assunto, html } = gerarDigest(p, top);
       await enviar({ para: p.email, assunto, html });
 
-      // Marca todos os vistos atuais para nao reenviar amanha
-      await monitorar(p, { marcar: true });
       p._ultimoDigest = hoje;
+      p._ultimoDigestEm = new Date().toISOString();
       salvar = true;
       enviados++;
       log(`[digest] ${p.nome}: enviado para ${p.email} (${novos.length} novos).`);
@@ -83,6 +87,7 @@ export async function enviarDigestDoDia({ log = console.log } = {}) {
     for (const p of perfisAtual) {
       const fonte = perfis.find((x) => x.token === p.token);
       if (fonte?._ultimoDigest) p._ultimoDigest = fonte._ultimoDigest;
+      if (fonte?._ultimoDigestEm) p._ultimoDigestEm = fonte._ultimoDigestEm;
     }
     await salvarPerfis(perfisAtual);
   }
