@@ -103,6 +103,18 @@ export function abrir() {
   `);
   db.exec("CREATE INDEX IF NOT EXISTS idx_pca_norm ON pca_itens(descricao_norm);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_pca_data ON pca_itens(data_desejada);");
+
+  // Contas dos clientes (migracao de perfis.json -> SQLite). Cada perfil e
+  // guardado como blob JSON por token: preserva o schema flexivel (filtro,
+  // assinatura, usuarios...) e troca a escrita do ARQUIVO INTEIRO por escrita
+  // POR LINHA (sem clobber/lost-update, sem rewrite gigante). perfis.mjs cuida.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS perfis (
+      token         TEXT PRIMARY KEY,
+      dados         TEXT NOT NULL,
+      atualizado_em TEXT
+    );
+  `);
   db.exec("CREATE INDEX IF NOT EXISTS idx_uf ON editais(uf);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_encerramento ON editais(encerramento);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_modalidade ON editais(modalidade_id);");

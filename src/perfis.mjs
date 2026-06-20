@@ -1,12 +1,15 @@
-// Camada compartilhada de acesso a perfis.json. Cada perfil = uma EMPRESA (conta),
-// que pode ter varios usuarios (equipe) sob o mesmo CNPJ.
+// Camada compartilhada de acesso aos perfis (contas dos clientes). Cada perfil =
+// uma EMPRESA (conta), que pode ter varios usuarios (equipe) sob o mesmo CNPJ.
 //
-// Centraliza a leitura/escrita e a migracao de contas antigas (que tinham um unico
-// login no topo do perfil) para o novo modelo com lista de usuarios.
+// ARMAZENAMENTO: SQLite (tabela `perfis`, um blob JSON por token), migrado do
+// antigo perfis.json. Vantagem sobre o arquivo unico: escrita POR LINHA (sem
+// reescrever o arquivo inteiro a cada mudanca, sem clobber/lost-update). A API
+// publica (lerPerfis/salvarPerfis/atualizarPerfil) e IDENTICA a antes — o resto
+// do sistema nao muda. O perfis.json fica preservado como backup pre-migracao.
 
-import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
-import { dirname } from "node:path";
+import { readFile } from "node:fs/promises";
 import { PERFIS } from "./caminhos.mjs";
+import { abrir } from "./db.mjs";
 
 export { PERFIS };
 
@@ -24,58 +27,92 @@ function normalizarTermos(perfis) {
   return perfis;
 }
 
-export async function lerPerfis() {
+// Migracao UNICA: na 1a vez, se a tabela estiver vazia, importa do perfis.json.
+// O arquivo NAO e apagado (fica como backup). Roda so uma vez por processo.
+let _importado = false;
+async function garantirImportacao() {
+  if (_importado) return;
+  _importado = true;
   try {
-    return normalizarTermos(JSON.parse(await readFile(PERFIS, "utf8")));
-  } catch (e) {
-    if (e.code === "ENOENT") {
-      // Arquivo nao existe ainda (primeiro uso). Retorna lista vazia SEM criar
-      // o arquivo — so salvarPerfis() cria o arquivo quando ha dados reais.
-      return [];
-    }
-    throw e;
-  }
+    const d = abrir();
+    const n = d.prepare("SELECT COUNT(*) AS c FROM perfis").get().c;
+    if (n > 0) return; // ja migrado
+    let arr;
+    try { arr = JSON.parse(await readFile(PERFIS, "utf8")); }
+    catch (e) { if (e.code !== "ENOENT") console.error("[perfis] leitura do json:", e.message); return; }
+    if (!Array.isArray(arr) || !arr.length) return;
+    const stmt = d.prepare("INSERT OR REPLACE INTO perfis (token, dados, atualizado_em) VALUES (?, ?, ?)");
+    const agora = new Date().toISOString();
+    d.exec("BEGIN");
+    try {
+      let ok = 0;
+      for (const p of arr) {
+        if (!p || !p.token) { console.warn("[perfis] perfil sem token ignorado na migracao"); continue; }
+        stmt.run(p.token, JSON.stringify(p), agora); ok++;
+      }
+      d.exec("COMMIT");
+      console.log(`[perfis] migracao perfis.json -> SQLite: ${ok} contas importadas.`);
+    } catch (e) { d.exec("ROLLBACK"); throw e; }
+  } catch (e) { console.error("[perfis] migracao falhou:", e.message); }
 }
 
-// Fila de escrita: serializa salvarPerfis pra duas requisicoes nao escreverem
-// o arquivo ao mesmo tempo (interleave de await). Node e single-thread, mas os
-// awaits podem se intercalar; a fila garante uma escrita por vez.
-let _filaEscrita = Promise.resolve();
+export async function lerPerfis() {
+  await garantirImportacao();
+  const linhas = abrir().prepare("SELECT dados FROM perfis").all();
+  const perfis = [];
+  for (const l of linhas) {
+    try { perfis.push(JSON.parse(l.dados)); } catch {}
+  }
+  return normalizarTermos(perfis);
+}
 
-// Escrita ATOMICA: grava num .tmp e renomeia. O rename e atomico no SO, entao
-// o perfis.json nunca fica truncado/corrompido se o processo cair no meio da
-// escrita (era o risco catastrofico: arquivo corrompido = todas as contas).
+// Fila de escrita: serializa as gravacoes pra duas requisicoes nao se
+// intercalarem nos awaits (Node single-thread, mas await pode interleave).
+let _fila = Promise.resolve();
+
+// Sincroniza a tabela com o ARRAY passado: remove os que sumiram, grava os
+// presentes. Mantem a semantica do antigo salvarPerfis(array completo).
 export async function salvarPerfis(perfis) {
-  const tarefa = _filaEscrita.then(async () => {
-    await mkdir(dirname(PERFIS), { recursive: true });
-    const tmp = `${PERFIS}.tmp`;
-    await writeFile(tmp, JSON.stringify(perfis, null, 2), "utf8");
-    await rename(tmp, PERFIS);
+  const tarefa = _fila.then(async () => {
+    await garantirImportacao();
+    const d = abrir();
+    const tokens = new Set((perfis || []).map((p) => p && p.token).filter(Boolean));
+    const agora = new Date().toISOString();
+    const up = d.prepare("INSERT OR REPLACE INTO perfis (token, dados, atualizado_em) VALUES (?, ?, ?)");
+    d.exec("BEGIN");
+    try {
+      for (const { token } of d.prepare("SELECT token FROM perfis").all()) {
+        if (!tokens.has(token)) d.prepare("DELETE FROM perfis WHERE token = ?").run(token);
+      }
+      for (const p of (perfis || [])) {
+        if (p && p.token) up.run(p.token, JSON.stringify(p), agora);
+      }
+      d.exec("COMMIT");
+    } catch (e) { d.exec("ROLLBACK"); throw e; }
   });
-  // Mantem a fila viva mesmo se uma escrita falhar (nao trava as proximas).
-  _filaEscrita = tarefa.catch(() => {});
+  _fila = tarefa.catch(() => {});
   return tarefa;
 }
 
-// Atualizacao RACE-SAFE de UM perfil: le, muta so esse e grava, tudo dentro da
-// fila serializada. Use isto em caminhos quentes (digest, webhook, edicao) pra
-// evitar lost-update (um salvarPerfis(array) sobrescrevendo o de outra request).
-// mutador(perfil) recebe o perfil encontrado e o altera in-place; retorna o
-// proprio perfil atualizado, ou null se nao achou.
+// Atualizacao RACE-SAFE de UM perfil: le SO essa linha, muta e grava SO essa
+// linha. Sem reescrever o conjunto -> sem lost-update entre requisicoes.
+// mutador(perfil) altera in-place; devolve o perfil atualizado, ou null.
 export async function atualizarPerfil(token, mutador) {
   let resultado = null;
-  const tarefa = _filaEscrita.then(async () => {
-    const perfis = await lerPerfis();
-    const p = perfis.find((x) => x.token === token);
-    if (!p) return;
+  const tarefa = _fila.then(async () => {
+    await garantirImportacao();
+    const d = abrir();
+    const row = d.prepare("SELECT dados FROM perfis WHERE token = ?").get(token);
+    if (!row) return;
+    let p;
+    try { p = JSON.parse(row.dados); } catch { return; }
+    normalizarTermos([p]);
     mutador(p);
     resultado = p;
-    await mkdir(dirname(PERFIS), { recursive: true });
-    const tmp = `${PERFIS}.tmp`;
-    await writeFile(tmp, JSON.stringify(perfis, null, 2), "utf8");
-    await rename(tmp, PERFIS);
+    d.prepare("INSERT OR REPLACE INTO perfis (token, dados, atualizado_em) VALUES (?, ?, ?)")
+      .run(token, JSON.stringify(p), new Date().toISOString());
   });
-  _filaEscrita = tarefa.catch(() => {});
+  _fila = tarefa.catch(() => {});
   await tarefa;
   return resultado;
 }
