@@ -51,6 +51,34 @@ export function abrir() {
   `);
   // Migracao: numero "amigavel" do edital do orgao (ex: 3/2026), pra busca por Nº.
   try { db.exec("ALTER TABLE editais ADD COLUMN numero_compra TEXT;"); } catch {}
+  // Marca quando os precos homologados deste edital ja foram colhidos (Caminho B).
+  try { db.exec("ALTER TABLE editais ADD COLUMN precos_em TEXT;"); } catch {}
+
+  // Pesquisa de Precos: precos HOMOLOGADOS (reais, do vencedor) colhidos item a
+  // item das licitacoes que encerram. Base que CRESCE com o tempo (incremental).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS precos_itens (
+      chave          TEXT PRIMARY KEY,
+      edital_id      TEXT,
+      descricao      TEXT,
+      descricao_norm TEXT,
+      valor_unitario REAL,
+      quantidade     REAL,
+      unidade        TEXT,
+      orgao          TEXT,
+      orgao_cnpj     TEXT,
+      uf             TEXT,
+      municipio      TEXT,
+      fornecedor     TEXT,
+      fornecedor_ni  TEXT,
+      porte          TEXT,
+      categoria      TEXT,
+      data_resultado TEXT,
+      criado_em      TEXT
+    );
+  `);
+  db.exec("CREATE INDEX IF NOT EXISTS idx_precos_norm ON precos_itens(descricao_norm);");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_precos_uf ON precos_itens(uf);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_uf ON editais(uf);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_encerramento ON editais(encerramento);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_modalidade ON editais(modalidade_id);");
@@ -83,6 +111,93 @@ export function abrir() {
   db.exec("CREATE INDEX IF NOT EXISTS idx_contr_forn ON contratos(fornecedor_ni);"); // analise de concorrentes
 
   return db;
+}
+
+// ===== Pesquisa de Precos (Caminho B: colheita incremental) =====
+
+// Editais ja ENCERRADOS e ainda no banco (dentro da carencia) que ainda nao
+// tiveram os precos colhidos. O colhedor processa esses antes de serem apagados.
+export function editaisPraColher({ limite = 30 } = {}) {
+  const d = abrir();
+  return d.prepare(
+    `SELECT id, orgao, orgao_cnpj, uf, municipio, ano, sequencial
+     FROM editais WHERE encerramento < ? AND precos_em IS NULL
+     ORDER BY encerramento DESC LIMIT ?`
+  ).all(new Date().toISOString(), limite);
+}
+
+export function marcarPrecosColhidos(editalId) {
+  abrir().prepare("UPDATE editais SET precos_em = ? WHERE id = ?").run(new Date().toISOString(), editalId);
+}
+
+// Grava um lote de precos homologados colhidos.
+export function upsertPrecos(linhas) {
+  if (!linhas.length) return 0;
+  const d = abrir();
+  const stmt = d.prepare(`
+    INSERT INTO precos_itens
+      (chave, edital_id, descricao, descricao_norm, valor_unitario, quantidade,
+       unidade, orgao, orgao_cnpj, uf, municipio, fornecedor, fornecedor_ni,
+       porte, categoria, data_resultado, criado_em)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(chave) DO NOTHING
+  `);
+  const agora = new Date().toISOString();
+  let n = 0;
+  d.exec("BEGIN");
+  try {
+    for (const l of linhas) {
+      const r = stmt.run(
+        l.chave, l.editalId, l.descricao, normalizar(l.descricao || ""),
+        l.valorUnitario, l.quantidade, l.unidade, l.orgao, l.orgaoCnpj, l.uf,
+        l.municipio, l.fornecedor, l.fornecedorNi, l.porte, l.categoria,
+        l.dataResultado, agora,
+      );
+      n += r.changes;
+    }
+    d.exec("COMMIT");
+  } catch (e) { d.exec("ROLLBACK"); throw e; }
+  return n;
+}
+
+// Pesquisa de precos por descricao do item. Devolve estatisticas (faixa, mediana)
+// + a lista + agregados por orgao e por empresa. Filtra outliers de valor 0.
+export function pesquisarPrecos({ termo = "", uf = null, limite = 80 } = {}) {
+  const d = abrir();
+  const cond = ["valor_unitario > 0"];
+  const args = [];
+  const t = normalizar(termo).trim();
+  if (t) { cond.push("descricao_norm LIKE ?"); args.push("%" + t + "%"); }
+  if (uf) { cond.push("uf = ?"); args.push(uf); }
+  const where = "WHERE " + cond.join(" AND ");
+  const total = d.prepare(`SELECT COUNT(*) n FROM precos_itens ${where}`).get(...args).n;
+  if (!total) return { total: 0, termo, valores: null, itens: [], porOrgao: [], porEmpresa: [] };
+  const linhas = d.prepare(`SELECT * FROM precos_itens ${where} ORDER BY data_resultado DESC LIMIT 2000`).all(...args);
+  const valores = linhas.map((l) => l.valor_unitario).filter((v) => v > 0).sort((a, b) => a - b);
+  const mediana = valores.length ? valores[Math.floor(valores.length / 2)] : null;
+  const min = valores[0], max = valores[valores.length - 1];
+  const media = valores.reduce((s, v) => s + v, 0) / valores.length;
+  const empresas = new Map();
+  for (const l of linhas) {
+    const k = l.fornecedor_ni || l.fornecedor;
+    const r = empresas.get(k) || { fornecedor: l.fornecedor, ni: l.fornecedor_ni, qtd: 0 };
+    r.qtd += 1; empresas.set(k, r);
+  }
+  return {
+    total, termo,
+    valores: { min, max, media, mediana, n: valores.length },
+    itens: linhas.slice(0, limite).map((l) => ({
+      descricao: l.descricao, valorUnitario: l.valor_unitario, unidade: l.unidade,
+      quantidade: l.quantidade, orgao: l.orgao, uf: l.uf, municipio: l.municipio,
+      fornecedor: l.fornecedor, porte: l.porte, data: l.data_resultado,
+    })),
+    porEmpresa: [...empresas.values()].sort((a, b) => b.qtd - a.qtd).slice(0, 8),
+  };
+}
+
+// Quantos precos ja foram colhidos (pro disclaimer "base em crescimento").
+export function totalPrecos() {
+  try { return abrir().prepare("SELECT COUNT(*) n FROM precos_itens").get().n; } catch { return 0; }
 }
 
 // Analise de um concorrente pelo CNPJ: contratos que ELE ganhou (qualquer ramo,

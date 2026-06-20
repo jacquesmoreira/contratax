@@ -48,6 +48,29 @@ export async function listarItens(edital) {
     valorTotal: i.valorTotal ?? null,
     tipo: i.materialOuServicoNome ?? (i.materialOuServico === "S" ? "Serviço" : i.materialOuServico === "M" ? "Material" : null),
     beneficioMeEpp: i.tipoBeneficioNome ?? null,
+    temResultado: Boolean(i.temResultado),
+    categoria: i.itemCategoriaNome ?? null,
+  }));
+}
+
+// Resultados HOMOLOGADOS de um item (vencedor + preco unitario real). Usado pela
+// colheita de precos. So existe quando o item ja foi homologado (temResultado).
+export async function listarResultadosItem(edital, numeroItem) {
+  const { cnpj, ano, sequencial } = identificadores(edital);
+  if (!cnpj || !ano || !sequencial) return [];
+  const url = `${API}/orgaos/${cnpj}/compras/${ano}/${sequencial}/itens/${numeroItem}/resultados`;
+  const r = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(12000) });
+  if (!r.ok) return [];
+  const j = await r.json();
+  const arr = Array.isArray(j) ? j : (j?.resultados ?? []);
+  return arr.map((x) => ({
+    sequencial: x.sequencialResultado ?? 1,
+    valorUnitario: x.valorUnitarioHomologado ?? null,
+    quantidade: x.quantidadeHomologada ?? null,
+    fornecedor: x.nomeRazaoSocialFornecedor ?? null,
+    fornecedorNi: x.niFornecedor ?? null,
+    porte: x.porteFornecedorNome ?? null,
+    dataResultado: x.dataResultado ?? x.dataInclusao ?? null,
   }));
 }
 

@@ -57,6 +57,12 @@ export async function atualizarEditais({ limitePaginas = Infinity, log = console
   for (const p of perfis) {
     try { await monitorar(p); } catch (e) { log(`[atualizar] perfil ${p.nome || p.id}: ${e.message}`); }
   }
+  // Colheita de precos homologados ANTES de remover os encerrados (a base de
+  // Pesquisa de Precos cresce a cada ciclo). Teto pequeno + pausa = leve.
+  try {
+    const { colheitaCiclo } = await import("./colheitaPrecos.mjs");
+    await colheitaCiclo({ limite: Number(process.env.LICITA_PRECOS_LOTE || 25), log });
+  } catch (e) { log(`[precos] erro: ${e.message}`); }
   const removidos = removerExpirados({ graceDias: 3 });
   // Alertas automaticos de certidoes vencendo (so se e-mail configurado)
   try { await verificarCertidoesVencendo({ log }); } catch (e) { log(`[alertas] erro: ${e.message}`); }
