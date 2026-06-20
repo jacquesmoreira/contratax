@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/logo-favicon.png" type="image/png" />
+<title>ContrataX Jurídico IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+:root { --indigo:#4338ca; --indigo-d:#312e81; --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b; --linha:#e2e8f0; --fundo:#f8fafc; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif; background:var(--fundo); color:var(--tinta); }
+nav { background:#fff; border-bottom:1px solid var(--linha); }
+nav .wrap { width:min(900px,95vw); margin:0 auto; display:flex; align-items:center; height:60px; gap:18px; padding:0 20px; }
+.logo img { height:30px; display:block; }
+nav .dir { margin-left:auto; font-size:14px; font-weight:600; }
+nav .dir a { color:var(--cinza); text-decoration:none; }
+.wrap-main { width:min(900px,95vw); margin:0 auto; padding:24px 20px 30px; }
+h1 { font-size:23px; font-weight:800; letter-spacing:-.4px; margin-bottom:4px; }
+.sub { color:var(--cinza); font-size:14px; margin-bottom:14px; }
+.disc { background:#fffbeb; border:1px solid #fde68a; color:#92400e; border-radius:10px; padding:10px 13px; font-size:12.5px; margin-bottom:16px; line-height:1.5; }
+#chat { background:#fff; border:1px solid var(--linha); border-radius:16px; padding:18px; min-height:340px; max-height:58vh; overflow-y:auto; margin-bottom:14px; }
+.msg { margin-bottom:16px; display:flex; gap:10px; }
+.msg .bolha { padding:11px 14px; border-radius:12px; font-size:14px; line-height:1.55; white-space:pre-wrap; max-width:88%; }
+.msg.u { justify-content:flex-end; }
+.msg.u .bolha { background:var(--indigo); color:#fff; }
+.msg.a .bolha { background:var(--fundo); border:1px solid var(--linha); }
+.av { width:30px;height:30px;border-radius:8px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0 }
+.sugestoes { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.sug { background:#fff; border:1px solid var(--linha); border-radius:99px; padding:7px 13px; font-size:12.5px; font-weight:600; color:var(--indigo); cursor:pointer; }
+.sug:hover { background:#eef2ff; }
+.barra { display:flex; gap:10px; }
+.barra input { flex:1; padding:13px 15px; border:1.5px solid var(--linha); border-radius:11px; font-size:15px; font-family:inherit; outline:none; }
+.barra input:focus { border-color:var(--indigo); }
+.barra button { background:var(--indigo); color:#fff; border:none; padding:0 22px; border-radius:11px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; }
+.barra button:disabled { opacity:.6; cursor:default; }
+.rodape { font-size:11px; color:var(--cinza-c); text-align:center; margin-top:10px; }
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="logo" href="#" id="link-painel"><img src="/logo-horizontal.png" alt="ContrataX" /></a>
+  <div class="dir"><a href="#" id="voltar">← Voltar ao painel</a></div>
+</div></nav>
+
+<div class="wrap-main">
+  <h1>⚖️ ContrataX Jurídico IA</h1>
+  <div class="sub">Tire dúvidas jurídicas sobre licitações e contratos — habilitação, impugnação, recursos, prazos, ME/EPP.</div>
+  <div class="disc">⚠️ <b>Apoio informativo</b>, baseado na Lei 14.133/2021 e na prática. <b>Não substitui um advogado</b> — para casos concretos de alto valor ou litígio, consulte um profissional.</div>
+
+  <div class="sugestoes" id="sugestoes">
+    <span class="sug" onclick="usar(this)">Qual o prazo para impugnar um edital?</span>
+    <span class="sug" onclick="usar(this)">Posso participar como MEI?</span>
+    <span class="sug" onclick="usar(this)">Como funciona o recurso depois do resultado?</span>
+    <span class="sug" onclick="usar(this)">O que é exigência restritiva ilegal?</span>
+  </div>
+
+  <div id="chat"><div class="msg a"><div class="av">⚖️</div><div class="bolha">Olá! Sou o <b>ContrataX Jurídico IA</b>. Pergunte sobre habilitação, impugnação, recursos, prazos, regras de ME/EPP... O que você quer saber?</div></div></div>
+
+  <div class="barra">
+    <input id="pergunta" type="text" placeholder="Sua dúvida jurídica sobre licitações..." />
+    <button id="enviar" onclick="enviar()">Enviar</button>
+  </div>
+  <div class="rodape">As respostas podem conter imprecisões. Confira sempre o edital e a legislação.</div>
+</div>
+
+<script>
+const token = new URLSearchParams(location.search).get("c") || "";
+document.getElementById("link-painel").href = "/painel?c=" + encodeURIComponent(token);
+document.getElementById("voltar").href = "/painel?c=" + encodeURIComponent(token);
+const esc = s => (s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const chat = document.getElementById("chat");
+const historico = [];
+
+function usar(el) { document.getElementById("pergunta").value = el.textContent; enviar(); }
+function add(role, texto) {
+  const div = document.createElement("div");
+  div.className = "msg " + (role === "user" ? "u" : "a");
+  div.innerHTML = (role === "user" ? "" : '<div class="av">⚖️</div>') + `<div class="bolha">${esc(texto)}</div>`;
+  chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+document.getElementById("pergunta").addEventListener("keydown", e => { if (e.key === "Enter") enviar(); });
+
+async function enviar() {
+  const inp = document.getElementById("pergunta");
+  const p = inp.value.trim();
+  if (p.length < 3) return;
+  document.getElementById("sugestoes").style.display = "none";
+  add("user", p); historico.push({ role: "user", texto: p });
+  inp.value = "";
+  const btn = document.getElementById("enviar"); btn.disabled = true;
+  const carregando = add("assistant", "Consultando…");
+  try {
+    const r = await fetch("/api/juridico", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ c: token, historico }) });
+    const d = await r.json();
+    carregando.querySelector(".bolha").textContent = d.erro ? ("⚠️ " + d.erro) : d.resposta;
+    if (!d.erro) historico.push({ role: "assistant", texto: d.resposta });
+  } catch {
+    carregando.querySelector(".bolha").textContent = "⚠️ Erro ao consultar. Tente de novo.";
+  }
+  btn.disabled = false; inp.focus();
+}
+</script>
+</body>
+</html>

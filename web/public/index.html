@@ -325,6 +325,7 @@
             <span>Resumo do edital</span><span>Pergunte ao edital</span><span>Análise &amp; impugnação</span><span>Conferência de docs</span>
           </div>
           <button class="ferr-acao" type="button" onclick="rolarEditais()">Abrir um edital →</button>
+          <a id="ferr-juridico" href="#" style="display:block;text-align:center;margin-top:8px;font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none">⚖️ ContrataX Jurídico IA →</a>
         </div>
         <div class="ferr-card">
           <div class="ferr-cab">📁 Gestão de contratos</div>
@@ -798,7 +799,7 @@ async function carregar() {
       ligar("ferr-docs", "/documentos"); ligar("ferr-declaracoes", "/declaracoes");
       ligar("ferr-historico", "/historico"); ligar("ferr-equipe", "/equipe");
       ligar("ferr-conta", "/conta"); ligar("ferr-concorrentes", "/concorrentes");
-      ligar("ferr-precos", "/precos"); ligar("ferr-pca", "/pca");
+      ligar("ferr-precos", "/precos"); ligar("ferr-pca", "/pca"); ligar("ferr-juridico", "/juridico");
       carregarNotificacoes();
       carregarEmpresas();
       const sec = document.getElementById("ferramentas-painel");

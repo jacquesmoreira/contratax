@@ -201,9 +201,9 @@ async function perfilPorToken(token) {
 const ROTAS_PROTEGIDAS = [
   "/api/recebiveis", "/api/contratos-meus", "/api/documentos", "/api/historico",
   "/api/declaracoes", "/api/radar", "/api/contratos-fornecedor", "/api/saude-empresa",
-  "/api/equipe", "/api/exportar", "/api/concorrente", "/api/precos", "/api/pca",
+  "/api/equipe", "/api/exportar", "/api/concorrente", "/api/precos", "/api/pca", "/api/juridico",
   "/recebiveis", "/contratos", "/documentos", "/historico", "/declaracoes",
-  "/equipe", "/empresas", "/concorrentes", "/precos", "/pca",
+  "/equipe", "/empresas", "/concorrentes", "/precos", "/pca", "/juridico",
 ];
 function rotaProtegida(rota) {
   return ROTAS_PROTEGIDAS.some((p) => rota === p || rota.startsWith(p + "/") || rota.startsWith(p + "."));
@@ -2047,6 +2047,34 @@ const servidor = createServer(async (req, res) => {
     // Cota: exige assinatura ativa + cap diario por plano (reusa tldrLimiteDia,
     // que ja garante margem). Cada pergunta envia o PDF (caro), entao o cap
     // protege custo; prompt caching barateia perguntas seguidas no mesmo edital.
+    // ContrataX Juridico IA: chat de duvidas juridicas sobre licitacoes.
+    if (rota === "/api/juridico" && req.method === "POST") {
+      if (!temChave()) return json(res, 400, { erro: "IA juridica nao configurada" });
+      const corpoJ = await lerCorpo(req);
+      const perfilJ = await perfilPorToken(corpoJ.c || "");
+      if (!perfilJ) return json(res, 403, { erro: "Faca login pra usar o Juridico IA", paywall: true });
+      if (perfilJ.token !== ADMIN && !statusAtual(perfilJ).temAcesso) {
+        return json(res, 403, { erro: "Assinatura nao ativa", paywall: true });
+      }
+      // Teto diario por cliente (controle de custo de IA).
+      const CAP = Number(process.env.LICITA_JURIDICO_DIA || 25);
+      const hoje = new Date().toISOString().slice(0, 10);
+      let bloqueado = false;
+      if (perfilJ.token !== ADMIN) {
+        await atualizarPerfil(perfilJ.token, (p) => {
+          if (!p._juridicoUso || p._juridicoUso.dia !== hoje) p._juridicoUso = { dia: hoje, n: 0 };
+          if (p._juridicoUso.n >= CAP) { bloqueado = true; return; }
+          p._juridicoUso.n += 1;
+        });
+      }
+      if (bloqueado) return json(res, 429, { erro: `Você atingiu ${CAP} perguntas jurídicas hoje. O limite zera amanhã.` });
+      try {
+        const { juridicoIA } = await import("../src/juridicoIA.mjs");
+        const r = await juridicoIA(corpoJ.historico || [], { perfilToken: perfilJ.token });
+        return json(res, 200, r);
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
+
     if (rota === "/api/perguntar-edital" && req.method === "POST") {
       const id = url.searchParams.get("id");
       const edital = buscarPorId(id);
@@ -2705,6 +2733,11 @@ Contact: contato@contratax.com.br
     }
     if (rota === "/pca" || rota === "/pca.html") {
       const html = await readFile(resolve(AQUI, "public", "pca.html"), "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(html));
+    }
+    if (rota === "/juridico" || rota === "/juridico.html") {
+      const html = await readFile(resolve(AQUI, "public", "juridico.html"), "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(injetarAnalytics(html));
     }
