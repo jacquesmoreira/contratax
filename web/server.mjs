@@ -2047,6 +2047,19 @@ const servidor = createServer(async (req, res) => {
     // Cota: exige assinatura ativa + cap diario por plano (reusa tldrLimiteDia,
     // que ja garante margem). Cada pergunta envia o PDF (caro), entao o cap
     // protege custo; prompt caching barateia perguntas seguidas no mesmo edital.
+    // Criar Radar com IA: texto livre -> filtros de busca estruturados.
+    if (rota === "/api/radar-ia" && req.method === "POST") {
+      if (!temChave()) return json(res, 400, { erro: "IA nao configurada" });
+      const corpoR = await lerCorpo(req);
+      const perfilR = await perfilPorToken(corpoR.c || "");
+      if (!perfilR) return json(res, 403, { erro: "Faca login", paywall: true });
+      try {
+        const { radarIA } = await import("../src/radarIA.mjs");
+        const filtros = await radarIA(corpoR.texto || "", { perfilToken: perfilR.token });
+        return json(res, 200, { filtros });
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
+
     // ContrataX Juridico IA: chat de duvidas juridicas sobre licitacoes.
     if (rota === "/api/juridico" && req.method === "POST") {
       if (!temChave()) return json(res, 400, { erro: "IA juridica nao configurada" });

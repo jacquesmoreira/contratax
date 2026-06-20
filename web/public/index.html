@@ -269,7 +269,10 @@
       </select>
       <button id="btn-buscar">Buscar</button>
     </div>
-    <button type="button" id="btn-filtros-av" onclick="toggleFiltrosAv()" style="margin-top:10px;background:none;border:none;color:rgba(255,255,255,.85);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;padding:2px 0">⚙️ Filtros avançados ▾</button>
+    <div style="margin-top:10px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <button type="button" id="btn-filtros-av" onclick="toggleFiltrosAv()" style="background:none;border:none;color:rgba(255,255,255,.85);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;padding:2px 0">⚙️ Filtros avançados ▾</button>
+      <button type="button" onclick="criarRadarIA()" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;padding:5px 12px;border-radius:99px">✨ Criar busca com IA</button>
+    </div>
     <div id="filtros-av" style="display:none;margin-top:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:14px;display:none">
       <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
         <div>
@@ -1521,6 +1524,48 @@ function toggleFiltrosAv() {
   const aberto = b.style.display === "block";
   b.style.display = aberto ? "none" : "block";
   document.getElementById("btn-filtros-av").innerHTML = aberto ? "⚙️ Filtros avançados ▾" : "⚙️ Filtros avançados ▴";
+}
+// Criar Radar com IA: descreve em texto -> IA monta os filtros -> aplica e busca.
+async function criarRadarIA() {
+  const texto = prompt("Descreva o que você procura, em português normal:\n\nEx: \"pregões de merenda escolar em SC até 50 mil, sem terceirização\"");
+  if (texto === null) return;
+  if (texto.trim().length < 3) return;
+  const c = document.getElementById("conteudo");
+  c.innerHTML = `<div class="carregando"><span class="spinner"></span>Montando sua busca com IA...</div>`;
+  try {
+    const r = await fetch("/api/radar-ia", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ c: token, texto }) });
+    const d = await r.json();
+    if (d.erro) { c.innerHTML = `<div class="vazio">⚠️ ${esc(d.erro)}</div>`; return; }
+    const f = d.filtros || {};
+    // Aplica nos campos da busca
+    document.getElementById("busca").value = (f.termos || []).join(" ");
+    document.getElementById("filtro-cidade").value = f.cidade || "";
+    document.getElementById("filtro-mod").value = f.modalidade || "";
+    document.getElementById("filtro-vmin").value = f.valorMin || "";
+    document.getElementById("filtro-vmax").value = f.valorMax || "";
+    document.getElementById("filtro-excluir").value = (f.excluir || []).join(", ");
+    ufsSelBusca.clear();
+    (f.ufs || []).forEach((u) => ufsSelBusca.add(u));
+    document.querySelectorAll(".uf-chip-busca").forEach((x) => x.classList.toggle("sel", ufsSelBusca.has(x.dataset.uf)));
+    atualizarBtnUf();
+    if ((f.valorMin || f.valorMax || f.excluir?.length) && document.getElementById("filtros-av").style.display !== "block") toggleFiltrosAv();
+    // Mostra o que a IA entendeu (transparencia)
+    const partes = [];
+    if (f.termos?.length) partes.push("<b>" + esc(f.termos.join(", ")) + "</b>");
+    if (f.ufs?.length) partes.push("em " + esc(f.ufs.join("/")));
+    if (f.cidade) partes.push("cidade " + esc(f.cidade));
+    if (f.valorMax) partes.push("até R$ " + Number(f.valorMax).toLocaleString("pt-BR"));
+    if (f.valorMin) partes.push("a partir de R$ " + Number(f.valorMin).toLocaleString("pt-BR"));
+    if (f.excluir?.length) partes.push("excluindo " + esc(f.excluir.join(", ")));
+    const toast = document.createElement("div");
+    toast.style.cssText = "position:fixed;bottom:22px;left:22px;background:#fff;border-left:5px solid #4338ca;border-radius:14px;padding:14px 18px;max-width:380px;box-shadow:0 18px 50px rgba(15,23,42,.18);z-index:90;font-size:13px;line-height:1.5";
+    toast.innerHTML = "✨ <b>Busca montada pela IA:</b> " + (partes.join(" · ") || "termos gerais") + ". Ajuste se quiser e clique em Buscar.";
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 9000);
+    buscarPainel(1);
+  } catch {
+    c.innerHTML = `<div class="vazio">Erro ao montar a busca. Tente de novo.</div>`;
+  }
 }
 // Botao "Abrir um edital" do bloco de IA: rola ate a lista de editais (as
 // ferramentas de IA vivem dentro de cada edital, nao como pagina avulsa).
