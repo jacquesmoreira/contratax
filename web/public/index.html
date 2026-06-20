@@ -269,6 +269,31 @@
       </select>
       <button id="btn-buscar">Buscar</button>
     </div>
+    <button type="button" id="btn-filtros-av" onclick="toggleFiltrosAv()" style="margin-top:10px;background:none;border:none;color:rgba(255,255,255,.85);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;padding:2px 0">⚙️ Filtros avançados ▾</button>
+    <div id="filtros-av" style="display:none;margin-top:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:14px;display:none">
+      <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Valor estimado (R$)</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input id="filtro-vmin" type="number" placeholder="Mín" style="width:110px;padding:9px 11px;border:none;border-radius:8px;font-size:14px;font-family:inherit" />
+            <span style="color:#fff">–</span>
+            <input id="filtro-vmax" type="number" placeholder="Máx" style="width:110px;padding:9px 11px;border:none;border-radius:8px;font-size:14px;font-family:inherit" />
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Registro de Preços</label>
+          <select id="filtro-srp" style="padding:9px 11px;border:none;border-radius:8px;font-size:14px;font-family:inherit">
+            <option value="">Tanto faz</option>
+            <option value="sim">Só com ata (Sim)</option>
+            <option value="nao">Sem ata (Não)</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <label style="display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Palavras a excluir (separe por vírgula)</label>
+          <input id="filtro-excluir" type="text" placeholder="ex: veterinário, locação" style="width:100%;padding:9px 11px;border:none;border-radius:8px;font-size:14px;font-family:inherit" />
+        </div>
+      </div>
+    </div>
     <div id="segmentos-chips" style="display:none;margin-top:12px">
       <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px">Ou clique no seu segmento</div>
       <div id="segmentos-lista" style="display:flex;flex-wrap:wrap;gap:7px"></div>
@@ -1410,6 +1435,10 @@ function paramsAtuais() {
     mod: document.getElementById("filtro-mod").value,
     prazo: document.getElementById("filtro-prazo").value,
     pub: document.getElementById("filtro-pub").value,
+    vmin: document.getElementById("filtro-vmin").value.trim(),
+    vmax: document.getElementById("filtro-vmax").value.trim(),
+    srp: document.getElementById("filtro-srp").value,
+    excluir: document.getElementById("filtro-excluir").value.trim(),
   };
 }
 function descreverBusca(p) {
@@ -1446,6 +1475,11 @@ function aplicarBuscaId(id) {
   document.getElementById("filtro-mod").value = p.mod || "";
   document.getElementById("filtro-prazo").value = p.prazo || "";
   document.getElementById("filtro-pub").value = p.pub || "";
+  document.getElementById("filtro-vmin").value = p.vmin || "";
+  document.getElementById("filtro-vmax").value = p.vmax || "";
+  document.getElementById("filtro-srp").value = p.srp || "";
+  document.getElementById("filtro-excluir").value = p.excluir || "";
+  if (p.vmin || p.vmax || p.srp || p.excluir) { const b = document.getElementById("filtros-av"); if (b && b.style.display !== "block") toggleFiltrosAv(); }
   ufsSelBusca.clear();
   (p.ufs || []).forEach((u) => ufsSelBusca.add(u));
   document.querySelectorAll(".uf-chip-busca").forEach((c) => c.classList.toggle("sel", ufsSelBusca.has(c.dataset.uf)));
@@ -1477,6 +1511,12 @@ carregarBuscasSalvas();
 function toggleUfDrop() {
   const d = document.getElementById("uf-drop");
   d.style.display = d.style.display === "none" ? "block" : "none";
+}
+function toggleFiltrosAv() {
+  const b = document.getElementById("filtros-av");
+  const aberto = b.style.display === "block";
+  b.style.display = aberto ? "none" : "block";
+  document.getElementById("btn-filtros-av").innerHTML = aberto ? "⚙️ Filtros avançados ▾" : "⚙️ Filtros avançados ▴";
 }
 // Botao "Abrir um edital" do bloco de IA: rola ate a lista de editais (as
 // ferramentas de IA vivem dentro de cada edital, nao como pagina avulsa).
@@ -1693,7 +1733,11 @@ async function buscarPainel(pagina = 1) {
   const mod = document.getElementById("filtro-mod").value;
   const prazo = document.getElementById("filtro-prazo").value;
   const pub = document.getElementById("filtro-pub").value;
-  if (!termo && !cidade && !numeroEdital && !ufsArr.length && !mod && !prazo && !pub) { carregar(); return; }
+  const vmin = document.getElementById("filtro-vmin").value.trim();
+  const vmax = document.getElementById("filtro-vmax").value.trim();
+  const srp = document.getElementById("filtro-srp").value;
+  const excluir = document.getElementById("filtro-excluir").value.trim();
+  if (!termo && !cidade && !numeroEdital && !ufsArr.length && !mod && !prazo && !pub && !vmin && !vmax && !srp && !excluir) { carregar(); return; }
   // Converte "publicado nos ultimos N dias" em data de corte (pubDe).
   let pubDe = "";
   if (pub !== "") {
@@ -1705,6 +1749,10 @@ async function buscarPainel(pagina = 1) {
   try {
     const params = new URLSearchParams({ termo, modalidade: mod, cidade, prazo, pagina: String(pagina), porPag: "15" });
     if (numeroEdital) params.set("numeroEdital", numeroEdital);
+    if (vmin) params.set("valorMin", vmin);
+    if (vmax) params.set("valorMax", vmax);
+    if (srp) params.set("srp", srp);
+    if (excluir) params.set("excluir", excluir);
     if (pubDe) params.set("pubDe", pubDe);
     ufsArr.forEach(u => params.append("uf", u)); // multi-uf: ?uf=SC&uf=SP
     const d = await (await fetch("/api/buscar?" + params)).json();

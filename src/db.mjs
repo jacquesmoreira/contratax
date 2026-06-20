@@ -528,13 +528,17 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
 
 // Busca livre no acervo (usada pelo painel): por termo, UF e modalidade.
 // Devolve a lista de editais (nao so estatisticas), ranqueada por relevancia.
-export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termosParam = null, modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, pubDe = null, pubAte = null, numeroEdital = null, limite = 60, pagina = null, porPag = null } = {}) {
+export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termosParam = null, modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, pubDe = null, pubAte = null, numeroEdital = null, valorMin = null, valorMax = null, srp = null, excluir = [], limite = 60, pagina = null, porPag = null } = {}) {
   // Aceita ufs (array) ou uf (string simples, retrocompativel).
   const ufsArr = ufs && ufs.length ? ufs : (uf ? [uf] : []);
-  const candidatos = consultar({ ufs: ufsArr, modalidades, apenasAbertos: true });
+  const candidatos = consultar({ ufs: ufsArr, modalidades, valorMin, valorMax, apenasAbertos: true });
   // Aceita termos (array, usado pelo export do painel) ou termo (string, busca livre).
   const termos = termosParam?.length ? termosParam : (termo && termo.trim() ? [termo.trim()] : []);
-  let casaram = aplicarFiltro(candidatos, { termos });
+  // Palavras a excluir (filtros avancados): tira ruido do resultado.
+  let casaram = aplicarFiltro(candidatos, { termos, termosExcluir: excluir });
+  // Registro de Precos (SRP): "sim" so atas, "nao" sem ata.
+  if (srp === "sim") casaram = casaram.filter((e) => e.srp);
+  else if (srp === "nao") casaram = casaram.filter((e) => !e.srp);
 
   // Filtro por cidade (compara sem acento/caixa; aceita parte do nome).
   if (cidade && cidade.trim()) {

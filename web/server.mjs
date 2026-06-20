@@ -753,9 +753,13 @@ const servidor = createServer(async (req, res) => {
       const modParam = url.searchParams.get("modalidade") || "";
       const modalidades = modParam ? [Number(modParam)] : [];
       const numeroEdital = url.searchParams.get("numeroEdital") || null;
+      const valorMin = url.searchParams.get("valorMin") ? Number(url.searchParams.get("valorMin")) : null;
+      const valorMax = url.searchParams.get("valorMax") ? Number(url.searchParams.get("valorMax")) : null;
+      const srp = url.searchParams.get("srp") || null; // "sim" | "nao"
+      const excluir = (url.searchParams.get("excluir") || "").split(",").map((s) => s.trim()).filter(Boolean);
       const pagina = Number(url.searchParams.get("pagina") || 1);
       const porPag = Math.min(50, Math.max(5, Number(url.searchParams.get("porPag") || 15)));
-      return json(res, 200, buscarEditais({ uf, ufs, termo, modalidades, cidade, prazoDias, dataDe, dataAte, pubDe, pubAte, numeroEdital, pagina, porPag }));
+      return json(res, 200, buscarEditais({ uf, ufs, termo, modalidades, cidade, prazoDias, dataDe, dataAte, pubDe, pubAte, numeroEdital, valorMin, valorMax, srp, excluir, pagina, porPag }));
     }
 
     // Lista de editais do cliente (filtrada pelo token ?c=). Token admin ve tudo.
