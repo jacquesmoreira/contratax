@@ -424,6 +424,25 @@ const servidor = createServer(async (req, res) => {
     }
 
     // Plano Assessoria: lista as empresas gerenciadas pelo assessor logado.
+    // Trocador de empresa no cabecalho: empresas que o cliente pode alternar.
+    // So tem sentido pra conta gerenciada (filha de assessoria) ou pra propria
+    // assessoria. Cliente normal de 1 CNPJ recebe lista vazia (sem trocador).
+    if (rota === "/api/minhas-empresas") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 200, { empresas: [], atual: null });
+      const gerenteToken = ehAssessoria(perfil) ? perfil.token : (perfil.gerenciadoPor || null);
+      if (!gerenteToken) return json(res, 200, { empresas: [], atual: perfil.token });
+      const perfis = await lerPerfis();
+      const filhas = perfis.filter((p) => p.gerenciadoPor === gerenteToken);
+      const lista = filhas.map((f) => ({
+        token: f.token,
+        nome: f.razaoSocial || f.nome || f.cnpj || "Empresa",
+        cnpj: f.cnpj || null,
+        atual: f.token === perfil.token,
+      }));
+      return json(res, 200, { empresas: lista, atual: perfil.token, gerenteToken });
+    }
+
     if (rota === "/api/assessoria/empresas") {
       const tokenAss = url.searchParams.get("c") || "";
       const gerente = await perfilPorToken(tokenAss);
