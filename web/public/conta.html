@@ -84,9 +84,9 @@
         <button type="button" class="sugestao-ramo" data-ramo="engenharia, projetos" style="background:#fff;border:1px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit">engenharia</button>
       </div>
 
-      <label style="margin-top:18px">Estados onde você atua</label>
+      <label style="margin-top:18px">Estados onde você atua *</label>
       <div class="mods" id="ufs-chips-completar" style="gap:7px"></div>
-      <div class="dica" title="Sem estado selecionado, o painel mostra editais do Brasil inteiro">💡 Deixe em branco para receber editais do Brasil todo</div>
+      <div class="dica">💡 Selecione seu(s) estado(s) — ou marque <b>🇧🇷 Brasil todo</b>. Focar na sua região deixa o radar mais limpo.</div>
 
       <button class="btn" id="btn-completar" style="margin-top:18px;width:100%">Liberar meu painel</button>
       <div class="ok" id="completar-ok"></div>
@@ -287,15 +287,25 @@ $("salvar").onclick = async () => {
 const modoCompletar = new URLSearchParams(location.search).get("completar") === "1";
 
 const ufsCompletar = new Set();
+let nacionalCompletar = false;
 function montarChipsCompletar() {
   const el = $("ufs-chips-completar");
+  const base = "display:flex;align-items:center;gap:7px;margin:0;text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;padding:7px 12px;border-radius:99px;cursor:pointer";
+  const off = (c) => { c.style.cssText = base + ";color:var(--tinta);background:var(--fundo);border:1.5px solid var(--linha)"; };
+  const on = (c) => { c.style.cssText = base + ";color:#fff;background:var(--indigo);border:1.5px solid var(--indigo)"; };
+  // Chip especial "Brasil todo" (escolha intencional de atuacao nacional).
+  const chipBR = document.createElement("label"); chipBR.textContent = "🇧🇷 Brasil todo"; off(chipBR);
+  chipBR.onclick = () => {
+    nacionalCompletar = !nacionalCompletar;
+    (nacionalCompletar ? on : off)(chipBR);
+    if (nacionalCompletar) { ufsCompletar.clear(); [...el.querySelectorAll("label")].forEach((c) => { if (c !== chipBR) off(c); }); }
+  };
+  el.appendChild(chipBR);
   UFS.forEach(u => {
-    const chip = document.createElement("label");
-    chip.style.cssText = "display:flex;align-items:center;gap:7px;margin:0;text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;color:var(--tinta);background:var(--fundo);border:1.5px solid var(--linha);padding:7px 12px;border-radius:99px;cursor:pointer";
-    chip.textContent = u;
+    const chip = document.createElement("label"); chip.textContent = u; off(chip);
     chip.onclick = () => {
-      if (ufsCompletar.has(u)) { ufsCompletar.delete(u); chip.style.background="var(--fundo)"; chip.style.borderColor="var(--linha)"; chip.style.color="var(--tinta)"; }
-      else { ufsCompletar.add(u); chip.style.background="var(--indigo)"; chip.style.borderColor="var(--indigo)"; chip.style.color="#fff"; }
+      if (ufsCompletar.has(u)) { ufsCompletar.delete(u); off(chip); }
+      else { ufsCompletar.add(u); on(chip); nacionalCompletar = false; off(chipBR); }
     };
     el.appendChild(chip);
   });
@@ -396,6 +406,7 @@ if (modoCompletar) {
     const ramo = $("ramo-completar").value.trim();
     if (cnpj.length !== 14) { $("completar-erro").textContent = "Informe um CNPJ válido (14 dígitos)."; return; }
     if (!ramo) { $("completar-erro").textContent = "Informe ao menos uma palavra do seu ramo."; return; }
+    if (!ufsCompletar.size && !nacionalCompletar) { $("completar-erro").textContent = "Selecione o(s) estado(s) onde atua, ou marque \"🇧🇷 Brasil todo\"."; return; }
     $("btn-completar").disabled = true;
     $("btn-completar").textContent = "Liberando...";
     try {

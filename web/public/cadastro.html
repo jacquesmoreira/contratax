@@ -82,9 +82,9 @@
         })();
       </script>
 
-      <label>Estados onde você atua</label>
+      <label>Estados onde você atua *</label>
       <div class="ufs-wrap" id="ufs-chips"></div>
-      <div class="uf-dica">Clique para selecionar um ou mais estados. Deixe em branco para monitorar o Brasil todo.</div>
+      <div class="uf-dica">Selecione um ou mais estados — ou marque <b>🇧🇷 Brasil todo</b>. Recomendamos focar na sua região pra receber só o que importa (sem UF, o radar vem do Brasil inteiro e fica poluído).</div>
 
       <label for="ramo">O que a sua empresa vende</label>
       <input id="ramo" type="text" placeholder="Ex: limpeza, conservação, asseio" required />
@@ -121,16 +121,25 @@ fetch("/api/google/status").then(r => r.json()).then(d => {
 <script>
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const selecionados = new Set();
+let nacional = false; // escolha EXPLICITA de "Brasil todo" (evita UF em branco por acidente)
 
-// Chips de estado
 const chipsEl = document.getElementById("ufs-chips");
+// Chip especial "Brasil todo": escolha intencional de atuacao nacional.
+const chipBR = document.createElement("span");
+chipBR.className = "uf-chip"; chipBR.textContent = "🇧🇷 Brasil todo";
+chipBR.onclick = () => {
+  nacional = !nacional;
+  chipBR.classList.toggle("sel", nacional);
+  if (nacional) { selecionados.clear(); chipsEl.querySelectorAll(".uf-chip[data-uf]").forEach(c => c.classList.remove("sel")); }
+};
+chipsEl.appendChild(chipBR);
+// Chips de estado
 UFS.forEach(u => {
   const chip = document.createElement("span");
-  chip.className = "uf-chip";
-  chip.textContent = u;
+  chip.className = "uf-chip"; chip.dataset.uf = u; chip.textContent = u;
   chip.onclick = () => {
     if (selecionados.has(u)) { selecionados.delete(u); chip.classList.remove("sel"); }
-    else { selecionados.add(u); chip.classList.add("sel"); }
+    else { selecionados.add(u); chip.classList.add("sel"); nacional = false; chipBR.classList.remove("sel"); }
   };
   chipsEl.appendChild(chip);
 });
@@ -189,6 +198,14 @@ document.getElementById("form").addEventListener("submit", async (ev) => {
   }
   const btn = document.getElementById("btn"), erro = document.getElementById("erro");
   erro.textContent = "";
+  // Escolha de atuacao OBRIGATORIA e intencional: pelo menos 1 estado OU "Brasil
+  // todo". Evita o "sem UF" por acidente (cliente que ficava com radar nacional
+  // poluido sem querer).
+  if (!selecionados.size && !nacional) {
+    erro.textContent = "Selecione o(s) estado(s) onde você atua, ou marque \"🇧🇷 Brasil todo\".";
+    document.getElementById("ufs-chips").scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
   // Clickwrap: aceite explicito obrigatorio. Sem checkbox marcada, nao envia.
   if (!document.getElementById("aceite-termos").checked) {
     erro.textContent = "Para continuar, você precisa marcar que leu e concorda com os Termos de Uso e a Política de Privacidade.";
