@@ -788,6 +788,20 @@ const servidor = createServer(async (req, res) => {
       // Marca os favoritados do cliente (estrela no card).
       const favSet = new Set(perfil._favoritos || []);
       for (const ed of editais) ed.favorito = favSet.has(ed.id);
+      // Selo de OPORTUNIDADE (honesto, transparente): compoe fatores que a gente
+      // REALMENTE sabe por card, sem custo extra. forte/regular/avaliar + os
+      // porques no tooltip. So usa sinais defensaveis (sem score caixa-preta).
+      for (const ed of editais) {
+        const fatores = [];
+        let pts = 0;
+        const rep = ed.reputacao?.classificacao;
+        if (rep === "rapido") { pts += 2; fatores.push("Órgão paga rápido"); }
+        else if (rep === "regular") { pts += 1; fatores.push("Órgão paga em dia"); }
+        else if (rep === "lento") { fatores.push("Órgão costuma pagar devagar"); }
+        if (ed.srp) { pts += 1; fatores.push("Registro de Preços (compra recorrente, dá pra se planejar)"); }
+        const nivel = pts >= 3 ? "forte" : pts >= 1 ? "regular" : "avaliar";
+        ed.oportunidade = { nivel, fatores };
+      }
       // Pre-aquece o resumo (TL;DR) dos editais mais urgentes em segundo plano,
       // pra abrir instantaneo (como o concorrente faz pre-gerando tudo). Diferenca:
       // so os top-N do painel, nao os 426k -> custo controlado. NAO bloqueia a
