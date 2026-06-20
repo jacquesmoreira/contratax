@@ -828,6 +828,37 @@ const servidor = createServer(async (req, res) => {
       return json(res, 200, { ok: true, dispensado: p._onboardingDispensado });
     }
 
+    // Notificacoes in-app (sino): agrega o que ja calculamos e hoje so vai por
+    // e-mail. Sem store: reflete o estado atual a cada abertura.
+    if (rota === "/api/notificacoes") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 200, { notificacoes: [], total: 0 });
+      const c = encodeURIComponent(perfil.token);
+      const notis = [];
+      try {
+        const empresa = empresaDoPerfil(perfil);
+        const em30 = new Date(Date.now() + 30 * 864e5);
+        const s = saudeDocumental(empresa);
+        const vencidas = s.itens.filter((i) => i.situacao === "vencida").length;
+        const vencendo = s.itens.filter((i) => i.situacao === "valida" && i.validade && new Date(i.validade) <= em30).length;
+        if (vencidas) notis.push({ icone: "📄", titulo: `${vencidas} certidão${vencidas > 1 ? "ões" : ""} vencida${vencidas > 1 ? "s" : ""}`, link: `/documentos?c=${c}`, urgente: true });
+        else if (vencendo) notis.push({ icone: "📄", titulo: `${vencendo} certidão${vencendo > 1 ? "ões" : ""} vencendo em até 30 dias`, link: `/documentos?c=${c}`, urgente: false });
+      } catch {}
+      try {
+        const r = estatisticasRecebiveis(perfil.token);
+        if (r.atrasadas) notis.push({ icone: "💰", titulo: `${r.atrasadas} nota${r.atrasadas > 1 ? "s" : ""} fiscal${r.atrasadas > 1 ? "is" : ""} atrasada${r.atrasadas > 1 ? "s" : ""}`, link: `/recebiveis?c=${c}`, urgente: true });
+      } catch {}
+      try {
+        const cs = listarContratos(perfil.token).filter((x) => x.situacao === "fim_em_30d");
+        if (cs.length) notis.push({ icone: "📑", titulo: `${cs.length} contrato${cs.length > 1 ? "s" : ""} vencendo em 30 dias`, link: `/contratos?c=${c}`, urgente: false });
+      } catch {}
+      try {
+        const u = usoDe(perfil);
+        if (u.limite > 0 && u.usados / u.limite >= 0.8) notis.push({ icone: "⚡", titulo: `Você usou ${u.usados}/${u.limite} análises do mês`, link: `/assinar?c=${c}`, urgente: u.usados >= u.limite });
+      } catch {}
+      return json(res, 200, { notificacoes: notis, total: notis.length });
+    }
+
     if (rota === "/api/acesso") {
       const token = url.searchParams.get("c") || "";
       if (token === ADMIN) return json(res, 200, { encontrado: true, nome: "Administrador", status: "admin", temAcesso: true });

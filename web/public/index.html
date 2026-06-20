@@ -216,6 +216,10 @@
       <a id="nav-plano" href="#" style="display:none"></a>
       <a id="nav-receb" href="#">Recebíveis</a>
       <a id="nav-contratos" href="#">Contratos</a>
+      <div id="sino-wrap" style="position:relative;display:none">
+        <button id="sino-btn" type="button" title="Notificações" style="background:none;border:none;cursor:pointer;font-size:18px;padding:6px 8px;position:relative;line-height:1">🔔<span id="sino-badge" style="display:none;position:absolute;top:0;right:2px;background:#dc2626;color:#fff;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:99px;padding:0 4px;line-height:16px;text-align:center"></span></button>
+        <div id="sino-menu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:120;background:#fff;border:1px solid var(--linha);border-radius:14px;box-shadow:0 18px 50px rgba(15,23,42,.18);width:320px;overflow:hidden"></div>
+      </div>
       <div class="dropdown" id="dd-mais">
         <span class="dd-btn">Mais</span>
         <div class="dd-menu">
@@ -764,6 +768,7 @@ async function carregar() {
       ligar("ferr-historico", "/historico"); ligar("ferr-equipe", "/equipe");
       ligar("ferr-conta", "/conta"); ligar("ferr-concorrentes", "/concorrentes");
       ligar("ferr-precos", "/precos"); ligar("ferr-pca", "/pca");
+      carregarNotificacoes();
       const sec = document.getElementById("ferramentas-painel");
       if (sec) sec.style.display = "block";
       const tg = document.getElementById("ferr-toggle"), grid = document.getElementById("ferr-grid");
@@ -1471,6 +1476,36 @@ function toggleUfDrop() {
 function rolarEditais() {
   const alvo = document.getElementById("conteudo");
   if (alvo) alvo.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+// Sino de notificacoes: agrega alertas (certidoes, recebiveis, contratos, cota)
+// que hoje so vao por e-mail. Reflete o estado atual; sem store.
+async function carregarNotificacoes() {
+  const wrap = document.getElementById("sino-wrap");
+  if (!wrap) return;
+  let d;
+  try { d = await (await fetch("/api/notificacoes?c=" + encodeURIComponent(token))).json(); }
+  catch { return; }
+  const notis = d.notificacoes || [];
+  wrap.style.display = "block";
+  const badge = document.getElementById("sino-badge");
+  if (notis.length) { badge.textContent = notis.length; badge.style.display = "block"; }
+  else badge.style.display = "none";
+  const menu = document.getElementById("sino-menu");
+  menu.innerHTML = notis.length
+    ? `<div style="padding:12px 15px;font-weight:800;font-size:13px;border-bottom:1px solid var(--linha)">Notificações</div>` +
+      notis.map((n) => `<a href="${n.link}" style="display:flex;gap:10px;align-items:flex-start;padding:12px 15px;border-bottom:1px solid var(--linha);text-decoration:none;color:var(--tinta)">
+        <span style="font-size:17px;line-height:1.2">${n.icone}</span>
+        <span style="flex:1;font-size:13px;line-height:1.4">${esc(n.titulo)}${n.urgente ? ' <span style="color:#dc2626;font-weight:800;font-size:10px">URGENTE</span>' : ""}</span>
+      </a>`).join("")
+    : `<div style="padding:22px 15px;text-align:center;color:var(--cinza);font-size:13px">🎉 Tudo em dia! Nenhum alerta no momento.</div>`;
+  const btn = document.getElementById("sino-btn");
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    const aberto = menu.style.display === "block";
+    menu.style.display = aberto ? "none" : "block";
+    badge.style.display = "none"; // abriu = viu
+  };
+  document.addEventListener("click", (e) => { if (!wrap.contains(e.target)) menu.style.display = "none"; });
 }
 // Favorita/desfavorita um edital (estrela no card). Atualiza visual na hora.
 async function toggleFavorito(id, btn) {
