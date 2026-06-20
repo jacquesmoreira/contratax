@@ -40,10 +40,14 @@ function cardEmail(e) {
 }
 
 // Gera o e-mail. Devolve { assunto, html }.
-export function gerarDigest(perfil, editais) {
+export function gerarDigest(perfil, editais, { semUf = false } = {}) {
   const link = `${BASE}/painel?c=${perfil.token}`;
   const n = editais.length;
   const assunto = `${n} ${n === 1 ? "licitação" : "licitações"} do seu ramo ${n === 1 ? "está" : "estão"} esperando você`;
+  // Cliente sem estado cadastrado: aviso pra completar (senao ve editais nacionais).
+  const avisoUf = semUf ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;"><tr><td style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;">
+          <div style="font-size:13.5px;color:#92400e;line-height:1.5;">⚠️ Você ainda não cadastrou seu <b>estado</b> — então mostramos editais do <b>Brasil todo</b>. <a href="${BASE}/conta?c=${perfil.token}" style="color:#b45309;font-weight:700;">Cadastre seu estado</a> pra receber só a sua região.</div>
+        </td></tr></table>` : "";
 
   const html = `<!DOCTYPE html><html><body style="margin:0;background:#f8fafc;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:24px 12px;"><tr><td align="center">
@@ -57,6 +61,7 @@ export function gerarDigest(perfil, editais) {
         <div style="color:#c7d2fe;font-size:14px;margin-top:14px;">Seus editais de hoje, ${perfil.nome}</div>
       </td></tr>
       <tr><td style="background:#fff;padding:24px 28px;">
+        ${avisoUf}
         <div style="font-size:16px;color:#0f172a;margin-bottom:18px;">
           Encontramos <b>${n} ${n === 1 ? "licitação" : "licitações"}</b> que combinam com o seu ramo. As mais urgentes primeiro:
         </div>
