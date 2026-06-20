@@ -22,9 +22,16 @@ function raiz(p) {
     .replace(/(es|s)$/, "");
 }
 
-// Conjunto das raizes das palavras (>= 3 letras) de um texto normalizado.
+// Token significativo: >= 3 letras OU curto mas com numero (ex: "a4", "h2o",
+// "aro13"). So tokens curtos puramente alfabeticos ("de", "da") sao ignorados.
+// Sem isso, "papel A4" virava so "papel" e trazia papel higienico.
+function tokenSignificativo(w) {
+  return w.length >= 3 || (w.length >= 2 && /\d/.test(w));
+}
+
+// Conjunto das raizes das palavras significativas de um texto normalizado.
 function raizesDe(textoNorm) {
-  return new Set(textoNorm.split(/[^a-z0-9]+/).filter((w) => w.length >= 3).map(raiz));
+  return new Set(textoNorm.split(/[^a-z0-9]+/).filter(tokenSignificativo).map(raiz));
 }
 
 // Conectivos coordenativos que separam ITENS distintos numa frase: "A e B",
@@ -35,7 +42,7 @@ const CONECTIVOS = /\s+e\/ou\s+|\s+(?:e|ou)\s+|\s*[,/&]\s*/;
 // Casa um sub-termo: TODAS as suas palavras (>= 3 letras) aparecem no objeto,
 // tolerando plural e genero. So palavra curta cai para substring.
 function subTermoCasa(sub, raizesObjeto, objetoNorm) {
-  const palavras = sub.split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
+  const palavras = sub.split(/[^a-z0-9]+/).filter(tokenSignificativo);
   if (!palavras.length) return objetoNorm.includes(sub);
   return palavras.every((w) => raizesObjeto.has(raiz(w)) || objetoNorm.includes(w));
 }
