@@ -25,7 +25,7 @@ import { renderizarAjuda, renderizarContato, processarContato } from "../src/aju
 import { tentarUsoVisitante, ipDoRequest } from "../src/rateLimitVisitante.mjs";
 import { paginaCasos, paginaStatus, paginaSeguranca } from "../src/paginasInstitucionais.mjs";
 import { injetarAnalytics, enviarConversao } from "../src/analytics.mjs";
-import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos, analiseConcorrente, pesquisarPrecos, totalPrecos } from "../src/db.mjs";
+import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos, analiseConcorrente, pesquisarPrecos, totalPrecos, pesquisarPca, totalPca } from "../src/db.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
 import { temChave } from "../src/ia.mjs";
 import { criarPerfil, MAX_TERMOS, parseRamos } from "../src/cadastro.mjs";
@@ -201,9 +201,9 @@ async function perfilPorToken(token) {
 const ROTAS_PROTEGIDAS = [
   "/api/recebiveis", "/api/contratos-meus", "/api/documentos", "/api/historico",
   "/api/declaracoes", "/api/radar", "/api/contratos-fornecedor", "/api/saude-empresa",
-  "/api/equipe", "/api/exportar", "/api/concorrente", "/api/precos",
+  "/api/equipe", "/api/exportar", "/api/concorrente", "/api/precos", "/api/pca",
   "/recebiveis", "/contratos", "/documentos", "/historico", "/declaracoes",
-  "/equipe", "/empresas", "/concorrentes", "/precos",
+  "/equipe", "/empresas", "/concorrentes", "/precos", "/pca",
 ];
 function rotaProtegida(rota) {
   return ROTAS_PROTEGIDAS.some((p) => rota === p || rota.startsWith(p + "/") || rota.startsWith(p + "."));
@@ -562,6 +562,14 @@ const servidor = createServer(async (req, res) => {
       const uf = url.searchParams.get("uf") || null;
       const r = pesquisarPrecos({ termo, uf });
       return json(res, 200, { ...r, baseTotal: totalPrecos() });
+    }
+
+    // PCA: oportunidades antecipadas (compras planejadas). Cliente logado.
+    if (rota === "/api/pca") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 403, { erro: "Sessao invalida" });
+      const r = pesquisarPca({ termo: url.searchParams.get("termo") || "" });
+      return json(res, 200, { ...r, baseTotal: totalPca() });
     }
 
     // Analise de concorrente por CNPJ (contratos que ele ganhou). Cliente logado.
@@ -2624,6 +2632,11 @@ Contact: contato@contratax.com.br
     }
     if (rota === "/precos" || rota === "/precos.html") {
       const html = await readFile(resolve(AQUI, "public", "precos.html"), "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(html));
+    }
+    if (rota === "/pca" || rota === "/pca.html") {
+      const html = await readFile(resolve(AQUI, "public", "pca.html"), "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(injetarAnalytics(html));
     }

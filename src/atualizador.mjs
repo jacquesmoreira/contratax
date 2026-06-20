@@ -63,6 +63,11 @@ export async function atualizarEditais({ limitePaginas = Infinity, log = console
     const { colheitaCiclo } = await import("./colheitaPrecos.mjs");
     await colheitaCiclo({ limite: Number(process.env.LICITA_PRECOS_LOTE || 25), log });
   } catch (e) { log(`[precos] erro: ${e.message}`); }
+  // Ingestao incremental do PCA (oportunidades antecipadas), capada por disco.
+  try {
+    const { ingerirPcaCiclo } = await import("./ingestPca.mjs");
+    await ingerirPcaCiclo({ log });
+  } catch (e) { log(`[pca] erro: ${e.message}`); }
   const removidos = removerExpirados({ graceDias: 3 });
   // Alertas automaticos de certidoes vencendo (so se e-mail configurado)
   try { await verificarCertidoesVencendo({ log }); } catch (e) { log(`[alertas] erro: ${e.message}`); }

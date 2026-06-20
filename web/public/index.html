@@ -308,6 +308,7 @@
           <div class="ferr-cab">📊 Acompanhamento &amp; conta</div>
           <div class="ferr-tiles">
             <a id="ferr-precos" href="#">💰 Pesquisa de Preços <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">quanto o governo pagou</span></a>
+            <a id="ferr-pca" href="#">📅 Oportunidades antecipadas <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">compras planejadas (PCA)</span></a>
             <a id="ferr-concorrentes" href="#">🔍 Concorrentes <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">quem ganha por CNPJ</span></a>
             <a id="ferr-historico" href="#">🕑 Histórico <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">o que você já viu</span></a>
             <a id="ferr-equipe" href="#">👥 Equipe <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">vários usuários</span></a>
@@ -762,7 +763,7 @@ async function carregar() {
       ligar("ferr-docs", "/documentos"); ligar("ferr-declaracoes", "/declaracoes");
       ligar("ferr-historico", "/historico"); ligar("ferr-equipe", "/equipe");
       ligar("ferr-conta", "/conta"); ligar("ferr-concorrentes", "/concorrentes");
-      ligar("ferr-precos", "/precos");
+      ligar("ferr-precos", "/precos"); ligar("ferr-pca", "/pca");
       const sec = document.getElementById("ferramentas-painel");
       if (sec) sec.style.display = "block";
       const tg = document.getElementById("ferr-toggle"), grid = document.getElementById("ferr-grid");

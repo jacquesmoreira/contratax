@@ -79,6 +79,30 @@ export function abrir() {
   `);
   db.exec("CREATE INDEX IF NOT EXISTS idx_precos_norm ON precos_itens(descricao_norm);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_precos_uf ON precos_itens(uf);");
+
+  // PCA - Plano de Contratacao Anual: compras que os orgaos JA planejaram (com
+  // data desejada) = oportunidade ANTECIPADA, antes do edital sair. Base
+  // incremental e CAPADA (protege o disco). Caminho B aqui tambem.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS pca_itens (
+      chave          TEXT PRIMARY KEY,
+      descricao      TEXT,
+      descricao_norm TEXT,
+      categoria      TEXT,
+      quantidade     REAL,
+      unidade        TEXT,
+      valor_unitario REAL,
+      valor_total    REAL,
+      data_desejada  TEXT,
+      orgao          TEXT,
+      orgao_cnpj     TEXT,
+      unidade_orgao  TEXT,
+      ano_pca        INTEGER,
+      criado_em      TEXT
+    );
+  `);
+  db.exec("CREATE INDEX IF NOT EXISTS idx_pca_norm ON pca_itens(descricao_norm);");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_pca_data ON pca_itens(data_desejada);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_uf ON editais(uf);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_encerramento ON editais(encerramento);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_modalidade ON editais(modalidade_id);");
@@ -198,6 +222,65 @@ export function pesquisarPrecos({ termo = "", uf = null, limite = 80 } = {}) {
 // Quantos precos ja foram colhidos (pro disclaimer "base em crescimento").
 export function totalPrecos() {
   try { return abrir().prepare("SELECT COUNT(*) n FROM precos_itens").get().n; } catch { return 0; }
+}
+
+// ===== PCA - Plano de Contratacao Anual (oportunidade antecipada) =====
+export function totalPca() {
+  try { return abrir().prepare("SELECT COUNT(*) n FROM pca_itens").get().n; } catch { return 0; }
+}
+
+export function upsertPca(linhas) {
+  if (!linhas.length) return 0;
+  const d = abrir();
+  const stmt = d.prepare(`
+    INSERT INTO pca_itens
+      (chave, descricao, descricao_norm, categoria, quantidade, unidade,
+       valor_unitario, valor_total, data_desejada, orgao, orgao_cnpj,
+       unidade_orgao, ano_pca, criado_em)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(chave) DO NOTHING
+  `);
+  const agora = new Date().toISOString();
+  let n = 0;
+  d.exec("BEGIN");
+  try {
+    for (const l of linhas) {
+      const r = stmt.run(
+        l.chave, l.descricao, normalizar(l.descricao || ""), l.categoria,
+        l.quantidade, l.unidade, l.valorUnitario, l.valorTotal, l.dataDesejada,
+        l.orgao, l.orgaoCnpj, l.unidadeOrgao, l.anoPca, agora,
+      );
+      n += r.changes;
+    }
+    d.exec("COMMIT");
+  } catch (e) { d.exec("ROLLBACK"); throw e; }
+  return n;
+}
+
+// Busca no PCA por descricao. Prioriza data desejada futura (oportunidade que
+// ainda vai acontecer). Devolve lista + agregado por orgao.
+export function pesquisarPca({ termo = "", limite = 80 } = {}) {
+  const d = abrir();
+  const t = normalizar(termo).trim();
+  const cond = []; const args = [];
+  if (t) { cond.push("descricao_norm LIKE ?"); args.push("%" + t + "%"); }
+  const where = cond.length ? "WHERE " + cond.join(" AND ") : "";
+  const total = d.prepare(`SELECT COUNT(*) n FROM pca_itens ${where}`).get(...args).n;
+  if (!total) return { total: 0, termo, itens: [], valorTotal: 0 };
+  // Futuras primeiro (data desejada >= hoje), depois por valor.
+  const hoje = new Date().toISOString().slice(0, 10);
+  const linhas = d.prepare(
+    `SELECT * FROM pca_itens ${where} ORDER BY (data_desejada >= '${hoje}') DESC, data_desejada ASC LIMIT 2000`
+  ).all(...args);
+  const valorTotal = linhas.reduce((s, l) => s + (Number(l.valor_total) || 0), 0);
+  return {
+    total, termo, valorTotal,
+    itens: linhas.slice(0, limite).map((l) => ({
+      descricao: l.descricao, categoria: l.categoria, quantidade: l.quantidade,
+      unidade: l.unidade, valorUnitario: l.valor_unitario, valorTotal: l.valor_total,
+      dataDesejada: l.data_desejada, orgao: l.orgao, unidadeOrgao: l.unidade_orgao,
+    })),
+  };
 }
 
 // Analise de um concorrente pelo CNPJ: contratos que ELE ganhou (qualquer ramo,
