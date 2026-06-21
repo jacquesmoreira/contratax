@@ -12,7 +12,7 @@ export function normalizar(texto) {
 // Raiz simples de uma palavra (ja normalizada, sem acento): remove plurais e
 // variacoes comuns do portugues, para "materiais" casar com "material" e
 // "hospitalares" com "hospitalar".
-function raiz(p) {
+export function raiz(p) {
   return p
     .replace(/oes$/, "ao")
     .replace(/ais$/, "al")

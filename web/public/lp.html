@@ -688,34 +688,7 @@
       </div>
     </div>
 
-    <div style="margin-top:24px;font-size:13.5px;color:var(--cinza);text-align:center">Não pedimos cartão no teste. Precisou de mais análises em algum mês? Tem <b>pacote avulso</b> (10 análises por R$ 79, 25 por R$ 189, 50 por R$ 369). Soma à sua cota sem trocar de plano.</div>
-
-    <!-- Calculadora de ROI -->
-    <div style="background:#fff;border:1.5px solid var(--linha);border-radius:18px;padding:30px 28px;margin-top:34px;max-width:680px;margin-left:auto;margin-right:auto">
-      <div style="text-align:center;margin-bottom:22px">
-        <div style="font-size:12.5px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Em quanto tempo se paga</div>
-        <h3 style="font-size:22px;font-weight:800;letter-spacing:-.3px">Calculadora de retorno</h3>
-        <p style="font-size:14px;color:var(--cinza);margin-top:6px">Diga quanto vale, em média, um contrato que sua empresa fecha. Calculamos quantos meses o ContrataX se paga.</p>
-      </div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;justify-content:center;margin-bottom:20px">
-        <div style="flex:1;min-width:200px">
-          <label style="display:block;font-size:11.5px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Valor médio do contrato (R$)</label>
-          <input id="calc-valor" type="number" value="4000" min="0" aria-label="Valor médio do contrato em reais" style="width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:10px;font-size:16px;font-family:inherit;outline:none" />
-        </div>
-        <div style="flex:1;min-width:200px">
-          <label style="display:block;font-size:11.5px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Plano</label>
-          <select id="calc-plano" aria-label="Plano para o cálculo de retorno" style="width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:10px;font-size:16px;font-family:inherit;outline:none;background:#fff">
-            <option value="59">Starter, R$ 59/mês</option>
-            <option value="247">Básico, R$ 247/mês</option>
-            <option value="397">Pro, R$ 397/mês</option>
-            <option value="697">Assessoria 10, R$ 697/mês</option>
-            <option value="1297">Assessoria 25, R$ 1.297/mês</option>
-          </select>
-        </div>
-      </div>
-      <div id="calc-resultado" style="background:linear-gradient(135deg,#eef2ff,#f0f9ff);border:1px solid #c7d2fe;border-radius:14px;padding:22px 24px;text-align:center"></div>
-      <div style="font-size:11.5px;color:var(--cinza-c);margin-top:14px;text-align:center;line-height:1.5">Cálculo simples: 1 contrato fechado pelo valor médio informado paga N meses da assinatura. Não considera taxas, impostos nem custo de produção, apenas o ponto de equilíbrio do software.</div>
-    </div>
+    <div style="margin-top:24px;font-size:13.5px;color:var(--cinza);text-align:center">Não pedimos cartão no teste. Precisou de mais análises em algum mês? Tem <b>pacote avulso</b> (10 análises por R$ 79,00, 25 por R$ 189,00, 50 por R$ 369,00). Soma à sua cota sem trocar de plano.</div>
   </div></section>
 
   <!-- FAQ -->
@@ -787,26 +760,6 @@ const brlHumano = v => {
 const dias = iso => { if (!iso) return null; const d = new Date(iso); return isNaN(d)?null:Math.ceil((d-new Date())/864e5); };
 function pz(iso){ const d = dias(iso); if (d==null) return ""; const c = d<=2?"u":d<=7?"m":"t"; const t = d<0?"encerrado":d===0?"encerra hoje":d===1?"encerra amanhã":`encerra em ${d} dias`; return `<span class="pz ${c}">${t}</span>`; }
 
-// Calculadora de ROI
-function atualizarCalc() {
-  const v = Number(document.getElementById("calc-valor").value || 0);
-  const p = Number(document.getElementById("calc-plano").value || 197);
-  const box = document.getElementById("calc-resultado");
-  if (!v || v <= 0) { box.innerHTML = '<div style="color:var(--cinza)">Informe um valor maior que zero</div>'; return; }
-  const meses = Math.max(0.1, v / p);
-  const mesesTxt = meses < 1
-    ? `<b style="color:var(--indigo);font-size:32px">menos de 1 mês</b>`
-    : `<b style="color:var(--indigo);font-size:32px">${meses.toFixed(1)}</b> <span style="color:var(--cinza)">${meses < 2 ? "mês" : "meses"}</span>`;
-  const contratosPorAno = Math.max(1, Math.round(12 / Math.max(1, meses)));
-  box.innerHTML = `
-    <div style="font-size:13px;color:var(--cinza);margin-bottom:6px">Um contrato de <b style="color:var(--tinta)">R$ ${v.toLocaleString("pt-BR")}</b> paga</div>
-    <div style="margin-bottom:14px">${mesesTxt} de assinatura</div>
-    <div style="font-size:13.5px;color:var(--cinza);border-top:1px solid #c7d2fe;padding-top:14px">Se você ganhar <b style="color:var(--tinta)">${contratosPorAno} contrato${contratosPorAno > 1 ? "s" : ""}/ano</b> desse porte, o ContrataX se paga <b style="color:var(--verde)">${contratosPorAno}× ao ano</b>.</div>`;
-}
-document.addEventListener("DOMContentLoaded", () => {
-  const v = document.getElementById("calc-valor"), p = document.getElementById("calc-plano");
-  if (v && p) { v.oninput = atualizarCalc; p.onchange = atualizarCalc; atualizarCalc(); }
-});
 
 // Contador nacional no topo + número real na faixa de autoridade
 fetch("/api/busca-publica").then(r=>r.json()).then(d=>{

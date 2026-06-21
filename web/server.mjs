@@ -670,10 +670,13 @@ const servidor = createServer(async (req, res) => {
         const termos = customTermo
           ? customTermo.split(",").map(t => t.trim()).filter(Boolean)
           : (perfilEx?.filtro?.termos ?? []);
-        const termosIA = customTermo ? [] : (perfilEx?.filtro?.termosIA ?? []);
+        const { aplicarFiltro, normalizar, termosAmplos } = await import("../src/filtro.mjs");
+        const { expandirTermos } = await import("../src/sinonimos.mjs");
+        const termosIA = customTermo
+          ? [...termosAmplos(termos), ...expandirTermos(termos)]
+          : (perfilEx?.filtro?.termosIA ?? []);
         if (!termos.length && !termosIA.length) return json(res, 400, { erro: "Informe um termo para exportar" });
         const candidatos = (await import("../src/db.mjs")).consultarContratos({ uf, mesesAtras: meses });
-        const { aplicarFiltro, normalizar } = await import("../src/filtro.mjs");
         let todos = aplicarFiltro(candidatos, { termos, termosIA }).filter(c => c.valor > 0);
         if (cidade.trim()) {
           const cn = normalizar(cidade.trim());
@@ -1084,18 +1087,22 @@ const servidor = createServer(async (req, res) => {
       const pag   = Math.max(1, Number(url.searchParams.get("pagina") || 1));
       const porPag = 30;
       const { consultarContratos } = await import("../src/db.mjs");
-      const { aplicarFiltro, normalizar } = await import("../src/filtro.mjs");
+      const { aplicarFiltro, normalizar, termosAmplos } = await import("../src/filtro.mjs");
+      const { expandirTermos } = await import("../src/sinonimos.mjs");
       const candidatos = consultarContratos({ uf, mesesAtras: meses });
       // Usa o termo digitado ou os termos do perfil (se logado). Quando usa o
       // ramo do perfil, aproveita tambem os termos relacionados da ContrataX.IA
       // (mesma expansao semantica do painel de editais), pra o historico nao
-      // ficar mais estreito que o painel. Termo digitado fica literal (respeita
-      // exatamente o que a pessoa buscou).
+      // ficar mais estreito que o painel. Termo digitado tambem expande para o
+      // ramo (atadura -> hospitalar), igual a LP e o painel — o objeto do
+      // contrato e de alto nivel, entao o produto especifico sozinho da zero.
       const customTermo = url.searchParams.get("termo");
       const termos = customTermo
         ? customTermo.split(",").map(t => t.trim()).filter(Boolean)
         : (perfil?.filtro?.termos ?? []);
-      const termosIA = customTermo ? [] : (perfil?.filtro?.termosIA ?? []);
+      const termosIA = customTermo
+        ? [...termosAmplos(termos), ...expandirTermos(termos)]
+        : (perfil?.filtro?.termosIA ?? []);
       // Sem termo e sem perfil: pede que o usuario busque algo
       if (!termos.length && !termosIA.length) {
         return json(res, 200, { total: 0, paginas: 0, pagina: 1, termos: [], licitacoes: [], aviso: "Digite um produto ou serviço para ver o histórico." });

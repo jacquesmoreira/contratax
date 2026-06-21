@@ -5,7 +5,8 @@ import { DatabaseSync } from "node:sqlite";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdirSync } from "node:fs";
-import { normalizar, aplicarFiltro, tokenSignificativo } from "./filtro.mjs";
+import { normalizar, aplicarFiltro, tokenSignificativo, termosAmplos } from "./filtro.mjs";
+import { expandirTermos } from "./sinonimos.mjs";
 
 // Monta condicoes SQL exigindo TODOS os tokens significativos do termo (mesma
 // regra do painel: "papel A4" pede papel E a4, nao a frase colada). Mantem a
@@ -523,7 +524,11 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
   }
   const candidatos = consultar({ ufs: uf ? [uf] : [], apenasAbertos: true });
   const termos = termo && termo.trim() ? [termo.trim()] : [];
-  let casaram = aplicarFiltro(candidatos, { termos });
+  // Expande produto -> ramo: quem busca "atadura" ve os editais de "material
+  // hospitalar" (o produto mora nos itens, nao no objeto). Sem isso a LP dava
+  // zero e matava cadastro. termosAmplos cobre o caso de termo de 2 palavras.
+  const expandido = [...termosAmplos(termos), ...expandirTermos(termos)];
+  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido });
 
   // Ordena por relevancia: editais onde o termo aparece mais cedo no objeto
   // (assunto central) vem antes dos que so mencionam de passagem. Empate = prazo.
@@ -553,8 +558,12 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
   const candidatos = consultar({ ufs: ufsArr, modalidades, valorMin, valorMax, apenasAbertos: true });
   // Aceita termos (array, usado pelo export do painel) ou termo (string, busca livre).
   const termos = termosParam?.length ? termosParam : (termo && termo.trim() ? [termo.trim()] : []);
+  // Expande produto -> ramo (atadura -> hospitalar), igual a LP. So na busca
+  // LIVRE (string digitada); quando vem termosParam (export do perfil) o perfil
+  // ja traz seus proprios termosIA, entao nao reexpande.
+  const expandido = termosParam?.length ? [] : [...termosAmplos(termos), ...expandirTermos(termos)];
   // Palavras a excluir (filtros avancados): tira ruido do resultado.
-  let casaram = aplicarFiltro(candidatos, { termos, termosExcluir: excluir });
+  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluir });
   // Registro de Precos (SRP): "sim" so atas, "nao" sem ata.
   if (srp === "sim") casaram = casaram.filter((e) => e.srp);
   else if (srp === "nao") casaram = casaram.filter((e) => !e.srp);
