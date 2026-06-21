@@ -232,7 +232,7 @@
           <a id="nav-conta" href="#">Conta</a>
         </div>
       </div>
-      <a class="nav-sair" href="/">Sair</a>
+      <a class="nav-sair" href="/api/sair">Sair</a>
     </div>
   </div></nav>
 
@@ -1985,6 +1985,27 @@ carregar();
       }
     };
   };
+})();
+</script>
+<script>
+// Sessao unica: checa periodicamente se a sessao ainda vale. Se foi encerrada
+// (login em outro dispositivo), desloga na hora. "sem-sessao" (acesso legado
+// so por link, sem cookie) e ignorado — nao derruba ninguem a toa.
+(function () {
+  let parado = false;
+  async function checar() {
+    if (parado || document.hidden) return;
+    try {
+      const d = await (await fetch("/api/sessao/ping", { cache: "no-store" })).json();
+      if (d.estado === "encerrada") {
+        parado = true;
+        alert("Sua conta foi acessada em outro dispositivo. Por segurança, só uma sessão fica ativa por vez. Faça login novamente.");
+        location.href = "/entrar?sessao=revogada";
+      }
+    } catch (e) { /* rede instável: tenta no próximo ciclo */ }
+  }
+  setInterval(checar, 45000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) checar(); });
 })();
 </script>
 </body>

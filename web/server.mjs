@@ -42,6 +42,7 @@ import { listarDocumentos, baixarArquivo, listarItens } from "../src/documentos.
 import { verificarSenha } from "../src/senha.mjs";
 import { consultarCNPJ } from "../src/cnpj.mjs";
 import { autenticarUsuario, convidarMembro, removerMembro, listarMembros, definirAssentos } from "../src/equipe.mjs";
+import { criarSessao, validarSessao, revogarSessao, cookieSessao, cookieLimpar, lerCookie } from "../src/sessoes.mjs";
 import { lerPerfis, salvarPerfis, atualizarPerfil, PERFIS, garantirUsuarios } from "../src/perfis.mjs";
 import { monitorar } from "../src/monitor.mjs";
 import { usoDe, registrarAnalise, checarAnalise, adicionarAvulsas, usoExtracoesDe, podeExtrairPdf, registrarExtracaoPdf, registrarResumo, resumosDe } from "../src/uso.mjs";
@@ -297,7 +298,43 @@ const servidor = createServer(async (req, res) => {
           res.writeHead(302, { Location: `/assinar?c=${encodeURIComponent(tkGuard)}` });
           return res.end();
         }
+        // Sessao unica: ferramentas sensiveis exigem uma sessao de login viva.
+        // Se a sessao foi revogada (login em outro local) ou nao existe, barra:
+        // API responde 401 sessaoEncerrada; pagina manda pro /entrar.
+        const vs = validarSessao(lerCookie(req, "cx_sid"));
+        if (!vs.ok) {
+          const revogada = vs.motivo === "revogada";
+          if (rota.startsWith("/api/")) {
+            return json(res, 401, {
+              erro: revogada
+                ? "Sua sessão foi encerrada porque sua conta foi acessada em outro dispositivo."
+                : "Entre na sua conta para usar esta ferramenta.",
+              sessaoEncerrada: true, motivo: vs.motivo,
+            });
+          }
+          res.writeHead(302, { Location: `/entrar?sessao=${vs.motivo}&next=${encodeURIComponent(req.url)}` });
+          return res.end();
+        }
       }
+    }
+
+    // Heartbeat de sessao: o painel chama de tempos em tempos pra saber se ainda
+    // esta logado. "encerrada" = foi revogada (login em outro local) -> desloga.
+    if (rota === "/api/sessao/ping") {
+      const sid = lerCookie(req, "cx_sid");
+      if (!sid) return json(res, 200, { estado: "sem-sessao" });
+      const vs = validarSessao(sid);
+      return json(res, 200, { estado: vs.ok ? "ativa" : "encerrada", motivo: vs.motivo });
+    }
+
+    // Logout: revoga a sessao e limpa o cookie.
+    if (rota === "/api/sair") {
+      const sid = lerCookie(req, "cx_sid");
+      revogarSessao(sid);
+      res.setHeader("Set-Cookie", cookieLimpar(host));
+      if (req.method === "POST") return json(res, 200, { ok: true });
+      res.writeHead(302, { Location: "/entrar" });
+      return res.end();
     }
 
     // Busca publica da landing page (por UF e termo, sem login).
@@ -358,6 +395,17 @@ const servidor = createServer(async (req, res) => {
       }
       try {
         const { perfil, isNovo } = await processarCallback(code, state);
+        // Sessao do login social (sessao unica + cookie HttpOnly).
+        try {
+          const uAdmin = (perfil.usuarios?.find((u) => u.papel === "admin") || perfil.usuarios?.[0]);
+          const sid = criarSessao({
+            token: perfil.token,
+            userId: uAdmin?.id || perfil.id || "admin",
+            ip: ipAuth(req),
+            ua: req.headers["user-agent"] || "",
+          });
+          res.setHeader("Set-Cookie", cookieSessao(sid, host));
+        } catch (e) { console.error("[sessao google]", e.message); }
         const destino = isNovo || perfil.precisaCompletarCadastro
           ? `/conta?c=${perfil.token}&completar=1`
           : (ehAssessoria(perfil) ? `/empresas?c=${perfil.token}` : `/painel?c=${perfil.token}`);
@@ -418,6 +466,17 @@ const servidor = createServer(async (req, res) => {
           });
         }
       } catch (e) { console.error("[email pos-login]", e.message); }
+      // Cria a sessao deste login (revoga as anteriores do mesmo usuario =
+      // sessao unica) e entrega o cookie HttpOnly.
+      try {
+        const sid = criarSessao({
+          token: r.perfil.token,
+          userId: r.usuario?.id || "admin",
+          ip,
+          ua: req.headers["user-agent"] || "",
+        });
+        res.setHeader("Set-Cookie", cookieSessao(sid, host));
+      } catch (e) { console.error("[sessao]", e.message); }
       // Assessoria: direto pra /empresas (gestao multi-CNPJ)
       const destino = ehAssessoria(r.perfil) ? `/empresas?c=${r.perfil.token}` : `/painel?c=${r.perfil.token}`;
       return json(res, 200, { link: destino });
@@ -513,6 +572,16 @@ const servidor = createServer(async (req, res) => {
         // Repassa o IP (servidor-side) pro registro do clickwrap. Mais
         // confiavel que client-side enviar IP fake.
         const r = await criarPerfil({ ...corpo, ip: ipCad });
+        // Cria a sessao do novo cadastro pra ele ja entrar logado (sem ser
+        // mandado pro /entrar ao abrir uma ferramenta protegida).
+        try {
+          if (r?.token) {
+            const p = await perfilPorToken(r.token);
+            const uAdmin = p?.usuarios?.find((u) => u.papel === "admin") || p?.usuarios?.[0];
+            const sid = criarSessao({ token: r.token, userId: uAdmin?.id || p?.id || "admin", ip: ipCad, ua: req.headers["user-agent"] || "" });
+            res.setHeader("Set-Cookie", cookieSessao(sid, host));
+          }
+        } catch (e) { console.error("[sessao cadastro]", e.message); }
         return json(res, 200, r);
       } catch (e) {
         return json(res, 400, { erro: e.message });

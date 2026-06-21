@@ -38,6 +38,8 @@
     <h1>Entrar na sua conta</h1>
     <div class="sub">Use o e-mail ou o CNPJ da empresa que você usou no cadastro.</div>
 
+    <div id="aviso-sessao" style="display:none;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:12px 14px;font-size:13.5px;margin-bottom:16px"></div>
+
     <form id="form">
       <label for="email">E-mail ou CNPJ da empresa</label>
       <input id="email" type="text" placeholder="voce@empresa.com.br ou 00.000.000/0001-00" required autofocus inputmode="email" />
@@ -72,8 +74,21 @@ fetch("/api/google/status").then(r => r.json()).then(d => {
 }).catch(() => {});
 
 // Mostra erro de Google se voltou da pagina de callback com problema.
-const erroG = new URLSearchParams(location.search).get("google_erro");
+const params = new URLSearchParams(location.search);
+const erroG = params.get("google_erro");
 if (erroG) document.getElementById("erro").textContent = "Login com Google falhou: " + erroG;
+
+// Aviso quando chegou aqui por sessao encerrada (guard ou heartbeat).
+const motivoSessao = params.get("sessao");
+if (motivoSessao) {
+  const av = document.getElementById("aviso-sessao");
+  av.textContent = motivoSessao === "revogada"
+    ? "Sua conta foi acessada em outro dispositivo. Por segurança, só uma sessão fica ativa por vez — entre novamente para continuar aqui."
+    : "Sua sessão expirou ou você ainda não entrou neste dispositivo. Faça login para continuar.";
+  av.style.display = "block";
+}
+// Para onde voltar apos logar (ferramenta que o cliente tentou abrir).
+const next = params.get("next");
 
 document.getElementById("form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
@@ -84,7 +99,11 @@ document.getElementById("form").addEventListener("submit", async (ev) => {
     const r = await fetch("/api/entrar", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ email: document.getElementById("email").value, senha: document.getElementById("senha").value }) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.erro || "falha");
-    if (d.link) { location.href = d.link; return; }            // leva direto ao painel
+    if (d.link) {
+      // Se veio de uma ferramenta protegida (next), volta pra ela (mesma origem).
+      location.href = (next && next.startsWith("/")) ? next : d.link;
+      return;
+    }
     if (d.enviado) {                                            // produção: link por e-mail
       document.querySelector(".card").innerHTML = '<div class="logo"><img src="/logo-horizontal.png" alt="ContrataX" style="height:32px;width:auto;display:block" /></div><h1>Verifique seu e-mail</h1><div class="sub">Enviamos o link de acesso ao seu painel para o seu e-mail. Abra e clique para entrar.</div>';
     }
