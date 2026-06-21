@@ -61,7 +61,7 @@ import { googleConfigurado, urlAutorizacao, processarCallback } from "../src/goo
 import { solicitarReset, aplicarReset, verificarToken } from "../src/recuperarSenha.mjs";
 import { checarAuth, registrarTentativa, limparAuth, ipDoRequest as ipAuth } from "../src/rateLimitAuth.mjs";
 import { PLANOS, AVULSOS, planoDe } from "../src/planos.mjs";
-import { ativarPlano, cancelarPorToken, calcularProRata, aplicarUpgrade } from "../src/assinatura.mjs";
+import { ativarPlano, cancelarPorToken, calcularProRata, aplicarUpgrade, calcularProRataAssentos, aplicarAssentos, valorMensalRecorrente } from "../src/assinatura.mjs";
 import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura, cancelarAssinaturaAsaas, atualizarValorAssinatura } from "../src/asaas.mjs";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
@@ -1463,7 +1463,9 @@ const servidor = createServer(async (req, res) => {
               await aplicarUpgrade(token, novoNivel);
               try {
                 const perfilU = await perfilPorToken(token);
-                const novoValor = precoNumero(PLANOS[novoNivel].preco);
+                // Inclui assentos extras pagos no novo valor recorrente, pra um
+                // upgrade nao zerar a cobranca dos acessos adicionais.
+                const novoValor = valorMensalRecorrente(perfilU);
                 if (perfilU?.asaasSubscriptionId) {
                   await atualizarValorAssinatura(
                     perfilU.asaasSubscriptionId,
@@ -1496,6 +1498,29 @@ const servidor = createServer(async (req, res) => {
                 });
               }
             } catch (e) { console.error("[ga4]", e.message); }
+          } else if (tipo === "assentos" && token) {
+            // Compra de acessos extras paga: libera os assentos na hora e sobe o
+            // valor da assinatura recorrente (base do plano + assentos pagos).
+            const n = Math.max(1, Math.min(50, Number(id) || 1));
+            const perfilA = await aplicarAssentos(token, n);
+            try {
+              if (perfilA?.asaasSubscriptionId) {
+                await atualizarValorAssinatura(
+                  perfilA.asaasSubscriptionId,
+                  valorMensalRecorrente(perfilA),
+                  `ContrataX — Plano ${planoDe(perfilA).nome} + ${perfilA.assentosPagos} acesso(s) extra(s)`,
+                );
+              } else {
+                console.warn(`[assentos] ${token}: sem asaasSubscriptionId; assentos liberados mas recorrencia nao atualizada.`);
+              }
+              await enviarConversao(perfilA, {
+                transactionId: pg.id || ref,
+                value: pg.value || 0,
+                planoId: "assentos-" + n,
+                planoNome: `${n} acesso(s) extra(s)`,
+                formaPagamento: pg.billingType || null,
+              });
+            } catch (e) { console.error("[assentos]", e.message); }
           }
         } else if (evento === "PAYMENT_OVERDUE") {
           // Cobranca vencida: avisa o cliente com link pra atualizar o pagamento.
@@ -1619,6 +1644,48 @@ const servidor = createServer(async (req, res) => {
         });
         if (!r.invoiceUrl) return json(res, 502, { erro: "Gateway nao devolveu URL de pagamento" });
         return json(res, 200, { url: r.invoiceUrl, valor: calc.valor, diasRestantes: calc.diasRestantes });
+      } catch (e) {
+        return json(res, 502, { erro: e.message });
+      }
+    }
+
+    // Pre-visualizacao da compra de assentos extras (R$ por mes cada).
+    // GET /api/equipe/assentos-preview?c=token&qtd=N
+    if (rota === "/api/equipe/assentos-preview" && req.method === "GET") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
+      const qtd = Number(url.searchParams.get("qtd") || 1);
+      const calc = calcularProRataAssentos(perfil, qtd);
+      return json(res, 200, { ...calc, automatico: asaasConfigurado() });
+    }
+
+    // Compra self-service de assentos extras: cobra a diferenca pro-rata do ciclo
+    // atual e devolve o link de pagamento. O webhook PAYMENT_RECEIVED com
+    // externalReference "assentos:token:N" libera os acessos na hora e sobe o
+    // valor da assinatura recorrente no Asaas pras proximas cobrancas.
+    if (rota === "/api/equipe/comprar-assentos" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfil = await perfilPorToken(corpo.c || url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
+      // So o admin da conta pode comprar acessos.
+      if (ehAssessoria(perfil)) return json(res, 400, { erro: "Planos Assessoria gerenciam empresas, nao assentos. Fale com o suporte." });
+      if (!asaasConfigurado()) return json(res, 400, { erro: "Pagamento automatico indisponivel no momento. Fale com o suporte.", contato: cobranca.contato });
+      const calc = calcularProRataAssentos(perfil, corpo.qtd);
+      try {
+        const clienteId = await obterOuCriarCliente({
+          nome: perfil.razaoSocial || perfil.nome, email: perfil.email, cnpj: perfil.cnpj, clienteId: perfil.asaasClienteId,
+        });
+        const BASE_URL = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
+        const successUrl = `${BASE_URL}/obrigado?c=${perfil.token}`;
+        const r = await criarCobrancaAvulsa({
+          clienteId,
+          valor: calc.valor,
+          descricao: `ContrataX — ${calc.qtd} acesso(s) extra(s)`,
+          externalReference: `assentos:${perfil.token}:${calc.qtd}`,
+          successUrl,
+        });
+        if (!r.invoiceUrl) return json(res, 502, { erro: "Gateway nao devolveu URL de pagamento" });
+        return json(res, 200, { url: r.invoiceUrl, valor: calc.valor, qtd: calc.qtd, mensalNovo: calc.mensalNovo });
       } catch (e) {
         return json(res, 502, { erro: e.message });
       }

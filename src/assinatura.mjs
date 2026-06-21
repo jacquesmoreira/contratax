@@ -3,8 +3,13 @@
 // apos o Pix. Automacao (Asaas/Mercado Pago) entra depois, no deploy.
 
 import { lerPerfis, salvarPerfis } from "./perfis.mjs";
+import { planoDe } from "./planos.mjs";
 
 const TRIAL_DIAS = Number(process.env.LICITA_TRIAL_DIAS || 7);
+
+// Preco de cada acesso (assento) extra, em numero. String "49,00" -> 49.
+const _precoNum = (s) => Number(String(s).replace(/\./g, "").replace(",", "."));
+export const PRECO_ASSENTO_NUM = _precoNum(process.env.LICITA_PRECO_ASSENTO || "49,00");
 
 // Dados de cobranca exibidos no muro de pagamento (configure no .env).
 export const cobranca = {
@@ -119,6 +124,48 @@ export function calcularProRata(perfil, planoAtual, planoNovo) {
     valor,
     descricao: `Upgrade pro-rata: ${planoAtual.nome} -> ${planoNovo.nome} (${dias} dias)`,
   };
+}
+
+// Valor mensal recorrente atual = base do plano + assentos extras pagos.
+// assentosPagos = assentos comprados ALEM do que ja vem incluso no plano.
+// Usado pra atualizar o valor da assinatura no Asaas (compra de assentos e
+// tambem upgrade, pra nao perder os assentos extras ao trocar de plano).
+export function valorMensalRecorrente(perfil) {
+  const base = _precoNum(planoDe(perfil).preco);
+  const extras = Math.max(0, Number(perfil?.assentosPagos || 0));
+  return Math.round((base + extras * PRECO_ASSENTO_NUM) * 100) / 100;
+}
+
+// Pro-rata para comprar `qtd` assentos extras dentro do ciclo atual.
+// Cobra qtd * preco_assento * dias_restantes / 30 agora (minimo R$ 5,00); o
+// valor cheio entra na recorrencia a partir da proxima cobranca.
+export function calcularProRataAssentos(perfil, qtd) {
+  const status = statusAtual(perfil);
+  let dias = status.diasRestantes;
+  if (dias == null || dias < 0) dias = 0;
+  if (dias > 30) dias = 30;
+  const n = Math.max(1, Math.min(50, Number(qtd) || 1)); // teto de 50 por compra
+  const valor = Math.max(5, Math.round(n * PRECO_ASSENTO_NUM * (dias / 30) * 100) / 100);
+  const mensalAtual = valorMensalRecorrente(perfil);
+  const mensalNovo = Math.round((mensalAtual + n * PRECO_ASSENTO_NUM) * 100) / 100;
+  return {
+    permitido: true, qtd: n, diasRestantes: dias, valor,
+    precoAssento: PRECO_ASSENTO_NUM, mensalAtual, mensalNovo,
+    descricao: `${n} acesso(s) extra(s) — pro-rata ${dias} dia(s)`,
+  };
+}
+
+// Aplica os assentos comprados no perfil (chamado pelo webhook ao confirmar o
+// pagamento). Sobe o total permitido (p.assentos) e o contador de pagos.
+export async function aplicarAssentos(token, qtd) {
+  const perfis = await lerPerfis();
+  const p = perfis.find((x) => x.token === token);
+  if (!p) throw new Error(`Token ${token} nao encontrado`);
+  const n = Math.max(1, Math.min(50, Number(qtd) || 1));
+  p.assentos = Math.max(1, (p.assentos || 1) + n);
+  p.assentosPagos = Math.max(0, (p.assentosPagos || 0) + n);
+  await salvarPerfis(perfis);
+  return p;
 }
 
 // Aplica o upgrade no perfil (sobe o nivel e mantem expiraEm). Chamado pelo

@@ -68,10 +68,12 @@ export async function convidarMembro(token, { nome, email, senha } = {}) {
   if (emailEmUso(perfis, email)) throw new Error("Este e-mail ja tem acesso em alguma conta.");
 
   if (p.usuarios.length >= (p.assentos || 1)) {
-    throw new Error(
+    const err = new Error(
       `Seu plano inclui ${p.assentos || 1} acesso(s). Cada acesso a mais custa R$ ${PRECO_ASSENTO}/mes. `
-      + "Fale com o suporte para liberar novos acessos.",
+      + "Compre acessos extras na hora, ali em cima.",
     );
+    err.codigo = "SEM_ASSENTO"; // a UI usa pra abrir o comprador de assentos
+    throw err;
   }
 
   const membro = {
