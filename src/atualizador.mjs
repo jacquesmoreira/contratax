@@ -72,7 +72,7 @@ export async function atualizarEditais({ limitePaginas = Infinity, log = console
   // LICITA_ITENS_INDEX=1; capado por disco. Enche aos poucos, ciclo a ciclo.
   try {
     const { colheitaItensCiclo } = await import("./colheitaItens.mjs");
-    await colheitaItensCiclo({ limite: Number(process.env.LICITA_ITENS_LOTE || 40), log });
+    await colheitaItensCiclo({ limite: Number(process.env.LICITA_ITENS_LOTE || 120), log });
   } catch (e) { log(`[itens] erro: ${e.message}`); }
   const removidos = removerExpirados({ graceDias: 3 });
   // Poda contratos antigos pra manter o banco (e o volume de 5GB) limitado. O

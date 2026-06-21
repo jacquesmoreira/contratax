@@ -1295,11 +1295,12 @@ const servidor = createServer(async (req, res) => {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       try {
         const { diagnosticoDisco, usoDisco } = await import("../src/backup.mjs");
+        const { totalItensEdital } = await import("../src/db.mjs");
         const [arquivos, volume] = await Promise.all([
           diagnosticoDisco(),
           usoDisco().catch(() => null),
         ]);
-        return json(res, 200, { volume, ...arquivos });
+        return json(res, 200, { volume, itensIndexados: totalItensEdital(), ...arquivos });
       } catch (e) {
         return json(res, 500, { erro: e.message });
       }
