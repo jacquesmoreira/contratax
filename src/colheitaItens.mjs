@@ -15,7 +15,7 @@ import { listarItens } from "./documentos.mjs";
 import { editaisPraIndexarItens, upsertItensEdital, marcarItensIndexados, totalItensEdital } from "./db.mjs";
 
 const PAUSA = Number(process.env.LICITA_ITENS_PAUSA || 350);
-const TETO = Number(process.env.LICITA_ITENS_MAX || 1_200_000); // ~300MB de teto
+const TETO = Number(process.env.LICITA_ITENS_MAX || 900_000); // teto conservador (~550MB)
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export async function colheitaItensCiclo({ limite = 40, log = console.log } = {}) {
