@@ -642,10 +642,12 @@ function unirPorItem(casaram, candidatos, termo, excluirList = []) {
   return casaram.concat(extra);
 }
 
-// Limiar pra acionar a expansao de ramo. Acima disso, a busca PRECISA (objeto
-// literal + itens) ja basta e nao ampliamos (evita "luva" trazer todo o ramo
-// hospitalar). Abaixo, ampliamos pro ramo pra nao devolver quase nada.
-const LIMIAR_EXPANSAO = Number(process.env.LICITA_LIMIAR_EXPANSAO || 8);
+// Limiar pra acionar a expansao de ramo. Default 1 = so amplia pro ramo quando
+// NAO houver NENHUM resultado preciso (objeto literal + itens). Havendo qualquer
+// match real, mostra so o preciso — "luva de procedimento" traz so editais com
+// luva, nunca o ramo hospitalar inteiro (medicamentos etc). A expansao vira
+// ultimo recurso, pra produto que nao aparece em lugar nenhum nao dar zero.
+const LIMIAR_EXPANSAO = Number(process.env.LICITA_LIMIAR_EXPANSAO || 1);
 
 // Casa em duas camadas: 1) PRECISO = objeto literal + itens do edital; 2) so se
 // vier pouco, ABRE pro ramo (expansao). O preciso sempre vem primeiro na lista.
