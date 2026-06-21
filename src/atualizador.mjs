@@ -68,6 +68,12 @@ export async function atualizarEditais({ limitePaginas = Infinity, log = console
     const { ingerirPcaCiclo } = await import("./ingestPca.mjs");
     await ingerirPcaCiclo({ log });
   } catch (e) { log(`[pca] erro: ${e.message}`); }
+  // Indice de ITENS dos editais abertos (busca universal por produto). Gated por
+  // LICITA_ITENS_INDEX=1; capado por disco. Enche aos poucos, ciclo a ciclo.
+  try {
+    const { colheitaItensCiclo } = await import("./colheitaItens.mjs");
+    await colheitaItensCiclo({ limite: Number(process.env.LICITA_ITENS_LOTE || 40), log });
+  } catch (e) { log(`[itens] erro: ${e.message}`); }
   const removidos = removerExpirados({ graceDias: 3 });
   // Poda contratos antigos pra manter o banco (e o volume de 5GB) limitado. O
   // backfill cresce sem teto; o historico so usa os ultimos 18 meses. Re-coletavel.

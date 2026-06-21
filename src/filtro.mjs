@@ -44,7 +44,7 @@ const CONECTIVOS = /\s+e\/ou\s+|\s+(?:e|ou)\s+|\s*[,/&]\s*/;
 // "fornecimento"/"reconhecimento", senao quase todo edital (que tem
 // "fornecimento") casaria. O conjunto de raizes ja e por palavra; isto cobre o
 // caso em que a raiz difere mas a palavra aparece igual.
-function contemPalavra(w, objetoNorm) {
+export function contemPalavra(w, objetoNorm) {
   let i = objetoNorm.indexOf(w);
   while (i !== -1) {
     const antes = i === 0 ? "" : objetoNorm[i - 1];

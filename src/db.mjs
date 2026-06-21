@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdirSync } from "node:fs";
-import { normalizar, aplicarFiltro, tokenSignificativo, termosAmplos } from "./filtro.mjs";
+import { normalizar, aplicarFiltro, tokenSignificativo, termosAmplos, contemPalavra } from "./filtro.mjs";
 import { expandirTermos, excluirTermos } from "./sinonimos.mjs";
 
 // Monta condicoes SQL exigindo TODOS os tokens significativos do termo (mesma
@@ -15,6 +15,15 @@ function condTokens(termo, coluna, cond, args) {
   const tokens = normalizar(termo).split(/[^a-z0-9]+/).filter(tokenSignificativo);
   for (const tk of tokens) { cond.push(`${coluna} LIKE ?`); args.push("%" + tk + "%"); }
   return tokens.length;
+}
+
+// O LIKE acima e SUBSTRING (prefiltro rapido) — casaria "cimento" em
+// "fornecimento". Este confirma por PALAVRA INTEIRA nas linhas ja trazidas,
+// igual a busca de editais. Mantem Precos/PCA consistentes com o resto.
+function confirmaTokens(linhas, termo, col = "descricao_norm") {
+  const tokens = normalizar(termo || "").split(/[^a-z0-9]+/).filter(tokenSignificativo);
+  if (!tokens.length) return linhas;
+  return linhas.filter((l) => tokens.every((t) => contemPalavra(t, l[col] || "")));
 }
 import { DATA_DIR } from "./caminhos.mjs";
 
@@ -63,6 +72,8 @@ export function abrir() {
   try { db.exec("ALTER TABLE editais ADD COLUMN numero_compra TEXT;"); } catch {}
   // Marca quando os precos homologados deste edital ja foram colhidos (Caminho B).
   try { db.exec("ALTER TABLE editais ADD COLUMN precos_em TEXT;"); } catch {}
+  // Marca quando os ITENS deste edital ja foram indexados pra busca (item index).
+  try { db.exec("ALTER TABLE editais ADD COLUMN itens_em TEXT;"); } catch {}
 
   // Pesquisa de Precos: precos HOMOLOGADOS (reais, do vencedor) colhidos item a
   // item das licitacoes que encerram. Base que CRESCE com o tempo (incremental).
@@ -89,6 +100,23 @@ export function abrir() {
   `);
   db.exec("CREATE INDEX IF NOT EXISTS idx_precos_norm ON precos_itens(descricao_norm);");
   db.exec("CREATE INDEX IF NOT EXISTS idx_precos_uf ON precos_itens(uf);");
+
+  // INDICE DE ITENS dos editais ABERTOS: a busca UNIVERSAL. O objeto do edital e
+  // alto nivel ("material hospitalar"); o produto especifico ("atadura") mora
+  // nos itens. Indexando os itens, qualquer produto/servico de qualquer nicho e
+  // achavel SEM precisar curar sinonimo. Base capada + podada quando o edital
+  // expira (nao incha o volume). Preenchida pelo colheitaItens (gated por env).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS itens_edital (
+      chave          TEXT PRIMARY KEY,
+      edital_id      TEXT NOT NULL,
+      numero         INTEGER,
+      descricao      TEXT,
+      descricao_norm TEXT
+    );
+  `);
+  db.exec("CREATE INDEX IF NOT EXISTS idx_itens_edital ON itens_edital(edital_id);");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_itens_norm ON itens_edital(descricao_norm);");
 
   // PCA - Plano de Contratacao Anual: compras que os orgaos JA planejaram (com
   // data desejada) = oportunidade ANTECIPADA, antes do edital sair. Base
@@ -176,6 +204,72 @@ export function marcarPrecosColhidos(editalId) {
   abrir().prepare("UPDATE editais SET precos_em = ? WHERE id = ?").run(new Date().toISOString(), editalId);
 }
 
+// ===== Indice de itens dos editais ABERTOS (busca universal) =====
+
+// Editais ABERTOS ainda nao indexados (itens_em IS NULL). O colhedor pega esses.
+export function editaisPraIndexarItens({ limite = 40 } = {}) {
+  const d = abrir();
+  return d.prepare(
+    `SELECT id, orgao, orgao_cnpj, uf, municipio, ano, sequencial
+     FROM editais WHERE encerramento >= ? AND itens_em IS NULL
+     ORDER BY encerramento ASC LIMIT ?`
+  ).all(new Date().toISOString(), limite);
+}
+
+export function marcarItensIndexados(editalId) {
+  abrir().prepare("UPDATE editais SET itens_em = ? WHERE id = ?").run(new Date().toISOString(), editalId);
+}
+
+// Substitui os itens indexados de um edital. itens = [{numero, descricao}].
+export function upsertItensEdital(editalId, itens = []) {
+  const d = abrir();
+  d.exec("BEGIN");
+  try {
+    d.prepare("DELETE FROM itens_edital WHERE edital_id = ?").run(editalId);
+    const stmt = d.prepare("INSERT OR IGNORE INTO itens_edital (chave, edital_id, numero, descricao, descricao_norm) VALUES (?,?,?,?,?)");
+    for (const it of itens) {
+      const desc = String(it.descricao || "").slice(0, 400);
+      if (!desc) continue;
+      stmt.run(`${editalId}#${it.numero ?? 0}`, editalId, it.numero ?? null, desc, normalizar(desc));
+    }
+    d.exec("COMMIT");
+  } catch (e) { d.exec("ROLLBACK"); throw e; }
+  marcarItensIndexados(editalId);
+  return itens.length;
+}
+
+export function totalItensEdital() {
+  try { return abrir().prepare("SELECT COUNT(*) AS n FROM itens_edital").get().n; } catch { return 0; }
+}
+
+// Apaga itens de editais que sairam do acervo (expiraram). Mantem o indice
+// limitado ao conjunto de abertos. Chamado junto do removerExpirados.
+export function podarItensOrfaos() {
+  try {
+    const r = abrir().prepare("DELETE FROM itens_edital WHERE edital_id NOT IN (SELECT id FROM editais)").run();
+    return Number(r.changes ?? 0);
+  } catch { return 0; }
+}
+
+// BUSCA UNIVERSAL: ids de editais cujos ITENS casam TODOS os tokens do termo.
+// SQL faz o prefiltro (LIKE substring, rapido); o JS confirma por PALAVRA
+// INTEIRA (mesma regra do objeto) pra nao casar "cimento" em "fornecimento".
+export function editaisIdsPorItem(termo, { teto = 4000 } = {}) {
+  const tokens = normalizar(termo || "").split(/[^a-z0-9]+/).filter(tokenSignificativo);
+  if (!tokens.length) return new Set();
+  const d = abrir();
+  const cond = tokens.map(() => "descricao_norm LIKE ?").join(" AND ");
+  const args = tokens.map((t) => "%" + t + "%");
+  const linhas = d.prepare(
+    `SELECT edital_id, descricao_norm FROM itens_edital WHERE ${cond} LIMIT ?`
+  ).all(...args, teto);
+  const ids = new Set();
+  for (const l of linhas) {
+    if (tokens.every((t) => contemPalavra(t, l.descricao_norm))) ids.add(l.edital_id);
+  }
+  return ids;
+}
+
 // Grava um lote de precos homologados colhidos.
 export function upsertPrecos(linhas) {
   if (!linhas.length) return 0;
@@ -215,9 +309,11 @@ export function pesquisarPrecos({ termo = "", uf = null, limite = 80 } = {}) {
   condTokens(termo, "descricao_norm", cond, args);
   if (uf) { cond.push("uf = ?"); args.push(uf); }
   const where = "WHERE " + cond.join(" AND ");
-  const total = d.prepare(`SELECT COUNT(*) n FROM precos_itens ${where}`).get(...args).n;
-  if (!total) return { total: 0, termo, valores: null, itens: [], porOrgao: [], porEmpresa: [] };
-  const linhas = d.prepare(`SELECT * FROM precos_itens ${where} ORDER BY data_resultado DESC LIMIT 2000`).all(...args);
+  const totalPre = d.prepare(`SELECT COUNT(*) n FROM precos_itens ${where}`).get(...args).n;
+  if (!totalPre) return { total: 0, termo, valores: null, itens: [], porOrgao: [], porEmpresa: [] };
+  const linhas = confirmaTokens(d.prepare(`SELECT * FROM precos_itens ${where} ORDER BY data_resultado DESC LIMIT 2000`).all(...args), termo);
+  if (!linhas.length) return { total: 0, termo, valores: null, itens: [], porOrgao: [], porEmpresa: [] };
+  const total = totalPre <= 2000 ? linhas.length : totalPre; // exato quando coube no lote
   const valores = linhas.map((l) => l.valor_unitario).filter((v) => v > 0).sort((a, b) => a - b);
   const mediana = valores.length ? valores[Math.floor(valores.length / 2)] : null;
   const min = valores[0], max = valores[valores.length - 1];
@@ -285,13 +381,15 @@ export function pesquisarPca({ termo = "", limite = 80 } = {}) {
   const cond = []; const args = [];
   condTokens(termo, "descricao_norm", cond, args);
   const where = cond.length ? "WHERE " + cond.join(" AND ") : "";
-  const total = d.prepare(`SELECT COUNT(*) n FROM pca_itens ${where}`).get(...args).n;
-  if (!total) return { total: 0, termo, itens: [], valorTotal: 0 };
+  const totalPre = d.prepare(`SELECT COUNT(*) n FROM pca_itens ${where}`).get(...args).n;
+  if (!totalPre) return { total: 0, termo, itens: [], valorTotal: 0 };
   // Futuras primeiro (data desejada >= hoje), depois por valor.
   const hoje = new Date().toISOString().slice(0, 10);
-  const linhas = d.prepare(
+  const linhas = confirmaTokens(d.prepare(
     `SELECT * FROM pca_itens ${where} ORDER BY (data_desejada >= '${hoje}') DESC, data_desejada ASC LIMIT 2000`
-  ).all(...args);
+  ).all(...args), termo);
+  if (!linhas.length) return { total: 0, termo, itens: [], valorTotal: 0 };
+  const total = totalPre <= 2000 ? linhas.length : totalPre;
   const valorTotal = linhas.reduce((s, l) => s + (Number(l.valor_total) || 0), 0);
   return {
     total, termo, valorTotal,
@@ -402,6 +500,9 @@ export function removerExpirados({ graceDias = 3 } = {}) {
   const d = abrir();
   const limite = new Date(Date.now() - graceDias * 864e5).toISOString();
   const r = d.prepare("DELETE FROM editais WHERE encerramento < ?").run(limite);
+  // Poda os itens indexados de editais que sairam do acervo (mantem o indice
+  // limitado aos abertos, sem inchar o volume).
+  try { podarItensOrfaos(); } catch {}
   return Number(r.changes ?? 0);
 }
 
@@ -527,6 +628,20 @@ export function estatisticasContratos() {
   return { total, porCategoria, vencendo6m };
 }
 
+// Une aos resultados (casaram) os editais cujos ITENS casam o termo, dentre os
+// `candidatos` (ja filtrados por UF/valor). Acha qualquer produto/servico mesmo
+// fora dos ramos curados. No-op se o termo for vazio ou o indice estiver vazio.
+function unirPorItem(casaram, candidatos, termo, excluirList = []) {
+  if (!termo || !termo.trim()) return casaram;
+  const idsItem = editaisIdsPorItem(termo);
+  if (!idsItem.size) return casaram;
+  const jaTem = new Set(casaram.map((e) => e.id));
+  let extra = candidatos.filter((c) => idsItem.has(c.id) && !jaTem.has(c.id));
+  if (excluirList.length) extra = aplicarFiltro(extra, { termosExcluir: excluirList });
+  for (const e of extra) e._viaItem = true; // a UI pode marcar "casou nos itens"
+  return casaram.concat(extra);
+}
+
 // Busca publica da landing page: por UF e termo livre, devolve o total, a soma
 // dos valores e uma amostra dos editais abertos. Sem perfil, sem login.
 export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
@@ -550,7 +665,12 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
   const expandido = [...termosAmplos(termos), ...expandirTermos(termos)];
   // Exclui obra/servico quando o termo e um produto de ramo que pede isso (ex:
   // "cimento" nao deve trazer licitacao de OBRA, so a compra do material).
-  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluirTermos(termos) });
+  const excluirList = excluirTermos(termos);
+  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluirList });
+  // Busca UNIVERSAL por ITEM: une editais cujos itens casam o termo (acha
+  // qualquer produto, mesmo fora dos ramos curados). Respeita UF (candidatos ja
+  // filtrados) e exclusoes. No-op se o indice de itens estiver vazio.
+  casaram = unirPorItem(casaram, candidatos, termo, excluirList);
 
   // Ordena por relevancia: editais onde o termo aparece mais cedo no objeto
   // (assunto central) vem antes dos que so mencionam de passagem. Empate = prazo.
@@ -587,7 +707,10 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
   // Palavras a excluir = filtros avancados do cliente + exclusoes de ramo (obra/
   // servico) quando a busca livre e por produto. Nao reexpande quando vem perfil.
   const excluirRamoAuto = termosParam?.length ? [] : excluirTermos(termos);
-  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: [...excluir, ...excluirRamoAuto] });
+  const excluirList = [...excluir, ...excluirRamoAuto];
+  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluirList });
+  // Busca universal por item (so na busca livre por string; perfil ja tem termosIA).
+  if (!termosParam?.length) casaram = unirPorItem(casaram, candidatos, termo, excluirList);
   // Registro de Precos (SRP): "sim" so atas, "nao" sem ata.
   if (srp === "sim") casaram = casaram.filter((e) => e.srp);
   else if (srp === "nao") casaram = casaram.filter((e) => !e.srp);
