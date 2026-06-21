@@ -564,7 +564,7 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
   const range = datas.length ? { de: datas[0], ate: datas[datas.length - 1] } : null;
   const comValor = casaram.filter((e) => e.valorEstimado > 0).length;
   const amostra = casaram.slice(0, limite).map((e) => ({
-    municipio: e.municipio, uf: e.uf, orgao: e.orgao, objeto: e.objeto,
+    id: e.id, municipio: e.municipio, uf: e.uf, orgao: e.orgao, objeto: e.objeto,
     valorEstimado: e.valorEstimado, encerramento: e.encerramento, modalidade: e.modalidade, link: e.link,
   }));
   return { total: casaram.length, somaValor, comValor, range, amostra };

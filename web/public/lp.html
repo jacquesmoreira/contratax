@@ -790,6 +790,7 @@ async function buscar() {
       <div class="top"><span class="org">${esc(e.municipio)}/${esc(e.uf)} · ${esc(e.orgao)}</span>${pz(e.encerramento)}</div>
       <div class="obj">${esc((e.objeto||"").slice(0,140))}</div>
       <div class="rod"><span class="mod">${esc(e.modalidade)}</span>${e.valorEstimado > 0 ? `<span class="val">${brl(e.valorEstimado)}</span>` : `<span class="val" style="color:#64748b;font-style:italic;font-weight:600;font-size:13px" title="O órgão não divulgou o valor estimado no PNCP">valor não divulgado</span>`}</div>
+      ${e.id ? `<button class="btn-ia" data-ia="${encodeURIComponent(e.id)}" style="margin-top:10px;display:inline-flex;align-items:center;gap:7px;background:#eef2ff;color:var(--indigo);border:1px solid #c7d2fe;border-radius:9px;padding:8px 13px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit">✨ Ver resumo da IA <span style="font-weight:600;color:#64748b">· grátis</span></button><div class="ia-box" style="display:none;margin-top:10px"></div>` : ""}
     </div>`).join("");
     if (d.total > d.amostra.length) {
       const restantes = (d.total - d.amostra.length).toLocaleString("pt-BR");
@@ -807,12 +808,53 @@ async function buscar() {
       </div>`;
     }
     box.innerHTML = html;
+    // Liga os botoes "Ver resumo da IA" de cada card (caminho anonimo do TL;DR).
+    box.querySelectorAll(".btn-ia").forEach(b => b.onclick = () => verResumoIA(decodeURIComponent(b.dataset.ia), b));
     box.scrollIntoView({ behavior: "smooth", block: "nearest" });
   } catch (e) {
     box.innerHTML = `<div class="res-vazio">Erro ao buscar: ${esc(e.message)}</div>`;
   }
 }
 
+// Mostra o resumo da ContrataX.IA de UM edital, sem login (3 grátis por dia/IP).
+// E o "jaw-drop moment": o visitante ve a IA lendo o edital de verdade.
+async function verResumoIA(id, btn) {
+  const card = btn.closest(".res-card");
+  const out = card.querySelector(".ia-box");
+  btn.disabled = true;
+  btn.style.opacity = ".7";
+  btn.textContent = "⏳ Lendo o edital com a IA...";
+  try {
+    const r = await fetch(`/api/tldr?id=${encodeURIComponent(id)}`, { method: "POST" });
+    const j = await r.json();
+    if (r.status === 402 || (j && j.paywall)) {
+      out.innerHTML = `<div style="background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:13px 15px;font-size:13.5px">Você usou seus resumos grátis de hoje. <a href="/cadastro" style="color:var(--indigo);font-weight:800">Crie sua conta grátis</a> e leia quantos editais quiser — com o veredito de aptidão pra <b>sua</b> empresa.</div>`;
+      out.style.display = "block"; btn.style.display = "none"; return;
+    }
+    if (!r.ok || j.erro || !j.tldr) {
+      out.innerHTML = `<div style="color:#64748b;font-size:13px">${esc(j.erro || "Não consegui ler este edital agora. Tente outro.")}</div>`;
+      out.style.display = "block"; btn.disabled = false; btn.style.opacity = "1"; btn.innerHTML = '✨ Ver resumo da IA <span style="font-weight:600;color:#64748b">· grátis</span>'; return;
+    }
+    out.innerHTML = renderTldr(j.tldr);
+    out.style.display = "block"; btn.style.display = "none";
+  } catch (e) {
+    btn.disabled = false; btn.style.opacity = "1"; btn.innerHTML = '✨ Ver resumo da IA <span style="font-weight:600;color:#64748b">· grátis</span>';
+  }
+}
+
+function renderTldr(t) {
+  const vmap = { apto: ["Apto", "#059669", "#ecfdf5"], apto_pendencias: ["Apto com pendências", "#b45309", "#fffbeb"], nao_apto: ["Não apto", "#dc2626", "#fef2f2"], indefinido: ["A conferir", "#475569", "#f1f5f9"] };
+  const [vtxt, vcor, vbg] = vmap[t.veredito] || vmap.indefinido;
+  const ex = (t.exigencias || []).filter(Boolean).map(x => `<li style="margin:2px 0">${esc(x)}</li>`).join("");
+  return `<div style="background:#fff;border:1.5px solid var(--linha);border-radius:12px;padding:15px 16px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:11.5px;font-weight:800;color:var(--indigo);letter-spacing:.3px">✨ CONTRATAX.IA</span><span style="background:${vbg};color:${vcor};font-size:12px;font-weight:800;padding:3px 9px;border-radius:99px">${vtxt}</span></div>
+    ${t.motivo ? `<div style="font-size:13.5px;color:var(--tinta);margin-bottom:8px">${esc(t.motivo)}</div>` : ""}
+    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--cinza);margin-bottom:${ex ? "8px" : "4px"}">${t.valor ? `<span><b>Valor:</b> ${esc(t.valor)}</span>` : ""}${t.prazo ? `<span><b>Prazo:</b> ${esc(t.prazo)}</span>` : ""}</div>
+    ${ex ? `<div style="font-size:13px;color:var(--cinza)"><b style="color:var(--tinta)">Exigências-chave:</b><ul style="margin:4px 0 0;padding-left:18px">${ex}</ul></div>` : ""}
+    <div style="margin-top:11px;padding-top:11px;border-top:1px dashed var(--linha);font-size:13px;color:var(--cinza)">É a ContrataX.IA lendo o edital de verdade. <a href="/cadastro" style="color:var(--indigo);font-weight:800">Crie sua conta grátis</a> e veja se a <b>sua</b> empresa está apta, com a sua documentação — e leia quantos editais quiser.</div>
+    <div style="margin-top:7px;font-size:11px;color:var(--cinza-c)">Leitura automática, como apoio à decisão. Confira sempre o edital oficial no PNCP.</div>
+  </div>`;
+}
 document.getElementById("btn-buscar").onclick = buscar;
 document.getElementById("termo").addEventListener("keydown", e => { if (e.key === "Enter") buscar(); });
 </script>
