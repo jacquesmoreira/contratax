@@ -2016,10 +2016,16 @@ const servidor = createServer(async (req, res) => {
     if (rota === "/api/edital-itens") {
       const edital = buscarPorId(url.searchParams.get("id"));
       if (!edital) return json(res, 404, { erro: "Edital nao encontrado" });
+      // Cabecalho do edital (pra pagina de itens montar o topo sem outra chamada).
+      const cab = {
+        id: edital.id, orgao: edital.orgao, municipio: edital.municipio, uf: edital.uf,
+        objeto: edital.objeto, valorEstimado: edital.valorEstimado, modalidade: edital.modalidade,
+        encerramento: edital.encerramento, link: edital.link,
+      };
       try {
-        return json(res, 200, { itens: await listarItens(edital) });
+        return json(res, 200, { edital: cab, itens: await listarItens(edital) });
       } catch (e) {
-        return json(res, 200, { itens: [], erro: e.message });
+        return json(res, 200, { edital: cab, itens: [], erro: e.message });
       }
     }
 
@@ -2892,6 +2898,11 @@ Contact: contato@contratax.com.br
     }
     if (rota === "/precos" || rota === "/precos.html") {
       const html = await readFile(resolve(AQUI, "public", "precos.html"), "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(html));
+    }
+    if (rota === "/itens" || rota === "/itens.html") {
+      const html = await readFile(resolve(AQUI, "public", "itens.html"), "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(injetarAnalytics(html));
     }
