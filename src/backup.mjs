@@ -249,6 +249,14 @@ export async function limparDisco({ vacuum = false } = {}) {
     acoes.push(`backups legados do volume removidos (${tamanhoLegivel(liberado)})`);
   } catch (e) { acoes.push(`poda falhou: ${e.message}`); }
 
+  // 1b) Poda contratos antigos (fora da janela do historico). So MARCA paginas
+  // como livres; o espaco so volta pro disco com o VACUUM (passo 3, vacuum:true).
+  try {
+    const { podarContratosAntigos } = await import("./db.mjs");
+    const podados = podarContratosAntigos();
+    acoes.push(`contratos antigos podados: ${podados}`);
+  } catch (e) { acoes.push(`poda contratos falhou: ${e.message}`); }
+
   // 2) Checkpoint do WAL (TRUNCATE zera o licita.db-wal apos aplicar). Roda
   // depois da poda pra ter espaco. VACUUM so se pedido (precisa de espaco).
   try {
