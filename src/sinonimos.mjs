@@ -45,6 +45,15 @@ const GRUPOS = [
   },
   {
     amplos: ["material de construcao", "materiais de construcao", "material hidraulico", "material eletrico", "material predial", "material de acabamento"],
+    // Quem busca um PRODUTO de construcao quer COMPRAR o produto, nao a obra.
+    // Excluimos editais de obra/servico (que so citam o material de passagem,
+    // junto com mao de obra). Frases contiguas que NAO aparecem em compra pura.
+    excluir: [
+      "mao de obra", "execucao de obra", "execucao de obras", "empreitada",
+      "obra de engenharia", "obras de engenharia", "servico de engenharia",
+      "servicos de engenharia", "pavimentacao", "reforma e ampliacao",
+      "ampliacao e reforma", "construcao civil",
+    ],
     gatilhos: [
       "cimento", "areia", "brita", "tijolo", "bloco de concreto", "vergalhao", "telha",
       "viga", "concreto", "argamassa", "cal", "gesso", "drywall", "massa corrida",
@@ -130,35 +139,54 @@ const GRUPOS_PREP = GRUPOS.map((g) => {
     if (n.includes(" ")) frases.push(n);
     else raizesUni.add(raiz(n));
   }
-  return { amplos: g.amplos, raizesUni, frases };
+  return { amplos: g.amplos, excluir: g.excluir || [], raizesUni, frases };
 });
 
-// Dada uma busca, devolve os termos AMPLOS do(s) ramo(s) cujo gatilho casou.
-// Casa gatilho de 1 palavra por raiz (tolera plural/genero); gatilho de varias
-// palavras por frase contida no termo.
-export function expandirRamo(termo) {
+// Frase de 2+ palavras vira busca EXATA (entre aspas = contigua); palavra unica
+// continua flexivel. Evita match espalhado ("material hospitalar" casando em
+// "equipamentos medico-hospitalares E MATERIAIS permanentes").
+const aspasSeFrase = (a) => (a.includes(" ") ? `"${a}"` : a);
+
+// Grupos cujo gatilho casa com o termo. Gatilho de 1 palavra casa por raiz
+// (tolera plural/genero); gatilho de varias palavras casa por frase contida.
+function gruposDoTermo(termo) {
   const n = normalizar(termo ?? "").trim();
-  if (!n || /^".*"$/.test((termo ?? "").trim())) return []; // frase exata: respeita
+  if (!n || /^".*"$/.test((termo ?? "").trim())) return { n, grupos: [] }; // frase exata: respeita
   const raizes = new Set(n.split(/[^a-z0-9]+/).filter(Boolean).map(raiz));
-  const out = new Set();
-  for (const g of GRUPOS_PREP) {
-    const casou =
-      g.frases.some((f) => n.includes(f)) ||
-      [...g.raizesUni].some((r) => raizes.has(r));
-    if (casou) for (const a of g.amplos) out.add(a);
-  }
-  // Nao devolve um amplo que o proprio termo ja contem (evita redundancia).
-  for (const a of [...out]) if (n.includes(normalizar(a))) out.delete(a);
-  // Amplos de VARIAS palavras viram busca EXATA (entre aspas = frase contigua).
-  // Sem isso, "material hospitalar" casava espalhado em "equipamentos medico-
-  // hospitalares E MATERIAIS permanentes" (equipamento/servico, nao o consumivel).
-  // Palavra unica (ex: "pneu") continua como match flexivel normal.
-  return [...out].map((a) => (a.includes(" ") ? `"${a}"` : a));
+  const grupos = GRUPOS_PREP.filter((g) =>
+    g.frases.some((f) => n.includes(f)) || [...g.raizesUni].some((r) => raizes.has(r)));
+  return { n, grupos };
 }
 
-// Expande uma lista de termos de busca: junta os amplos de ramo de cada um.
+// Termos AMPLOS do(s) ramo(s) do produto buscado (pra ABRIR a busca pro ramo).
+export function expandirRamo(termo) {
+  const { n, grupos } = gruposDoTermo(termo);
+  const out = new Set();
+  for (const g of grupos) for (const a of g.amplos) out.add(a);
+  for (const a of [...out]) if (n.includes(normalizar(a))) out.delete(a); // ja contido no termo
+  return [...out].map(aspasSeFrase);
+}
+
+// Termos a EXCLUIR quando o produto buscado tem ramo com sinais de obra/servico.
+// Ex: quem busca "cimento" quer COMPRAR cimento, nao ver licitacoes de OBRA que
+// so citam cimento junto com mao de obra. So construcao define `excluir` hoje.
+export function excluirRamo(termo) {
+  const { grupos } = gruposDoTermo(termo);
+  const out = new Set();
+  for (const g of grupos) for (const e of g.excluir) out.add(e);
+  return [...out].map(aspasSeFrase);
+}
+
+// Expande uma lista de termos: junta os amplos de ramo de cada um.
 export function expandirTermos(termos = []) {
   const out = new Set();
   for (const t of termos) for (const a of expandirRamo(t)) out.add(a);
+  return [...out];
+}
+
+// Junta as exclusoes de ramo de cada termo.
+export function excluirTermos(termos = []) {
+  const out = new Set();
+  for (const t of termos) for (const e of excluirRamo(t)) out.add(e);
   return [...out];
 }

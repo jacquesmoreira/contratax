@@ -6,7 +6,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdirSync } from "node:fs";
 import { normalizar, aplicarFiltro, tokenSignificativo, termosAmplos } from "./filtro.mjs";
-import { expandirTermos } from "./sinonimos.mjs";
+import { expandirTermos, excluirTermos } from "./sinonimos.mjs";
 
 // Monta condicoes SQL exigindo TODOS os tokens significativos do termo (mesma
 // regra do painel: "papel A4" pede papel E a4, nao a frase colada). Mantem a
@@ -548,7 +548,9 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
   // hospitalar" (o produto mora nos itens, nao no objeto). Sem isso a LP dava
   // zero e matava cadastro. termosAmplos cobre o caso de termo de 2 palavras.
   const expandido = [...termosAmplos(termos), ...expandirTermos(termos)];
-  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido });
+  // Exclui obra/servico quando o termo e um produto de ramo que pede isso (ex:
+  // "cimento" nao deve trazer licitacao de OBRA, so a compra do material).
+  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluirTermos(termos) });
 
   // Ordena por relevancia: editais onde o termo aparece mais cedo no objeto
   // (assunto central) vem antes dos que so mencionam de passagem. Empate = prazo.
@@ -582,8 +584,10 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
   // LIVRE (string digitada); quando vem termosParam (export do perfil) o perfil
   // ja traz seus proprios termosIA, entao nao reexpande.
   const expandido = termosParam?.length ? [] : [...termosAmplos(termos), ...expandirTermos(termos)];
-  // Palavras a excluir (filtros avancados): tira ruido do resultado.
-  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluir });
+  // Palavras a excluir = filtros avancados do cliente + exclusoes de ramo (obra/
+  // servico) quando a busca livre e por produto. Nao reexpande quando vem perfil.
+  const excluirRamoAuto = termosParam?.length ? [] : excluirTermos(termos);
+  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: [...excluir, ...excluirRamoAuto] });
   // Registro de Precos (SRP): "sim" so atas, "nao" sem ata.
   if (srp === "sim") casaram = casaram.filter((e) => e.srp);
   else if (srp === "nao") casaram = casaram.filter((e) => !e.srp);

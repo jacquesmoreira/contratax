@@ -740,13 +740,14 @@ const servidor = createServer(async (req, res) => {
           ? customTermo.split(",").map(t => t.trim()).filter(Boolean)
           : (perfilEx?.filtro?.termos ?? []);
         const { aplicarFiltro, normalizar, termosAmplos } = await import("../src/filtro.mjs");
-        const { expandirTermos } = await import("../src/sinonimos.mjs");
+        const { expandirTermos, excluirTermos } = await import("../src/sinonimos.mjs");
         const termosIA = customTermo
           ? [...termosAmplos(termos), ...expandirTermos(termos)]
           : (perfilEx?.filtro?.termosIA ?? []);
+        const termosExcluir = customTermo ? excluirTermos(termos) : (perfilEx?.filtro?.termosExcluir ?? []);
         if (!termos.length && !termosIA.length) return json(res, 400, { erro: "Informe um termo para exportar" });
         const candidatos = (await import("../src/db.mjs")).consultarContratos({ uf, mesesAtras: meses });
-        let todos = aplicarFiltro(candidatos, { termos, termosIA }).filter(c => c.valor > 0);
+        let todos = aplicarFiltro(candidatos, { termos, termosIA, termosExcluir }).filter(c => c.valor > 0);
         if (cidade.trim()) {
           const cn = normalizar(cidade.trim());
           todos = todos.filter(c => normalizar(c.municipio || "").includes(cn));
@@ -1157,7 +1158,7 @@ const servidor = createServer(async (req, res) => {
       const porPag = 30;
       const { consultarContratos } = await import("../src/db.mjs");
       const { aplicarFiltro, normalizar, termosAmplos } = await import("../src/filtro.mjs");
-      const { expandirTermos } = await import("../src/sinonimos.mjs");
+      const { expandirTermos, excluirTermos } = await import("../src/sinonimos.mjs");
       const candidatos = consultarContratos({ uf, mesesAtras: meses });
       // Usa o termo digitado ou os termos do perfil (se logado). Quando usa o
       // ramo do perfil, aproveita tambem os termos relacionados da ContrataX.IA
@@ -1172,11 +1173,13 @@ const servidor = createServer(async (req, res) => {
       const termosIA = customTermo
         ? [...termosAmplos(termos), ...expandirTermos(termos)]
         : (perfil?.filtro?.termosIA ?? []);
+      // Exclui obra/servico quando o termo digitado e produto de ramo (ex: cimento).
+      const termosExcluir = customTermo ? excluirTermos(termos) : (perfil?.filtro?.termosExcluir ?? []);
       // Sem termo e sem perfil: pede que o usuario busque algo
       if (!termos.length && !termosIA.length) {
         return json(res, 200, { total: 0, paginas: 0, pagina: 1, termos: [], licitacoes: [], aviso: "Digite um produto ou serviço para ver o histórico." });
       }
-      let todos = aplicarFiltro(candidatos, { termos, termosIA }).filter(c => c.valor > 0);
+      let todos = aplicarFiltro(candidatos, { termos, termosIA, termosExcluir }).filter(c => c.valor > 0);
       // Filtro por cidade
       if (cidade.trim()) {
         const cn = normalizar(cidade.trim());

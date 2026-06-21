@@ -39,12 +39,28 @@ function raizesDe(textoNorm) {
 // NAO entram de proposito: mantem frases como "maquina de lavar" inteiras.
 const CONECTIVOS = /\s+e\/ou\s+|\s+(?:e|ou)\s+|\s*[,/&]\s*/;
 
+// Verdadeiro se `w` aparece como PALAVRA INTEIRA em objetoNorm (com fronteiras),
+// nao como pedaco de outra palavra. Critico: "cimento" NAO pode casar dentro de
+// "fornecimento"/"reconhecimento", senao quase todo edital (que tem
+// "fornecimento") casaria. O conjunto de raizes ja e por palavra; isto cobre o
+// caso em que a raiz difere mas a palavra aparece igual.
+function contemPalavra(w, objetoNorm) {
+  let i = objetoNorm.indexOf(w);
+  while (i !== -1) {
+    const antes = i === 0 ? "" : objetoNorm[i - 1];
+    const depois = objetoNorm[i + w.length] || "";
+    if (!/[a-z0-9]/.test(antes) && !/[a-z0-9]/.test(depois)) return true;
+    i = objetoNorm.indexOf(w, i + 1);
+  }
+  return false;
+}
+
 // Casa um sub-termo: TODAS as suas palavras (>= 3 letras) aparecem no objeto,
-// tolerando plural e genero. So palavra curta cai para substring.
+// tolerando plural e genero. Match por PALAVRA INTEIRA (nunca substring).
 function subTermoCasa(sub, raizesObjeto, objetoNorm) {
   const palavras = sub.split(/[^a-z0-9]+/).filter(tokenSignificativo);
-  if (!palavras.length) return objetoNorm.includes(sub);
-  return palavras.every((w) => raizesObjeto.has(raiz(w)) || objetoNorm.includes(w));
+  if (!palavras.length) return contemPalavra(sub, objetoNorm);
+  return palavras.every((w) => raizesObjeto.has(raiz(w)) || contemPalavra(w, objetoNorm));
 }
 
 // Um termo casa tolerando plural e genero. Regras:
