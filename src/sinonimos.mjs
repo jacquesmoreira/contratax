@@ -27,7 +27,10 @@ import { normalizar, raiz } from "./filtro.mjs";
 // produto ("hospitalar", "combustivel", "pneu").
 const GRUPOS = [
   {
-    amplos: ["hospitalar", "enfermagem", "ambulatorial", "material hospitalar", "materiais hospitalares", "insumo hospitalar", "insumos hospitalares", "produto hospitalar", "produtos para saude", "material de enfermagem", "material ambulatorial", "material laboratorial", "medico-hospitalar", "material medico"],
+    // So FRASES de material de consumo (viram busca exata). Sem "hospitalar"/
+    // "ambulatorial" soltos: pegavam servico ("atendimento ambulatorial") e
+    // equipamento ("equipamentos hospitalares", "camas hospitalares").
+    amplos: ["material hospitalar", "materiais hospitalares", "material medico-hospitalar", "materiais medico-hospitalares", "material medico hospitalar", "insumo hospitalar", "insumos hospitalares", "produto hospitalar", "produtos hospitalares", "produtos para saude", "produto para saude", "material de enfermagem", "materiais de enfermagem", "material penso", "material ambulatorial", "material odontologico", "material laboratorial", "material farmacologico"],
     gatilhos: [
       "atadura", "gaze", "compressa", "esparadrapo", "cateter", "seringa", "agulha",
       "escalpe", "sonda", "curativo", "algodao", "soro", "soro fisiologico", "fralda",
@@ -146,7 +149,11 @@ export function expandirRamo(termo) {
   }
   // Nao devolve um amplo que o proprio termo ja contem (evita redundancia).
   for (const a of [...out]) if (n.includes(normalizar(a))) out.delete(a);
-  return [...out];
+  // Amplos de VARIAS palavras viram busca EXATA (entre aspas = frase contigua).
+  // Sem isso, "material hospitalar" casava espalhado em "equipamentos medico-
+  // hospitalares E MATERIAIS permanentes" (equipamento/servico, nao o consumivel).
+  // Palavra unica (ex: "pneu") continua como match flexivel normal.
+  return [...out].map((a) => (a.includes(" ") ? `"${a}"` : a));
 }
 
 // Expande uma lista de termos de busca: junta os amplos de ramo de cada um.
