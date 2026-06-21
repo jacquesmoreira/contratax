@@ -30,7 +30,9 @@ const VOLUME_BACKUP_DIR = resolve(DATA_DIR, "backups");
 // volume persistente. Some no restart — e isso e proposital, o backup vai por
 // e-mail (anexo) e nao precisa sobreviver no disco.
 const TMP_DIR = resolve(tmpdir(), "contratax-backup");
-const ADMIN_EMAIL = process.env.LICITA_CONTATO || "contato@contratax.com.br";
+// Destino do backup off-site (anexo no e-mail) e dos alertas de volume. Caixa
+// dedicada pra backup; sobrescreva com LICITA_BACKUP_EMAIL se quiser.
+const ADMIN_EMAIL = process.env.LICITA_BACKUP_EMAIL || "licitacontratax@gmail.com";
 const BASE = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
 
 function ymd(d = new Date()) {
