@@ -31,15 +31,25 @@ function identificadores(edital) {
 // Lista os ITENS da contratacao (o que esta sendo comprado: descricao,
 // quantidade, unidade, valor unitario/total). Pedido de cliente "Ver itens".
 // PNCP: /orgaos/{cnpj}/compras/{ano}/{sequencial}/itens
-export async function listarItens(edital) {
+export async function listarItens(edital, { tamanhoPagina = 100, maxPaginas = 30 } = {}) {
   const { cnpj, ano, sequencial } = identificadores(edital);
   if (!cnpj || !ano || !sequencial) throw new Error(`Identificadores incompletos para ${edital.id}`);
-  const url = `${API}/orgaos/${cnpj}/compras/${ano}/${sequencial}/itens`;
-  const r = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(12000) });
-  if (!r.ok) throw new Error(`PNCP itens respondeu ${r.status}`);
-  const bruto = await r.json();
-  const lista = Array.isArray(bruto) ? bruto : (bruto?.itens ?? []);
-  return lista.map((i) => ({
+  const base = `${API}/orgaos/${cnpj}/compras/${ano}/${sequencial}/itens`;
+  // O PNCP entrega 10 itens por pagina por padrao. Sem paginar, perdiamos os
+  // itens alem do 10o (uma ata pode ter 100+). Buscamos pagina a pagina ate a
+  // ultima (lista menor que o tamanho), com teto de seguranca (mega-atas).
+  const bruto = [];
+  for (let pagina = 1; pagina <= maxPaginas; pagina++) {
+    const r = await fetch(`${base}?pagina=${pagina}&tamanhoPagina=${tamanhoPagina}`, {
+      headers: { Accept: "application/json" }, signal: AbortSignal.timeout(12000),
+    });
+    if (!r.ok) { if (pagina === 1) throw new Error(`PNCP itens respondeu ${r.status}`); break; }
+    const corpo = await r.json();
+    const pag = Array.isArray(corpo) ? corpo : (corpo?.itens ?? []);
+    bruto.push(...pag);
+    if (pag.length < tamanhoPagina) break; // ultima pagina
+  }
+  return bruto.map((i) => ({
     numero: i.numeroItem ?? null,
     descricao: i.descricao ?? i.materialOuServicoNome ?? "Item sem descrição",
     quantidade: i.quantidade ?? null,
