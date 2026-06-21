@@ -14,9 +14,8 @@
 
 import { resolve } from "node:path";
 import { tmpdir } from "node:os";
-import { mkdir, readFile, writeFile, readdir, unlink, stat } from "node:fs/promises";
+import { mkdir, readFile, writeFile, readdir, unlink, stat, statfs } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
-import { pipeline } from "node:stream/promises";
 import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { DATA_DIR, PERFIS } from "./caminhos.mjs";
@@ -187,6 +186,8 @@ export async function backupLoop() {
       const meta = await rodarBackup();
       console.log(`[backup] ok ${meta.data} ${tamanhoLegivel(meta.tamanho)} sha=${meta.checksum} (liberou ${tamanhoLegivel(meta.liberadoVolume)} do volume)`);
       await enviarResumo(meta).catch((e) => console.error("[backup email]", e.message));
+      // Checagem diaria do volume: alerta o admin se passar do limiar (~80%).
+      await verificarDisco().catch((e) => console.error("[disco]", e.message));
     } catch (e) {
       console.error("[backup]", e.message);
     }
@@ -277,4 +278,61 @@ export async function limparDisco({ vacuum = false } = {}) {
     liberado: tamanhoLegivel(Math.max(0, antes.total - depois.total)),
     arquivos: depois.arquivos.slice(0, 15),
   };
+}
+
+// ===== Alerta de volume cheio =====
+
+// Uso REAL do volume (capacidade total/livre via statfs, nao so a soma dos
+// nossos arquivos). Em producao DATA_DIR e o ponto de montagem do volume Railway.
+export async function usoDisco() {
+  const s = await statfs(DATA_DIR);
+  const total = s.blocks * s.bsize;
+  const livre = s.bavail * s.bsize; // disponivel pra processo nao-root
+  const usado = total - livre;
+  const pct = total > 0 ? usado / total : 0;
+  return {
+    totalBytes: total, usadoBytes: usado, livreBytes: livre, pct,
+    total: tamanhoLegivel(total), usado: tamanhoLegivel(usado), livre: tamanhoLegivel(livre),
+    pctTexto: (pct * 100).toFixed(1) + "%",
+  };
+}
+
+// Throttle do alerta: no maximo 1 a cada ~20h (evita spam em restart/loop).
+let _ultimoAlertaMs = 0;
+const ALERTA_LIMIAR = Number(process.env.LICITA_DISCO_ALERTA_PCT || 80) / 100;
+
+// Checa o volume e, se passar do limiar, manda e-mail pro admin com instrucao
+// de limpeza. Best-effort: se statfs/email falhar, loga e segue.
+export async function verificarDisco({ log = console.log, forcar = false } = {}) {
+  let uso;
+  try { uso = await usoDisco(); }
+  catch (e) { log(`[disco] statfs indisponivel: ${e.message}`); return null; }
+
+  log(`[disco] volume em ${uso.pctTexto} (${uso.usado}/${uso.total}).`);
+  if (uso.pct < ALERTA_LIMIAR && !forcar) return uso;
+  if (!temEmailKey()) return uso;
+
+  const agora = Date.now();
+  if (!forcar && agora - _ultimoAlertaMs < 20 * 3600 * 1000) return uso; // ja avisou hoje
+  _ultimoAlertaMs = agora;
+
+  const limiarTxt = (ALERTA_LIMIAR * 100).toFixed(0) + "%";
+  const html = `<!DOCTYPE html><html><body style="margin:0;background:#f8fafc;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:24px 12px"><tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0">
+<tr><td style="background:#b91c1c;color:#fff;padding:20px 26px">
+<div style="font-size:13px;color:#fecaca;font-weight:700;letter-spacing:.5px">ATENCAO — VOLUME</div>
+<div style="font-size:20px;font-weight:800;margin-top:4px">Disco em ${uso.pctTexto}</div>
+</td></tr>
+<tr><td style="padding:24px 26px;color:#0f172a;font-size:14.5px;line-height:1.6">
+<p>O volume do ContrataX passou de <b>${limiarTxt}</b>. Use <b>${uso.usado}</b> de <b>${uso.total}</b> (livre: ${uso.livre}).</p>
+<p>Se chegar a 100%, o login e as escritas param. A limpeza automatica roda no boot e no backup diario, mas se quiser liberar agora, rode no console do navegador (logado como admin):</p>
+<pre style="background:#0f172a;color:#e2e8f0;padding:12px 14px;border-radius:10px;font-size:12px;overflow:auto">fetch('/api/admin/disco/limpar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({c:'SEU_ADMIN_TOKEN',vacuum:true})}).then(r=>r.json()).then(console.log)</pre>
+<p style="font-size:12.5px;color:#64748b">Isso esvazia backups legados, poda contratos antigos, faz checkpoint do WAL e compacta o banco (VACUUM).</p>
+</td></tr></table></td></tr></table></body></html>`;
+  try {
+    await enviar({ para: ADMIN_EMAIL, assunto: `[ContrataX] ⚠ Volume em ${uso.pctTexto}`, html });
+    log(`[disco] alerta enviado pro admin (volume ${uso.pctTexto}).`);
+  } catch (e) { log(`[disco] falha ao enviar alerta: ${e.message}`); }
+  return uso;
 }

@@ -1291,8 +1291,12 @@ const servidor = createServer(async (req, res) => {
     if (rota === "/api/admin/disco") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       try {
-        const { diagnosticoDisco } = await import("../src/backup.mjs");
-        return json(res, 200, await diagnosticoDisco());
+        const { diagnosticoDisco, usoDisco } = await import("../src/backup.mjs");
+        const [arquivos, volume] = await Promise.all([
+          diagnosticoDisco(),
+          usoDisco().catch(() => null),
+        ]);
+        return json(res, 200, { volume, ...arquivos });
       } catch (e) {
         return json(res, 500, { erro: e.message });
       }
@@ -3167,7 +3171,11 @@ if (process.env.LICITA_BACKUP) {
 // sem precisar acionar nada manualmente.
 setTimeout(() => {
   import("../src/backup.mjs")
-    .then(({ limparDisco }) => limparDisco({ vacuum: false }))
-    .then((r) => console.log(`[disco] limpeza no boot: liberado ${r.liberado} (${r.antes} -> ${r.depois})`))
+    .then(async ({ limparDisco, verificarDisco }) => {
+      const r = await limparDisco({ vacuum: false });
+      console.log(`[disco] limpeza no boot: liberado ${r.liberado} (${r.antes} -> ${r.depois})`);
+      // Apos limpar, se o volume ainda estiver alto (>~80%), avisa o admin na hora.
+      await verificarDisco();
+    })
     .catch((e) => console.error("[disco] limpeza no boot falhou:", e.message));
 }, 15 * 1000);
