@@ -17,9 +17,17 @@ import { normalizar, raiz } from "./filtro.mjs";
 
 // Cada grupo: gatilhos (produtos especificos) -> amplos (termos do ramo que
 // realmente aparecem no objeto dos editais). Mantido curado e extensivel.
+//
+// PRECISAO: os `amplos` miram a CATEGORIA DO PRODUTO ("material hospitalar"),
+// nunca o DOMINIO/orgao ("saude", "medico"). Palavras de dominio aparecem no
+// nome do orgao ("Secretaria de Saude") e em editais de servico/obra sem
+// relacao com o produto -> trariam lixo (ex: buscar "compressa" trazia seguro
+// e engenharia da Secretaria de Saude). Por isso os amplos sao frases de
+// produto ("material de X", "equipamento de X") ou palavras inerentemente de
+// produto ("hospitalar", "combustivel", "pneu").
 const GRUPOS = [
   {
-    amplos: ["hospitalar", "saude", "enfermagem", "ambulatorial", "medico", "laboratorial"],
+    amplos: ["hospitalar", "enfermagem", "ambulatorial", "material hospitalar", "materiais hospitalares", "insumo hospitalar", "insumos hospitalares", "produto hospitalar", "produtos para saude", "material de enfermagem", "material ambulatorial", "material laboratorial", "medico-hospitalar", "material medico"],
     gatilhos: [
       "atadura", "gaze", "compressa", "esparadrapo", "cateter", "seringa", "agulha",
       "escalpe", "sonda", "curativo", "algodao", "soro", "soro fisiologico", "fralda",
@@ -33,7 +41,7 @@ const GRUPOS = [
     ],
   },
   {
-    amplos: ["construcao", "obra", "material de construcao", "predial", "hidraulico", "eletrico"],
+    amplos: ["material de construcao", "materiais de construcao", "material hidraulico", "material eletrico", "material predial", "material de acabamento"],
     gatilhos: [
       "cimento", "areia", "brita", "tijolo", "bloco de concreto", "vergalhao", "telha",
       "viga", "concreto", "argamassa", "cal", "gesso", "drywall", "massa corrida",
@@ -44,7 +52,7 @@ const GRUPOS = [
     ],
   },
   {
-    amplos: ["alimento", "alimenticio", "generos alimenticios", "merenda", "hortifruti", "alimentacao escolar"],
+    amplos: ["alimenticio", "genero alimenticio", "generos alimenticios", "alimentacao escolar", "merenda escolar", "cesta basica", "hortifruti"],
     gatilhos: [
       "arroz", "feijao", "oleo de soja", "acucar", "farinha", "macarrao", "leite",
       "carne", "frango", "peixe", "ovo", "fruta", "verdura", "legume", "pao",
@@ -54,7 +62,7 @@ const GRUPOS = [
     ],
   },
   {
-    amplos: ["limpeza", "higiene", "material de limpeza", "conservacao", "higienizacao"],
+    amplos: ["material de limpeza", "materiais de limpeza", "produto de limpeza", "produtos de limpeza", "material de higiene", "material de higienizacao"],
     gatilhos: [
       "detergente", "sabao", "agua sanitaria", "alvejante", "desinfetante", "vassoura",
       "rodo", "pano de chao", "balde", "esponja", "papel higienico", "papel toalha",
@@ -63,7 +71,7 @@ const GRUPOS = [
     ],
   },
   {
-    amplos: ["escritorio", "papelaria", "expediente", "material de escritorio", "material de expediente"],
+    amplos: ["papelaria", "material de escritorio", "material de expediente", "material de papelaria"],
     gatilhos: [
       "papel a4", "papel sulfite", "caneta", "lapis", "borracha", "grampeador",
       "grampo", "clips", "pasta", "envelope", "caderno", "agenda", "cartolina",
@@ -72,7 +80,7 @@ const GRUPOS = [
     ],
   },
   {
-    amplos: ["informatica", "tecnologia", "equipamento de informatica", "computacao"],
+    amplos: ["equipamento de informatica", "equipamentos de informatica", "material de informatica", "suprimento de informatica"],
     gatilhos: [
       "notebook", "computador", "desktop", "monitor", "teclado", "mouse", "impressora",
       "scanner", "roteador", "switch", "nobreak", "estabilizador", "ssd", "pendrive",
@@ -81,7 +89,7 @@ const GRUPOS = [
     ],
   },
   {
-    amplos: ["mobiliario", "moveis", "mobiliario escolar", "mobiliario de escritorio"],
+    amplos: ["mobiliario", "mobiliario escolar", "mobiliario de escritorio"],
     gatilhos: [
       "cadeira", "mesa", "armario", "estante", "gaveteiro", "longarina", "poltrona",
       "sofa", "arquivo de aco", "prateleira", "balcao", "escrivaninha", "cama",
@@ -89,7 +97,7 @@ const GRUPOS = [
     ],
   },
   {
-    amplos: ["automotivo", "veicular", "manutencao de veiculos", "frota", "autopecas"],
+    amplos: ["peca automotiva", "pecas automotivas", "material automotivo", "autopecas", "pneu", "pneus"],
     gatilhos: [
       "pneu", "oleo lubrificante", "filtro de oleo", "filtro de ar", "pastilha de freio",
       "bateria automotiva", "amortecedor", "correia", "vela de ignicao",
@@ -97,11 +105,11 @@ const GRUPOS = [
     ],
   },
   {
-    amplos: ["combustivel", "abastecimento"],
+    amplos: ["combustivel", "oleo diesel", "gasolina", "etanol", "arla"],
     gatilhos: ["gasolina", "diesel", "etanol", "alcool combustivel", "arla", "oleo diesel", "gas glp"],
   },
   {
-    amplos: ["epi", "uniforme", "vestuario", "seguranca do trabalho", "fardamento"],
+    amplos: ["epi", "equipamento de protecao individual", "material de seguranca", "uniforme", "fardamento", "vestuario"],
     gatilhos: [
       "capacete", "bota", "luva de seguranca", "oculos de protecao", "protetor auricular",
       "cinto de seguranca", "jaleco", "colete", "fardamento", "camiseta", "calca uniforme",
