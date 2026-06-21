@@ -642,6 +642,23 @@ function unirPorItem(casaram, candidatos, termo, excluirList = []) {
   return casaram.concat(extra);
 }
 
+// Limiar pra acionar a expansao de ramo. Acima disso, a busca PRECISA (objeto
+// literal + itens) ja basta e nao ampliamos (evita "luva" trazer todo o ramo
+// hospitalar). Abaixo, ampliamos pro ramo pra nao devolver quase nada.
+const LIMIAR_EXPANSAO = Number(process.env.LICITA_LIMIAR_EXPANSAO || 8);
+
+// Casa em duas camadas: 1) PRECISO = objeto literal + itens do edital; 2) so se
+// vier pouco, ABRE pro ramo (expansao). O preciso sempre vem primeiro na lista.
+function casarComExpansao(candidatos, termos, termo, expandido, excluirList) {
+  let preciso = aplicarFiltro(candidatos, { termos, termosExcluir: excluirList });
+  preciso = unirPorItem(preciso, candidatos, termo, excluirList);
+  if (preciso.length >= LIMIAR_EXPANSAO || !expandido.length) return preciso;
+  const amplo = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluirList });
+  const ids = new Set(preciso.map((e) => e.id));
+  for (const e of amplo) if (!ids.has(e.id)) preciso.push(e);
+  return preciso;
+}
+
 // Busca publica da landing page: por UF e termo livre, devolve o total, a soma
 // dos valores e uma amostra dos editais abertos. Sem perfil, sem login.
 export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
@@ -666,11 +683,8 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
   // Exclui obra/servico quando o termo e um produto de ramo que pede isso (ex:
   // "cimento" nao deve trazer licitacao de OBRA, so a compra do material).
   const excluirList = excluirTermos(termos);
-  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluirList });
-  // Busca UNIVERSAL por ITEM: une editais cujos itens casam o termo (acha
-  // qualquer produto, mesmo fora dos ramos curados). Respeita UF (candidatos ja
-  // filtrados) e exclusoes. No-op se o indice de itens estiver vazio.
-  casaram = unirPorItem(casaram, candidatos, termo, excluirList);
+  // Precisao primeiro (objeto literal + itens); so abre pro ramo se vier pouco.
+  let casaram = casarComExpansao(candidatos, termos, termo, expandido, excluirList);
 
   // Ordena por relevancia: editais onde o termo aparece mais cedo no objeto
   // (assunto central) vem antes dos que so mencionam de passagem. Empate = prazo.
@@ -703,14 +717,20 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
   // Expande produto -> ramo (atadura -> hospitalar), igual a LP. So na busca
   // LIVRE (string digitada); quando vem termosParam (export do perfil) o perfil
   // ja traz seus proprios termosIA, entao nao reexpande.
-  const expandido = termosParam?.length ? [] : [...termosAmplos(termos), ...expandirTermos(termos)];
   // Palavras a excluir = filtros avancados do cliente + exclusoes de ramo (obra/
   // servico) quando a busca livre e por produto. Nao reexpande quando vem perfil.
   const excluirRamoAuto = termosParam?.length ? [] : excluirTermos(termos);
   const excluirList = [...excluir, ...excluirRamoAuto];
-  let casaram = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluirList });
-  // Busca universal por item (so na busca livre por string; perfil ja tem termosIA).
-  if (!termosParam?.length) casaram = unirPorItem(casaram, candidatos, termo, excluirList);
+  let casaram;
+  if (termosParam?.length) {
+    // Perfil/export: usa os termos como vieram (ja sao o ramo do cliente).
+    casaram = aplicarFiltro(candidatos, { termos, termosExcluir: excluirList });
+  } else {
+    // Busca livre: precisao primeiro (objeto literal + itens); abre pro ramo so
+    // se vier pouco. Evita "luva de procedimento" trazer todo o ramo hospitalar.
+    const expandido = [...termosAmplos(termos), ...expandirTermos(termos)];
+    casaram = casarComExpansao(candidatos, termos, termo, expandido, excluirList);
+  }
   // Registro de Precos (SRP): "sim" so atas, "nao" sem ata.
   if (srp === "sim") casaram = casaram.filter((e) => e.srp);
   else if (srp === "nao") casaram = casaram.filter((e) => !e.srp);
