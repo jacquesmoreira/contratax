@@ -80,13 +80,22 @@ export function gerarDigest(perfil, editais, { semUf = false } = {}) {
 }
 
 // Envia via Resend (precisa de RESEND_API_KEY e dominio verificado para producao).
-export async function enviar({ para, assunto, html }) {
+// anexos (opcional): [{ filename, content }] onde content e um Buffer ou base64.
+// Usado pelo backup off-site (manda o dump de clientes anexado no e-mail).
+export async function enviar({ para, assunto, html, anexos = null }) {
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error("RESEND_API_KEY nao definida");
+  const corpo = { from: FROM, to: para, subject: assunto, html };
+  if (anexos?.length) {
+    corpo.attachments = anexos.map((a) => ({
+      filename: a.filename,
+      content: Buffer.isBuffer(a.content) ? a.content.toString("base64") : a.content,
+    }));
+  }
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: FROM, to: para, subject: assunto, html }),
+    body: JSON.stringify(corpo),
   });
   if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 200)}`);
   return await r.json();

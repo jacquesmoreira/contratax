@@ -13,21 +13,24 @@
 // licita.db. Pronto.
 
 import { resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { mkdir, readFile, writeFile, readdir, unlink, stat } from "node:fs/promises";
-import { createReadStream, createWriteStream } from "node:fs";
-import { createGzip } from "node:zlib";
+import { gzipSync } from "node:zlib";
 import { pipeline } from "node:stream/promises";
 import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { DATA_DIR, PERFIS } from "./caminhos.mjs";
 import { enviar, temEmailKey } from "./email.mjs";
 
-const BACKUP_DIR = resolve(DATA_DIR, "backups");
-// Quantos backups manter no volume. Cada snapshot gzipado pode ter centenas de
-// MB (o banco cresce com o backfill de contratos). Num volume de 5GB que ja
-// tem o banco vivo (>1GB), guardar 7 backups = ~2GB so de historico = volume
-// estoura. 3 e suficiente: os backups tambem vao por e-mail (link de download).
-const MANTER = Number(process.env.LICITA_BACKUP_MANTER || 2);
+// Pasta LEGADA de backups DENTRO do volume. Era aqui que o backup antigo
+// guardava snapshots do banco INTEIRO (centenas de MB) — a causa do volume de
+// 5GB encher. A politica nova NAO grava nada de backup no volume; esta pasta so
+// existe pra ser ESVAZIADA (limpa o legado e libera disco).
+const VOLUME_BACKUP_DIR = resolve(DATA_DIR, "backups");
+// Onde o dump transitorio e gerado: disco EFEMERO do container (/tmp), NUNCA o
+// volume persistente. Some no restart — e isso e proposital, o backup vai por
+// e-mail (anexo) e nao precisa sobreviver no disco.
+const TMP_DIR = resolve(tmpdir(), "contratax-backup");
 const ADMIN_EMAIL = process.env.LICITA_CONTATO || "contato@contratax.com.br";
 const BASE = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
 
@@ -43,59 +46,38 @@ function tamanhoLegivel(bytes) {
   return (bytes / 1024 / 1024).toFixed(2) + " MB";
 }
 
-async function sha256Arquivo(caminho) {
-  const buf = await readFile(caminho);
-  return createHash("sha256").update(buf).digest("hex").slice(0, 16);
-}
-
-// Cria snapshot do banco via VACUUM INTO (consistente, sem lock prolongado).
-async function snapshotBanco(destino) {
-  const dbOrigem = resolve(DATA_DIR, "licita.db");
-  const db = new DatabaseSync(dbOrigem, { readOnly: true });
-  try {
-    // VACUUM INTO precisa de path absoluto e em formato POSIX no SQL.
-    const safe = destino.replace(/\\/g, "/").replace(/'/g, "''");
-    db.exec(`VACUUM INTO '${safe}'`);
-  } finally {
-    db.close();
-  }
-}
-
-// Gzipa um arquivo. Retorna caminho do gz.
-async function gzip(origem) {
-  const destino = origem + ".gz";
-  await pipeline(createReadStream(origem), createGzip({ level: 9 }), createWriteStream(destino));
-  return destino;
-}
-
-// Apaga snapshots antigos, mantendo os MANTER mais recentes. Tambem remove
-// orfaos: snapshots .db soltos (sobra de gzip que falhou) que antes ficavam
-// pra sempre no volume (45MB cada) e iam enchendo o disco.
+// ESVAZIA a pasta de backups do volume. A politica nova nao guarda backup no
+// volume (vai por e-mail), entao qualquer arquivo aqui e legado e pode sair —
+// e o que libera disco quando o volume enche. Devolve quantos bytes liberou.
 async function limparAntigos() {
+  let liberado = 0;
   try {
-    const nomes = await readdir(BACKUP_DIR);
-
-    // Remove TODO snapshot .db cru. Eles sao transientes: o backup gera o .db,
-    // gzipa pra .gz e deveria apagar o .db. Se sobrou (gzip ou unlink falhou),
-    // e lixo de centenas de MB. O backup que importa e sempre o .gz, entao
-    // qualquer .db na pasta pode ir embora, COM ou SEM .gz ao lado.
-    for (const n of nomes.filter((n) => n.endsWith(".db") && !n.endsWith(".db.gz"))) {
-      try { await unlink(resolve(BACKUP_DIR, n)); } catch {}
-    }
-
-    // Poda por tipo (.gz e perfis-*.json), mantendo os MANTER mais recentes
-    for (const filtro of [(n) => n.endsWith(".gz"), (n) => /^perfis-.*\.json$/.test(n)]) {
-      const arquivos = nomes.filter(filtro).map((n) => resolve(BACKUP_DIR, n));
-      if (arquivos.length <= MANTER) continue;
-      const ordenados = await Promise.all(
-        arquivos.map(async (c) => ({ c, m: (await stat(c)).mtimeMs })),
-      );
-      ordenados.sort((a, b) => b.m - a.m);
-      for (const x of ordenados.slice(MANTER)) {
-        try { await unlink(x.c); } catch {}
-      }
+    const nomes = await readdir(VOLUME_BACKUP_DIR);
+    for (const n of nomes) {
+      const caminho = resolve(VOLUME_BACKUP_DIR, n);
+      try {
+        const st = await stat(caminho);
+        if (st.isFile()) { await unlink(caminho); liberado += st.size; }
+      } catch {}
     }
   } catch {}
+  return liberado;
+}
+
+// Dump das tabelas INSUBSTITUIVEIS (dado de cliente). O acervo do PNCP (editais,
+// contratos, pca, precos) NAO entra: e publico e re-coletavel a qualquer hora.
+// Resultado: um JSON pequeno (KB a poucos MB) que cabe em anexo de e-mail.
+function dumpClientes() {
+  const db = new DatabaseSync(resolve(DATA_DIR, "licita.db"), { readOnly: true });
+  const out = { geradoEm: new Date().toISOString(), tabelas: {} };
+  try {
+    for (const t of ["perfis", "notas_fiscais", "contratos_meus"]) {
+      try { out.tabelas[t] = db.prepare(`SELECT * FROM ${t}`).all(); }
+      catch { out.tabelas[t] = null; }
+    }
+  } finally { db.close(); }
+  // perfis.json tambem (copia de seguranca redundante do arquivo).
+  return out;
 }
 
 // Conta total de registros em algumas tabelas pro relatorio do e-mail.
@@ -104,7 +86,7 @@ function resumoBanco() {
     const db = new DatabaseSync(resolve(DATA_DIR, "licita.db"), { readOnly: true });
     try {
       const totais = {};
-      for (const t of ["contratacoes", "contratos", "empresas"]) {
+      for (const t of ["editais", "contratos", "perfis"]) {
         try {
           const r = db.prepare(`SELECT COUNT(*) AS n FROM ${t}`).get();
           totais[t] = r?.n || 0;
@@ -115,73 +97,73 @@ function resumoBanco() {
   } catch { return {}; }
 }
 
-// Executa o backup: snapshot + gzip + email com resumo. Retorna metadados.
+// Executa o backup: dump pequeno de CLIENTES (gerado em /tmp, fora do volume),
+// gzipado e devolvido como buffer pra ir ANEXO no e-mail. Esvazia tambem a
+// pasta de backups legada do volume. Retorna metadados + o buffer do anexo.
 export async function rodarBackup() {
-  await mkdir(BACKUP_DIR, { recursive: true });
+  await mkdir(TMP_DIR, { recursive: true });
   const data = ymd();
-  const nomeBase = `contratax-${data}.db`;
-  const snapPath = resolve(BACKUP_DIR, nomeBase);
-  const perfisCopia = resolve(BACKUP_DIR, `perfis-${data}.json`);
 
-  // 1) Snapshot do SQLite
-  await snapshotBanco(snapPath);
-  const gzPath = await gzip(snapPath);
-  await unlink(snapPath).catch(() => {});
+  // 1) Dump do dado de cliente (insubstituivel) + perfis.json redundante.
+  const dump = dumpClientes();
+  try { dump.perfisJson = JSON.parse(await readFile(PERFIS, "utf8")); } catch { dump.perfisJson = null; }
+  const json = Buffer.from(JSON.stringify(dump), "utf8");
+  const buffer = gzipSync(json, { level: 9 });
 
-  // 2) Copia perfis.json
-  try {
-    const perfisRaw = await readFile(PERFIS, "utf8");
-    await writeFile(perfisCopia, perfisRaw, "utf8");
-  } catch {}
+  // 2) Grava uma copia transitoria em /tmp (efemero) pro endpoint de download.
+  const nomeArquivo = `contratax-clientes-${data}.json.gz`;
+  const gzPath = resolve(TMP_DIR, nomeArquivo);
+  try { await writeFile(gzPath, buffer); } catch {}
 
-  // 3) Metadados
-  const stGz = await stat(gzPath);
-  const checksum = await sha256Arquivo(gzPath);
+  // 3) Metadados + libera a pasta de backups legada do volume (o que enchia).
+  const checksum = createHash("sha256").update(buffer).digest("hex").slice(0, 16);
   const totais = resumoBanco();
-  let totalPerfis = 0;
-  try { totalPerfis = JSON.parse(await readFile(PERFIS, "utf8")).length || 0; } catch {}
-
-  await limparAntigos();
+  const totalPerfis = (dump.tabelas?.perfis?.length) || (Array.isArray(dump.perfisJson) ? dump.perfisJson.length : 0);
+  const liberadoVolume = await limparAntigos();
 
   return {
     data,
     arquivo: gzPath,
-    tamanho: stGz.size,
+    nomeArquivo,
+    tamanho: buffer.length,
+    buffer,
     checksum,
     totais,
     totalPerfis,
+    liberadoVolume,
   };
 }
 
 // E-mail diario com resumo + link de download. O link exige token admin.
-async function enviarResumo(meta, adminToken) {
+async function enviarResumo(meta) {
   if (!temEmailKey()) return;
-  const link = `${BASE}/admin/backup/${meta.data}?t=${encodeURIComponent(adminToken)}`;
   const tot = meta.totais || {};
   const html = `<!DOCTYPE html><html><body style="margin:0;background:#f8fafc;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:24px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0">
 <tr><td style="background:#0f172a;color:#fff;padding:20px 26px">
-<div style="font-size:13px;color:#a5b4fc;font-weight:700;letter-spacing:.5px">BACKUP DIARIO</div>
+<div style="font-size:13px;color:#a5b4fc;font-weight:700;letter-spacing:.5px">BACKUP DIARIO (CLIENTES)</div>
 <div style="font-size:20px;font-weight:800;margin-top:4px">ContrataX, ${meta.data}</div>
 </td></tr>
 <tr><td style="padding:24px 26px;color:#0f172a;font-size:14.5px;line-height:1.6">
-<p>Snapshot do banco gerado com sucesso.</p>
+<p><b>O backup do dado de cliente está anexado neste e-mail</b> (${meta.nomeArquivo}). Guarde o e-mail — é a sua cópia off-site, sobrevive a qualquer problema do volume.</p>
 <table cellpadding="0" cellspacing="0" style="width:100%;font-size:13.5px;margin:14px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
-<tr><td style="padding:10px 14px;background:#f8fafc;width:50%;color:#64748b">Tamanho do arquivo</td><td style="padding:10px 14px;font-weight:700">${tamanhoLegivel(meta.tamanho)}</td></tr>
+<tr><td style="padding:10px 14px;background:#f8fafc;width:50%;color:#64748b">Anexo</td><td style="padding:10px 14px;font-weight:700">${tamanhoLegivel(meta.tamanho)}</td></tr>
 <tr><td style="padding:10px 14px;background:#f8fafc;color:#64748b">SHA-256 (16 chars)</td><td style="padding:10px 14px;font-family:monospace;font-size:12.5px">${meta.checksum}</td></tr>
 <tr><td style="padding:10px 14px;background:#f8fafc;color:#64748b">Perfis (clientes)</td><td style="padding:10px 14px;font-weight:700">${brl(meta.totalPerfis)}</td></tr>
-${tot.contratacoes != null ? `<tr><td style="padding:10px 14px;background:#f8fafc;color:#64748b">Contratacoes</td><td style="padding:10px 14px;font-weight:700">${brl(tot.contratacoes)}</td></tr>` : ""}
-${tot.contratos != null ? `<tr><td style="padding:10px 14px;background:#f8fafc;color:#64748b">Contratos</td><td style="padding:10px 14px;font-weight:700">${brl(tot.contratos)}</td></tr>` : ""}
-${tot.empresas != null ? `<tr><td style="padding:10px 14px;background:#f8fafc;color:#64748b">Empresas</td><td style="padding:10px 14px;font-weight:700">${brl(tot.empresas)}</td></tr>` : ""}
+${tot.editais != null ? `<tr><td style="padding:10px 14px;background:#f8fafc;color:#64748b">Editais (acervo PNCP)</td><td style="padding:10px 14px;font-weight:700">${brl(tot.editais)}</td></tr>` : ""}
+${tot.contratos != null ? `<tr><td style="padding:10px 14px;background:#f8fafc;color:#64748b">Contratos (acervo PNCP)</td><td style="padding:10px 14px;font-weight:700">${brl(tot.contratos)}</td></tr>` : ""}
+${meta.liberadoVolume ? `<tr><td style="padding:10px 14px;background:#f8fafc;color:#64748b">Liberado do volume</td><td style="padding:10px 14px;font-weight:700">${tamanhoLegivel(meta.liberadoVolume)}</td></tr>` : ""}
 </table>
-<table cellpadding="0" cellspacing="0" border="0" style="margin:18px 0"><tr><td align="center">
-<a href="${link}" style="display:inline-block;background:#4338ca;color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:13px 26px;border-radius:11px">Baixar backup</a>
-</td></tr></table>
-<p style="font-size:12.5px;color:#64748b">Guarde este e-mail. Em caso de problema com o volume Railway, baixe daqui e restaure no novo servidor.</p>
-<p style="font-size:12.5px;color:#64748b">Restauracao: <code>gunzip contratax-${meta.data}.db.gz</code> e suba o .db para o volume como <code>licita.db</code>.</p>
+<p style="font-size:12.5px;color:#64748b">O acervo público do PNCP (editais/contratos) NÃO entra no backup de propósito: é re-coletável a qualquer momento. O que importa — contas, recebíveis e contratos dos clientes — está no anexo.</p>
+<p style="font-size:12.5px;color:#64748b">Restauração: descompacte o .gz e reimporte o JSON (tabelas perfis/notas_fiscais/contratos_meus + perfisJson).</p>
 </td></tr></table></td></tr></table></body></html>`;
-  await enviar({ para: ADMIN_EMAIL, assunto: `[ContrataX] Backup ${meta.data} (${tamanhoLegivel(meta.tamanho)})`, html });
+  await enviar({
+    para: ADMIN_EMAIL,
+    assunto: `[ContrataX] Backup ${meta.data} (${tamanhoLegivel(meta.tamanho)})`,
+    html,
+    anexos: [{ filename: meta.nomeArquivo, content: meta.buffer }],
+  });
 }
 
 // Loop in-process: dispara 1x por dia no horario alvo (default 03:00 BR).
@@ -195,25 +177,25 @@ function msAteProximoHorario(horaBR = 3) {
   return alvo - agora;
 }
 
-export async function backupLoop({ adminToken } = {}) {
+export async function backupLoop() {
   const horaBR = Number(process.env.LICITA_BACKUP_HORA || 3);
-  console.log(`[backup] loop ativado (hora alvo BR=${horaBR}, manter=${MANTER})`);
+  console.log(`[backup] loop ativado (hora alvo BR=${horaBR}; backup de clientes off-site por e-mail, nada no volume)`);
   while (true) {
     const ms = msAteProximoHorario(horaBR);
     await dormir(ms);
     try {
       const meta = await rodarBackup();
-      console.log(`[backup] ok ${meta.data} ${tamanhoLegivel(meta.tamanho)} sha=${meta.checksum}`);
-      await enviarResumo(meta, adminToken).catch((e) => console.error("[backup email]", e.message));
+      console.log(`[backup] ok ${meta.data} ${tamanhoLegivel(meta.tamanho)} sha=${meta.checksum} (liberou ${tamanhoLegivel(meta.liberadoVolume)} do volume)`);
+      await enviarResumo(meta).catch((e) => console.error("[backup email]", e.message));
     } catch (e) {
       console.error("[backup]", e.message);
     }
   }
 }
 
-// Para servir o download: localiza o arquivo .db.gz por data.
+// Para servir o download (copia transitoria em /tmp; o backup real vai por e-mail).
 export function caminhoBackup(data) {
-  return resolve(BACKUP_DIR, `contratax-${data}.db.gz`);
+  return resolve(TMP_DIR, `contratax-clientes-${data}.json.gz`);
 }
 
 // ===== Diagnostico e limpeza de disco (pra investigar volume cheio) =====
@@ -259,13 +241,12 @@ export async function limparDisco({ vacuum = false } = {}) {
   const antes = await diagnosticoDisco();
   const acoes = [];
 
-  // 1) PRIMEIRO poda os arquivos (deletes puros, liberam espaco na hora). Num
-  // volume 100% cheio, isso da o respiro necessario pro checkpoint do passo 2.
-  // Reusa a mesma poda do backup: remove .db orfaos (gzip que falhou) + mantem
-  // so os MANTER backups .gz e copias de perfis mais recentes.
+  // 1) PRIMEIRO esvazia a pasta de backups legada do volume (deletes puros,
+  // liberam espaco na hora). Num volume 100% cheio, isso da o respiro necessario
+  // pro checkpoint do passo 2. A politica nova nao guarda backup no volume.
   try {
-    await limparAntigos();
-    acoes.push(`poda de backups: mantidos ${MANTER} mais recentes, orfaos removidos`);
+    const liberado = await limparAntigos();
+    acoes.push(`backups legados do volume removidos (${tamanhoLegivel(liberado)})`);
   } catch (e) { acoes.push(`poda falhou: ${e.message}`); }
 
   // 2) Checkpoint do WAL (TRUNCATE zera o licita.db-wal apos aplicar). Roda

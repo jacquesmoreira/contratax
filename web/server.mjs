@@ -3154,8 +3154,20 @@ if (process.env.LICITA_DIGEST) {
 if (process.env.LICITA_BACKUP) {
   import("../src/backup.mjs")
     .then(({ backupLoop }) => {
-      console.log(`[backup] ativado em background`);
-      return backupLoop({ adminToken: ADMIN });
+      console.log(`[backup] ativado em background (clientes off-site por e-mail)`);
+      return backupLoop();
     })
     .catch((e) => console.error("[backup] erro:", e.message));
 }
+
+// Limpeza de disco NO BOOT (self-healing): a cada deploy, esvazia a pasta de
+// backups legada do volume (snapshots do banco inteiro que enchiam os 5GB) e
+// faz checkpoint do WAL. Roda 15s apos subir pra nao competir no startup. Isso
+// garante que, se o volume encheu, o proprio deploy ja libera o espaco —
+// sem precisar acionar nada manualmente.
+setTimeout(() => {
+  import("../src/backup.mjs")
+    .then(({ limparDisco }) => limparDisco({ vacuum: false }))
+    .then((r) => console.log(`[disco] limpeza no boot: liberado ${r.liberado} (${r.antes} -> ${r.depois})`))
+    .catch((e) => console.error("[disco] limpeza no boot falhou:", e.message));
+}, 15 * 1000);

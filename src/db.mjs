@@ -405,6 +405,26 @@ export function removerExpirados({ graceDias = 3 } = {}) {
   return Number(r.changes ?? 0);
 }
 
+// Poda contratos antigos pra MANTER O BANCO LIMITADO (o backfill cresce sem
+// teto, 1.2M+ registros, e enche o volume de 5GB do Railway). O historico so
+// consulta os ultimos 18 meses (consultarContratos), entao guardar mais que
+// isso e so peso morto. Default 24 meses = folga de 6 meses sobre a janela de
+// consulta. Re-coletavel do PNCP a qualquer momento, entao podar e seguro.
+export function podarContratosAntigos({ mesesAtras = Number(process.env.LICITA_CONTRATOS_MESES || 24) } = {}) {
+  const d = abrir();
+  const corte = new Date();
+  corte.setMonth(corte.getMonth() - mesesAtras);
+  const corteISO = corte.toISOString().slice(0, 10);
+  // Considera o MAIS RECENTE entre vigencia_inicio e publicacao; so apaga quando
+  // ambos sao anteriores ao corte (ou ausentes). COALESCE evita que um NULL
+  // some o MAX inteiro e apague um contrato que ainda esta na janela.
+  const r = d.prepare(`
+    DELETE FROM contratos
+    WHERE MAX(COALESCE(vigencia_inicio,''), COALESCE(publicacao,'')) < ?
+  `).run(corteISO);
+  return Number(r.changes ?? 0);
+}
+
 // Insere/atualiza um lote de contratos. Dedupe por id (numeroControlePNCP).
 export function upsertContratos(contratos) {
   if (!contratos.length) return 0;

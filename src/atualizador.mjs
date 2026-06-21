@@ -69,6 +69,13 @@ export async function atualizarEditais({ limitePaginas = Infinity, log = console
     await ingerirPcaCiclo({ log });
   } catch (e) { log(`[pca] erro: ${e.message}`); }
   const removidos = removerExpirados({ graceDias: 3 });
+  // Poda contratos antigos pra manter o banco (e o volume de 5GB) limitado. O
+  // backfill cresce sem teto; o historico so usa os ultimos 18 meses. Re-coletavel.
+  try {
+    const { podarContratosAntigos } = await import("./db.mjs");
+    const podados = podarContratosAntigos();
+    if (podados) log(`[atualizar] ${podados} contratos antigos podados (fora da janela).`);
+  } catch (e) { log(`[poda] erro: ${e.message}`); }
   // Alertas automaticos de certidoes vencendo (so se e-mail configurado)
   try { await verificarCertidoesVencendo({ log }); } catch (e) { log(`[alertas] erro: ${e.message}`); }
   // Sequencia de onboarding (3 e-mails nos primeiros 6 dias do cadastro)
