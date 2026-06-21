@@ -25,7 +25,7 @@ function raiz(p) {
 // Token significativo: >= 3 letras OU curto mas com numero (ex: "a4", "h2o",
 // "aro13"). So tokens curtos puramente alfabeticos ("de", "da") sao ignorados.
 // Sem isso, "papel A4" virava so "papel" e trazia papel higienico.
-function tokenSignificativo(w) {
+export function tokenSignificativo(w) {
   return w.length >= 3 || (w.length >= 2 && /\d/.test(w));
 }
 

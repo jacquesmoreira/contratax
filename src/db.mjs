@@ -5,7 +5,16 @@ import { DatabaseSync } from "node:sqlite";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdirSync } from "node:fs";
-import { normalizar, aplicarFiltro } from "./filtro.mjs";
+import { normalizar, aplicarFiltro, tokenSignificativo } from "./filtro.mjs";
+
+// Monta condicoes SQL exigindo TODOS os tokens significativos do termo (mesma
+// regra do painel: "papel A4" pede papel E a4, nao a frase colada). Mantem a
+// busca de Precos/PCA consistente com o resto do site.
+function condTokens(termo, coluna, cond, args) {
+  const tokens = normalizar(termo).split(/[^a-z0-9]+/).filter(tokenSignificativo);
+  for (const tk of tokens) { cond.push(`${coluna} LIKE ?`); args.push("%" + tk + "%"); }
+  return tokens.length;
+}
 import { DATA_DIR } from "./caminhos.mjs";
 
 const DIR_DADOS = DATA_DIR;
@@ -202,8 +211,7 @@ export function pesquisarPrecos({ termo = "", uf = null, limite = 80 } = {}) {
   const d = abrir();
   const cond = ["valor_unitario > 0"];
   const args = [];
-  const t = normalizar(termo).trim();
-  if (t) { cond.push("descricao_norm LIKE ?"); args.push("%" + t + "%"); }
+  condTokens(termo, "descricao_norm", cond, args);
   if (uf) { cond.push("uf = ?"); args.push(uf); }
   const where = "WHERE " + cond.join(" AND ");
   const total = d.prepare(`SELECT COUNT(*) n FROM precos_itens ${where}`).get(...args).n;
@@ -273,9 +281,8 @@ export function upsertPca(linhas) {
 // ainda vai acontecer). Devolve lista + agregado por orgao.
 export function pesquisarPca({ termo = "", limite = 80 } = {}) {
   const d = abrir();
-  const t = normalizar(termo).trim();
   const cond = []; const args = [];
-  if (t) { cond.push("descricao_norm LIKE ?"); args.push("%" + t + "%"); }
+  condTokens(termo, "descricao_norm", cond, args);
   const where = cond.length ? "WHERE " + cond.join(" AND ") : "";
   const total = d.prepare(`SELECT COUNT(*) n FROM pca_itens ${where}`).get(...args).n;
   if (!total) return { total: 0, termo, itens: [], valorTotal: 0 };
