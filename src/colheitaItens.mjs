@@ -46,3 +46,18 @@ export async function colheitaItensCiclo({ limite = 40, log = console.log } = {}
   log(`[itens] indexados ${itens} itens de ${processados} editais (total no indice: ${totalItensEdital()}).`);
   return { processados, itens };
 }
+
+// Loop dedicado: enche o indice o mais rapido que o throttle permite (gated por
+// LICITA_ITENS_INDEX). Lote a lote, com pausa curta. Quando nao ha mais editais
+// pra indexar (ou bate no teto), espera 5 min e checa de novo (pega os novos).
+export async function colheitaItensLoop({ log = console.log } = {}) {
+  if (!process.env.LICITA_ITENS_INDEX) return;
+  const lote = Number(process.env.LICITA_ITENS_LOTE || 60);
+  log(`[itens] loop de indexacao ativado (lote ${lote}, teto ${TETO}).`);
+  for (;;) {
+    let r = { processados: 0 };
+    try { r = await colheitaItensCiclo({ limite: lote, log }); }
+    catch (e) { log(`[itens] erro no ciclo: ${e.message}`); }
+    await dormir(r.processados ? 1500 : 5 * 60 * 1000);
+  }
+}

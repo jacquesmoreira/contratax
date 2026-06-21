@@ -3168,6 +3168,17 @@ if (process.env.LICITA_BACKUP) {
     .catch((e) => console.error("[backup] erro:", e.message));
 }
 
+// Indice de ITENS dos editais abertos (busca universal por produto). Loop
+// dedicado, gated por LICITA_ITENS_INDEX=1, capado por disco (LICITA_ITENS_MAX).
+// Inicia 90s apos subir (depois do backfill/atualizador) pra nao competir no boot.
+if (process.env.LICITA_ITENS_INDEX) {
+  setTimeout(() => {
+    import("../src/colheitaItens.mjs")
+      .then(({ colheitaItensLoop }) => colheitaItensLoop())
+      .catch((e) => console.error("[itens] loop erro:", e.message));
+  }, 90 * 1000);
+}
+
 // Limpeza de disco NO BOOT (self-healing): a cada deploy, esvazia a pasta de
 // backups legada do volume (snapshots do banco inteiro que enchiam os 5GB) e
 // faz checkpoint do WAL. Roda 15s apos subir pra nao competir no startup. Isso
