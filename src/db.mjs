@@ -757,10 +757,11 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
     // Perfil/export: usa os termos como vieram (ja sao o ramo do cliente).
     casaram = aplicarFiltro(candidatos, { termos, termosExcluir: excluirList });
   } else {
-    // Busca livre do PAINEL: PRECISAO (so o produto buscado). So abre pro ramo
-    // se nao houver NENHUM preciso. "luva" nunca traz o ramo saude (medicamento).
+    // Busca livre do PAINEL: recall (painel cheio), com os PRECISOS (objeto +
+    // itens) ranqueados no topo. O ramo vem abaixo. Sem o indice de itens nao da
+    // pra ter "cheio" E "sem ramo errado" ao mesmo tempo (so o titulo e visivel).
     const expandido = [...termosAmplos(termos), ...expandirTermos(termos)];
-    casaram = casarComExpansao(candidatos, termos, termo, expandido, excluirList, { preferePreciso: true });
+    casaram = casarComExpansao(candidatos, termos, termo, expandido, excluirList);
   }
   // Registro de Precos (SRP): "sim" so atas, "nao" sem ata.
   if (srp === "sim") casaram = casaram.filter((e) => e.srp);
