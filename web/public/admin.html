@@ -137,7 +137,12 @@ async function carregar() {
     html += `<tr>
       <td><b>${esc(c.razaoSocial || c.nome)}</b><br><span class="mut">${esc(c.cnpj || "sem CNPJ")} · ${esc(c.uf || "BR")}</span><br>${ramoCell(c.ramo)}</td>
       <td>${esc(c.email || "—")}<br><span class="mut">desde ${dataBR(c.criadoEm)}</span></td>
-      <td><span class="pill ${c.status}">${esc(c.status)}</span> ${venc ? `<span class="mut">${venc}</span>` : ""}<br><span class="mut">${esc(c.planoNome)}${c.formaPagamento ? " · " + esc(c.formaPagamento) : ""}</span></td>
+      <td><span class="pill ${c.status}">${esc(c.status)}</span> ${venc ? `<span class="mut">${venc}</span>` : ""}<br><span class="mut">${esc(c.planoNome)}${c.formaPagamento ? " · " + esc(c.formaPagamento) : ""}</span>${(() => {
+        const r = c.regua || { onboard: 0, winback: 0 };
+        const enviou = r.onboard + r.winback > 0;
+        const cor = enviou ? "#059669" : "#94a3b8";
+        return `<br><span style="font-size:10px;font-weight:700;color:${cor}" title="E-mails da régua já enviados (onboarding tem 3, win-back tem 3)">📨 onb ${r.onboard}/3 · win ${r.winback}/3</span>`;
+      })()}</td>
       <td>${(() => {
         const pct = c.uso.limite > 0 ? c.uso.usados / c.uso.limite : 0;
         const cor = pct >= 1 ? "#dc2626" : pct >= 0.8 ? "#d97706" : "#0f172a";

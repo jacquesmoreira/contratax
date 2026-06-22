@@ -1339,6 +1339,12 @@ const servidor = createServer(async (req, res) => {
           uso: usoDe(p), equipe: { usados: p.usuarios.length, assentos: p.assentos || 1 },
           custoIA: { total: custo.brl, mes: custo.brlMes, chamadas: custo.chamadas },
           resumos: resumosDe(p),
+          // Regua de e-mails: quantos do onboarding (3) e do win-back (3) ja sairam.
+          regua: {
+            onboard: [p._onboardEmail1Em, p._onboardEmail2Em, p._onboardEmail3Em].filter(Boolean).length,
+            winback: [p._winbackEmail1Em, p._winbackEmail2Em, p._winbackEmail3Em].filter(Boolean).length,
+            boasVindas: Boolean(p._boasVindasEm),
+          },
         };
       });
       const resumo = {
