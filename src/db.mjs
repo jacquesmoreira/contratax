@@ -646,12 +646,14 @@ function unirPorItem(casaram, candidatos, termo, excluirList = []) {
   return casaram.concat(extra);
 }
 
-// Limiar pra acionar a expansao de ramo. Default 1 = so amplia pro ramo quando
-// NAO houver NENHUM resultado preciso (objeto literal + itens). Havendo qualquer
-// match real, mostra so o preciso — "luva de procedimento" traz so editais com
-// luva, nunca o ramo hospitalar inteiro (medicamentos etc). A expansao vira
-// ultimo recurso, pra produto que nao aparece em lugar nenhum nao dar zero.
-const LIMIAR_EXPANSAO = Number(process.env.LICITA_LIMIAR_EXPANSAO || 1);
+// Limiar pra acionar a expansao de ramo. Se o PRECISO (objeto literal + itens)
+// ja traz >= LIMIAR, mostra so o preciso; senao, amplia pro ramo pra nao ficar
+// vazio. Default 8 funciona como CHAVE AUTOMATICA conforme o indice de itens:
+//   - Indice VAZIO (hoje): produto especifico tem poucos literais -> expande ->
+//     RECALL (varias licitacoes), como o cliente espera.
+//   - Indice CHEIO: o produto casa em muitos itens -> passa do limiar -> NAO
+//     expande -> PRECISAO (luva traz so luva). Se auto-ajusta sozinho.
+const LIMIAR_EXPANSAO = Number(process.env.LICITA_LIMIAR_EXPANSAO || 8);
 
 // Casa em duas camadas: 1) PRECISO = objeto literal + itens do edital; 2) so se
 // vier pouco, ABRE pro ramo (expansao). O preciso sempre vem primeiro na lista.
