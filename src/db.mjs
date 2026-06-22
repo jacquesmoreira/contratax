@@ -668,12 +668,14 @@ const ITENS_PRONTO_MIN = Number(process.env.LICITA_ITENS_PRONTO || 200000);
 function casarComExpansao(candidatos, termos, termo, expandido, excluirList) {
   let preciso = aplicarFiltro(candidatos, { termos, termosExcluir: excluirList });
   preciso = unirPorItem(preciso, candidatos, termo, excluirList);
+  // Marca os PRECISOS (objeto literal + itens) pra rankearem ACIMA dos do ramo.
+  for (const e of preciso) e._preciso = true;
   const indicePronto = totalItensEdital() >= ITENS_PRONTO_MIN;
   if (indicePronto && preciso.length >= LIMIAR_EXPANSAO) return preciso;
   if (!expandido.length) return preciso;
   const amplo = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluirList });
   const ids = new Set(preciso.map((e) => e.id));
-  for (const e of amplo) if (!ids.has(e.id)) preciso.push(e);
+  for (const e of amplo) if (!ids.has(e.id)) { e._preciso = false; preciso.push(e); }
   return preciso;
 }
 
@@ -708,7 +710,10 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
   // (assunto central) vem antes dos que so mencionam de passagem. Empate = prazo.
   const termoNorm = termos.length ? normalizar(termos[0]) : "";
   const posicao = (e) => { if (!termoNorm) return 0; const i = normalizar(e.objeto).indexOf(termoNorm); return i < 0 ? 1e9 : i; };
-  casaram.sort((a, b) => posicao(a) - posicao(b) || (a.encerramento || "").localeCompare(b.encerramento || ""));
+  // PRECISOS (objeto/itens) primeiro; depois os do ramo. Dentro de cada tier,
+  // por relevancia (posicao do termo) e prazo. Evita medicamento (so ramo) vir
+  // antes de um edital que tem luva de verdade.
+  casaram.sort((a, b) => (b._preciso ? 1 : 0) - (a._preciso ? 1 : 0) || posicao(a) - posicao(b) || (a.encerramento || "").localeCompare(b.encerramento || ""));
   casaram = dedupEditais(casaram);
 
   const somaValor = casaram.reduce((s, e) => s + (e.valorEstimado || 0), 0);
@@ -795,6 +800,8 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
   const termoNorm = termos.length ? normalizar(termos[0]).replace(/"/g, "") : "";
   const posicao = (e) => { if (!termoNorm) return 0; const i = normalizar(e.objeto).indexOf(termoNorm); return i < 0 ? 1e9 : i; };
   casaram.sort((a, b) => {
+    const p = (b._preciso ? 1 : 0) - (a._preciso ? 1 : 0); // precisos (objeto/itens) primeiro
+    if (p) return p;
     const ea = a.encerramento || "9999-12-31";
     const eb = b.encerramento || "9999-12-31";
     return ea.localeCompare(eb) || posicao(a) - posicao(b);
