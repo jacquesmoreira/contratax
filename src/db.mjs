@@ -665,14 +665,21 @@ const ITENS_PRONTO_MIN = Number(process.env.LICITA_ITENS_PRONTO || 200000);
 // itens nao esta pronto, sempre amplia (recall — painel cheio); quando o indice
 // enche, o proprio volume de itens alimenta o "preciso" e a expansao so entra
 // se realmente vier pouco. Assim nunca fica vazio agora, e fica preciso depois.
-function casarComExpansao(candidatos, termos, termo, expandido, excluirList) {
+function casarComExpansao(candidatos, termos, termo, expandido, excluirList, { preferePreciso = false } = {}) {
   let preciso = aplicarFiltro(candidatos, { termos, termosExcluir: excluirList });
   preciso = unirPorItem(preciso, candidatos, termo, excluirList);
   // Marca os PRECISOS (objeto literal + itens) pra rankearem ACIMA dos do ramo.
   for (const e of preciso) e._preciso = true;
-  const indicePronto = totalItensEdital() >= ITENS_PRONTO_MIN;
-  if (indicePronto && preciso.length >= LIMIAR_EXPANSAO) return preciso;
-  if (!expandido.length) return preciso;
+  // preferePreciso (PAINEL): so amplia pro ramo se NAO houver nenhum preciso —
+  // quem busca "luva" ve luva, nunca o ramo saude (medicamento). Volume volta
+  // com o indice de itens. Sem isso (LP): adaptativo ao indice (recall agora).
+  if (preferePreciso) {
+    if (preciso.length > 0 || !expandido.length) return preciso;
+  } else {
+    const indicePronto = totalItensEdital() >= ITENS_PRONTO_MIN;
+    if (indicePronto && preciso.length >= LIMIAR_EXPANSAO) return preciso;
+    if (!expandido.length) return preciso;
+  }
   const amplo = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluirList });
   const ids = new Set(preciso.map((e) => e.id));
   for (const e of amplo) if (!ids.has(e.id)) { e._preciso = false; preciso.push(e); }
@@ -750,10 +757,10 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
     // Perfil/export: usa os termos como vieram (ja sao o ramo do cliente).
     casaram = aplicarFiltro(candidatos, { termos, termosExcluir: excluirList });
   } else {
-    // Busca livre: precisao primeiro (objeto literal + itens); abre pro ramo so
-    // se vier pouco. Evita "luva de procedimento" trazer todo o ramo hospitalar.
+    // Busca livre do PAINEL: PRECISAO (so o produto buscado). So abre pro ramo
+    // se nao houver NENHUM preciso. "luva" nunca traz o ramo saude (medicamento).
     const expandido = [...termosAmplos(termos), ...expandirTermos(termos)];
-    casaram = casarComExpansao(candidatos, termos, termo, expandido, excluirList);
+    casaram = casarComExpansao(candidatos, termos, termo, expandido, excluirList, { preferePreciso: true });
   }
   // Registro de Precos (SRP): "sim" so atas, "nao" sem ata.
   if (srp === "sim") casaram = casaram.filter((e) => e.srp);
