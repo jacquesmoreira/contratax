@@ -655,12 +655,22 @@ function unirPorItem(casaram, candidatos, termo, excluirList = []) {
 //     expande -> PRECISAO (luva traz so luva). Se auto-ajusta sozinho.
 const LIMIAR_EXPANSAO = Number(process.env.LICITA_LIMIAR_EXPANSAO || 8);
 
-// Casa em duas camadas: 1) PRECISO = objeto literal + itens do edital; 2) so se
-// vier pouco, ABRE pro ramo (expansao). O preciso sempre vem primeiro na lista.
+// Quantos itens indexados pra considerar o indice "pronto" e confiar na
+// PRECISAO. Abaixo disso, o objeto (alto nivel) e a unica fonte e nao da pra
+// ser preciso -> sempre amplia pro ramo (recall). Configuravel.
+const ITENS_PRONTO_MIN = Number(process.env.LICITA_ITENS_PRONTO || 200000);
+
+// Casa em duas camadas: 1) PRECISO = objeto literal + itens do edital; 2) ABRE
+// pro ramo (expansao) quando faltar precisao. ADAPTATIVO: enquanto o indice de
+// itens nao esta pronto, sempre amplia (recall — painel cheio); quando o indice
+// enche, o proprio volume de itens alimenta o "preciso" e a expansao so entra
+// se realmente vier pouco. Assim nunca fica vazio agora, e fica preciso depois.
 function casarComExpansao(candidatos, termos, termo, expandido, excluirList) {
   let preciso = aplicarFiltro(candidatos, { termos, termosExcluir: excluirList });
   preciso = unirPorItem(preciso, candidatos, termo, excluirList);
-  if (preciso.length >= LIMIAR_EXPANSAO || !expandido.length) return preciso;
+  const indicePronto = totalItensEdital() >= ITENS_PRONTO_MIN;
+  if (indicePronto && preciso.length >= LIMIAR_EXPANSAO) return preciso;
+  if (!expandido.length) return preciso;
   const amplo = aplicarFiltro(candidatos, { termos, termosIA: expandido, termosExcluir: excluirList });
   const ids = new Set(preciso.map((e) => e.id));
   for (const e of amplo) if (!ids.has(e.id)) preciso.push(e);
