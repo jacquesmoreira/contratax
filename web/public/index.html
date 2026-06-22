@@ -346,6 +346,7 @@
             <a id="ferr-pca" href="#">📅 Oportunidades antecipadas <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">compras planejadas (PCA)</span></a>
             <a id="ferr-concorrentes" href="#">🔍 Concorrentes <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">quem ganha por CNPJ</span></a>
             <a id="ferr-historico" href="#">🕑 Histórico <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">o que você já viu</span></a>
+            <a id="ferr-radar" href="#">🛰️ Radar de renovação <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">contratos a vencer</span></a>
             <a id="ferr-equipe" href="#">👥 Equipe <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">vários usuários</span></a>
             <a id="ferr-conta" href="#">⚙️ Conta &amp; plano <span style="margin-left:auto;color:var(--cinza-c);font-size:11px;font-weight:600">assinatura</span></a>
           </div>
@@ -481,6 +482,24 @@ function radarHTML(lista) {
       <a href="#" onclick="exportar('radar');return false" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none" title="Exportar radar para Excel/CSV">📊 Excel</a>
     </div>
     <div style="font-size:13.5px;color:var(--cinza);margin-bottom:12px">Contratos do seu ramo que vão vencer. Uma nova licitação deve sair, prepare-se com antecedência.</div>${itens}<div style="font-size:11px;color:var(--cinza-c);margin-top:4px">Fonte: dados públicos do PNCP.</div></section>`;
+}
+
+// Abre o Radar de renovacao sob demanda (item de "Suas ferramentas"), no lugar
+// da lista de editais, com link de voltar. Tira o peso da tela principal.
+async function verRadar() {
+  const c = document.getElementById("conteudo");
+  if (!c) return;
+  c.innerHTML = `<div class="carregando" style="padding:20px"><span class="spinner"></span>Carregando o radar de renovação...</div>`;
+  c.scrollIntoView({ behavior: "smooth", block: "start" });
+  try {
+    const rd = await (await fetch(`/api/radar?c=${encodeURIComponent(token)}`)).json();
+    const voltar = `<div style="margin-bottom:14px"><a href="#" id="radar-voltar" style="color:var(--indigo);font-weight:700;text-decoration:none">← Voltar ao meu painel</a></div>`;
+    c.innerHTML = voltar + radarHTML(rd.radar || []);
+    const v = document.getElementById("radar-voltar");
+    if (v) v.onclick = (e) => { e.preventDefault(); carregar(); };
+  } catch (e) {
+    c.innerHTML = `<div class="vazio">Não consegui carregar o radar agora. <a href="#" onclick="carregar();return false" style="color:var(--indigo);font-weight:700">Voltar</a></div>`;
+  }
 }
 
 function bannerTeste(a) {
@@ -804,6 +823,8 @@ async function carregar() {
       ligar("ferr-historico", "/historico"); ligar("ferr-equipe", "/equipe");
       ligar("ferr-conta", "/conta"); ligar("ferr-concorrentes", "/concorrentes");
       ligar("ferr-precos", "/precos"); ligar("ferr-pca", "/pca"); ligar("ferr-juridico", "/juridico");
+      const elRadar = document.getElementById("ferr-radar");
+      if (elRadar) elRadar.onclick = (e) => { e.preventDefault(); verRadar(); };
       carregarNotificacoes();
       carregarEmpresas();
       const sec = document.getElementById("ferramentas-painel");
@@ -855,9 +876,9 @@ async function carregar() {
       banner += bannerAtrasado(acesso);
       popupAtrasado(acesso);
     }
-    let radarBloco = "";
-    try { const rd = await (await fetch(`/api/radar?c=${encodeURIComponent(token)}`)).json(); radarBloco = radarHTML(rd.radar); } catch {}
-    c.innerHTML = banner + radarBloco + (perfis.length ? perfis.map(perfilHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Seu painel está sendo preparado.</div>`);
+    // Radar saiu do topo do painel: agora abre sob demanda em "Suas ferramentas"
+    // (item "Radar de renovação" -> verRadar()). Deixa a tela principal mais limpa.
+    c.innerHTML = banner + (perfis.length ? perfis.map(perfilHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Seu painel está sendo preparado.</div>`);
     // Apos render, pergunta ao backend quais desses editais ja foram analisados
     // (cache global). Marca visualmente os que sim.
     const idsRender = [...c.querySelectorAll(".card[data-id]")].map((x) => x.dataset.id);
