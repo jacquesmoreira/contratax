@@ -1821,25 +1821,8 @@ async function buscarPainel(pagina = 1) {
       <span style="color:var(--cinza)">em ${esc(onde)}</span>
       ${d.total ? `<a href="#" onclick="exportarBusca();return false" style="font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none">📊 Excel</a>` : ""}
       <a href="#" id="voltar-painel" style="margin-left:auto;color:var(--indigo);font-weight:700">← Voltar ao meu painel</a></div>`;
-    // Separa os PRECISOS (objeto/itens tem o termo) dos do RAMO (aproximacao),
-    // com um rotulo honesto no meio. Assim o cliente entende por que um edital
-    // "do ramo" (ex: saude) aparece mesmo sem ter o item exato.
-    const eds = d.editais || [];
-    const precisos = eds.filter(e => e._preciso);
-    const doRamo = eds.filter(e => !e._preciso);
-    if (!eds.length) {
-      html += `<div class="vazio"><span class="emoji">🔭</span>Nada encontrado. Tente outro termo, outra cidade ou amplie os filtros.</div>`;
-    } else if (precisos.length && doRamo.length && termo) {
-      html += `<div class="cards-grid">${precisos.map(cardHTML).join("")}</div>
-        <div style="margin:24px 0 16px;display:flex;align-items:center;gap:12px;color:var(--cinza-c);font-size:13px;font-weight:700">
-          <div style="flex:1;height:1px;background:var(--linha)"></div>
-          <span>↓ Relacionados do seu ramo — podem não ter "${esc(termo)}" exato</span>
-          <div style="flex:1;height:1px;background:var(--linha)"></div>
-        </div>
-        <div class="cards-grid">${doRamo.map(cardHTML).join("")}</div>`;
-    } else {
-      html += `<div class="cards-grid">${eds.map(cardHTML).join("")}</div>`;
-    }
+    // Lista cheia (recall), com os PRECISOS ja no topo (ranqueados no backend).
+    html += d.editais.length ? `<div class="cards-grid">${d.editais.map(cardHTML).join("")}</div>` : `<div class="vazio"><span class="emoji">🔭</span>Nada encontrado. Tente outro termo, outra cidade ou amplie os filtros.</div>`;
     // Controles de paginacao (so quando ha mais de 1 pagina)
     if (nPaginas > 1) {
       html += `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;flex-wrap:wrap">
