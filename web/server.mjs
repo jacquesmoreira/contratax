@@ -2659,7 +2659,10 @@ Contact: contato@contratax.com.br
       const base = caminhos.map((c) => BASE_PUBLICA + c);
       const blog = (await urlsBlog(BASE_PUBLICA)).map((b) => b.loc);
       const urls = [...base, ...blog, ...urlsSEO(), ...urlsOrgaos(), ...urlsCnae()];
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc><changefreq>daily</changefreq></url>`).join("\n")}\n</urlset>`;
+      // lastmod = hoje: o acervo (licitacoes/orgaos/cnae) regenera diariamente do
+      // PNCP, entao a data e legitima e ajuda o Google a priorizar o recrawl.
+      const hoje = new Date().toISOString().slice(0, 10);
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc><lastmod>${hoje}</lastmod><changefreq>daily</changefreq></url>`).join("\n")}\n</urlset>`;
       res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
       return res.end(xml);
     }
