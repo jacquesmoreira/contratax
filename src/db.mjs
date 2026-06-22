@@ -254,20 +254,24 @@ export function podarItensOrfaos() {
 // BUSCA UNIVERSAL: ids de editais cujos ITENS casam TODOS os tokens do termo.
 // SQL faz o prefiltro (LIKE substring, rapido); o JS confirma por PALAVRA
 // INTEIRA (mesma regra do objeto) pra nao casar "cimento" em "fornecimento".
+// Devolve um Map(edital_id -> descricao do item que casou) — pro card mostrar
+// "achado nos itens: <item>". Match por palavra inteira (confirma o prefiltro).
 export function editaisIdsPorItem(termo, { teto = 4000 } = {}) {
   const tokens = normalizar(termo || "").split(/[^a-z0-9]+/).filter(tokenSignificativo);
-  if (!tokens.length) return new Set();
+  if (!tokens.length) return new Map();
   const d = abrir();
   const cond = tokens.map(() => "descricao_norm LIKE ?").join(" AND ");
   const args = tokens.map((t) => "%" + t + "%");
   const linhas = d.prepare(
-    `SELECT edital_id, descricao_norm FROM itens_edital WHERE ${cond} LIMIT ?`
+    `SELECT edital_id, descricao, descricao_norm FROM itens_edital WHERE ${cond} LIMIT ?`
   ).all(...args, teto);
-  const ids = new Set();
+  const mapa = new Map();
   for (const l of linhas) {
-    if (tokens.every((t) => contemPalavra(t, l.descricao_norm))) ids.add(l.edital_id);
+    if (!mapa.has(l.edital_id) && tokens.every((t) => contemPalavra(t, l.descricao_norm))) {
+      mapa.set(l.edital_id, l.descricao);
+    }
   }
-  return ids;
+  return mapa;
 }
 
 // Grava um lote de precos homologados colhidos.
@@ -633,12 +637,12 @@ export function estatisticasContratos() {
 // fora dos ramos curados. No-op se o termo for vazio ou o indice estiver vazio.
 function unirPorItem(casaram, candidatos, termo, excluirList = []) {
   if (!termo || !termo.trim()) return casaram;
-  const idsItem = editaisIdsPorItem(termo);
-  if (!idsItem.size) return casaram;
+  const itensCasados = editaisIdsPorItem(termo); // Map(id -> descricao do item)
+  if (!itensCasados.size) return casaram;
   const jaTem = new Set(casaram.map((e) => e.id));
-  let extra = candidatos.filter((c) => idsItem.has(c.id) && !jaTem.has(c.id));
+  let extra = candidatos.filter((c) => itensCasados.has(c.id) && !jaTem.has(c.id));
   if (excluirList.length) extra = aplicarFiltro(extra, { termosExcluir: excluirList });
-  for (const e of extra) e._viaItem = true; // a UI pode marcar "casou nos itens"
+  for (const e of extra) { e._viaItem = true; e._itemCasado = itensCasados.get(e.id); }
   return casaram.concat(extra);
 }
 
@@ -704,6 +708,7 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
   const amostra = casaram.slice(0, limite).map((e) => ({
     id: e.id, municipio: e.municipio, uf: e.uf, orgao: e.orgao, objeto: e.objeto,
     valorEstimado: e.valorEstimado, encerramento: e.encerramento, modalidade: e.modalidade, link: e.link,
+    itemCasado: e._itemCasado || null,
   }));
   return { total: casaram.length, somaValor, comValor, range, amostra };
 }

@@ -426,6 +426,7 @@ function cardHTML(e) {
       <span class="badge-trilha badge-visto">já visto</span>
       <span class="badge-trilha badge-analisado">analisado pela ContrataX.IA</span></div>
     <div class="objeto">${esc(e.objeto)}</div>
+    ${e._itemCasado ? `<div class="achado-item" style="font-size:12.5px;color:var(--verde);margin-top:5px;display:flex;align-items:flex-start;gap:6px"><span>🔎</span><span>Achado nos itens: <b style="color:var(--tinta)">${esc(e._itemCasado)}</b></span></div>` : ""}
     <div class="card-rodape"><span class="modalidade">${esc(e.modalidade)}</span>
       <span class="valor">${brl(e.valorEstimado)}</span>
       ${oportBadge(e.oportunidade, e.reputacao)}
