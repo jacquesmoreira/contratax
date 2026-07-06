@@ -9,7 +9,7 @@
 // LICITA_DIGEST_HORA (default 8 = 08:00 Brasilia / 11:00 UTC).
 
 import { lerPerfis, salvarPerfis } from "./perfis.mjs";
-import { gerarDigest, enviar, temEmailKey } from "./email.mjs";
+import { gerarDigest, enviar, temEmailKey, urlDescadastro } from "./email.mjs";
 import { statusAtual } from "./assinatura.mjs";
 import { monitorar } from "./monitor.mjs";
 import { enviarAvisosRenovacaoDoDia } from "./avisoRenovacao.mjs";
@@ -44,6 +44,7 @@ export async function enviarDigestDoDia({ log = console.log } = {}) {
   for (const p of perfis) {
     try {
       if (!p.email) continue;
+      if (p._descadastrado) continue; // opt-out honrado tambem no digest
       const st = statusAtual(p);
       if (!st.temAcesso) continue;
       if (p._ultimoDigest === hoje) continue;
@@ -66,8 +67,13 @@ export async function enviarDigestDoDia({ log = console.log } = {}) {
       }
 
       const top = ordenarPorPrazo(novos).slice(0, 10);
-      const { assunto, html } = gerarDigest(p, top, { semUf });
-      await enviar({ para: p.email, assunto, html });
+      // Vigencia no bloco de identificacao do boletim (lembra o cliente do prazo).
+      const exp = p.assinatura?.expiraEm ? new Date(p.assinatura.expiraEm).toLocaleDateString("pt-BR") : "";
+      const vigenciaTexto = st.status === "teste"
+        ? `Vigência do teste grátis: até ${exp}`
+        : `Vigência da assinatura: ativa até ${exp}`;
+      const { assunto, html } = gerarDigest(p, top, { semUf, vigenciaTexto });
+      await enviar({ para: p.email, assunto, html, listaDescadastroUrl: urlDescadastro(p.token) });
 
       p._ultimoDigest = hoje;
       p._ultimoDigestEm = new Date().toISOString();
@@ -105,6 +111,12 @@ export async function digestLoop({ horaBR = 8, log = console.log } = {}) {
     // Apos o digest, dispara avisos de renovacao (7d e 1d antes do vencimento).
     try { await enviarAvisosRenovacaoDoDia({ log }); }
     catch (e) { log(`[renov] erro no ciclo: ${e.message}`); }
+    // Regua de reengajamento diario (leads que testaram e nao assinaram). Roda
+    // aqui, 1x/dia no horario controlado, junto do digest (nao no loop de 6h).
+    try {
+      const { disparosReengajamento } = await import("./winbackEmails.mjs");
+      await disparosReengajamento({ log });
+    } catch (e) { log(`[reengajamento] erro no ciclo: ${e.message}`); }
     // Tambem 1x/dia: anonimiza IPs em logs/perfis com > LICITA_IP_RETENCAO_DIAS dias.
     try {
       const { anonimizarLogsAntigos } = await import("./anonimizarLogs.mjs");

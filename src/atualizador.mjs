@@ -10,7 +10,6 @@ import { lerPerfis, atualizarPerfil } from "./perfis.mjs";
 import { expandirRamo } from "./expandirRamo.mjs";
 import { verificarCertidoesVencendo } from "./alertasCertidoes.mjs";
 import { disparosOnboarding } from "./onboardingEmails.mjs";
-import { disparosWinback } from "./winbackEmails.mjs";
 import { verificarRecebiveisAtrasados } from "./alertasRecebiveis.mjs";
 import { verificarContratosVencendo } from "./alertasContratos.mjs";
 
@@ -80,7 +79,8 @@ export async function atualizarEditais({ limitePaginas = Infinity, log = console
   try { await verificarCertidoesVencendo({ log }); } catch (e) { log(`[alertas] erro: ${e.message}`); }
   // Sequencia de onboarding (3 e-mails nos primeiros 6 dias do cadastro)
   try { await disparosOnboarding({ log }); } catch (e) { log(`[onboarding] erro: ${e.message}`); }
-  try { await disparosWinback({ log }); } catch (e) { log(`[winback] erro: ${e.message}`); }
+  // Reengajamento diario dos nao-convertidos roda no digestLoop (1x/dia,
+  // horario controlado), nao aqui no loop de 6h.
   try { await verificarRecebiveisAtrasados({ log }); } catch (e) { log(`[recebiveis] erro: ${e.message}`); }
   try { await verificarContratosVencendo({ log }); } catch (e) { log(`[contratos] erro: ${e.message}`); }
   const s = estatisticas();

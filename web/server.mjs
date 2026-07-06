@@ -337,6 +337,32 @@ const servidor = createServer(async (req, res) => {
       return res.end();
     }
 
+    // Descadastro (opt-out) dos e-mails de regua. Aceita clique no rodape (GET) e
+    // o one-click do Gmail/Outlook (POST, RFC 8058). Marca _descadastrado no
+    // perfil; o cliente segue recebendo e-mails essenciais da conta (senha,
+    // pagamento), so para a regua de marketing/reengajamento.
+    if (rota === "/descadastrar") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      if (perfil && !perfil._descadastrado) {
+        await atualizarPerfil(perfil.token, (p) => { p._descadastrado = new Date().toISOString(); });
+      }
+      if (req.method === "POST") { res.writeHead(200); return res.end("OK"); }
+      const voltar = perfil ? `/painel?c=${encodeURIComponent(perfil.token)}` : "/";
+      const pagina = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Descadastrado | ContrataX</title>
+<style>body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f8fafc;color:#0f172a;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px}.card{max-width:460px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:34px 32px;text-align:center}h1{font-size:20px;margin:0 0 12px}p{color:#475569;line-height:1.6;font-size:15px;margin:0 0 10px}a{color:#4338ca;font-weight:700;text-decoration:none}</style>
+</head><body><div class="card">
+<h1>Pronto, você foi descadastrado</h1>
+<p>Você não vai mais receber os e-mails de novidades e oportunidades do ContrataX.</p>
+<p>E-mails essenciais da sua conta (redefinição de senha, cobrança) continuam chegando normalmente.</p>
+<p style="margin-top:18px">Mudou de ideia? <a href="${voltar}">Voltar ao ContrataX</a></p>
+</div></body></html>`;
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(pagina);
+    }
+
     // Busca publica da landing page (por UF e termo, sem login).
     if (rota === "/api/busca-publica") {
       const uf = url.searchParams.get("uf") || null;
