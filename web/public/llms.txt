@@ -37,9 +37,9 @@ ContrataX consome a API oficial do Portal Nacional de Contratações Públicas (
 - Assessoria 10: R$ 697/mês — 10 CNPJs, 8 análises por empresa
 - Assessoria 25: R$ 1.297/mês — 25 CNPJs, 6 análises por empresa
 
-## Fundador e operação
+## Empresa e operação
 
-- Fundador: Jacques Brião Moreira (MEI)
+- Empresa: ContrataX (MEI)
 - Sede: Balneário Camboriú, Santa Catarina, Brasil
 - CNPJ: 61.740.453/0001-49
 - Site: https://www.contratax.com.br
