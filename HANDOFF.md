@@ -2,8 +2,8 @@
 
 > **Para qualquer outra IA ou desenvolvedor que pegue este projeto:** este documento contém TUDO que precisa pra continuar de onde paramos. Leitura: ~10 minutos.
 
-**Última atualização:** 2026-06-07 (sábado, final de tarde)
-**Status:** Pronto pra venda. Primeiro pagamento real processado com sucesso (R$ 59 via Pix). Termos de Uso 2.0 + clickwrap explícito implementados.
+**Última atualização:** 2026-07-06 (domingo)
+**Status:** Em operação. Infraestrutura completa, SEO programático ativo (1.609 URLs), sequência win-back implementada. Fase atual: crescimento orgânico + backlinks.
 
 ---
 
@@ -13,7 +13,7 @@
 
 - **Domínio**: `contratax.com.br` (com www)
 - **Modelo**: assinatura mensal recorrente, sem fidelidade
-- **Aquisição**: 100% orgânica + SEO programático (1.602 URLs no sitemap)
+- **Aquisição**: 100% orgânica + SEO programático (1.609 URLs no sitemap)
 - **Suporte**: zero outbound, zero vendas ativas, zero ligações, zero demos
 - **CNPJ operador**: 61.740.453/0001-49 (Jacques Brião Moreira, MEI)
 
@@ -64,6 +64,7 @@ D:/Licita/
 │       ├── cadastro.html, entrar.html, conta.html
 │       ├── assinar.html, obrigado.html
 │       ├── equipe.html, documentos.html, recebiveis.html, contratos.html
+│       ├── itens.html        # Viewer de itens de um edital (abre em nova aba do painel)
 │       ├── admin.html        # Painel admin (gated por LICITA_ADMIN_TOKEN)
 │       ├── erro-500.html, privacidade.html, termos.html
 │       ├── sw.js             # Service Worker (v2)
@@ -107,7 +108,7 @@ D:/Licita/
 │   ├── onboardingEmails.mjs  # 3 emails na 1ª semana
 │   ├── digestDiario.mjs      # email diário com editais novos do ramo
 │   ├── avisoRenovacao.mjs    # email 7d e 1d antes de renovar
-│   ├── winbackEmails.mjs     # reativação pós-cancelamento
+│   ├── winbackEmails.mjs     # reengajamento DIARIO dos nao-convertidos (afunila: diario->semanal->mensal), formato Boletim
 │   ├── recuperarSenha.mjs, senha.mjs
 │   ├── equipe.mjs            # multiusuário (assentos por plano)
 │   ├── googleOAuth.mjs       # login com Google
@@ -331,13 +332,25 @@ Cliente paga a diferença via cobrança avulsa Asaas → webhook reconhece `upgr
 - [x] Email cobrança vencida (PAYMENT_OVERDUE)
 - [x] Email estorno/chargeback para o Jacques
 
+### Painel — funcionalidades recentes
+- [x] **Viewer de itens** (`itens.html`) — página standalone que abre em nova aba do painel com todos os itens de um edital (quantidade, unidade, valor unitário, valor total). Filtro em tempo real por descrição. Útil pra editais de ata de registro de preços com 80-200+ itens. Abertura via botão "📦 Ver o que está sendo comprado →" no painel.
+
+### Régua de e-mail (ativação + reengajamento + Boletim)
+- [x] **Onboarding** (`src/onboardingEmails.mjs`) — 5 toques no teste: boas-vindas (dia 0), ATIVAÇÃO (dia 2, mostra os editais reais do ramo), veredito (dia 4), planos (dia 6), últimas horas (dia 7). Ataca a baixa ativação (quase ninguém rodava a 1ª análise no teste).
+- [x] **Reengajamento diário** (`src/winbackEmails.mjs`, `disparosReengajamento`) — para quem testou e não assinou: DIÁRIO até 14 dias após expirar, SEMANAL até 60, MENSAL depois (pra sempre). Cada e-mail lidera com os editais do dia do ramo + muro "reative pra ver o veredito". Roda 1x/dia no `digestLoop`. Respeita `_jaFoiPago`, `_descadastrado`, 1/dia (`_ultimoReengajamento`).
+- [x] **Formato Boletim** (`boletimLayout` em `src/email.mjs`) — digest e reengajamento saem com nº de edição, data de processamento, bloco de identificação do cliente (código, empresa+CNPJ, filtro, vigência da assinatura), saudação formal e política de uso. Cara de empresa estabelecida (inspirado no boletim da ConLicitação).
+- [x] **Descadastro de 1 clique** — rota `/descadastrar` (GET + one-click POST RFC 8058) + header `List-Unsubscribe`. Honrado em digest, onboarding e reengajamento. Flag `_descadastrado` no perfil. Pré-requisito pra envio diário não virar spam.
+
 ### Marketing/SEO
 - [x] Landing page (`lp.html`) + Comparativo (`lp-comparativo.html`)
-- [x] SEO programático: 1.602 URLs no sitemap
+- [x] SEO programático: 1.609 URLs no sitemap (13 base + 36 blog + 1.009 seoPaginas + 521 órgãos + 30 CNAE)
+- [x] `<lastmod>` com data de hoje em todas as URLs do sitemap (acervo regenera diariamente do PNCP — legítimo)
 - [x] `/licitacoes/<ramo>/<uf>` com Schema.org Event JSON-LD
-- [x] `/orgaos/<slug>` (~520 órgãos com 5+ contratos)
+- [x] `/orgaos/<slug>` (~521 órgãos com 5+ contratos)
 - [x] `/cnae/<codigo>` (30 CNAEs estratégicos)
 - [x] Schema.org GovernmentOrganization
+- [x] 6 landing pages comparativas vs concorrentes (`/blog/contratax-vs-*`)
+- [x] 35+ artigos pilar no blog (Lei 14.133, MEI em licitação, PNCP, impugnação, etc.)
 - [x] GA4 (G-N79Q5SH624) + Microsoft Clarity (wrs09m31ps)
 - [x] PWA (manifest, service worker, "Adicionar à tela inicial")
 - [x] Cookie banner LGPD
@@ -471,29 +484,34 @@ git add -A && git commit -m "..." && git push origin main
 
 ## 13. Estado atual / Próximos passos
 
-**07/06/2026 — sábado**
-- ✅ Primeiro pagamento real processado automaticamente (R$ 59 Pix → ativação em ~3s)
-- ✅ Webhook validado em produção
-- ✅ Cancelamento self-service validado em produção
-- ✅ Sistema 100% pronto pra venda
+**06/07/2026 — domingo (estado atual)**
+- ✅ Sistema em produção, estável
+- ✅ SEO técnico completo: 1.609 páginas, schema, sitemap com lastmod, 35+ artigos pilar, 6 páginas vs concorrentes
+- ✅ Sequência win-back implementada (3 e-mails automáticos pós-expiração)
+- ✅ Viewer de itens de edital (itens.html)
+- ⚠️ Tráfego orgânico ainda baixo — esperado para domínio de ~1 mês; domínio precisa de backlinks para ganhar autoridade
+- ⚠️ Google Ads: sequência crítica de junho (#55) ainda pendente de execução (Jacques)
 
-**Pendente para SEGUNDA-FEIRA (09/06/2026)**
-- 📝 Redigir 1 post LinkedIn de lançamento (200 palavras)
-- 📝 Mapear 10 nichos (CNAEs) de fornecedor com alta dor em editais
-- 📝 (opcional) Redigir 3 mensagens pra empresas do network (não cold)
+**Alavancas de curto prazo (Jacques — manual)**
+- 🔑 Google Business Profile (#57) — base de tudo, ainda não feito
+- 🔑 Backlinks BR (#56): GetApp Brasil, Capterra Brasil, AppMasters, Guia Mais/Apontador, diretórios de empresa BR, post LinkedIn pessoal, guest post em blog de despachante/contador/consultor de licitação, imprensa regional (Balneário Camboriú/SC)
+- 🔑 Google Ads: importar conversão `purchase` + trocar para "Maximizar conversões" + religar em R$ 30/dia (#55)
+- Search Console: revalidar erros após indexação completa (#49)
+- Bing Webmaster Tools verificação (#47)
 
-**Backlog (não urgente)**
+**Backlog técnico (não urgente)**
+- 2FA TOTP opcional (#35 — auth atual é token-based em URL, refator necessário primeiro)
 - Botão "Reativar assinatura" pra reduzir churn por arrependimento
 - Endereço comercial (quando migrar pra LTDA, ~30+ clientes)
-- Email comercial `contato@contratax.com.br` via Cloudflare Email Routing (cliente vê email pro em vez de Gmail)
+- Email comercial `contato@contratax.com.br` via Cloudflare Email Routing
 - Logos PNG dos portais em `/portais/` (Jacques vai mandar)
 - Página de status pública (status.contratax.com.br)
-- Upgrade no Asaas: marca site `https://www.contratax.com.br` (com www) ao invés de sem www
-- Bing Webmaster Tools (5-8% do tráfego)
-- Aceite explícito no fluxo Google OAuth (`/conta?completar=1`) — hoje só pula pelo cadastro tradicional
+- Aceite explícito no fluxo Google OAuth (`/conta?completar=1`)
 - Contratar 1h com advogado de direito digital (R$ 500-800) para revisar termos 2.0 e privacidade
 - Migrar pra LTDA quando passar de R$ 50k MRR (proteção patrimonial)
-- Seguro de responsabilidade civil profissional (E&O) — só relevante se um dia mexer com lances ou volumes grandes
+- OG image dinâmica + imagens convertidas para WebP (#60)
+- Healthcheck Railway: `HEALTHCHECK_PATH=/health` (#61)
+- Breadcrumbs schema em todas as páginas SEO (#58)
 
 ---
 
@@ -729,6 +747,88 @@ Plano: 1 post por semana focado em UM desses CNAEs, com link interno pro `/cnae/
 - **Msg 3**: Pra amigo geral. Tom: "favor rápido, só passar o link pra quem se encaixar".
 
 Todas sem cold call, sem venda dura, sem pressão. Pedem ação mínima (opinião, indicação, ou só compartilhamento).
+
+---
+
+---
+
+### 2026-06-08 a 2026-06-21 (múltiplas sessões)
+
+**Reforços de segurança e LGPD:**
+- Headers HTTP completos (HSTS 2 anos+preload, X-Frame-Options, Referrer-Policy, Permissions-Policy, CORP, DNS-Prefetch-Control, X-XSS-Protection)
+- Disclaimer permanente amarelo em toda análise IA + botão verde "Ver edital oficial no PNCP"
+- Anonimização automática de IP após 30 dias (mascara `189.45.67.x`) — roda 1x/dia no loop do digest
+- Painel "Meus Dados" em `/conta` (portabilidade LGPD art. 18): download JSON + CSV de todos os dados do cliente
+- Email automático pós-login com data, região de IP mascarado, dispositivo e CTA "Trocar minha senha"
+
+**LCP e performance (#42 — concluído):**
+- Investigação completa do LCP de 6,8s na lp.html
+- Fix: preload do logo, inline CSS crítico, lazy-load de fontes, remoção de render-blocking
+- LCP medido pós-fix: dentro do aceitável
+
+**Otimizações UX e conversão (#45):**
+- TBT reduzido (script deferral)
+- Prova social adicionada na LP
+- Fricção de cadastro Google reduzida
+- Demo grátis ("ver a IA antes de cadastrar") implementado
+
+**SEO — pilares e landings (#50-54, #63-65):**
+- 5 artigos pilar publicados: o-que-e-pncp, lei-14133-atualizada-2026, como-mei-participar-licitacao, documentos-habilitacao-licitacao, como-impugnar-edital-restritivo
+- 30+ artigos de cauda longa adicionados ao blog
+- 6 landing pages comparativas vs concorrentes: ConLicitação, Effecti, Licitei, PainelGov, QLicitações, Licitação Nacional
+- sinonimos.mjs: expansão produto→ramo na busca (corrige zero-results quando usuário busca produto específico como "papel A4")
+
+**Asaas e planos:**
+- Alerta no admin quando cliente passa 80% da cota
+- Cenário A de preços aplicado: Starter R$59, Básico R$247, Pro R$397, Assessoria 10 R$697, Assessoria 25 R$1.297
+
+**Search Console (#48):**
+- Investigados 8 URLs 404 + 25 redirecionamentos
+- Corrigidos os canonicals e redirecionamentos relevantes
+
+---
+
+### 2026-06-22 a 2026-07-05 (múltiplas sessões)
+
+**Win-back implementado (`src/winbackEmails.mjs`):**
+- Sequência de 3 e-mails automáticos para leads que testaram e não converteram
+- E-mail 1 (2d): FOMO com dado real do ramo (licitações abertas + valor total)
+- E-mail 2 (9d): custo de NÃO monitorar (1 contrato perdido > 1 ano de assinatura)
+- E-mail 3 (21d): última chamada, sem pressão, conta preservada
+- Nunca envia pra ex-pagantes (`_jaFoiPago`); cada e-mail enviado uma única vez por perfil
+
+**Viewer de itens de edital (`web/public/itens.html`):**
+- Página standalone que abre em nova aba via "📦 Ver o que está sendo comprado →" no painel
+- Lista todos os itens do edital: nº, descrição, quantidade, unidade, valor unitário, valor total
+- Filtro em tempo real por palavras (destaca match com `<mark>`)
+- Tag ME/EPP quando `beneficioMeEpp` indica exclusividade
+- Criada pra substituir drawer que não escalava para editais de ata com 80-200+ itens
+- Bug pós-criação (Chrome): `position:sticky` no `thead` conflitava com `border-collapse:collapse` — cabeçalho "boiava" sobre as linhas. Fix: removido o sticky, substituído por `border-bottom: 1px solid var(--linha)`.
+
+**Sitemap com `<lastmod>` (`web/server.mjs`):**
+- Todas as 1.609 URLs do sitemap agora incluem `<lastmod>` com a data atual (YYYY-MM-DD)
+- Justificativa: acervo de licitações/órgãos/CNAE regenera diariamente do PNCP → data legítima, ajuda Google a priorizar recrawl
+- Validado: `curl /sitemap.xml` retorna `<lastmod>2026-07-06</lastmod>` em todas as URLs
+
+**Diagnóstico SEO (07/06 a 07/07 — ~1 mês de domínio):**
+- Técnica: OK. 1.609 páginas indexáveis, schema/JSON-LD, robots.txt, sitemap completo.
+- Gap real: **backlinks/autoridade** — domínio novo sem links apontando para ele é invisível ao Google independente da qualidade técnica.
+- Organic sandbox do Google: 3-6 meses para domínio novo começar a rankear mesmo com tudo certo.
+- Conclusão: não mais código de SEO. Prioridade = backlinks (Jacques) + tempo.
+- Checklist de backlinks BR gerado: GetApp/Capterra Brasil, AppMasters, diretórios BR, LinkedIn pessoal, guest post, imprensa regional.
+
+---
+
+### 2026-07-06 (domingo — sessão atual)
+
+- Sticky header bug em itens.html diagnosticado e corrigido (commit+push)
+- Sitemap ganhou `<lastmod>` (commit+push)
+- Auditoria SEO completa: fundação técnica sólida, gap = backlinks
+- **Régua de e-mail reformada** (deploy): onboarding com ativação (dia 2) + últimas horas (dia 7); win-back virou reengajamento DIÁRIO que afunila (diário→semanal→mensal); digest e reengajamento no formato Boletim; descadastro de 1 clique (`/descadastrar` + `List-Unsubscribe`). Decisões do Jacques: "diário quente → afunila" (protege o domínio), WhatsApp fica pra depois, sem e-mail de consultora humana.
+- **Marca só ContrataX** nas superfícies públicas: termos, privacidade e llms.txt passam a usar "ContrataX" + CNPJ, sem o nome pessoal do fundador. Ver memória `contratax-marca-empresa-nao-pessoa`.
+- HANDOFF.md atualizado (este documento)
+
+**Pendente (próximo bloco):** revisão do site inteiro (LP + subpáginas) com voz de empresa, prova viva e comparativo em destaque — a outra metade do pedido do Jacques.
 
 ---
 
