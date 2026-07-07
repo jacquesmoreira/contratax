@@ -938,6 +938,9 @@ const servidor = createServer(async (req, res) => {
           // Ativacao: se ainda nao rodou nenhuma analise, o painel mostra o card
           // "comece por aqui" que leva a 1a analise (momento "uau").
           analisou: (perfil.analises?.usados || 0) > 0,
+          // Se ja analisou mas nao tem nenhuma certidao, o painel mostra o card
+          // de captura rapida pra destravar o veredito personalizado.
+          temCertidao: Object.values(perfil.empresa?.certidoes || {}).some((c) => c?.validade),
         },
       });
     }
@@ -964,6 +967,19 @@ const servidor = createServer(async (req, res) => {
     if (rota === "/api/documentos") {
       const perfil = await perfilPorToken(url.searchParams.get("c") || "");
       return json(res, 200, { empresa: perfil?.empresa || null });
+    }
+    // Captura rapida de certidoes (card do painel): MERGE, sem apagar os outros
+    // dados da empresa. Destrava o veredito personalizado sem sair pra /documentos.
+    if (rota === "/api/certidoes" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfil = await perfilPorToken(corpo.c || "");
+      if (!perfil) return json(res, 403, { erro: "Sessao invalida" });
+      const cert = (corpo.certidoes && typeof corpo.certidoes === "object") ? corpo.certidoes : {};
+      await atualizarPerfil(perfil.token, (p) => {
+        p.empresa = p.empresa || {};
+        p.empresa.certidoes = { ...(p.empresa.certidoes || {}), ...cert };
+      });
+      return json(res, 200, { ok: true });
     }
 
     // Estado da assinatura do cliente (o painel usa para liberar ou cobrar).
