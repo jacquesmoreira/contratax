@@ -828,7 +828,13 @@ Todas sem cold call, sem venda dura, sem pressão. Pedem ação mínima (opiniã
 - **Marca só ContrataX** nas superfícies públicas: termos, privacidade e llms.txt passam a usar "ContrataX" + CNPJ, sem o nome pessoal do fundador. Ver memória `contratax-marca-empresa-nao-pessoa`.
 - HANDOFF.md atualizado (este documento)
 
-**Pendente (próximo bloco):** revisão do site inteiro (LP + subpáginas) com voz de empresa, prova viva e comparativo em destaque — a outra metade do pedido do Jacques.
+### 2026-07-07 (continuação)
+
+- **Diagnóstico de churn do teste (dados reais):** rodei o acervo contra o ramo×UF dos 10 leads. Só **2 de 7** (nicho + estado pequeno: material didático/RN=0, energia solar/AC=0) viram painel vazio. A **maioria tinha 20-87 editais** e mesmo assim não rodou análise → causa principal = **ATIVAÇÃO**, não painel vazio. (Correção honesta: 1º diagnóstico com termo cru subestimou; o painel real usa termos+termosAmplos+termosIA.)
+- **Painel nunca vazio** (deploy): `monitor.mjs` alarga pro Brasil quando o estado do cliente tem < 8 editais do ramo (flag `alargado`); `/api/editais` expõe o flag; painel mostra banner "ampliamos para o Brasil todo". Ateliê/RN: 0 → 31. Beneficia painel + digest + reengajamento.
+- **LP: números corrigidos** — "27 mil licitações / 1,2 milhão contratos" (furados) → "20 mil / 3,1 milhões" (reais).
+
+**Pendente (o GRANDE, próximo bloco):** ATIVAÇÃO in-app — primeiro login guiado (auto-rodar a 1ª análise no melhor edital + puxar upload de documentos, senão o veredito personalizado não dispara). É a alavanca de conversão nº 1; precisa de trabalho no painel (`index.html`). + revisão visual das subpáginas.
 
 ---
 
