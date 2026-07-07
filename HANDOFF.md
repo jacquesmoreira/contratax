@@ -834,7 +834,9 @@ Todas sem cold call, sem venda dura, sem pressão. Pedem ação mínima (opiniã
 - **Painel nunca vazio** (deploy): `monitor.mjs` alarga pro Brasil quando o estado do cliente tem < 8 editais do ramo (flag `alargado`); `/api/editais` expõe o flag; painel mostra banner "ampliamos para o Brasil todo". Ateliê/RN: 0 → 31. Beneficia painel + digest + reengajamento.
 - **LP: números corrigidos** — "27 mil licitações / 1,2 milhão contratos" (furados) → "20 mil / 3,1 milhões" (reais).
 
-**Pendente (o GRANDE, próximo bloco):** ATIVAÇÃO in-app — primeiro login guiado (auto-rodar a 1ª análise no melhor edital + puxar upload de documentos, senão o veredito personalizado não dispara). É a alavanca de conversão nº 1; precisa de trabalho no painel (`index.html`). + revisão visual das subpáginas.
+**ATIVAÇÃO in-app (SHIPPED 07/07):** card "✨ Comece por aqui" no topo do painel só pra quem ainda não analisou (`analises.usados === 0`, some após a 1ª análise) — destaca o edital mais urgente e leva ao resumo da IA num clique (reusa `abrirDrawer`), + puxa upload de certidões pro veredito personalizado. `onboarding.mjs` reordenado (análise + veredito no topo). `/api/editais` expõe `analisou`. **Não foi testável localmente** (perfis.json local vazio, sem sessão, IA precisa da chave) — validado só por `--check` + parse do JS; VERIFICAR criando conta de teste nova.
+
+**Pendente (próximo bloco):** revisão visual das subpáginas (não abri uma a uma); evoluir a ativação pra auto-abrir o resumo já no 1º login; card de aha ainda não cobre conta multi-CNPJ (assessoria).
 
 ---
 
