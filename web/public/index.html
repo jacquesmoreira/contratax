@@ -448,6 +448,20 @@ async function salvarCertidoesRapido(btn) {
   } catch { btn.disabled = false; btn.textContent = txt; alert("Nao consegui salvar agora. Tente de novo."); }
 }
 
+// Melhor oportunidade SEM custo de IA: usa os sinais que /api/editais ja calcula
+// por edital (oportunidade.nivel via CAPAG + valor + prazo). Escolhe o melhor
+// edital aberto pro card de "foco" do cliente ja ativado.
+function melhorEdital(editais) {
+  const rank = { forte: 3, regular: 2, avaliar: 1 };
+  const abertos = editais.filter((e) => { const d = diasAte(e.encerramento); return d == null || d >= 0; });
+  if (!abertos.length) return null;
+  return [...abertos].sort((a, b) => {
+    const ra = rank[a.oportunidade?.nivel] || 0, rb = rank[b.oportunidade?.nivel] || 0;
+    if (rb !== ra) return rb - ra;
+    return (b.valorEstimado || 0) - (a.valorEstimado || 0);
+  })[0];
+}
+
 function perfilHTML(p) {
   const editais = [...(p.editais ?? [])].sort((a,b) => { const da = diasAte(a.encerramento) ?? 9999, db = diasAte(b.encerramento) ?? 9999; return da !== db ? da - db : (b.novo?1:0)-(a.novo?1:0); });
   const novos = editais.filter(e => e.novo).length;
@@ -503,10 +517,23 @@ function perfilHTML(p) {
       <button type="button" onclick="salvarCertidoesRapido(this)" style="background:var(--indigo);color:#fff;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">Salvar e destravar meu veredito</button>
       <span style="font-size:12.5px;color:var(--cinza-c);margin-left:12px">Deixe em branco a que você não tem.</span>
     </div>` : "";
+  // Card de FOCO (passo 3, SEM custo de IA): cliente ja ativado (analisou + tem
+  // certidao) ve a melhor oportunidade do dia pra ir disputar.
+  const melhor = (p.analisou && p.temCertidao) ? melhorEdital(editais) : null;
+  const valMelhor = melhor && melhor.valorEstimado ? "R$ " + Number(melhor.valorEstimado).toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "valor não divulgado";
+  const dMelhor = melhor ? diasAte(melhor.encerramento) : null;
+  const prazoMelhor = dMelhor == null ? "" : dMelhor <= 0 ? " · encerra hoje" : ` · encerra em ${dMelhor} dia${dMelhor > 1 ? "s" : ""}`;
+  const oppCard = melhor ? `
+    <div style="background:linear-gradient(135deg,#059669,#0d9488);color:#fff;border-radius:16px;padding:18px 22px;margin-bottom:20px;box-shadow:0 10px 26px rgba(5,150,105,.25)">
+      <div style="font-size:11.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.9;margin-bottom:6px">🎯 Sua melhor oportunidade agora</div>
+      <div style="font-size:15.5px;font-weight:700;line-height:1.35;margin-bottom:8px">${esc((melhor.objeto || "").slice(0, 110))}</div>
+      <div style="font-size:13px;opacity:.95;margin-bottom:14px">${esc(melhor.municipio ?? "")}/${esc(melhor.uf ?? "")} · ${esc(melhor.orgao ?? "")} · <b>${valMelhor}</b>${melhor.reputacao?.classificacao === "rapido" ? " · órgão paga rápido" : ""}${prazoMelhor}</div>
+      <button type="button" data-id="${esc(melhor.id)}" onclick="abrirDrawer(this.dataset.id)" style="background:#fff;color:#059669;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">Abrir e disputar →</button>
+    </div>` : "";
   const corpo = editais.length
     ? `<div class="cards-grid">${editais.map(cardHTML).join("")}</div>`
     : `<div class="vazio"><span class="emoji">🔭</span>Nenhum edital do seu ramo está aberto agora.<br>Assim que surgir, aparece aqui e você recebe por e-mail.<br><br><b>Dica:</b> termos mais amplos pegam mais oportunidades (ex: <b>"hospitalar"</b> em vez de "material hospitalar").</div>`;
-  return `<section class="perfil">${cabecalho}${ahaCard}${certCard}${banner}${corpo}</section>`;
+  return `<section class="perfil">${cabecalho}${ahaCard}${certCard}${oppCard}${banner}${corpo}</section>`;
 }
 
 function radarHTML(lista) {
