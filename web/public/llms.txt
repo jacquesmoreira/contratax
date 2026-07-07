@@ -59,4 +59,4 @@ ContrataX consome a API oficial do Portal Nacional de Contratações Públicas (
 - Política de privacidade: https://www.contratax.com.br/privacidade
 - Termos de uso: https://www.contratax.com.br/termos
 - Dados pessoais são tratados conforme art. 9º da LGPD
-- Subprocessadores declarados (Anthropic, Resend, Asaas, Google, Cloudflare, Railway)
+- Subprocessadores declarados (provedor de IA especializado, Resend, Asaas, Google, Cloudflare, provedor de nuvem)

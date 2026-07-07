@@ -67,7 +67,7 @@ function template({ title, description, canonical, conteudo }) {
   </div></nav>
   <main class="wrap-main">${conteudo}</main>
   <footer>
-    <a href="/">Home</a> · <a href="/blog">Blog</a> · <a href="/ajuda">Ajuda</a> · <a href="/contato">Contato</a> · <a href="/status">Status</a> · <a href="/seguranca">Segurança</a>
+    <a href="/">Home</a> · <a href="/blog">Blog</a> · <a href="/ajuda">Ajuda</a> · <a href="/contato">Contato</a> · <a href="/seguranca">Segurança</a>
     <div style="margin-top:8px;font-size:12px">© ContrataX · Dados públicos do PNCP</div>
   </footer>
 </body>
@@ -127,7 +127,7 @@ export function paginaStatus() {
       <p><span class="ok">●</span><b>Ingest de contratos (histórico):</b> backfill contínuo em background</p>
       <p><span class="ok">●</span><b>E-mail (Resend):</b> operacional, domínio próprio verificado</p>
       <p><span class="ok">●</span><b>Pagamento (Asaas):</b> em produção</p>
-      <p><span class="ok">●</span><b>Backup do banco:</b> volume persistente Railway, snapshot diário</p>
+      <p><span class="ok">●</span><b>Backup do banco:</b> volume persistente em nuvem, snapshot diário</p>
     </div>
 
     <div class="card">
@@ -150,8 +150,8 @@ export function paginaSeguranca() {
     <p class="sub">Como tratamos os seus dados, sua senha e a infraestrutura do ContrataX.</p>
 
     <h2>Hospedagem e infraestrutura</h2>
-    <p>O ContrataX roda em servidores da Railway, com domínio próprio (contratax.com.br) e certificado SSL TLS 1.3. Toda comunicação entre o seu navegador e o nosso servidor é criptografada por HTTPS.</p>
-    <p>O banco de dados fica em volume persistente isolado, com backup automático diário pela infraestrutura da Railway. O acesso administrativo ao banco é restrito por token e auditado.</p>
+    <p>O ContrataX roda em servidores em nuvem, com domínio próprio (contratax.com.br) e certificado SSL TLS 1.3. Toda comunicação entre o seu navegador e o nosso servidor é criptografada por HTTPS.</p>
+    <p>O banco de dados fica em volume persistente isolado, com backup automático diário pela infraestrutura de nuvem. O acesso administrativo ao banco é restrito por token e auditado.</p>
 
     <h2>Senhas e autenticação</h2>
     <p>As senhas dos usuários são armazenadas com hash criptográfico (não em texto puro). Mesmo que um atacante obtenha o banco, não consegue reverter as senhas.</p>
@@ -159,7 +159,7 @@ export function paginaSeguranca() {
 
     <h2>Dados pessoais e LGPD</h2>
     <p>Coletamos apenas o necessário para operar o serviço: nome da empresa, CNPJ, e-mail, ramo de atuação e estados onde atua. Opcionalmente, datas de validade das suas certidões e endereço (para gerar declarações de habilitação).</p>
-    <p><b>Não compartilhamos seus dados com terceiros</b> para marketing ou publicidade. Os únicos parceiros que processam dados são: Asaas (pagamento), Resend (envio de e-mail), Anthropic (leitura técnica de editais) e Railway (hospedagem). Todos com políticas próprias de privacidade compatíveis com a LGPD.</p>
+    <p><b>Não compartilhamos seus dados com terceiros</b> para marketing ou publicidade. Os únicos parceiros que processam dados são: Asaas (pagamento), Resend (envio de e-mail), provedor de IA especializado (leitura técnica de editais) e provedor de nuvem (hospedagem). Todos com políticas próprias de privacidade compatíveis com a LGPD.</p>
     <p>Você pode pedir a <b>exclusão completa dos seus dados</b> a qualquer momento em <a href="/contato" style="color:var(--indigo);font-weight:700">contato</a>. Processamos em até 7 dias úteis e enviamos confirmação.</p>
 
     <h2>Dados públicos vs dados privados</h2>
