@@ -363,6 +363,21 @@ const servidor = createServer(async (req, res) => {
       return res.end(pagina);
     }
 
+    // Admin: dispara a sequencia COMPLETA de e-mails de teste pra um endereco
+    // (avaliacao interna de acentuacao/tom/layout). ?c=ADMIN&para=email.
+    if (rota === "/api/admin/testar-emails") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Somente admin" });
+      const para = url.searchParams.get("para") || process.env.LICITA_CONTATO || "";
+      if (!para) return json(res, 400, { erro: "Informe ?para=seu@email.com" });
+      try {
+        const { enviarSequenciaTeste } = await import("../src/testarEmails.mjs");
+        const n = await enviarSequenciaTeste({ para });
+        return json(res, 200, { ok: true, enviados: n, para });
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
+      }
+    }
+
     // Busca publica da landing page (por UF e termo, sem login).
     if (rota === "/api/busca-publica") {
       const uf = url.searchParams.get("uf") || null;
