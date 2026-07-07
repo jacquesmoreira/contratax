@@ -1,6 +1,10 @@
 // Checklist de onboarding pos-cadastro. Calcula o estado de cada passo
 // olhando o que o cliente JA fez (sem precisar marcar manualmente).
 // O banner some sozinho quando todos os passos viraram "feito".
+//
+// Ordem = ATIVACAO primeiro: a causa nº1 de churn no teste (medida) foi o cliente
+// nunca rodar a 1a analise nem subir certidoes, entao nunca sentir o veredito (o
+// diferencial). Os dois primeiros passos vendem esse momento, nao pedem tarefa.
 
 import { temEmailKey } from "./email.mjs";
 
@@ -19,28 +23,28 @@ export function checklist(perfil) {
 
   const passos = [
     {
+      id: "edital",
+      titulo: "Rode sua 1ª análise (o momento que decide)",
+      descricao: "Abra qualquer edital do seu painel e a IA lê ele por você em segundos: objeto, prazo, armadilhas e o veredito. É o que a maioria testa primeiro, e é grátis no teste.",
+      feito: temAnalise,
+      link: "#painel",
+      icone: "🔍",
+    },
+    {
       id: "docs",
-      titulo: "Cadastrar documentos da empresa",
-      descricao: "Datas de validade das certidões — a IA usa pra conferir aptidão e te avisar dos vencimentos.",
+      titulo: "Destrave o veredito personalizado",
+      descricao: "Suba as datas das suas certidões e a IA passa a dizer se VOCÊ está apto ou o que falta (ex: certidão X vencida), não só um resumo genérico. É o nosso diferencial, e ainda te avisa antes de cada vencimento.",
       feito: temDocsCompletos,
       link: "/documentos",
       icone: "📄",
       progresso: `${docsCadastrados}/5 certidões`,
     },
     {
-      id: "edital",
-      titulo: "Abrir seu primeiro edital",
-      descricao: "Veja o TL;DR, faixa de preços e quem ganha no seu ramo direto no detalhe.",
-      feito: temAnalise,
-      link: "#painel",
-      icone: "🔍",
-    },
-    {
       id: "alertas",
       titulo: "Avisos por e-mail ativados",
       descricao: temEmailKey()
-        ? "Você recebe digest diário dos editais novos + alertas quando uma certidão estiver perto de vencer."
-        : "Em breve: digest diário automático dos editais novos no seu ramo.",
+        ? "Você recebe o boletim diário dos editais novos do seu ramo + alerta quando uma certidão estiver perto de vencer."
+        : "Em breve: boletim diário automático dos editais novos no seu ramo.",
       feito: Boolean(perfil.email) && temEmailKey(),
       link: "/conta",
       icone: "📧",
