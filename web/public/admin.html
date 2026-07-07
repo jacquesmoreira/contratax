@@ -103,6 +103,7 @@ async function carregar() {
     <button onclick="rodarDigest()" style="background:var(--indigo);color:#fff;border:none;padding:9px 14px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">📧 Enviar digest agora</button>
     <button onclick="verDisco()" style="background:#0f172a;color:#fff;border:none;padding:9px 14px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">💾 Ver uso de disco</button>
     <button onclick="limparDisco()" style="background:#b45309;color:#fff;border:none;padding:9px 14px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">🧹 Limpar disco</button>
+    <button onclick="testarEmails()" style="background:#6d28d9;color:#fff;border:none;padding:9px 14px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">📨 Testar e-mails (pra mim)</button>
     <span id="digest-status" style="font-size:13px;color:var(--cinza);align-self:center"></span>
   </div>
   <div id="disco-saida" style="display:none;background:#0f172a;color:#e2e8f0;font-family:monospace;font-size:12px;padding:14px 16px;border-radius:10px;margin-bottom:18px;white-space:pre-wrap;line-height:1.5;max-height:340px;overflow:auto"></div>`;
@@ -233,6 +234,24 @@ function ligarAcoes() {
       alert(r.ok ? `Empresa excluída: ${r.d.excluido}.` : "Erro: " + r.d.erro); if (r.ok) carregar();
     };
   });
+}
+
+// Dispara a sequencia completa de e-mails de teste (7) pra um endereco.
+async function testarEmails() {
+  const s = document.getElementById("digest-status");
+  const email = prompt("Enviar os 7 e-mails de teste da regua para qual endereco?", "jacques.moreira@gmail.com");
+  if (!email) return;
+  s.textContent = "Enviando 7 e-mails de teste...";
+  s.style.color = "var(--cinza)";
+  try {
+    const r = await api("/api/admin/testar-emails?para=" + encodeURIComponent(email));
+    if (!r.ok) throw new Error(r.d.erro || "falha");
+    s.textContent = "✅ " + (r.d.enviados || 0) + " e-mails de teste enviados para " + email;
+    s.style.color = "#059669";
+  } catch (e) {
+    s.textContent = "⚠️ " + e.message;
+    s.style.color = "var(--vermelho)";
+  }
 }
 
 // Dispara o digest manualmente (testar Resend + envio do dia)
