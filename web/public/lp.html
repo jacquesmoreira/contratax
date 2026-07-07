@@ -281,7 +281,7 @@
   <header class="hero"><div class="wrap">
     <div class="eyebrow"><span class="ponto"></span> <span id="contador-topo">Dados oficiais do PNCP, atualizados todo dia</span></div>
     <h1>Existe contrato público do seu ramo aberto agora. <span class="grad">Você só não está vendo.</span></h1>
-    <p class="sub">Todo dia o governo abre milhares de licitações, espalhadas em dezenas de portais diferentes. As do seu ramo passam batido, porque conferir todas na mão é impossível.</p>
+    <p class="sub">Todo dia o governo abre milhares de licitações. A ContrataX encontra as do seu ramo e, com inteligência, mostra <b>em quais vale a pena entrar</b> — antes de você gastar horas com papelada.</p>
 
     <!-- Prova social MOVIDA pra cima do card de busca (acima da dobra mobile).
          Faz o visitante ver volume e seriedade antes de decidir interagir. -->
@@ -596,6 +596,58 @@
       <div class="passo"><div class="n">4</div><h3>Receba em dia</h3><p>Quando ganhar, cadastre a NF emitida. O sistema te avisa se atrasar e gera o ofício de cobrança com correção e juros já calculados.</p></div>
     </div>
   </div></section>
+
+  <!-- Calculadora de ROI: usa os numeros do proprio cliente (honesto, sem
+       estatistica inventada) pra mostrar o custo do tempo gasto na mao. -->
+  <section class="bloco" id="roi"><div class="wrap">
+    <div class="titulo-sec">
+      <span class="tag-sec">Faça a conta</span>
+      <h2>Quanto a sua equipe gasta analisando edital na mão?</h2>
+      <p>Coloque os números da sua operação. A conta é sua, com os seus valores.</p>
+    </div>
+    <div style="max-width:820px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px;align-items:stretch">
+      <div style="background:#fff;border:1px solid var(--linha);border-radius:18px;padding:26px;box-shadow:var(--sombra-sm)">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <label style="font-size:13.5px;font-weight:700;color:var(--cinza)">Editais que sua equipe analisa por mês
+            <input id="roi-editais" type="number" min="0" value="80" style="width:100%;margin-top:6px;padding:12px 14px;border:1.5px solid var(--linha);border-radius:11px;font-size:16px;font-family:inherit;outline:none" /></label>
+          <label style="font-size:13.5px;font-weight:700;color:var(--cinza)">Minutos para ler e avaliar cada edital
+            <input id="roi-min" type="number" min="0" value="40" style="width:100%;margin-top:6px;padding:12px 14px;border:1.5px solid var(--linha);border-radius:11px;font-size:16px;font-family:inherit;outline:none" /></label>
+          <label style="font-size:13.5px;font-weight:700;color:var(--cinza)">Quanto vale a hora da sua equipe (R$)
+            <input id="roi-hora" type="number" min="0" value="50" style="width:100%;margin-top:6px;padding:12px 14px;border:1.5px solid var(--linha);border-radius:11px;font-size:16px;font-family:inherit;outline:none" /></label>
+        </div>
+      </div>
+      <div style="background:linear-gradient(135deg,var(--indigo-d),var(--indigo));color:#fff;border-radius:18px;padding:26px;box-shadow:var(--sombra);display:flex;flex-direction:column;justify-content:center">
+        <div style="font-size:12.5px;opacity:.85;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Hoje, na mão</div>
+        <div style="font-size:15px;opacity:.95;margin-bottom:16px"><b id="roi-horas">53</b> horas/mês · <b id="roi-custo">R$ 2.667</b> em tempo de equipe</div>
+        <div style="border-top:1px solid rgba(255,255,255,.25);padding-top:16px">
+          <div style="font-size:12.5px;opacity:.85;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Reduzindo metade desse tempo</div>
+          <div style="font-size:34px;font-weight:900;letter-spacing:-1px;line-height:1.05">R$ <span id="roi-economia">1.333</span><span style="font-size:17px;font-weight:600">/mês</span></div>
+          <div style="font-size:13.5px;opacity:.9;margin-top:8px">de economia estimada — cerca de <b id="roi-vezes">5×</b> o valor do plano Básico (R$ 247/mês)</div>
+        </div>
+        <a href="/cadastro" class="btn btn-grande" style="background:#fff;color:var(--indigo);margin-top:22px;width:100%">Testar grátis e recuperar esse tempo →</a>
+      </div>
+    </div>
+    <div style="text-align:center;color:var(--cinza-c);font-size:12.5px;margin:16px auto 0;max-width:620px">Estimativa com base nos números que você informou. A ContrataX lê cada edital e entrega o veredito em segundos, para a sua equipe focar só no que vale a pena.</div>
+  </div></section>
+  <script>
+  (function () {
+    var ed = document.getElementById("roi-editais"), mn = document.getElementById("roi-min"), hr = document.getElementById("roi-hora");
+    if (!ed) return;
+    var fmt = function (v) { return Math.round(v).toLocaleString("pt-BR"); };
+    function calc() {
+      var horas = (Number(ed.value || 0) * Number(mn.value || 0)) / 60;
+      var custo = horas * Number(hr.value || 0);
+      var economia = custo * 0.5;
+      document.getElementById("roi-horas").textContent = fmt(horas);
+      document.getElementById("roi-custo").textContent = "R$ " + fmt(custo);
+      document.getElementById("roi-economia").textContent = fmt(economia);
+      var vezes = economia / 247;
+      document.getElementById("roi-vezes").textContent = (vezes >= 1 ? Math.round(vezes) : vezes.toFixed(1)) + "×";
+    }
+    [ed, mn, hr].forEach(function (i) { i.addEventListener("input", calc); });
+    calc();
+  })();
+  </script>
 
   <!-- Preco -->
   <section class="bloco alt" id="preco"><div class="wrap">
