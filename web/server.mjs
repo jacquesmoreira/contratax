@@ -874,8 +874,11 @@ const servidor = createServer(async (req, res) => {
       // (termosAmplos/termosIA) na hora. marcar:false preserva a flag "novo" do
       // digest diario.
       let editais = [];
-      try { editais = (await monitorar(perfil, { marcar: false, salvar: false })).filtrados; }
-      catch (e) { console.error("[api/editais] monitorar:", e.message); }
+      let alargado = false;
+      try {
+        const r = await monitorar(perfil, { marcar: false, salvar: false });
+        editais = r.filtrados; alargado = r.alargado;
+      } catch (e) { console.error("[api/editais] monitorar:", e.message); }
       // Selo de reputacao de pagamento no card (versao leve, so CAPAG/heuristica).
       // Cache por UF|municipio: orgaos repetem, evita recomputar. Best-effort.
       try {
@@ -916,6 +919,7 @@ const servidor = createServer(async (req, res) => {
           uf: (perfil.ufs ?? [])[0] ?? perfil.uf ?? null,
           atualizadoEm: new Date().toISOString(),
           editais,
+          alargado,
         },
       });
     }

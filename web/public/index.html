@@ -451,10 +451,15 @@ function perfilHTML(p) {
       ${editais.length ? `<button type="button" onclick="alternarSoFavoritos(this)" style="margin-left:auto;background:#eef2ff;border:1px solid #c7d2fe;color:var(--indigo);font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:8px;cursor:pointer;font-family:inherit" title="Mostrar só os editais que você favoritou">★ Só favoritos</button>` : ""}
       ${editais.length ? `<a href="#" onclick="exportar('editais');return false" style="font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Exportar resultado para Excel/CSV">📊 Excel</a>` : ""}
     </div>`;
+  // Aviso de painel alargado: o estado do cliente tinha poucos editais do ramo,
+  // entao o backend caiu no fallback nacional. Sinaliza pra nao confundir.
+  const banner = p.alargado
+    ? `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:11px 16px;margin-bottom:14px;font-size:13.5px;color:#1e40af;line-height:1.5">📍 Poucos editais do seu ramo abertos ${p.uf ? `em <b>${esc(p.uf)}</b>` : "no seu estado"} agora, então ampliamos para o <b>Brasil todo</b>. Você ajusta os estados nas configurações do seu ramo.</div>`
+    : "";
   const corpo = editais.length
     ? `<div class="cards-grid">${editais.map(cardHTML).join("")}</div>`
     : `<div class="vazio"><span class="emoji">🔭</span>Nenhum edital do seu ramo está aberto agora.<br>Assim que surgir, aparece aqui e você recebe por e-mail.<br><br><b>Dica:</b> termos mais amplos pegam mais oportunidades (ex: <b>"hospitalar"</b> em vez de "material hospitalar").</div>`;
-  return `<section class="perfil">${cabecalho}${corpo}</section>`;
+  return `<section class="perfil">${cabecalho}${banner}${corpo}</section>`;
 }
 
 function radarHTML(lista) {
