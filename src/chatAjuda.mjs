@@ -33,7 +33,7 @@ function tabelaPlanosAoVivo() {
       partes.push(`${p.analises} analises de IA por empresa/mes`);
     } else {
       partes.push(`${p.empresas} CNPJ`);
-      partes.push(`${p.analises} analises de IA por mes${p.degustacao ? " (degustacao da IA)" : ""}`);
+      partes.push(`${p.analises} analises de IA por mes${p.degustacao ? " (plano de entrada)" : ""}`);
     }
     if (p.extracoesPdf) partes.push(`${p.extracoesPdf} extracoes de PDF/mes`);
     l.push(partes.join(", ") + ".");

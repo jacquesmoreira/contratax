@@ -9,14 +9,14 @@
 // no teto da cota mensal.
 
 export const PLANOS = {
-  // Plano de ENTRADA: busca e alerta ilimitados (custo zero), mas a leitura do
-  // edital pelo ContrataX.IA fica em DEGUSTACAO (3/mes). A IA e o gancho de
-  // upgrade pro Basico. Margem alta porque quase nao consome IA.
+  // Plano de ENTRADA: busca e alerta ilimitados (custo zero) + 6 analises de
+  // edital COM VEREDITO de aptidao. Volume maior e o pos-venda ficam no Basico
+  // (o upgrade). Margem segura porque o uso medio fica bem abaixo do teto de 6.
   starter: {
     id: "starter",
     nome: "Starter",
     preco: process.env.LICITA_PRECO_STARTER || "59,00",
-    analises: Number(process.env.LICITA_ANALISES_STARTER || 3), // degustacao
+    analises: Number(process.env.LICITA_ANALISES_STARTER || 6), // entrada, com veredito
     extracoesPdf: Number(process.env.LICITA_EXTRACOES_STARTER || 0),
     tldrLimiteDia: Number(process.env.LICITA_TLDR_STARTER || 8),
     empresas: 1,

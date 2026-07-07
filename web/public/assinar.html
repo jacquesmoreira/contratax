@@ -102,10 +102,11 @@ async function carregar() {
   const planosAssessoria = DADOS.planos.filter(p => p.assessoria);
 
   const cardPlano = (p, destaque, tag) => {
-    // Plano de degustacao (Starter): busca/alerta ilimitados, mas a leitura de
-    // edital pela IA e limitada. Deixamos isso EXPLICITO pro cliente.
+    // Plano de ENTRADA (Starter): busca/alerta ilimitados + N analises com
+    // veredito. O teto de analises e menor que o Basico; deixamos claro sem
+    // chamar de "degustacao".
     const cotaHtml = p.degustacao
-      ? `<b style="color:var(--verde)">Busca e alertas ilimitados</b><br><span style="font-weight:600;color:var(--cinza)">${p.analises} leituras de edital com ContrataX.IA por mês (degustação)</span>`
+      ? `<b style="color:var(--verde)">Busca e alertas ilimitados</b><br><span style="font-weight:600;color:var(--cinza)">${p.analises} análises de edital com a ContrataX.IA por mês, com veredito</span>`
       : (p.empresas && p.empresas > 1
           ? `Até ${p.empresas} empresas (CNPJs)<br><span style="font-weight:600;color:var(--cinza)">${p.analises} análises de edital/mês cada</span>`
           : `${p.analises} análises de edital por mês`);
@@ -116,7 +117,7 @@ async function carregar() {
       <div class="preco"><b>R$ ${p.preco}</b><span>/mês</span></div>
       <div class="pl-cota">${cotaHtml}</div>
       ${p.degustacao
-        ? `<div style="font-size:12px;color:var(--cinza-c);margin-top:6px;line-height:1.4">Ideal para começar: receba os editais do seu ramo todo dia. A leitura completa do edital pela ContrataX.IA fica liberada para os planos Básico e Pro.</div>`
+        ? `<div style="font-size:12px;color:var(--cinza-c);margin-top:6px;line-height:1.4">Ideal para começar: além dos alertas diários, você já usa a IA que lê o edital e diz se está apto. Volume maior de análises e o pós-venda completo ficam no Básico e Pro.</div>`
         : `<div style="font-size:12.5px;color:var(--cinza);margin-top:4px">+ ${p.extracoesPdf || 0} extrações de PDF de contrato/mês ${p.empresas > 1 ? "por empresa" : ""}<br><span style="color:var(--cinza-c)">(XML do PNCP é ilimitado)</span></div>`}
       <ul class="inc">${BENEFICIOS.map(b => `<li>${b}</li>`).join("")}${p.assessoria ? '<li style="color:var(--indigo);font-weight:700">Painel único para gerenciar todas as empresas</li>' : ""}</ul>
       <button class="btn" data-tipo="plano" data-id="${p.id}">Assinar ${p.nome}</button>
