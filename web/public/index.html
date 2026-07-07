@@ -456,10 +456,26 @@ function perfilHTML(p) {
   const banner = p.alargado
     ? `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:11px 16px;margin-bottom:14px;font-size:13.5px;color:#1e40af;line-height:1.5">📍 Poucos editais do seu ramo abertos ${p.uf ? `em <b>${esc(p.uf)}</b>` : "no seu estado"} agora, então ampliamos para o <b>Brasil todo</b>. Você ajusta os estados nas configurações do seu ramo.</div>`
     : "";
+  // Card de ATIVACAO: so pra quem ainda NAO rodou analise. Destaca o edital mais
+  // urgente e leva pro resumo da IA (o momento "uau") num clique, reusando o
+  // abrirDrawer(id) que ja existe. Some sozinho apos a 1a analise.
+  const topo = editais[0];
+  const ahaCard = (!p.analisou && topo && topo.id) ? `
+    <div style="background:linear-gradient(135deg,#4338ca,#6d28d9);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:20px;box-shadow:0 12px 30px rgba(67,56,202,.28)">
+      <div style="font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.85;margin-bottom:8px">✨ Comece por aqui</div>
+      <div style="font-size:19px;font-weight:800;margin-bottom:6px;line-height:1.3">Veja a IA ler um edital do seu ramo em segundos</div>
+      <div style="font-size:14px;opacity:.92;line-height:1.5;margin-bottom:12px">Escolhemos o mais urgente pra você. A IA resume o objeto, o prazo e as armadilhas, e diz se vale entrar. Grátis no teste.</div>
+      <div style="background:rgba(255,255,255,.12);border-radius:11px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:12px;opacity:.85;font-weight:700">${esc(topo.municipio ?? "")}/${esc(topo.uf ?? "")} · ${esc(topo.orgao ?? "Órgão público")}</div>
+        <div style="font-size:14.5px;margin-top:4px">${esc((topo.objeto || "").slice(0, 110))}</div>
+      </div>
+      <button type="button" data-id="${esc(topo.id)}" onclick="abrirDrawer(this.dataset.id)" style="background:#fff;color:var(--indigo);border:none;border-radius:11px;padding:13px 26px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Ver a análise deste edital →</button>
+      <div style="font-size:12.5px;opacity:.9;margin-top:13px">Depois, <a href="/documentos?c=${encodeURIComponent(token)}" style="color:#fff;text-decoration:underline;font-weight:700">suba suas certidões</a> pra o veredito dizer se <b>VOCÊ</b> está apto, não só o resumo.</div>
+    </div>` : "";
   const corpo = editais.length
     ? `<div class="cards-grid">${editais.map(cardHTML).join("")}</div>`
     : `<div class="vazio"><span class="emoji">🔭</span>Nenhum edital do seu ramo está aberto agora.<br>Assim que surgir, aparece aqui e você recebe por e-mail.<br><br><b>Dica:</b> termos mais amplos pegam mais oportunidades (ex: <b>"hospitalar"</b> em vez de "material hospitalar").</div>`;
-  return `<section class="perfil">${cabecalho}${banner}${corpo}</section>`;
+  return `<section class="perfil">${cabecalho}${ahaCard}${banner}${corpo}</section>`;
 }
 
 function radarHTML(lista) {

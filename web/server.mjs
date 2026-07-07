@@ -920,6 +920,9 @@ const servidor = createServer(async (req, res) => {
           atualizadoEm: new Date().toISOString(),
           editais,
           alargado,
+          // Ativacao: se ainda nao rodou nenhuma analise, o painel mostra o card
+          // "comece por aqui" que leva a 1a analise (momento "uau").
+          analisou: (perfil.analises?.usados || 0) > 0,
         },
       });
     }
