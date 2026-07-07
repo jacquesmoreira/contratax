@@ -369,10 +369,12 @@ const servidor = createServer(async (req, res) => {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Somente admin" });
       const para = url.searchParams.get("para") || process.env.LICITA_CONTATO || "";
       if (!para) return json(res, 400, { erro: "Informe ?para=seu@email.com" });
+      const ramo = url.searchParams.get("ramo") || undefined; // ex: "energia solar"
+      const uf = url.searchParams.get("uf") || undefined;       // ex: "AC"
       try {
         const { enviarSequenciaTeste } = await import("../src/testarEmails.mjs");
-        const n = await enviarSequenciaTeste({ para });
-        return json(res, 200, { ok: true, enviados: n, para });
+        const n = await enviarSequenciaTeste({ para, ramo, uf });
+        return json(res, 200, { ok: true, enviados: n, para, ramo: ramo || "material hospitalar", uf: uf || "SC" });
       } catch (e) {
         return json(res, 500, { erro: e.message });
       }

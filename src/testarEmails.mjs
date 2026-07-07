@@ -22,11 +22,13 @@ function dadosRamo(perfil) {
   return { total: casaram.length, soma, novos: casaram.length, exemplos: ordenados.slice(0, 5), top: ordenados.slice(0, 8) };
 }
 
-// Monta a lista [{ tag, assunto, html }] com um perfil de amostra realista.
-export function montarSequencia({ para = "amostra@contratax.com.br" } = {}) {
+// Monta a lista [{ tag, assunto, html }] com um perfil de amostra. ramo e uf sao
+// configuraveis (?ramo=&uf= na rota) pra avaliar como fica em qualquer nicho.
+export function montarSequencia({ para = "amostra@contratax.com.br", ramo = "material hospitalar", uf = "SC" } = {}) {
   const agora = new Date();
   const criadoEm = new Date(agora.getTime() - 6 * 864e5).toISOString(); // teste com 6 dias
   const expiraEm = new Date(agora.getTime() + 1 * 864e5).toISOString();
+  const termos = String(ramo).split(",").map((s) => s.trim()).filter(Boolean);
   const perfil = {
     id: "amostra-teste",
     nome: "Jacques",
@@ -34,8 +36,8 @@ export function montarSequencia({ para = "amostra@contratax.com.br" } = {}) {
     cnpj: "61740453000149",
     email: para,
     token: "amostra-teste",
-    filtro: { termos: ["material hospitalar"] },
-    ufs: ["SC"],
+    filtro: { termos: termos.length ? termos : ["material hospitalar"] },
+    ufs: uf ? [String(uf).toUpperCase()] : [],
     assinatura: { criadoEm, expiraEm },
   };
   const d = dadosRamo(perfil);
@@ -52,8 +54,8 @@ export function montarSequencia({ para = "amostra@contratax.com.br" } = {}) {
   ];
 }
 
-export async function enviarSequenciaTeste({ para, log = console.log }) {
-  const lista = montarSequencia({ para });
+export async function enviarSequenciaTeste({ para, ramo, uf, log = console.log }) {
+  const lista = montarSequencia({ para, ramo, uf });
   const base = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
   let n = 0;
   for (const e of lista) {
