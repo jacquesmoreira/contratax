@@ -1022,11 +1022,14 @@ function tldrHTML(t, id, msg) {
     </div>`;
   }
   if (!t) return `<div class="bloco" id="tldr-bloco"></div>`; // placeholder pra preencher
+  // Badge sobre a BARREIRA DE ENTRADA do edital (leitura global, igual pra todo
+  // cliente). NAO e o veredito pessoal do cliente (esse mora na Aptidao, que cruza
+  // com os documentos). Por isso o texto fala do edital, nao de "voce esta apto".
   const rotulo = {
-    apto: ["#059669", "#ecfdf5", "✓ APTO"],
-    apto_pendencias: ["#b45309", "#fffbeb", "⚠ APTO COM PENDÊNCIAS"],
-    nao_apto: ["#dc2626", "#fef2f2", "✕ NÃO APTO"],
-    indefinido: ["#475569", "#f8fafc", "? INDEFINIDO"],
+    apto: ["#059669", "#ecfdf5", "✓ EXIGÊNCIAS PADRÃO"],
+    apto_pendencias: ["#b45309", "#fffbeb", "⚠ EXIGE REQUISITOS ESPECÍFICOS"],
+    nao_apto: ["#dc2626", "#fef2f2", "✕ ACESSO RESTRITO"],
+    indefinido: ["#475569", "#f8fafc", "? A CONFERIR"],
   }[t.veredito] || ["#475569", "#f8fafc", t.veredito || "?"];
   const [cor, bg, txt] = rotulo;
   const exigencias = (t.exigencias || []).map(e =>
@@ -1043,7 +1046,7 @@ function tldrHTML(t, id, msg) {
       ${t.prazo ? `<div>📅 <b style="color:var(--tinta)">${esc(t.prazo)}</b></div>` : ""}
     </div>
     ${exigencias ? `<div style="font-size:12px;font-weight:700;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Exigências-chave</div><ul style="list-style:none;padding:0;margin:0 0 12px">${exigencias}</ul>` : ""}
-    ${t.motivo ? `<div style="background:#fff;border:1px solid var(--linha);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--cinza);line-height:1.5"><b style="color:${cor}">Veredito:</b> ${esc(t.motivo)}</div>` : ""}
+    ${t.motivo ? `<div style="background:#fff;border:1px solid var(--linha);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--cinza);line-height:1.5"><b style="color:${cor}">Leitura do edital:</b> ${esc(t.motivo)}</div>` : ""}
   </div>`;
 }
 
