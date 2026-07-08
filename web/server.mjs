@@ -20,6 +20,7 @@ import { paginaHub, paginaCategoria, urlsSEO } from "../src/seoPaginas.mjs";
 import { categoriaPorSlug, ufPorSigla, CATEGORIAS } from "../src/categorias.mjs";
 import { paginaOrgao, paginaHubOrgaos, urlsOrgaos } from "../src/seoOrgaos.mjs";
 import { paginaCnae, paginaHubCnae, urlsCnae, cnaePorCodigo } from "../src/seoCnae.mjs";
+import { paginaRanking, paginaHubRanking, urlsRanking } from "../src/rankingCompras.mjs";
 import { renderizarArtigo, renderizarListagem, urlsBlog } from "../src/blog.mjs";
 import { renderizarAjuda, renderizarContato, processarContato } from "../src/ajuda.mjs";
 import { tentarUsoVisitante, ipDoRequest } from "../src/rateLimitVisitante.mjs";
@@ -2714,6 +2715,20 @@ Contact: contato@contratax.com.br
       }
     }
 
+    // ===== SEO programatico: RANKINGS de compras por ramo (ativo linkavel) =====
+    if (rota === "/ranking" || rota === "/ranking/") {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(paginaHubRanking()));
+    }
+    if (rota.startsWith("/ranking/")) {
+      const slug = rota.split("/").filter(Boolean)[1];
+      const html = paginaRanking(slug);
+      if (html) {
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+        return res.end(injetarAnalytics(html));
+      }
+    }
+
     // Arquivos de SEO.
     if (rota === "/robots.txt") {
       const txt = await readFile(resolve(AQUI, "public", "robots.txt"), "utf8");
@@ -2724,10 +2739,10 @@ Contact: contato@contratax.com.br
     if (rota === "/sitemap.xml") {
       // Usa o dominio canonico (BASE_PUBLICA = com www) em tudo, alinhado com
       // os canonicals das paginas e com o redirect 301 do apex.
-      const caminhos = ["/", "/cadastro", "/entrar", "/ajuda", "/contato", "/lp/comparativo", "/casos", "/status", "/seguranca", "/orgaos", "/cnae", "/privacidade", "/termos"];
+      const caminhos = ["/", "/cadastro", "/entrar", "/ajuda", "/contato", "/lp/comparativo", "/casos", "/status", "/seguranca", "/orgaos", "/cnae", "/ranking", "/privacidade", "/termos"];
       const base = caminhos.map((c) => BASE_PUBLICA + c);
       const blog = (await urlsBlog(BASE_PUBLICA)).map((b) => b.loc);
-      const urls = [...base, ...blog, ...urlsSEO(), ...urlsOrgaos(), ...urlsCnae()];
+      const urls = [...base, ...blog, ...urlsSEO(), ...urlsOrgaos(), ...urlsCnae(), ...urlsRanking()];
       // lastmod = hoje: o acervo (licitacoes/orgaos/cnae) regenera diariamente do
       // PNCP, entao a data e legitima e ajuda o Google a priorizar o recrawl.
       const hoje = new Date().toISOString().slice(0, 10);

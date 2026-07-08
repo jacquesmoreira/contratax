@@ -973,14 +973,39 @@ export function topOrgaos({ limite = 800, minimoContratos = 5 } = {}) {
   return linhas;
 }
 
+// Ranking de quem MAIS COMPROU um ramo especifico (por valor total gasto).
+// Alimenta as paginas /ranking/<slug> - ativo de dados linkavel (jornalista,
+// consultor e blog de contador citam "quem gastou mais com X", gerando
+// backlink organico sem outbound). termo ja deve vir normalizado (sem acento,
+// minusculo) igual ao usado em categorias.mjs.
+export function rankingPorTermo({ termo, limite = 50, minimoContratos = 1 } = {}) {
+  const d = abrir();
+  const linhas = d.prepare(`
+    SELECT orgao_cnpj AS cnpj, orgao AS nome, uf, municipio,
+           COUNT(*) AS contratos, SUM(valor) AS total
+    FROM contratos
+    WHERE orgao_cnpj IS NOT NULL AND orgao_cnpj <> ''
+      AND objeto_norm LIKE '%' || ? || '%'
+    GROUP BY orgao_cnpj
+    HAVING contratos >= ? AND total > 0
+    ORDER BY total DESC
+    LIMIT ?
+  `).all(termo, minimoContratos, limite);
+  return linhas;
+}
+
 // Busca um orgao especifico pelo CNPJ (limpo, 14 digitos).
 export function orgaoPorCnpj(cnpj) {
   const d = abrir();
   const limpo = String(cnpj || "").replace(/\D+/g, "");
   if (limpo.length !== 14) return null;
+  // totalContratos (nome distinto do array "contratos" abaixo - antes os dois
+  // se chamavam "contratos" e o spread do array sobrescrevia a contagem
+  // numerica, quebrando toLocaleString() e subestimando o total pro limite
+  // de exibicao de 20).
   const linha = d.prepare(`
     SELECT orgao_cnpj AS cnpj, orgao AS nome, uf, municipio,
-           COUNT(*) AS contratos,
+           COUNT(*) AS totalContratos,
            MIN(publicacao) AS desde
     FROM contratos WHERE orgao_cnpj = ?
     GROUP BY orgao_cnpj
@@ -993,7 +1018,7 @@ export function orgaoPorCnpj(cnpj) {
     FROM editais WHERE orgao_cnpj = ? AND encerramento >= ?
     ORDER BY encerramento ASC LIMIT 20
   `).all(limpo, new Date().toISOString());
-  // contratos recentes
+  // contratos recentes (amostra pra listar na pagina; total real e linha.totalContratos)
   const contratos = d.prepare(`
     SELECT id, objeto, valor, fornecedor, vigencia_inicio AS vigenciaInicio
     FROM contratos WHERE orgao_cnpj = ?

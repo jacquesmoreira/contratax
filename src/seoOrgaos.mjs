@@ -116,7 +116,7 @@ export async function paginaOrgao(slug) {
   const onde = [orgao.municipio, orgao.uf].filter(Boolean).join("/");
   const canonical = `${BASE}/orgaos/${slug}`;
   const title = `Licitações de ${orgao.nome} — Editais Abertos e Contratos | ContrataX`;
-  const description = `${detalhe.editais.length} editais abertos e ${detalhe.contratos.toLocaleString("pt-BR")} contratos no histórico de ${orgao.nome}${onde ? " (" + onde + ")" : ""}. Acompanhe oportunidades de venda para esse órgão.`;
+  const description = `${detalhe.editais.length} editais abertos e ${detalhe.totalContratos.toLocaleString("pt-BR")} contratos no histórico de ${orgao.nome}${onde ? " (" + onde + ")" : ""}. Acompanhe oportunidades de venda para esse órgão.`;
 
   // Reputação de pagamento (CAPAG)
   const rep = await reputacaoDoOrgao({ cnpj: orgao.cnpj, nome: orgao.nome, uf: orgao.uf, municipio: orgao.municipio });
@@ -160,7 +160,7 @@ export async function paginaOrgao(slug) {
 
     <div class="stats">
       <div class="stat"><div class="lbl">Editais abertos</div><div class="v">${detalhe.editais.length}</div></div>
-      <div class="stat"><div class="lbl">Contratos no acervo</div><div class="v">${detalhe.contratos.toLocaleString("pt-BR")}</div></div>
+      <div class="stat"><div class="lbl">Contratos no acervo</div><div class="v">${detalhe.totalContratos.toLocaleString("pt-BR")}</div></div>
       <div class="stat"><div class="lbl">CNPJ</div><div class="v" style="font-size:14px">${esc(orgao.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5"))}</div></div>
     </div>
 
