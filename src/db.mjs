@@ -686,6 +686,18 @@ function casarComExpansao(candidatos, termos, termo, expandido, excluirList, { p
   return preciso;
 }
 
+// Matching do PERFIL (painel/digest/reengajamento). Igual a BUSCA: casa no OBJETO
+// (com a expansao de ramo/IA do perfil) E nos ITENS de cada edital. Sem os itens,
+// ramos de produto especifico ("papel A4") ficavam quase vazios no painel, enquanto
+// a busca livre achava dezenas — porque o produto mora nos ITENS, nao no objeto de
+// alto nivel ("material de consumo"). Marca _itemCasado nos que vieram por item
+// (o card do painel mostra "achado nos itens"). Dedup no fim.
+export function casarPerfil(candidatos, { termos = [], termosIA = [], termosExcluir = [] } = {}) {
+  let casaram = aplicarFiltro(candidatos, { termos, termosIA, termosExcluir });
+  for (const t of termos) casaram = unirPorItem(casaram, candidatos, t, termosExcluir);
+  return dedupEditais(casaram);
+}
+
 // Busca publica da landing page: por UF e termo livre, devolve o total, a soma
 // dos valores e uma amostra dos editais abertos. Sem perfil, sem login.
 export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {

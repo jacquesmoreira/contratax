@@ -2,8 +2,8 @@
 // devolve os editais que interessam. NAO chama a API (isso e papel do ingest);
 // por isso e instantaneo e serve todos os clientes a partir de um unico acervo.
 
-import { consultar } from "./db.mjs";
-import { aplicarFiltro, termosAmplos } from "./filtro.mjs";
+import { consultar, casarPerfil } from "./db.mjs";
+import { termosAmplos } from "./filtro.mjs";
 import { carregarVistos, marcarVistos, salvarResultados } from "./store.mjs";
 
 // Abaixo deste numero de editais no estado do cliente, o painel ALARGA pro Brasil
@@ -43,8 +43,11 @@ export async function monitorar(perfil, { marcar = true, salvar = true } = {}) {
     termosExcluir: filtro.termosExcluir ?? [],
   };
 
+  // casarPerfil casa no OBJETO (com a expansao de ramo) E nos ITENS do edital,
+  // igual a busca livre. Sem os itens, ramo de produto especifico ("papel A4")
+  // ficava raso no painel enquanto a busca achava dezenas (o produto mora nos itens).
   let candidatos = consultar({ ufs, ...recorte });
-  let casaram = aplicarFiltro(candidatos, termosBusca);
+  let casaram = casarPerfil(candidatos, termosBusca);
 
   // PAINEL NUNCA VAZIO: estado do cliente trouxe poucos e ele tem UF setada ->
   // alarga pro Brasil todo. So vale se o nacional realmente tiver mais (senao e
@@ -52,7 +55,7 @@ export async function monitorar(perfil, { marcar = true, salvar = true } = {}) {
   let alargado = false;
   if (ufs.length && casaram.length < LIMIAR_ALARGAR) {
     const candNac = consultar({ ...recorte }); // sem ufs
-    const casaramNac = aplicarFiltro(candNac, termosBusca);
+    const casaramNac = casarPerfil(candNac, termosBusca);
     if (casaramNac.length > casaram.length) {
       candidatos = candNac;
       casaram = casaramNac;
