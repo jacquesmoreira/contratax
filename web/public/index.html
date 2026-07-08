@@ -19,7 +19,11 @@
     --raio:16px; --sombra:0 12px 40px rgba(15,23,42,.10); --sombra-sm:0 3px 14px rgba(15,23,42,.05);
   }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--fundo); color:var(--tinta); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  /* overflow-x:hidden protege contra o drawer (off-canvas via transform) forcar
+     scroll horizontal/estourar a largura da viewport em alguns navegadores/webviews
+     mobile, mesmo estando visualmente fora da tela quando fechado. */
+  html { overflow-x:hidden; }
+  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--fundo); color:var(--tinta); line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
   .wrap { width:min(1760px, 95vw); max-width:none; margin:0 auto; padding:0 32px; }
   /* Cards de editais em grade: usa a largura da tela (2-3 colunas) em vez de
      uma coluna unica esticada. Inspirado no layout full-width do mercado. */
