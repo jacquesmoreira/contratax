@@ -2,8 +2,8 @@
 
 > **Para qualquer outra IA ou desenvolvedor que pegue este projeto:** este documento contém TUDO que precisa pra continuar de onde paramos. Leitura: ~10 minutos.
 
-**Última atualização:** 2026-07-08 (quarta-feira)
-**Status:** Em operação. Infraestrutura completa, SEO programático ativo (1.609 URLs), sequência win-back implementada. Dois bugs graves de ativação do teste corrigidos e validados em produção (cota zerada + painel raso). Fase atual: observar conversão dos próximos trials + crescimento orgânico/backlinks.
+**Última atualização:** 2026-07-08 (quarta-feira, noite)
+**Status:** Em operação. 513 páginas indexadas no Google (confirmado via Search Console). Infra corrigida: domínio raiz tirado de um Netlify esquecido e apontado pro Railway, healthcheck configurado, bug crítico que quebrava toda página `/orgaos/<slug>` corrigido, e-mail `contato@` (nunca tinha funcionado) consertado. Primeiro ativo de dados linkável no ar (`/ranking/<ramo>`, 36 páginas). Backlinks: B2B Stack e Product Hunt cadastrados, G2 em andamento. Fase atual: observar conversão dos próximos trials + crescimento orgânico/backlinks.
 
 ---
 
@@ -868,6 +868,55 @@ Jacques cadastrou uma conta de teste nova e andou o funil inteiro, print a print
 **Verificação final desta leva:** `node --check` limpo em todos os `.mjs` tocados (`uso.mjs`, `db.mjs`, `monitor.mjs`, `aptidao.mjs`, `planos.mjs`, `tldr.mjs`, `pncp.mjs`, `server.mjs`, `chatAjuda.mjs`) + parse-check dos blocos `<script>` executáveis em `index.html`, `lp.html`, `lp-comparativo.html`, `assinar.html` — todos OK. Todos os commits já com push pro `main` (Railway auto-deploya).
 
 **Pendente:** observar as PRÓXIMAS contas de teste (não as 10 já expiradas) pra confirmar que o funil de ativação converte melhor agora. Decisão em aberto sobre a página comparativa nomeada vs concorrentes (Jacques ainda não decidiu manter ou substituir por "ContrataX vs o jeito antigo").
+
+---
+
+### 2026-07-08 (continuação) — infra crítica destravada + primeiro ativo de backlinks + SEO/IA
+
+Sessão longa focada em três frentes: auditoria de SEO/descoberta por IA, infraestrutura Railway/DNS (achou e corrigiu problemas sérios que ninguém sabia que existiam), e início da campanha de backlinks.
+
+**Refinos de produto (commits menores, todos no ar):**
+- Calculadora da LP mudou de framing: "tempo/dinheiro economizado" → "quantas oportunidades ficam sem revisão" (`0fa0e90`). Baseado em convergência de análise com o ChatGPT (Jacques roda os dois em paralelo pra segunda opinião): aversão à perda converte mais que economia. Números só derivados do que o próprio visitante informa, sem estatística de mercado inventada — testado ao vivo no preview (desktop + mobile).
+- Painel admin ganhou filtro **Ativos / Em teste / Expirados / Todos** na tabela de clientes (`3442256`, `d8e9c9f`) — Ativos (pagante+atrasado) é o padrão, sem apagar nada (a régua de reengajamento continua rodando nos expirados por trás).
+- Fix de overflow horizontal no painel mobile: drawer off-canvas (fora da tela via `transform`) estourava a largura da viewport (`13813c9`).
+- `llms.txt` e o FAQ do `/lp/comparativo` tinham os MESMOS números furados que já haviam sido corrigidos na LP ("27 mil/1,2 milhão" → "20 mil/3,1 milhões"); tirado rótulo "MEI" do llms.txt (`798f9c5`). Importante porque é o arquivo que IAs (ChatGPT, Claude, Perplexity) leem pra descrever o produto.
+
+**Auditoria de SEO — correção de rota própria:** Checagem inicial via busca externa deu `site:contratax.com.br` = zero, sugerindo domínio invisível. **Estava errado** — o Search Console (fonte da verdade, print do Jacques) mostrou **513 páginas já indexadas** e 1.205 descobertas na fila. A ferramenta de busca usada só reflete índice dos EUA. Lição: sempre confiar no Search Console do próprio domínio, não em buscas externas de terceiros.
+
+**Achado #1 — 307 páginas com "Erro no servidor (5xx)" no Search Console, causa raiz dupla:**
+
+1. **Domínio raiz preso num Netlify esquecido.** `contratax.com.br` (sem www) era servido pelo **Netlify** (`Server: Netlify`, projeto "remarkable-torrone-a66bd0" com esse domínio como **Primary domain** + Netlify DNS ativo), não pelo Railway — só o `www` apontava certo. Provável resquício de protótipo antes da migração pro Railway, nunca desligado. Isso explicava o aviso "Waiting for DNS update" no Railway e é a explicação mais provável pros erros de redirecionamento/5xx no Search Console (dois servidores concorrentes pro mesmo domínio).
+   - **Fix** (passo a passo interativo com prints, print a print): removido `contratax.com.br` do projeto Netlify (Site settings → Domain management → Options → Remove domain) — isso liberou o registro proprietário `NETLIFY` que travava edição direta no DNS. Depois, na zona de DNS (Netlify DNS continua sendo o **host** do DNS, só não hospeda mais o site): adicionado `CNAME @ → t9ryqg4i.up.railway.app` + `TXT _railway-verify → <valor do Railway>`, copiados exatamente da tela "Show DNS records" do Railway. Validado via `curl`/`nslookup`: domínio raiz agora responde `Server: railway-hikari` (Railway de verdade). Certificado SSL do Railway para o domínio raiz ainda estava provisionando ao fim da sessão (normal, minutos a ~1h) — Jacques confirmou não ter fechado ainda; sem ação pendente, só esperar.
+   - Nota técnica capturada: cada domínio anexado no Railway ganha um alvo `*.up.railway.app` **único** (não é erro ter `www`→`w5xa6fnv...` e raiz→`t9ryqg4i...` diferentes — ambos roteiam pro mesmo serviço, é assim que o Railway identifica de qual domínio veio a requisição).
+
+2. **Bug real de código quebrando TODA página `/orgaos/<slug>`.** Achado testando um cross-link genuíno (nunca clicado antes) da nova página de ranking pra uma página de órgão. `orgaoPorCnpj()` em `src/db.mjs` retornava dois campos diferentes com o MESMO nome `contratos` — uma contagem numérica (`COUNT(*)`) e um array dos 20 contratos mais recentes — e o spread `{ ...linha, contratos }` fazia o array sobrescrever o número. Resultado: `detalhe.contratos.toLocaleString()` (esperando número) quebrava com `TypeError: undefined is not a function` sempre que chamado num objeto puro sem esse método → erro 500 em **até 1.000 páginas indexáveis no sitemap**, provável causa real (não suposição — comprovada com stack trace) dos 5xx do Search Console.
+   - **Fix** (commit `36ae159`): renomeado o campo numérico pra `totalContratos` (distinto do array `contratos`); `seoOrgaos.mjs` atualizado nos 2 lugares que exibiam esse número. Bônus: a métrica também estava **subestimada antes** do bug virar crash visível (limitada a 20 mesmo quando o órgão tinha centenas — confirmado 460 num caso real).
+   - Testado em lote: 12 páginas de órgão diferentes, todas 200 OK depois do fix.
+
+**Achado #2 — `/health` já existia no código mas o Railway não sabia disso.** `web/server.mjs` já tinha uma rota `/health` bem-feita (resposta rápida, sem tocar banco), mas o Railway não estava configurado pra usá-la como healthcheck — sem isso, ele não detecta travamento e não reinicia limpo (comentário no próprio código: "Railway estava reiniciando o processo aleatoriamente"). **Fix:** Jacques configurou Settings → Deploy → Healthcheck Path = `/health`, Timeout = 30s (task #61 concluída). Revisão do resto do Settings do Railway: Serverless desligado (bom, descarta risco de cold-start), região US West Califórnia (só 4 regiões existem no Railway, sem América do Sul — US East teria latência menor pro Brasil, troca opcional sem downtime, baixa prioridade), resto default e sem problema.
+
+**Achado #3 — `contato@contratax.com.br` nunca existiu de verdade.** Investigando pra que servia o e-mail de verificação do G2 (backlink), descoberto que o domínio **não tinha nenhum registro MX no ápice** — só um MX no subdomínio `send.` (infra do Amazon SES, só serve pra ENVIO via Resend). Ou seja, todo texto do site (chat de ajuda, rodapé de e-mails, termos de uso) que manda cliente escrever pra `contato@contratax.com.br` caía no vazio há meses. **Fix:** conta grátis no [ImprovMX](https://improvmx.com), domínio adicionado com alias curinga (`*` → `licitacontratax@gmail.com`, já cobre `contato@` automaticamente), 3 registros DNS adicionados na mesma zona Netlify (`MX @ 10 mx1.improvmx.com`, `MX @ 20 mx2.improvmx.com`, `TXT @ v=spf1 include:spf.improvmx.com ~all`). **Validado ponta a ponta**: status "Active" no ImprovMX + Jacques mandou e-mail de teste e confirmou que chegou no Gmail.
+
+**Novo: ativo de dados linkável — `/ranking/<ramo>` (Nível 3 da estratégia de backlinks, commit `36ae159`):**
+- 36 páginas novas (uma por categoria já existente em `categorias.mjs`), ex. `/ranking/material-hospitalar`, respondendo "quem mais comprou X no Brasil" — valor total + nº de contratos por órgão comprador, agregado do acervo (`SUM(valor)` agrupado por `orgao_cnpj`, filtrado por `objeto_norm LIKE`). Nova query `rankingPorTermo()` em `src/db.mjs`. Novo módulo `src/rankingCompras.mjs` (layout próprio reaproveitando o padrão de `seoCnae.mjs`), hub em `/ranking`, incluído no sitemap.
+- Racional: diferente de `/licitacoes`/`/cnae` (editais abertos, úteis pro fornecedor comprar), ranking é o tipo de dado que jornalista/consultor/blog de contador **cita e linka sem a gente pedir** — único jeito de ganhar autoridade de domínio sem outbound (regra do fundador). Ideia veio de convergência entre a auditoria própria e a do ChatGPT.
+- Testado ao vivo no preview: mobile (tabela com `overflow-x:auto` próprio, não vaza a página — achado e corrigido um bug de responsividade nessa mesma leva de testes) e desktop (tabela cabe sem scroll). JSON-LD (ItemList/CollectionPage/BreadcrumbList) validado.
+
+**Estratégia de backlinks (Nível 1-4, definida em conversa, sem outbound):**
+- Nível 1 (autosserviço, backlink garantido): B2B Stack, Capterra/GetApp/Software Advice, G2, Product Hunt, Crunchbase, StartupBase. **B2B Stack e Product Hunt já cadastrados.** G2 em andamento (estava travado esperando e-mail de verificação — destravado agora que `contato@` funciona).
+- Nível 2 (propriedades próprias): LinkedIn empresa + pessoal, GitHub, Reclame Aqui.
+- Nível 3 (o de maior alavanca): ativos de dados linkáveis — **`/ranking/<ramo>` é o primeiro, já no ar.**
+- Nível 4 (opcional, só se topar contato leve): guest post em blog de contador/consultor — pode pular sem prejuízo, Níveis 1-3 já sustentam a estratégia.
+- Decidido explicitamente: localização (Balneário Camboriú) NÃO é critério de segmentação de backlink — negócio atende Brasil todo, feedback do Jacques.
+
+**Verificação desta leva:** todos os módulos novos/tocados passaram por `node --check` + parse-check de JSON-LD + teste real no preview (mobile e desktop) antes do commit. Bug do `/orgaos` confirmado corrigido testando 12 páginas em lote (todas 200). DNS confirmado propagado via `nslookup` contra 8.8.8.8 (não só cache local). Todos os commits com push pro `main`.
+
+**Pendente:**
+- Confirmar quando o certificado SSL do domínio raiz no Railway terminar de provisionar (aviso "Waiting for DNS update" deve sumir sozinho).
+- Retomar cadastro do G2 agora que o e-mail de verificação vai chegar.
+- Seguir Nível 1 dos backlinks: Capterra/GetApp, Crunchbase, StartupBase, LinkedIn.
+- Pedir indexação manual das 6 URLs prioritárias no Search Console (home + 5 pilares) — passo a passo já dado, não confirmado se Jacques executou.
+- Considerar reframear os títulos de `/orgaos/<slug>` e `/cnae/<codigo>` em formato mais "ranking" pra reforçar o efeito Nível 3 (sugestão do ChatGPT, não implementada ainda).
 
 ---
 
