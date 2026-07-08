@@ -189,6 +189,7 @@
   .veredito.apto { background:var(--verde-bg); color:var(--verde); }
   .veredito.apto_com_pendencias { background:var(--ambar-bg); color:var(--ambar); }
   .veredito.nao_apto { background:var(--vermelho-bg); color:var(--vermelho); }
+  .veredito.aguardando_documentos { background:#eff6ff; color:#1e40af; }
   .veredito p { color:var(--tinta); margin-top:8px; font-size:14px; }
   ul.itens { list-style:none; }
   ul.itens li { padding:8px 0; border-bottom:1px solid var(--linha); font-size:13.5px; display:flex; gap:9px; }
@@ -1305,7 +1306,7 @@ function analiseHTML(a) {
 function veredictoHTML(conf) {
   if (!conf || !conf.aptidao) return "";
   const a = conf.aptidao;
-  const rotulo = { apto: "APTO", apto_com_pendencias: "APTO COM PENDÊNCIAS", nao_apto: "NÃO APTO" }[a.veredito] ?? a.veredito;
+  const rotulo = { apto: "APTO", apto_com_pendencias: "APTO COM PENDÊNCIAS", nao_apto: "NÃO APTO", aguardando_documentos: "AGUARDANDO SEUS DOCUMENTOS" }[a.veredito] ?? a.veredito;
   return `<div class="veredito ${esc(a.veredito)}"><h3>Veredito de aptidão</h3><div class="selo">${rotulo}</div><p>${esc(a.resumo)}</p></div>
     <div class="bloco"><h3>Item a item</h3><ul class="itens">${(a.itens||[]).map(it=>`<li>${iconHTML(it.situacao)}<span><b>${esc(it.exigencia)}</b><br><span style="color:var(--cinza)">${esc(it.observacao)}</span></span></li>`).join("")}</ul></div>
     ${a.pendencias && a.pendencias.length ? `<div class="bloco"><h3>Pendências</h3><ul class="itens">${a.pendencias.map(p=>`<li class="pendencia"><span class="ic no">✕</span><span>${esc(p)}</span></li>`).join("")}</ul></div>` : ""}

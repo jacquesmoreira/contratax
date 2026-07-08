@@ -74,16 +74,34 @@ export async function conferirComIA(analiseEdital, empresa, opcoes = {}) {
 export async function conferir(edital, empresa, { forcar = false, perfilToken = null } = {}) {
   const saude = saudeDocumental(empresa);
 
+  // Empresa sem NENHUMA certidao cadastrada: nao da pra afirmar aptidao. Em vez de
+  // "NAO APTO" (que desanima o cliente no 1o uso do teste), o veredito vira
+  // "aguardando_documentos" — neutro e acionavel, empurrando pro cadastro. O resto
+  // da analise (item a item, exigencias, alertas) continua util. Deterministico:
+  // nao depende da IA. Cache guarda a verdade da IA; o ajuste e aplicado na saida.
+  const semDocs = saude.itens.every((i) => i.situacao === "ausente");
+  const ajustar = (dados) => {
+    if (!semDocs || !dados?.aptidao) return dados;
+    return {
+      ...dados,
+      aptidao: {
+        ...dados.aptidao,
+        veredito: "aguardando_documentos",
+        resumo: "Cadastre suas certidões e documentos para o veredito confirmar se VOCÊ está apto neste edital. Abaixo, tudo o que o edital exige.",
+      },
+    };
+  };
+
   if (!forcar) {
     const cache = await carregarConferencia(edital.id, empresa.id);
-    if (cache) return { ...cache.dados, saude, cache: true };
+    if (cache) return { ...ajustar(cache.dados), saude, cache: true };
   }
 
   const { analise } = await analisarEdital(edital, { perfilToken }); // Camada 3
   const aptidao = await conferirComIA(analise, empresa, { meta: { etapa: "conferencia", editalId: edital.id, empresaId: empresa.id, perfilToken } }); // Camada 4
   const dados = { aptidao, analiseResumo: analise.resumo };
   await salvarConferencia(edital.id, empresa.id, dados);
-  return { ...dados, saude, cache: false };
+  return { ...ajustar(dados), saude, cache: false };
 }
 
 // Simulacao: devolve a parte que roda sem chave e sinaliza prontidao da parte de IA.
