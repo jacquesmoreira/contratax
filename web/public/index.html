@@ -483,10 +483,15 @@ function perfilHTML(p) {
   const banner = p.alargado
     ? `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:11px 16px;margin-bottom:14px;font-size:13.5px;color:#1e40af;line-height:1.5">📍 Poucos editais do seu ramo abertos ${p.uf ? `em <b>${esc(p.uf)}</b>` : "no seu estado"} agora, então ampliamos para o <b>Brasil todo</b>. Você ajusta os estados nas configurações do seu ramo.</div>`
     : "";
+  // Pra os cards de aha e de melhor oportunidade, prefere editais do(s) estado(s)
+  // do cliente; so cai no nacional (quando o painel alargou) se nao houver nenhum
+  // no estado. Evita o card sugerir um edital de outro estado do nada.
+  const ufsCli = p.ufs || (p.uf ? [p.uf] : []);
+  const noEstado = (ufsCli.length && editais.length) ? editais.filter((e) => ufsCli.includes(e.uf)) : editais;
   // Card de ATIVACAO: so pra quem ainda NAO rodou analise. Destaca o edital mais
-  // urgente e leva pro resumo da IA (o momento "uau") num clique, reusando o
-  // abrirDrawer(id) que ja existe. Some sozinho apos a 1a analise.
-  const topo = editais[0];
+  // urgente do estado do cliente e leva pro resumo da IA num clique (reusa
+  // abrirDrawer). Some sozinho apos a 1a analise.
+  const topo = noEstado[0] || editais[0];
   const ahaCard = (!p.analisou && topo && topo.id) ? `
     <div style="background:linear-gradient(135deg,#4338ca,#6d28d9);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:20px;box-shadow:0 12px 30px rgba(67,56,202,.28)">
       <div style="font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.85;margin-bottom:8px">✨ Comece por aqui</div>
@@ -519,7 +524,7 @@ function perfilHTML(p) {
     </div>` : "";
   // Card de FOCO (passo 3, SEM custo de IA): cliente ja ativado (analisou + tem
   // certidao) ve a melhor oportunidade do dia pra ir disputar.
-  const melhor = (p.analisou && p.temCertidao) ? melhorEdital(editais) : null;
+  const melhor = (p.analisou && p.temCertidao) ? melhorEdital(noEstado.length ? noEstado : editais) : null;
   const valMelhor = melhor && melhor.valorEstimado ? "R$ " + Number(melhor.valorEstimado).toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "valor não divulgado";
   const dMelhor = melhor ? diasAte(melhor.encerramento) : null;
   const prazoMelhor = dMelhor == null ? "" : dMelhor <= 0 ? " · encerra hoje" : ` · encerra em ${dMelhor} dia${dMelhor > 1 ? "s" : ""}`;
@@ -533,7 +538,7 @@ function perfilHTML(p) {
   const corpo = editais.length
     ? `<div class="cards-grid">${editais.map(cardHTML).join("")}</div>`
     : `<div class="vazio"><span class="emoji">🔭</span>Nenhum edital do seu ramo está aberto agora.<br>Assim que surgir, aparece aqui e você recebe por e-mail.<br><br><b>Dica:</b> termos mais amplos pegam mais oportunidades (ex: <b>"hospitalar"</b> em vez de "material hospitalar").</div>`;
-  return `<section class="perfil">${cabecalho}${ahaCard}${certCard}${oppCard}${banner}${corpo}</section>`;
+  return `<section class="perfil">${cabecalho}${banner}${ahaCard}${certCard}${oppCard}${corpo}</section>`;
 }
 
 function radarHTML(lista) {

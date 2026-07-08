@@ -943,6 +943,9 @@ const servidor = createServer(async (req, res) => {
           // Se ja analisou mas nao tem nenhuma certidao, o painel mostra o card
           // de captura rapida pra destravar o veredito personalizado.
           temCertidao: Object.values(perfil.empresa?.certidoes || {}).some((c) => c?.validade),
+          // Estados do cliente: o painel prefere editais destes UFs nos cards de
+          // aha/melhor oportunidade (so cai no nacional se nao houver no estado).
+          ufs: perfil.ufs ?? (perfil.uf ? [perfil.uf] : []),
         },
       });
     }
