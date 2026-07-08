@@ -2,8 +2,8 @@
 
 > **Para qualquer outra IA ou desenvolvedor que pegue este projeto:** este documento contém TUDO que precisa pra continuar de onde paramos. Leitura: ~10 minutos.
 
-**Última atualização:** 2026-07-06 (domingo)
-**Status:** Em operação. Infraestrutura completa, SEO programático ativo (1.609 URLs), sequência win-back implementada. Fase atual: crescimento orgânico + backlinks.
+**Última atualização:** 2026-07-08 (quarta-feira)
+**Status:** Em operação. Infraestrutura completa, SEO programático ativo (1.609 URLs), sequência win-back implementada. Dois bugs graves de ativação do teste corrigidos e validados em produção (cota zerada + painel raso). Fase atual: observar conversão dos próximos trials + crescimento orgânico/backlinks.
 
 ---
 
@@ -843,6 +843,31 @@ Todas sem cold call, sem venda dura, sem pressão. Pedem ação mínima (opiniã
 **Outras entregas 07/07:** LP passou a exaltar qualidades (tirou "não temos robô de lance") + números reais (3,1M contratos); rodapé sem link "Status"; "Anthropic"→"provedor de IA" e "Railway"→"provedor de nuvem" em /status, /seguranca, /privacidade, llms.txt (regra da marca `contratax-marca-empresa-nao-pessoa`); rota admin `/api/admin/testar-emails?c=&para=&ramo=&uf=` + botão no /admin pra receber os 7 e-mails da régua (produção é personalizada por cliente; a amostra do teste é configurável por ramo/uf).
 
 **Pendente (precisa do Jacques):** (1) VALIDAR o funil de ativação numa conta de teste; (2) trazer prints do Clarity dos leads que não fecharam (não há MCP de Clarity — confirmado no registro; a API do Clarity só dá agregado raso). **Pendente (código/decisão):** "você está APTO" de verdade custaria IA por edital (decidir se vale); revisão visual das subpáginas; funil não cobre multi-CNPJ (assessoria); decisão de PREÇO (abismo Starter R$59 → Básico R$247, onde mora a mágica do veredito).
+
+---
+
+### 2026-07-07 (noite) a 2026-07-08 — VALIDAÇÃO AO VIVO: achadas e corrigidas as travas reais de conversão
+
+Jacques cadastrou uma conta de teste nova e andou o funil inteiro, print a print. Isso revelou dois bugs graves que explicavam sozinhos boa parte do "0 de 10 trials converteram", mais uma leva de refinos de honestidade/clareza na tela.
+
+**BUG GRAVE #1 — cota do teste travava o diferencial.** `src/uso.mjs`: `ANALISES_TESTE` tinha default **0** (só funcionava se `LICITA_ANALISES_TESTE` estivesse setada no Railway, e não estava). Resultado: todo cliente em teste clicava em "Analisar" e batia num paywall — nunca via o veredito, que é o produto de verdade. Fix: default 0→3 (commit `7aca4da`). Jacques confirmou a variável criada no Railway. **Validado em produção**: conta de teste nova mostrou 2/3 análises consumidas no painel admin.
+
+**BUG GRAVE #2 — painel via muito menos editais que a busca.** O painel (`monitor.mjs`) só casava palavra-chave no CAMPO OBJETO do edital; a busca livre também varria os ITENS (onde mora o produto específico, ex. "papel A4"). Cliente buscava "papel A4" e achava 72 resultados na busca, mas o painel automático só trazia 1. Fix: nova `casarPerfil()` em `src/db.mjs` que faz objeto + itens igual à busca; `monitor.mjs` passou a usá-la (commit `245af37`). **Validado em produção**: painel RS foi de 11 → 137 editais, todos no estado certo, com badge "Achado nos itens".
+
+**Refinos de honestidade na tela (todos commitados e no ar):**
+- Cards de ativação (aha-card, certidão, melhor oportunidade) agora preferem editais do(s) estado(s) do próprio cliente antes de cair no nacional (`fa759f3`) — corrige caso real de painel SC/RN/PR mostrando destaque de Alagoas.
+- Banner do teste tinha número furado ("100 leituras/mês"); virou texto honesto sem contagem inventada (`acc451b`).
+- Veredito de aptidão: empresa sem NENHUM documento cadastrado não recebe mais "NÃO APTO" (desanima no 1º uso) — vira "AGUARDANDO SEUS DOCUMENTOS", neutro e acionável (`0b25b21`, `src/aptidao.mjs`).
+- Badge do TL;DR (Resumo Rápido) usava a MESMA linguagem do veredito pessoal ("APTO COM PENDÊNCIAS"), confundindo cliente sem documentos cadastrados — ele achava que era sobre ELE, mas o TL;DR é uma leitura GLOBAL da barreira do EDITAL (cache compartilhado, não vê documentos de ninguém). Relabeled: "EXIGÊNCIAS PADRÃO" / "EXIGE REQUISITOS ESPECÍFICOS" / "ACESSO RESTRITO" / "A CONFERIR", e "Veredito:" → "Leitura do edital:" (`b920b12`).
+- Botão de acesso à disputa: (a) rótulo do fallback deixou claro que o PNCP é a PORTA de entrada pro sistema de origem, não o lugar da disputa em si (`48e4489`); (b) só chama de "disputa por lances" quando a modalidade é Pregão — Dispensa/Inexigibilidade/Concurso não têm fase de lances competitivos, então o texto vira neutro "acompanhar esta contratação" (`fc38ded`).
+
+**Investigado e ESCLARECIDO (sem código):** pré-aquecimento automático de TL;DR (`preaquecerTldrs` em `web/server.mjs`, gera até 8 resumos em segundo plano por carregamento de painel, sem clique) é intencional — imita concorrente que pré-gera tudo. Custo real medido no admin: **R$48,80 TOTAL desde sempre** em toda a operação (todas as etapas de IA somadas). Negligível — 1 cliente pagante já cobre. Mantido como está.
+
+**Estado do negócio (admin, 08/07):** 12 clientes cadastrados, 1 ativo pagante (o próprio Jacques), 1 em teste (a conta de validação, 2/3 análises), **10 com teste expirado sem converter**. Confirma que o problema é real e os fixes acima atacam a causa raiz (ativação quebrada) — efeito só será visível nos PRÓXIMOS trials, não nos 10 já perdidos.
+
+**Verificação final desta leva:** `node --check` limpo em todos os `.mjs` tocados (`uso.mjs`, `db.mjs`, `monitor.mjs`, `aptidao.mjs`, `planos.mjs`, `tldr.mjs`, `pncp.mjs`, `server.mjs`, `chatAjuda.mjs`) + parse-check dos blocos `<script>` executáveis em `index.html`, `lp.html`, `lp-comparativo.html`, `assinar.html` — todos OK. Todos os commits já com push pro `main` (Railway auto-deploya).
+
+**Pendente:** observar as PRÓXIMAS contas de teste (não as 10 já expiradas) pra confirmar que o funil de ativação converte melhor agora. Decisão em aberto sobre a página comparativa nomeada vs concorrentes (Jacques ainda não decidiu manter ou substituir por "ContrataX vs o jeito antigo").
 
 ---
 
