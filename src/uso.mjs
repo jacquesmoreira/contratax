@@ -6,9 +6,11 @@ import { statusAtual } from "./assinatura.mjs";
 import { lerPerfis, salvarPerfis, atualizarPerfil } from "./perfis.mjs";
 import { planoDe } from "./planos.mjs";
 
-// Cota mensal de analises no teste gratis (0 por padrao: recurso aparece mas pede
-// assinatura; LICITA_ANALISES_TESTE=1+ libera uma "degustacao").
-const ANALISES_TESTE = Number(process.env.LICITA_ANALISES_TESTE || 0);
+// Cota de analises no teste gratis. Default 3: o cliente PRECISA sentir o veredito
+// durante o teste, senao o diferencial nunca dispara e ele nao converte (era 0 =
+// clicava em "analisar" e batia num paywall). Anti-abuso vem do cadastro (1 CNPJ
+// unico, ativo na Receita). Ajustavel via LICITA_ANALISES_TESTE no Railway.
+const ANALISES_TESTE = Number(process.env.LICITA_ANALISES_TESTE || 3);
 
 export function mesAtual() {
   const d = new Date();
