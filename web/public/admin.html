@@ -29,7 +29,11 @@
   .pill.teste { background:#eef2ff; color:var(--indigo); }
   .pill.atrasado { background:var(--ambar-bg); color:var(--ambar); }
   .pill.vencido, .pill.teste_expirado { background:var(--vermelho-bg); color:var(--vermelho); }
+  .pill.inativo { background:#f1f5f9; color:var(--cinza-c); }
   .mut { color:var(--cinza-c); font-size:12px; }
+  .filtro-status { display:flex; gap:6px; }
+  .filtro-status button { padding:7px 14px; border:1px solid var(--linha); border-radius:99px; background:#fff; color:var(--cinza); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .filtro-status button.on { background:var(--indigo); color:#fff; border-color:var(--indigo); }
   .acoes { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
   .acoes select, .acoes input { padding:5px 7px; border:1px solid var(--linha); border-radius:7px; font-size:12.5px; font-family:inherit; }
   .acoes input { width:46px; }
@@ -79,6 +83,16 @@ function toggleRamo(a) {
   return false;
 }
 
+// Filtro da tabela de clientes: ativos (pagante + em teste + atrasado, o que
+// importa no dia a dia) fica como padrao; expirados (teste_expirado, vencido,
+// inativo) sao mostrados sob demanda, sem excluir nada (a regua de reengajamento
+// continua rodando pra eles mesmo fora da tela).
+let filtroStatus = "ativos"; // ativos | expirados | todos
+function grupoStatus(status) {
+  return (status === "ativo" || status === "teste" || status === "atrasado" || status === "admin") ? "ativos" : "expirados";
+}
+function filtrar(f) { filtroStatus = f; carregar(); }
+
 async function api(path) { const r = await fetch(path + (path.includes("?") ? "&" : "?") + "c=" + encodeURIComponent(token)); return { ok: r.ok, d: await r.json() }; }
 async function post(path, corpo) {
   const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...corpo, c: token }) });
@@ -126,9 +140,22 @@ async function carregar() {
     <div class="c"><div class="n">${brl(cu.brlTotal ?? 0)}</div><div class="l">Custo total (${cu.custoMedioPorAnaliseBRL ? brl(cu.custoMedioPorAnaliseBRL)+"/análise" : "—"})</div></div>
   </div>`;
 
-  html += `<h2>Clientes e cadastros</h2><table><thead><tr>
+  const contAtivos = cli.d.clientes.filter((c) => grupoStatus(c.status) === "ativos").length;
+  const contExpirados = cli.d.clientes.length - contAtivos;
+  const clientesView = filtroStatus === "todos" ? cli.d.clientes : cli.d.clientes.filter((c) => grupoStatus(c.status) === filtroStatus);
+
+  html += `<div style="display:flex;align-items:center;gap:14px;margin:24px 0 12px;flex-wrap:wrap">
+    <h2 style="margin:0">Clientes e cadastros</h2>
+    <div class="filtro-status">
+      <button class="${filtroStatus === "ativos" ? "on" : ""}" onclick="filtrar('ativos')">Ativos (${contAtivos})</button>
+      <button class="${filtroStatus === "expirados" ? "on" : ""}" onclick="filtrar('expirados')">Expirados (${contExpirados})</button>
+      <button class="${filtroStatus === "todos" ? "on" : ""}" onclick="filtrar('todos')">Todos (${cli.d.clientes.length})</button>
+    </div>
+  </div>
+  <table><thead><tr>
     <th>Empresa</th><th>Contato</th><th>Plano / Status</th><th>Análises</th><th>Custo IA</th><th>Equipe</th><th>Ações</th></tr></thead><tbody>`;
-  for (const c of cli.d.clientes) {
+  if (!clientesView.length) html += `<tr><td colspan="7" class="mut" style="text-align:center;padding:20px">Nenhum cliente nesse filtro.</td></tr>`;
+  for (const c of clientesView) {
     const venc = c.diasRestantes != null ? `${c.diasRestantes}d` : "";
     const ia = c.custoIA || { total: 0, mes: 0, chamadas: 0 };
     const brlIA = (v) => "R$ " + (Number(v) || 0).toFixed(2).replace(".", ",");
@@ -197,7 +224,7 @@ async function carregar() {
   }</div>`;
 
   $("conteudo").innerHTML = html;
-  $("cab-resumo").textContent = `${r.total} clientes · ${r.ativos} pagantes`;
+  $("cab-resumo").textContent = `${r.total} clientes · ${r.ativos} pagantes${filtroStatus !== "todos" ? ` · mostrando ${clientesView.length}` : ""}`;
   ligarAcoes();
 }
 
