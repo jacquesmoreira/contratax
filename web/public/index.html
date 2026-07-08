@@ -1336,9 +1336,13 @@ async function abrirDrawer(id) {
   const linkPNCP = (ed.orgaoCnpj && ed.ano && ed.sequencial)
     ? `https://pncp.gov.br/app/editais/${ed.orgaoCnpj}/${ed.ano}/${ed.sequencial}` : "";
   const portalUrl = linkDireto || linkPNCP;
+  // "Disputa por lances" so existe em Pregao. Dispensa, Inexigibilidade, Concurso
+  // etc. sao contratacao direta/proposta unica — chamar de "disputa" prometeria
+  // algo que a modalidade nao tem. O texto se adapta pra nao mentir.
+  const temLances = /preg[aã]o/i.test(ed.modalidade || "");
   const portalLabel = linkDireto
-    ? "Ir para o portal de lances onde acontece a disputa →"
-    : "Abrir no PNCP — de lá você acessa o sistema oficial da disputa →";
+    ? (temLances ? "Ir para o portal de lances onde acontece a disputa →" : "Ir para o portal oficial e acompanhar esta contratação →")
+    : (temLances ? "Abrir no PNCP — de lá você acessa o sistema oficial da disputa →" : "Abrir no PNCP — de lá você acompanha esta contratação →");
 
   let html = "";
   // TL;DR no topo (gancho rapido): se ja tem cache, renderiza; senao mostra
