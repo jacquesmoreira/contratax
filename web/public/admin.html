@@ -87,9 +87,11 @@ function toggleRamo(a) {
 // importa no dia a dia) fica como padrao; expirados (teste_expirado, vencido,
 // inativo) sao mostrados sob demanda, sem excluir nada (a regua de reengajamento
 // continua rodando pra eles mesmo fora da tela).
-let filtroStatus = "ativos"; // ativos | expirados | todos
+let filtroStatus = "ativos"; // ativos | teste | expirados | todos
 function grupoStatus(status) {
-  return (status === "ativo" || status === "teste" || status === "atrasado" || status === "admin") ? "ativos" : "expirados";
+  if (status === "teste") return "teste";
+  if (status === "ativo" || status === "atrasado" || status === "admin") return "ativos";
+  return "expirados"; // teste_expirado, vencido, inativo
 }
 function filtrar(f) { filtroStatus = f; carregar(); }
 
@@ -141,13 +143,15 @@ async function carregar() {
   </div>`;
 
   const contAtivos = cli.d.clientes.filter((c) => grupoStatus(c.status) === "ativos").length;
-  const contExpirados = cli.d.clientes.length - contAtivos;
+  const contTeste = cli.d.clientes.filter((c) => grupoStatus(c.status) === "teste").length;
+  const contExpirados = cli.d.clientes.filter((c) => grupoStatus(c.status) === "expirados").length;
   const clientesView = filtroStatus === "todos" ? cli.d.clientes : cli.d.clientes.filter((c) => grupoStatus(c.status) === filtroStatus);
 
   html += `<div style="display:flex;align-items:center;gap:14px;margin:24px 0 12px;flex-wrap:wrap">
     <h2 style="margin:0">Clientes e cadastros</h2>
     <div class="filtro-status">
       <button class="${filtroStatus === "ativos" ? "on" : ""}" onclick="filtrar('ativos')">Ativos (${contAtivos})</button>
+      <button class="${filtroStatus === "teste" ? "on" : ""}" onclick="filtrar('teste')">Em teste (${contTeste})</button>
       <button class="${filtroStatus === "expirados" ? "on" : ""}" onclick="filtrar('expirados')">Expirados (${contExpirados})</button>
       <button class="${filtroStatus === "todos" ? "on" : ""}" onclick="filtrar('todos')">Todos (${cli.d.clientes.length})</button>
     </div>
