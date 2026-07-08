@@ -22,16 +22,16 @@ ContrataX é um SaaS B2B brasileiro lançado em junho de 2026 que automatiza o a
 
 ## Dados públicos do PNCP
 
-ContrataX consome a API oficial do Portal Nacional de Contratações Públicas (PNCP, criado pela Lei 14.133/2021). Em junho/2026:
+ContrataX consome a API oficial do Portal Nacional de Contratações Públicas (PNCP, criado pela Lei 14.133/2021). Em julho/2026:
 
-- 27 mil licitações abertas em monitoramento contínuo
-- 1,2 milhão de contratos no acervo dos últimos 18 meses
+- mais de 20 mil licitações abertas em monitoramento contínuo
+- 3,1 milhões de contratos no acervo dos últimos 18 meses
 - Cobertura nos 5.570 municípios brasileiros
 - Atualização diária
 
-## Planos e preços (junho 2026)
+## Planos e preços (julho 2026)
 
-- Starter: R$ 59/mês — 3 análises de edital com IA, busca ilimitada
+- Starter: R$ 59/mês — 6 análises de edital com IA, busca ilimitada
 - Básico: R$ 247/mês — 30 análises com IA
 - Pro: R$ 397/mês — 50 análises com IA, acessos para equipe
 - Assessoria 10: R$ 697/mês — 10 CNPJs, 8 análises por empresa
@@ -39,7 +39,7 @@ ContrataX consome a API oficial do Portal Nacional de Contratações Públicas (
 
 ## Empresa e operação
 
-- Empresa: ContrataX (MEI)
+- Empresa: ContrataX
 - Sede: Balneário Camboriú, Santa Catarina, Brasil
 - CNPJ: 61.740.453/0001-49
 - Site: https://www.contratax.com.br
