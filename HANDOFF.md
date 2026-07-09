@@ -2,8 +2,8 @@
 
 > **Para qualquer outra IA ou desenvolvedor que pegue este projeto:** este documento contém TUDO que precisa pra continuar de onde paramos. Leitura: ~10 minutos.
 
-**Última atualização:** 2026-07-08 (quarta-feira, noite)
-**Status:** Em operação. 513 páginas indexadas no Google (confirmado via Search Console). Infra corrigida: domínio raiz tirado de um Netlify esquecido e apontado pro Railway, healthcheck configurado, bug crítico que quebrava toda página `/orgaos/<slug>` corrigido, e-mail `contato@` (nunca tinha funcionado) consertado. Primeiro ativo de dados linkável no ar (`/ranking/<ramo>`, 36 páginas). Backlinks: B2B Stack e Product Hunt cadastrados, G2 em andamento. Fase atual: observar conversão dos próximos trials + crescimento orgânico/backlinks.
+**Última atualização:** 2026-07-08 (quarta-feira, fechamento da noite)
+**Status:** Em operação, infra 100% saudável. Domínio raiz resolvido e confirmado (Railway, certificado válido). 513 páginas indexadas, revalidação dos 307 erros 5xx disparada no Search Console (causa raiz confirmada e corrigida). Primeiros cliques orgânicos reais aparecendo, inclusive capturando busca por concorrente. Google Ads religado com a conversão `purchase` finalmente configurada certo (achado que estava quebrada desde o início) — rodando 14 dias de aprendizado sem mexer. 3 backlinks confirmados (B2B Stack, Product Hunt, G2). Fase atual: deixar rodar e observar — próximos trials (funil corrigido), validação do Search Console, e resultado do teste pago.
 
 ---
 
@@ -918,6 +918,28 @@ Sessão longa focada em três frentes: auditoria de SEO/descoberta por IA, infra
 - Seguir Nível 1 dos backlinks: Capterra/GetApp, Crunchbase, StartupBase, LinkedIn.
 - Pedir indexação manual das 6 URLs prioritárias no Search Console (home + 5 pilares) — passo a passo já dado, não confirmado se Jacques executou.
 - Considerar reframear os títulos de `/orgaos/<slug>` e `/cnae/<codigo>` em formato mais "ranking" pra reforçar o efeito Nível 3 (sugestão do ChatGPT, não implementada ainda).
+
+---
+
+### 2026-07-08 (fechamento da noite) — domínio raiz resolvido, Search Console confirmando o fix, Google Ads religado com conversão corrigida
+
+**Domínio raiz: resolvido de vez.** O aviso "Waiting for DNS update" ficou preso por mais de 1h mesmo com DNS já propagado (confirmado via `nslookup` contra 8.8.8.8 múltiplas vezes) — não era propagação, era o processo de verificação do Railway travado. Fix: removido o domínio do Railway (lixeira) e re-adicionado (+ Custom Domain), o que reiniciou a verificação do zero e resolveu em minutos. Railway gerou um alvo CNAME novo (`0isb9xom.up.railway.app`) mas aceitou manter o antigo (`t9ryqg4i...`) no DNS, sem precisar trocar nada no Netlify de novo. **Confirmado 100%**: `curl -I https://contratax.com.br/` → `Server: railway-hikari`, 301 pra `https://www.contratax.com.br/`, certificado válido. O painel "Production domains" do Netlify continuou (e provavelmente vai continuar) mostrando "propagating..." pros dois domínios — é só a UI do Netlify remoendo um estado que não existe mais (ele hospeda a zona de DNS mas não o site), sem efeito real. Ignorar esse painel específico daqui pra frente.
+
+**Search Console: bug do `/orgaos` confirmado como causa raiz, revalidação disparada.** No relatório "Erro no servidor (5xx)" (307 páginas), os exemplos de URL eram TODOS `/orgaos/<slug>` — bate exatamente com o bug corrigido mais cedo hoje. Testadas 13 dessas URLs específicas + 3 URLs "sujas" de `/licitacoes/<categoria>/<link-externo-colado>` (mecanismo de recuperação via 301 que já existia no código, comentário em `server.mjs`) — **todas 200 ou 301 corretos agora**. Jacques clicou em "Validar correção"; status mudou pra "Validação iniciado, Início: 08/07/2026". Expectativa: página indexadas deve subir de 513 pra bem mais nos próximos dias, já que a maioria dos 307 eram páginas boas travadas por bug, não conteúdo ruim.
+
+**Search Console: primeiros sinais reais de tráfego orgânico.** 65 cliques / 2,6 mil impressões em 28 dias (site tem ~1 mês). Destaques: busca por "contratax" (13 cliques, branded/reconhecimento), busca por **"licitei"** (1 clique — alguém procurando o concorrente e clicando no ContrataX, prova que `/lp/comparativo` está funcionando como planejado), página `/licitacoes/ar-condicionado/mg` com 4 cliques (+300%, primeira página de SEO programático rankeando de verdade). 99%+ do tráfego é Brasil. Core Web Vitals sem dado ainda (normal, precisa de mais volume).
+
+**Google Ads: religado, mas com bug de configuração de meses achado e corrigido no processo.** Jacques reativou a campanha (R$25/dia). Ao configurar a estratégia de lance, achamos que a ação de conversão "Compra" já existente estava **quebrada desde sempre**: configurada como tag direta no site (Google tag/gtag.js), status "Inativo", nunca recebeu dado — porque o checkout do ContrataX não passa por uma página de confirmação com JS (pagamento acontece no Asaas, fora do domínio, confirmação via webhook servidor-a-servidor). O assistente de "corrigir com fluxo guiado" do Google Ads pedia instalar tag via GTM, o que não bate com essa arquitetura — **não seguido**.
+- **Fix correto:** criada nova ação de conversão via **Importar → Google Analytics 4 (propriedade "ContrataX", 540488652) → evento `purchase`** — esse é o caminho que já estava documentado desde o início (era o task #39/#55), mas nunca tinha sido finalizado direito (a ação antiga, quebrada, mascarava o problema).
+- **Confirmado no código (não por suposição)** que o evento `purchase` só dispara dentro do handler do webhook do Asaas (`web/server.mjs`, dentro de `if (evento === "PAYMENT_RECEIVED" || evento === "PAYMENT_CONFIRMED")`, chamando `enviarConversao`) — nunca no cadastro/início do trial. Métrica limpa: só conta pagamento de verdade.
+- A ação antiga (quebrada) foi desativada ("Incluir em Conversões: Não") pra não brigar com a nova — status da meta "Compra" voltou pra "✓ Ativa".
+- Estratégia de lance: **Maximizar conversões, sem teto de CPA** (Jacques inicialmente configurou um teto de R$5/conversão, que teria sufocado a campanha — plano mais barato é R$59/mês e o algoritmo não tinha nenhum histórico ainda; removido a pedido, deixado aprender livre).
+- Tasks #40 e #55 marcadas concluídas.
+- **Pendente:** observar depois dos 14 dias de aprendizado se o CPA estabiliza numa faixa saudável (referência antiga do HANDOFF: R$100-300). Não mexer em nada da campanha até lá.
+
+**Backlinks confirmados nesta sessão:** B2B Stack, Product Hunt, G2 (3 cadastrados). Faltam Capterra/GetApp, Crunchbase, StartupBase, LinkedIn pra fechar o Nível 1.
+
+**Preferência registrada do Jacques:** sempre registrar no HANDOFF tudo que for concluído numa sessão, não só quando perguntado — vale manter esse hábito daqui pra frente.
 
 ---
 
