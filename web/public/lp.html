@@ -208,6 +208,26 @@
   .mock .mrow:last-child { border:none; }
   .mi-ok { color:var(--verde); font-weight:900; } .mi-no { color:var(--vermelho); font-weight:900; }
 
+  /* Movimento sutil: revela blocos ao rolar, dados dos mocks entram em sequencia,
+     mock ganha leve elevacao no hover, CTA final "respira" bem devagar. Tudo CSS
+     puro (sem lib), desligado se o visitante pedir menos movimento no SO. */
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease; }
+    .reveal.in-view { opacity:1; transform:translateY(0); }
+    .mock { transition:transform .35s ease, box-shadow .35s ease; }
+    .mock:hover { transform:translateY(-5px); box-shadow:0 22px 50px rgba(15,23,42,.14); }
+    .mock .mrow, .mock .veredito { opacity:0; transform:translateX(-8px); transition:opacity .5s ease, transform .5s ease; }
+    .mock.in-view .mrow, .mock.in-view .veredito { opacity:1; transform:translateX(0); }
+    .mock.in-view .veredito { transition-delay:.05s; }
+    .mock.in-view .mrow:nth-of-type(1) { transition-delay:.15s; }
+    .mock.in-view .mrow:nth-of-type(2) { transition-delay:.27s; }
+    .mock.in-view .mrow:nth-of-type(3) { transition-delay:.39s; }
+    .mock.in-view .mrow:nth-of-type(4) { transition-delay:.51s; }
+    .mock.in-view .mrow:nth-of-type(5) { transition-delay:.63s; }
+    @keyframes respirar { 0%,100%{box-shadow:0 6px 20px rgba(67,56,202,.30)} 50%{box-shadow:0 12px 34px rgba(67,56,202,.55)} }
+    .cta-final .btn { animation:respirar 3.2s ease-in-out infinite; }
+  }
+
   /* Passos */
   .passos { display:grid; grid-template-columns:repeat(2,1fr); gap:24px; max-width:920px; margin:0 auto; }
   .passo { background:#fff; border:1px solid var(--linha); border-radius:var(--raio); padding:30px; box-shadow:var(--sombra-sm); position:relative; }
@@ -353,7 +373,7 @@
 
   <!-- Diferenciais explicitos: as qualidades do ContrataX -->
   <section class="bloco" id="por-que" style="padding-top:10px"><div class="wrap">
-    <div class="titulo-sec" style="margin-bottom:34px">
+    <div class="titulo-sec reveal" style="margin-bottom:34px">
       <span class="tag-sec">Por que ContrataX</span>
       <h2>Inteligência que faz você ganhar, do edital ao pagamento.</h2>
       <p>Nós fazemos o que ninguém faz: te dizemos <b>onde vale a pena</b> e <b>se você está apto</b> antes de gastar tempo, e cuidamos de você até o contrato ser pago.</p>
@@ -384,22 +404,22 @@
 
   <!-- Dor -->
   <section class="bloco" id="dor"><div class="wrap">
-    <div class="titulo-sec">
+    <div class="titulo-sec reveal">
       <span class="tag-sec">Soa familiar?</span>
       <h2>Vender pro governo é uma mina de ouro. E uma dor de cabeça.</h2>
       <p>Todo dia milhões em contratos são abertos. O problema não é falta de oportunidade. É o que te faz perder o contrato.</p>
     </div>
     <div class="dores">
-      <div class="dor"><div class="ic">01</div><h3>Você descobre tarde demais</h3><p>Cada órgão publica num portal diferente, e ninguém te avisa. Quando você acha o edital certo, ele já encerrou. O contrato foi pra outro.</p></div>
-      <div class="dor"><div class="ic">02</div><h3>Monta a papelada e é inabilitado</h3><p>Você passa horas reunindo a documentação e, no fim, perde por uma certidão vencida ou um atestado que faltava. O trabalho inteiro no lixo.</p></div>
-      <div class="dor"><div class="ic">03</div><h3>O edital é um muro de linguagem complicada</h3><p>São dezenas de páginas de exigências, e as armadilhas que te desclassificam só aparecem na hora de enviar a proposta.</p></div>
-      <div class="dor"><div class="ic">04</div><h3>Ganha, entrega, e fica esperando o pagamento</h3><p>A lei diz 30 dias. A realidade é 60, 90, 120. Você sabe que tem direito a juros e correção, mas nunca cobra porque não sabe como fazer sem queimar o cliente.</p></div>
+      <div class="dor reveal"><div class="ic">01</div><h3>Você descobre tarde demais</h3><p>Cada órgão publica num portal diferente, e ninguém te avisa. Quando você acha o edital certo, ele já encerrou. O contrato foi pra outro.</p></div>
+      <div class="dor reveal"><div class="ic">02</div><h3>Monta a papelada e é inabilitado</h3><p>Você passa horas reunindo a documentação e, no fim, perde por uma certidão vencida ou um atestado que faltava. O trabalho inteiro no lixo.</p></div>
+      <div class="dor reveal"><div class="ic">03</div><h3>O edital é um muro de linguagem complicada</h3><p>São dezenas de páginas de exigências, e as armadilhas que te desclassificam só aparecem na hora de enviar a proposta.</p></div>
+      <div class="dor reveal"><div class="ic">04</div><h3>Ganha, entrega, e fica esperando o pagamento</h3><p>A lei diz 30 dias. A realidade é 60, 90, 120. Você sabe que tem direito a juros e correção, mas nunca cobra porque não sabe como fazer sem queimar o cliente.</p></div>
     </div>
   </div></section>
 
   <!-- Diferencial -->
   <section class="bloco alt"><div class="wrap">
-    <div class="titulo-sec">
+    <div class="titulo-sec reveal">
       <span class="tag-sec">O nosso diferencial</span>
       <h2>Achar o edital é o começo. Saber se você ganha é o que importa.</h2>
       <p>O <b>ContrataX.IA</b> lê cada edital por você e cruza as exigências com a sua empresa. Em segundos, você sabe se está habilitado, ou o que falta resolver antes de perder tempo.</p>
@@ -414,7 +434,7 @@
         <li><div class="ic">›</div><div><h4>Mostramos o que dá para impugnar</h4><p>Quando o edital tem cláusula restritiva ou ilegal, apontamos o ponto, o fundamento na lei e entregamos uma minuta de impugnação pronta.</p></div></li>
         <li><div class="ic">›</div><div><h4>Histórico de quem ganhou no seu ramo</h4><p>Veja os contratos fechados no último ano: quem venceu, quanto o governo pagou e em qual órgão. Prepare sua proposta com base em dados reais, não em chute.</p></div></li>
       </ul>
-      <div class="mock">
+      <div class="mock reveal">
         <div class="mhead"><span class="dot" style="background:#f87171"></span><span class="dot" style="background:#fbbf24"></span><span class="dot" style="background:#34d399"></span> &nbsp; Conferência de aptidão</div>
         <div class="veredito"><div class="sel">NÃO APTO</div><small>4 pontos impedem a sua participação neste edital</small></div>
         <div class="mrow"><span class="mi-ok">✓</span><span>Regularidade fiscal federal, FGTS e trabalhista em dia</span></div>
@@ -427,7 +447,7 @@
 
   <!-- Inteligencia de preco -->
   <section class="bloco"><div class="wrap">
-    <div class="titulo-sec">
+    <div class="titulo-sec reveal">
       <span class="tag-sec">Inteligência de concorrência</span>
       <h2>Saiba contra quem você joga, antes de entrar na disputa.</h2>
       <p>A gente olha os contratos já fechados e mostra quais empresas mais ganham no seu ramo, na sua região. Você entra na disputa sabendo quem é a concorrência.</p>
@@ -438,7 +458,7 @@
         <li><div class="ic">›</div><div><h4>Quantos contratos cada um ganhou</h4><p>A frequência de vitórias de cada concorrente. Você sabe quem é forte de verdade.</p></div></li>
         <li><div class="ic">›</div><div><h4>Faixa de preços praticada</h4><p>A referência do que se cobra em contratos do seu tipo, para calibrar a proposta.</p></div></li>
       </ul>
-      <div class="mock">
+      <div class="mock reveal">
         <div class="mhead"><span class="dot" style="background:#818cf8"></span> &nbsp; Quem ganha no seu ramo · sua região</div>
         <div class="mrow"><span style="flex:1"><b>Fornecedor líder do ramo</b></span><span style="font-weight:800;color:var(--indigo);white-space:nowrap">62 contratos</span></div>
         <div class="mrow"><span style="flex:1"><b>2º colocado</b></span><span style="font-weight:800;color:var(--indigo);white-space:nowrap">41 contratos</span></div>
@@ -451,7 +471,7 @@
 
   <!-- Radar de renovacao -->
   <section class="bloco alt"><div class="wrap">
-    <div class="titulo-sec">
+    <div class="titulo-sec reveal">
       <span class="tag-sec">Antes de todo mundo</span>
       <h2>Saiba das oportunidades antes do edital existir.</h2>
       <p>Todo contrato público tem prazo. A gente te avisa quando um contrato do seu ramo vai vencer: a nova licitação está chegando, e você se prepara com meses de antecedência.</p>
@@ -462,7 +482,7 @@
         <li><div class="ic">›</div><div><h4>Conheça o concorrente</h4><p>Quem é o fornecedor atual e por quanto fechou. Você entra sabendo contra quem joga.</p></div></li>
         <li><div class="ic">›</div><div><h4>Chegue pronto</h4><p>Documentação e proposta preparadas com antecedência. Você sai na frente quando a licitação abre.</p></div></li>
       </ul>
-      <div class="mock">
+      <div class="mock reveal">
         <div class="mhead"><span class="dot" style="background:#818cf8"></span> &nbsp; Radar de renovação</div>
         <div style="padding:18px 20px;border-bottom:1px solid var(--linha)">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px"><span style="font-size:12.5px;color:var(--cinza);font-weight:700">Prefeitura · SC</span><span class="pz m" style="margin-left:auto">vence em 3 meses</span></div>
@@ -476,7 +496,7 @@
 
   <!-- Pos-venda: o diferencial mais forte (ninguem mais faz) -->
   <section class="bloco" id="pos-venda"><div class="wrap">
-    <div class="titulo-sec">
+    <div class="titulo-sec reveal">
       <span class="tag-sec">Depois que você ganhar</span>
       <h2>Ganhar a licitação é metade do caminho. A outra metade é receber em dia.</h2>
       <p>O ContrataX é a única plataforma que cuida de você do edital até o último pagamento. Cobrança formal de órgão atrasado, alerta de prorrogação, reequilíbrio quando o insumo dispara: tudo gerado em segundos, com a fundamentação legal pronta.</p>
@@ -489,7 +509,7 @@
         <li><div class="ic">›</div><div><h4>Reequilíbrio quando dá direito</h4><p>Combustível subiu 18%? INCC disparou? O sistema calcula a variação e gera o pedido formal de reequilíbrio econômico-financeiro, com o fundamento da Lei 14.133.</p></div></li>
         <li><div class="ic">›</div><div><h4>Advogado parceiro quando precisar escalar</h4><p>Cobrança formal não funcionou? Indicamos um advogado especialista em contratos administrativos. Sem custo inicial, comissão paga só no sucesso.</p></div></li>
       </ul>
-      <div class="mock">
+      <div class="mock reveal">
         <div class="mhead"><span class="dot" style="background:#f59e0b"></span> &nbsp; Recebíveis · NF nº 1234</div>
         <div style="padding:16px 20px;border-bottom:1px solid var(--linha)">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:12.5px;color:var(--cinza);font-weight:700">Prefeitura · SC</span><span class="pz f" style="margin-left:auto">atrasada 42 dias</span></div>
@@ -508,7 +528,7 @@
 
   <!-- Comparacao -->
   <section class="bloco" id="comparar"><div class="wrap">
-    <div class="titulo-sec">
+    <div class="titulo-sec reveal">
       <span class="tag-sec">Por que o ContrataX</span>
       <h2>Direto ao ponto. Sem vendedor, sem contrato.</h2>
       <p>A maioria das plataformas foi feita para a assessoria de licitação que cobra caro. O ContrataX é para a sua empresa fazer sozinha, pagando o preço de um almoço por mês.</p>
@@ -585,15 +605,15 @@
 
   <!-- Como funciona -->
   <section class="bloco" id="como"><div class="wrap">
-    <div class="titulo-sec">
+    <div class="titulo-sec reveal">
       <span class="tag-sec">Simples assim</span>
       <h2>Você cuida do negócio. O ContrataX garimpa, lê e confere.</h2>
     </div>
     <div class="passos">
-      <div class="passo"><div class="n">1</div><h3>Diga o seu ramo</h3><p>Informe o que a sua empresa vende e em quais estados atua. Leva um minuto, sem cartão.</p></div>
-      <div class="passo"><div class="n">2</div><h3>Receba os editais certos</h3><p>Todo dia, as licitações que combinam com você, com prazo e valor, por painel e por e-mail.</p></div>
-      <div class="passo"><div class="n">3</div><h3>Saiba se está apto</h3><p>Abra qualquer edital e veja o resumo, as armadilhas e o veredito: você pode ou não pode ganhar.</p></div>
-      <div class="passo"><div class="n">4</div><h3>Receba em dia</h3><p>Quando ganhar, cadastre a NF emitida. O sistema te avisa se atrasar e gera o ofício de cobrança com correção e juros já calculados.</p></div>
+      <div class="passo reveal"><div class="n">1</div><h3>Diga o seu ramo</h3><p>Informe o que a sua empresa vende e em quais estados atua. Leva um minuto, sem cartão.</p></div>
+      <div class="passo reveal"><div class="n">2</div><h3>Receba os editais certos</h3><p>Todo dia, as licitações que combinam com você, com prazo e valor, por painel e por e-mail.</p></div>
+      <div class="passo reveal"><div class="n">3</div><h3>Saiba se está apto</h3><p>Abra qualquer edital e veja o resumo, as armadilhas e o veredito: você pode ou não pode ganhar.</p></div>
+      <div class="passo reveal"><div class="n">4</div><h3>Receba em dia</h3><p>Quando ganhar, cadastre a NF emitida. O sistema te avisa se atrasar e gera o ofício de cobrança com correção e juros já calculados.</p></div>
     </div>
   </div></section>
 
@@ -603,7 +623,7 @@
        Framing de oportunidade perdida, nao de tempo/dinheiro economizado
        (mais forte pra decisao, e evita parecer conta de marketing). -->
   <section class="bloco" id="roi"><div class="wrap">
-    <div class="titulo-sec">
+    <div class="titulo-sec reveal">
       <span class="tag-sec">Faça a conta</span>
       <h2>Quantos editais do seu ramo passam batido todo mês?</h2>
       <p>Com os números da sua própria operação. Sem estatística de mercado, só a sua conta.</p>
@@ -656,7 +676,7 @@
 
   <!-- Preco -->
   <section class="bloco alt" id="preco"><div class="wrap">
-    <div class="titulo-sec">
+    <div class="titulo-sec reveal">
       <span class="tag-sec">Preço</span>
       <h2>Escolha o tamanho. Sem fidelidade.</h2>
       <p>Teste 7 dias grátis, <b>sem cartão de crédito</b>. Menos que uma hora de consultor de licitações. Sem fidelidade, cancele quando quiser.</p>
@@ -665,7 +685,7 @@
     <!-- Bloco: planos pra empresa que participa de licitação -->
     <h3 style="text-align:center;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--cinza-c);margin-bottom:20px">Para a sua empresa</h3>
     <div style="display:flex;gap:22px;flex-wrap:wrap;justify-content:center;align-items:stretch">
-      <div class="preco-card" style="margin:0;flex:1;min-width:280px;max-width:360px">
+      <div class="preco-card reveal" style="margin:0;flex:1;min-width:280px;max-width:360px">
         <div class="selo-preco" style="background:var(--verde)">Para começar</div>
         <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza)">Starter</div>
         <div class="valor">R$ 59<small>/mês</small></div>
@@ -679,7 +699,7 @@
         </ul>
         <a href="/cadastro" class="btn btn-fantasma btn-grande" style="width:100%">Começar teste grátis</a>
       </div>
-      <div class="preco-card" style="margin:0;flex:1;min-width:280px;max-width:360px">
+      <div class="preco-card reveal" style="margin:0;flex:1;min-width:280px;max-width:360px">
         <div class="selo-preco">7 dias grátis, sem cartão</div>
         <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza)">Básico</div>
         <div class="valor">R$ 247<small>/mês</small></div>
@@ -696,7 +716,7 @@
         </ul>
         <a href="/cadastro" class="btn btn-primario btn-grande" style="width:100%">Começar teste grátis</a>
       </div>
-      <div class="preco-card" style="margin:0;flex:1;min-width:280px;max-width:360px;border:2px solid var(--indigo)">
+      <div class="preco-card reveal" style="margin:0;flex:1;min-width:280px;max-width:360px;border:2px solid var(--indigo)">
         <div class="selo-preco">Mais análises</div>
         <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza)">Pro</div>
         <div class="valor">R$ 397<small>/mês</small></div>
@@ -717,7 +737,7 @@
     <h3 style="text-align:center;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--cinza-c);margin:48px 0 8px">Para consultores e assessorias</h3>
     <p style="text-align:center;color:var(--cinza);max-width:560px;margin:0 auto 22px;font-size:14.5px">Gerencie vários clientes em <b>um único login</b>. Cada CNPJ ganha painel próprio, alertas e analise dos editais.</p>
     <div style="display:flex;gap:22px;flex-wrap:wrap;justify-content:center;align-items:stretch">
-      <div class="preco-card" style="margin:0;flex:1;min-width:280px;max-width:360px">
+      <div class="preco-card reveal" style="margin:0;flex:1;min-width:280px;max-width:360px">
         <div class="selo-preco">Multi-CNPJ</div>
         <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza)">Assessoria 10</div>
         <div class="valor">R$ 697<small>/mês</small></div>
@@ -730,7 +750,7 @@
         </ul>
         <a href="/cadastro" class="btn btn-primario btn-grande" style="width:100%">Começar teste grátis</a>
       </div>
-      <div class="preco-card" style="margin:0;flex:1;min-width:280px;max-width:360px;border:2px solid var(--indigo)">
+      <div class="preco-card reveal" style="margin:0;flex:1;min-width:280px;max-width:360px;border:2px solid var(--indigo)">
         <div class="selo-preco">Recomendado</div>
         <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza)">Assessoria 25</div>
         <div class="valor">R$ 1.297<small>/mês</small></div>
@@ -750,7 +770,7 @@
 
   <!-- FAQ -->
   <section class="bloco"><div class="wrap">
-    <div class="titulo-sec"><span class="tag-sec">Dúvidas</span><h2>Perguntas frequentes</h2></div>
+    <div class="titulo-sec reveal"><span class="tag-sec">Dúvidas</span><h2>Perguntas frequentes</h2></div>
     <div class="faq">
       <details><summary>Quanto custa para começar?</summary><p>Zero. Você cria a conta em 1 minuto, sem cartão, e tem 7 dias grátis para testar. Depois, o plano de entrada é o Starter por R$ 59/mês (busca e alertas ilimitados, com 6 análises de edital pela ContrataX.IA, já com o veredito de aptidão). Quem usa a leitura completa do edital escolhe o Básico de R$ 247/mês. Cancele quando quiser, sem multa.</p></details>
       <details><summary>R$ 247/mês não é caro para algo que dá pra fazer de graça no PNCP?</summary><p>O PNCP é gratuito e a busca dele funciona. O custo real não é o software, é o tempo. Conferir manualmente todos os editais do seu ramo, ler cada PDF e cruzar com a sua documentação consome entre 1 e 2 horas por dia em uma pequena empresa. Esse mesmo trabalho cabe em 10 minutos no painel. Um contrato pequeno fechado em R$ 4.000 paga 16 meses da assinatura.</p></details>
@@ -1026,6 +1046,23 @@ document.getElementById("termo").addEventListener("keydown", e => { if (e.key ==
       pensando=false; enviar.disabled=false; input.focus();
     }
   };
+})();
+</script>
+<script>
+// Revela blocos e mockups conforme entram na tela (fade + leve subida). CSS puro,
+// sem lib. Marca .in-view uma vez e para de observar (nao reanima ao rolar de volta).
+(function () {
+  var alvos = document.querySelectorAll(".reveal");
+  if (!alvos.length || !("IntersectionObserver" in window)) {
+    alvos.forEach(function (el) { el.classList.add("in-view"); });
+    return;
+  }
+  var obs = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add("in-view"); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+  alvos.forEach(function (el) { obs.observe(el); });
 })();
 </script>
 </body>
