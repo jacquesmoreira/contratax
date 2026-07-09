@@ -139,6 +139,29 @@
   h1 .grad { background:linear-gradient(110deg,var(--roxo),var(--azul)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   .hero .sub { font-size:clamp(16px,2.1vw,20px); color:var(--cinza); max-width:660px; margin:22px auto 0; }
 
+  /* Hero em DUAS COLUNAS no desktop: pitch a esquerda, busca interativa a
+     direita (nossa vitrine e VIVA, o visitante digita e ve o numero na hora,
+     melhor que print estatico). Enche a largura da tela em vez de empilhar
+     tudo numa coluna central estreita. Empilha e recentraliza no mobile. */
+  .hero-grid { display:grid; grid-template-columns:1.02fr .98fr; gap:52px; align-items:center; }
+  .hero-esq { text-align:left; }
+  .hero-esq h1 { margin:0; max-width:none; }
+  .hero-esq .sub { margin:20px 0 0; max-width:560px; text-align:left; }
+  .hero-esq .eyebrow { margin-bottom:22px; }
+  .hero-stats { display:flex; gap:10px 26px; flex-wrap:wrap; margin:26px 0 0; font-size:13px; color:var(--cinza); font-weight:600; }
+  .hero-esq .trust { justify-content:flex-start; margin-top:22px; }
+  .hero-dir { text-align:left; }
+  .hero-dir .busca-card { max-width:none; margin:0; }
+  .hero-dir #resultados { max-width:none; margin:22px 0 0; }
+  @media (max-width:900px) {
+    .hero-grid { grid-template-columns:1fr; gap:30px; }
+    .hero-esq { text-align:center; }
+    .hero-esq h1, .hero-esq .sub { margin-left:auto; margin-right:auto; text-align:center; }
+    .hero-stats, .hero-esq .trust { justify-content:center; }
+    .hero-dir .busca-card { max-width:600px; margin:0 auto; }
+    .hero-dir #resultados { max-width:600px; margin:22px auto 0; }
+  }
+
   /* Busca */
   .busca-card { max-width:740px; margin:38px auto 0; background:#fff; border:1px solid var(--linha); border-radius:22px; box-shadow:var(--sombra); padding:24px; position:relative; }
   .busca-card::before { content:"Grátis, sem cadastro"; position:absolute; top:-13px; left:50%; transform:translateX(-50%); background:var(--verde); color:#fff; font-size:12px; font-weight:700; padding:4px 14px; border-radius:999px; }
@@ -328,47 +351,45 @@
     </div>
   </div></nav>
 
-  <header class="hero"><div class="wrap">
-    <div class="eyebrow"><span class="ponto"></span> <span id="contador-topo">Dados oficiais do PNCP, atualizados todo dia</span></div>
-    <h1>Existe contrato público do seu ramo aberto agora. <span class="grad">Você só não está vendo.</span></h1>
-    <p class="sub">Todo dia o governo abre milhares de licitações. A ContrataX encontra as do seu ramo e, com inteligência, mostra <b>em quais vale a pena entrar</b> — antes de você gastar horas com papelada.</p>
+  <header class="hero"><div class="wrap hero-grid">
+    <div class="hero-esq">
+      <div class="eyebrow"><span class="ponto"></span> <span id="contador-topo">Dados oficiais do PNCP, atualizados todo dia</span></div>
+      <h1>Existe contrato público do seu ramo aberto agora. <span class="grad">Você só não está vendo.</span></h1>
+      <p class="sub">Todo dia o governo abre milhares de licitações. A ContrataX encontra as do seu ramo e, com inteligência, mostra <b>em quais vale a pena entrar</b> — antes de você gastar horas com papelada.</p>
 
-    <!-- Prova social MOVIDA pra cima do card de busca (acima da dobra mobile).
-         Faz o visitante ver volume e seriedade antes de decidir interagir. -->
-    <div class="autoridade-hero-mobile" style="margin:0 0 18px;display:flex;gap:8px 22px;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--cinza);font-weight:600">
-      <span><b style="font-size:16px;color:var(--indigo)" id="stat-editais-topo">20 mil</b> licitações abertas agora</span>
-      <span><b style="font-size:16px;color:var(--indigo)">3,1 milhões</b> de contratos no acervo</span>
-      <span><b style="font-size:16px;color:var(--indigo)">5.570</b> municípios cobertos</span>
-    </div>
+      <div class="hero-stats">
+        <span><b style="font-size:18px;color:var(--indigo)" id="stat-editais-topo">20 mil</b> licitações abertas agora</span>
+        <span><b style="font-size:18px;color:var(--indigo)">3,1 milhões</b> de contratos no acervo</span>
+        <span><b style="font-size:18px;color:var(--indigo)">5.570</b> municípios cobertos</span>
+      </div>
 
-    <div class="busca-card">
-      <div class="busca-titulo">Quantas licitações do seu ramo estão abertas agora?</div>
-      <div class="busca-form">
-        <div class="campo">
-          <label for="uf">Estado</label>
-          <select id="uf"></select>
-        </div>
-        <div class="campo" style="flex:2">
-          <label for="termo">O que a sua empresa vende</label>
-          <input id="termo" type="text" placeholder="ex: limpeza, merenda, informática, obras" />
-        </div>
-        <button class="btn btn-primario" id="btn-buscar">Ver agora</button>
+      <div class="trust">
+        <span><span class="ok">✓</span> Preço público, sem falar com vendedor</span>
+        <span><span class="ok">✓</span> Teste grátis, sem cartão</span>
+        <span><span class="ok">✓</span> Dados oficiais do PNCP</span>
+        <span><span class="ok">✓</span> Cancele quando quiser, sem multa</span>
       </div>
     </div>
 
-    <div class="trust">
-      <span><span class="ok">✓</span> Preço público, sem falar com vendedor</span>
-      <span><span class="ok">✓</span> Teste grátis, sem cartão</span>
-      <span><span class="ok">✓</span> Dados oficiais do PNCP</span>
-      <span><span class="ok">✓</span> Cancele quando quiser, sem multa</span>
-    </div>
+    <div class="hero-dir">
+      <div class="busca-card">
+        <div class="busca-titulo">Quantas licitações do seu ramo estão abertas agora?</div>
+        <div class="busca-form">
+          <div class="campo">
+            <label for="uf">Estado</label>
+            <select id="uf"></select>
+          </div>
+          <div class="campo" style="flex:2">
+            <label for="termo">O que a sua empresa vende</label>
+            <input id="termo" type="text" placeholder="ex: limpeza, merenda, informática, obras" />
+          </div>
+          <button class="btn btn-primario" id="btn-buscar">Ver agora</button>
+        </div>
+      </div>
 
-    <div class="autoridade" id="autoridade-hero" style="margin-top:24px;display:none">
-      <!-- Prova social agora vive acima do card de busca (mobile-first).
-           Este bloco fica oculto pra nao duplicar. -->
+      <div class="autoridade" id="autoridade-hero" style="margin-top:24px;display:none"></div>
+      <div id="resultados"></div>
     </div>
-
-    <div id="resultados"></div>
   </div></header>
 
   <!-- Faixa de portais: prova de cobertura. Honesto: o PNCP agrega os editais
