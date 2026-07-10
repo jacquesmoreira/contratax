@@ -985,6 +985,30 @@ Preço: já tinha a mesma estrutura do design dele; mantido o subtítulo descrit
 
 **DECISÃO DE CONVERSÃO (hero mockup vs busca interativa) — registrar pra validar:** Jacques deixou a meu critério. Escolhi **mockup estático no hero + busca interativa numa seção logo abaixo (`#experimente`)**, e repontei o botão secundário do hero pra `#experimente` ("Ver as licitações do meu ramo"). Motivos: (a) performance/LCP — tínhamos LCP 6,8s, hero interativo é mais pesado; (b) o mockup conta a história da triagem por prioridade (nosso diferencial real) melhor que resultado de busca cru; (c) controle de risco (busca ao vivo pode dar resultado fraco pra ramo nichado); (d) padrão que converte (Linear/Stripe/Vercel usam produto estático no hero). **É uma decisão genuinamente A/B-testável.** O que observar pra validar/reverter: engajamento na seção `#experimente` (Clarity — cliques no botão de busca), taxa de scroll até ela, e conversão trial. Se a interação despencar, é trivial trazer a busca de volta pro hero (swap do bloco `.hero-card` com o `.busca-exp`). Commits: `cf30f34`, `ee605e2`. Em produção.
 
+### 2026-07-10 (continuação) — pente-fino: elimina travessão longo (—) de toda a copy do produto
+
+Jacques apontou que a barra de travessão longo é "cara de IA" e pediu humanização de todo texto (não só a LP). Feita uma varredura completa do codebase, não só arquivos que eu já tinha editado nesta sessão.
+
+Escopo tratado:
+1. **LP e páginas do funil** (entrar, cadastro, esqueci/redefinir senha, obrigado, comparativo): já sem travessão desde o pedido anterior nesta mesma sessão.
+2. **Prompts de sistema da IA** (leitura de edital, TL;DR, aptidão, dossiê de impugnação, jurídico, pergunte ao edital, extrator de contrato): adicionada a regra "nunca use travessão longo" em cada um. Esse é o ponto de maior alavancagem, sem isso toda análise nova geraria travessão pra sempre.
+3. **Templates de documentos oficiais** (declarações de habilitação, minutas de contrato, ofício/manifestação de ouvidoria): corrigidos os travessões hardcoded nos rodapés de assinatura e cabeçalhos de referência.
+4. **34 posts do blog + central de ajuda** (258 ocorrências): rótulo de lista em negrito virou dois pontos; prosa virou vírgula ou ponto final; parênteses embutidos com listas internas (que geravam sequência confusa de vírgulas na troca automática) foram revisados à mão e viraram parênteses de verdade.
+5. **Painel logado inteiro** (as ~19 telas: index, admin, conta, contratos, documentos, empresas, equipe, histórico, jurídico, obrigado, pca, preços, recebíveis, declarações, esqueci/redefinir senha, termos, privacidade, erro-500): dropdowns (IPCA/INPC/INCC, porte MEI/ME/EPP viraram "Rótulo: descrição"), placeholders de valor vazio ("—" virou "-", mesmo padrão já usado no resto do produto) e toda a prosa de UI.
+6. **Títulos `<title>`** de todas as páginas SEO programático (as ~500 páginas /licitações), blog, ranking, CNAE, órgãos e legais, isso é visível no Google e na aba do navegador.
+7. **E-mails transacionais reais** que o cliente recebe: assunto e corpo do alerta de certidão vencendo, aviso de pagamento não identificado, mensagem de rate-limit do chat de ajuda.
+8. **Descrição de cobrança no Asaas**, aparece na fatura/boleto do cliente: "ContrataX — Plano X" virou "ContrataX: Plano X" em 6 pontos do server.mjs.
+9. **Evento de calendário (.ics)** que o cliente importa na agenda.
+10. **Texto de análise de preço de referência** mostrado no painel.
+
+Deixado de propósito, por não ser visível ao cliente: comentários de código nos arquivos .mjs e HTML, e a própria string de instrução "Nunca use travessão longo (—)" dentro dos prompts de IA (cita o caractere como exemplo do que evitar, não é AI-visible como texto renderizado). Documentação interna (README, HANDOFF, DEPLOY, GUIA, PAGAMENTO, RAILWAY, TESTE) também ficou de fora, ninguém de fora vê esses arquivos.
+
+Validado em cada lote: parse-check dos blocos `<script>`, `node --check` nos `.mjs`, e teste real no servidor local (rotas do blog, SEO, e páginas do painel renderizando sem erro de console, títulos corretos).
+
+Commits: `7637b0f` (blog + ajuda), `da26155` (prompts de IA, documentos, painel, títulos SEO, e-mails, faturamento). Em produção.
+
+**Preferência registrada permanentemente na memória:** ver `jacques-copy-humanizada-sem-travessao.md`, nunca mais usar travessão longo em copy voltada ao usuário, em nenhum projeto.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
