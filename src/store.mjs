@@ -197,3 +197,53 @@ export async function carregarNota(token, editalId) {
   const tudo = await lerJSON(ARQUIVO_NOTAS, {});
   return tudo[token]?.[editalId] ?? null;
 }
+
+const ARQUIVO_ESTAGIOS = resolve(DATA_DIR, "estagios.json");
+
+// Estagios do funil que o cliente decidiu perseguir (Kanban de Planejamento).
+// Estrutura: { [token]: { [editalId]: { estagio, edital, criadoEm, atualizadoEm } } }.
+// "edital" guarda um retrato (objeto, orgao, uf, valorEstimado, encerramento etc)
+// no momento em que foi adicionado, pra o card continuar aparecendo no funil
+// mesmo se o edital sair do resultado ao vivo da busca (encerrou, mudou de
+// pagina etc). Privado: so o dono ve/edita, igual as notas.
+const ESTAGIOS_VALIDOS = ["identificada", "em_analise", "elaborando_proposta", "enviada", "aguardando_resultado", "encerrada"];
+
+export async function salvarEstagio(token, editalId, estagio, edital) {
+  if (!token || !editalId || !ESTAGIOS_VALIDOS.includes(estagio)) return null;
+  const tudo = await lerJSON(ARQUIVO_ESTAGIOS, {});
+  tudo[token] = tudo[token] || {};
+  const existente = tudo[token][editalId];
+  tudo[token][editalId] = {
+    estagio,
+    edital: edital || existente?.edital || null,
+    criadoEm: existente?.criadoEm || new Date().toISOString(),
+    atualizadoEm: new Date().toISOString(),
+  };
+  await gravarJSON(ARQUIVO_ESTAGIOS, tudo);
+  return tudo[token][editalId];
+}
+
+export async function removerEstagio(token, editalId) {
+  if (!token || !editalId) return false;
+  const tudo = await lerJSON(ARQUIVO_ESTAGIOS, {});
+  if (!tudo[token] || !tudo[token][editalId]) return false;
+  delete tudo[token][editalId];
+  await gravarJSON(ARQUIVO_ESTAGIOS, tudo);
+  return true;
+}
+
+// Devolve os editais planejados de um cliente, ja agrupados por estagio.
+export async function carregarEstagios(token) {
+  if (!token) return {};
+  const tudo = await lerJSON(ARQUIVO_ESTAGIOS, {});
+  const meus = tudo[token] || {};
+  const grupos = Object.fromEntries(ESTAGIOS_VALIDOS.map((e) => [e, []]));
+  for (const [editalId, item] of Object.entries(meus)) {
+    if (!grupos[item.estagio]) continue; // estagio invalido/legado: ignora
+    grupos[item.estagio].push({ id: editalId, ...item });
+  }
+  for (const lista of Object.values(grupos)) lista.sort((a, b) => (b.atualizadoEm || "").localeCompare(a.atualizadoEm || ""));
+  return grupos;
+}
+
+export { ESTAGIOS_VALIDOS };

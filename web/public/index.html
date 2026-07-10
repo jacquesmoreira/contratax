@@ -231,6 +231,7 @@
       <div class="dropdown" id="dd-mais">
         <span class="dd-btn">Mais</span>
         <div class="dd-menu">
+          <a id="nav-planejamento" href="#">Planejamento</a>
           <a id="nav-docs" href="#">Documentos</a>
           <a id="nav-declaracoes" href="#">Declarações</a>
           <a id="nav-historico" href="#">Histórico</a>
@@ -437,6 +438,7 @@ function cardHTML(e) {
     <div class="card-rodape"><span class="modalidade">${esc(e.modalidade)}</span>
       <span class="valor">${brl(e.valorEstimado)}</span>
       ${oportBadge(e.oportunidade, e.reputacao)}
+      <button type="button" class="add-planejamento" onclick="event.stopPropagation();adicionarAoPlanejamento('${esc(e.id)}',this)" title="Adicionar ao Planejamento" style="background:none;border:1px solid var(--linha);color:var(--indigo);font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">+ Planejamento</button>
       <a class="baixar-edital" href="/api/baixar-edital?id=${encodeURIComponent(e.id)}" onclick="event.stopPropagation()" title="Baixar o PDF do edital direto, sem abrir o painel">⬇ Edital</a>
       <span class="abrir">Ver análise →</span></div>
   </div>`;
@@ -897,6 +899,7 @@ async function carregar() {
       return;
     }
     if (acesso.nome) document.getElementById("nav-cliente").textContent = acesso.nome;
+    document.getElementById("nav-planejamento").href = "/planejamento?c=" + encodeURIComponent(token);
     document.getElementById("nav-docs").href = "/documentos?c=" + encodeURIComponent(token);
     document.getElementById("nav-equipe").href = "/equipe?c=" + encodeURIComponent(token);
     document.getElementById("nav-receb").href = "/recebiveis?c=" + encodeURIComponent(token);
@@ -1757,6 +1760,28 @@ async function toggleFavorito(id, btn) {
     // Se o filtro "so favoritos" estiver ligado e desfavoritou, some o card.
     if (window._soFavoritos && !fav && card) card.style.display = "none";
   } catch {}
+}
+
+// Manda o edital pro Kanban de Planejamento, na primeira coluna (Identificada).
+// Envia um retrato do card (store[id], ja em memoria) pra ele sobreviver no
+// funil mesmo se o edital sumir do resultado ao vivo da busca depois.
+async function adicionarAoPlanejamento(id, btn) {
+  const edital = store[id];
+  if (!edital) return;
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = "Adicionando...";
+  try {
+    const r = await fetch("/api/planejamento", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ c: token, editalId: id, estagio: "identificada", edital }),
+    });
+    if (!r.ok) throw new Error();
+    btn.textContent = "✓ No planejamento";
+    btn.style.background = "#DCFCE7"; btn.style.color = "#166534"; btn.style.borderColor = "#a7f3d0";
+  } catch {
+    btn.disabled = false; btn.textContent = original;
+    alert("Não consegui adicionar agora. Tente de novo.");
+  }
 }
 // Filtro "so favoritos": mostra/esconde os cards sem estrela.
 // Filtro por nivel de oportunidade (forte/regular/avaliar, o mesmo selo

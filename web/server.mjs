@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { gzip as gzipCb } from "node:zlib";
 import { promisify } from "node:util";
 const gzip = promisify(gzipCb);
-import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao, carregarLeads, carregarTldr, salvarTldr, salvarFeedback, carregarFeedbacks, alternarFeedbackLido, salvarNota, carregarNota } from "../src/store.mjs";
+import { carregarResultados, carregarAnalise, carregarConferencia, salvarLead, carregarImpugnacao, carregarLeads, carregarTldr, salvarTldr, salvarFeedback, carregarFeedbacks, alternarFeedbackLido, salvarNota, carregarNota, salvarEstagio, removerEstagio, carregarEstagios } from "../src/store.mjs";
 import { gerarTldr } from "../src/tldr.mjs";
 import { gerarImpugnacao } from "../src/impugnacao.mjs";
 import { gerarDeclaracoes } from "../src/declaracoes.mjs";
@@ -98,6 +98,7 @@ const CADASTRO = resolve(AQUI, "public", "cadastro.html");
 const ENTRAR = resolve(AQUI, "public", "entrar.html");
 const DOCUMENTOS = resolve(AQUI, "public", "documentos.html");
 const EQUIPE = resolve(AQUI, "public", "equipe.html");
+const PLANEJAMENTO = resolve(AQUI, "public", "planejamento.html");
 const CONTA = resolve(AQUI, "public", "conta.html");
 const ASSINAR = resolve(AQUI, "public", "assinar.html");
 const HISTORICO = resolve(AQUI, "public", "historico.html");
@@ -204,8 +205,9 @@ const ROTAS_PROTEGIDAS = [
   "/api/recebiveis", "/api/contratos-meus", "/api/documentos", "/api/historico",
   "/api/declaracoes", "/api/radar", "/api/contratos-fornecedor", "/api/saude-empresa",
   "/api/equipe", "/api/exportar", "/api/concorrente", "/api/precos", "/api/pca", "/api/juridico",
+  "/api/planejamento",
   "/recebiveis", "/contratos", "/documentos", "/historico", "/declaracoes",
-  "/equipe", "/empresas", "/concorrentes", "/precos", "/pca", "/juridico",
+  "/equipe", "/empresas", "/concorrentes", "/precos", "/pca", "/juridico", "/planejamento",
 ];
 function rotaProtegida(rota) {
   return ROTAS_PROTEGIDAS.some((p) => rota === p || rota.startsWith(p + "/") || rota.startsWith(p + "."));
@@ -986,6 +988,30 @@ const servidor = createServer(async (req, res) => {
         p.empresa.certidoes = { ...(p.empresa.certidoes || {}), ...cert };
       });
       return json(res, 200, { ok: true });
+    }
+
+    // Kanban de Planejamento: adiciona/move um edital de estagio, ou remove do
+    // funil. "edital" (retrato do card no momento de adicionar) e opcional: so
+    // e necessario na primeira vez, pra o card sobreviver mesmo se o edital sair
+    // do resultado ao vivo da busca depois.
+    if (rota === "/api/planejamento" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfil = await perfilPorToken(corpo.c || "");
+      if (!perfil) return json(res, 403, { erro: "Sessao invalida" });
+      if (!corpo.editalId) return json(res, 400, { erro: "editalId obrigatorio" });
+      if (corpo.remover) {
+        await removerEstagio(perfil.token, corpo.editalId);
+        return json(res, 200, { ok: true });
+      }
+      const item = await salvarEstagio(perfil.token, corpo.editalId, corpo.estagio, corpo.edital);
+      if (!item) return json(res, 400, { erro: "Estagio invalido" });
+      return json(res, 200, { ok: true, item });
+    }
+    // Kanban de Planejamento: lista os editais do cliente, agrupados por estagio.
+    if (rota === "/api/planejamento") {
+      const perfil = await perfilPorToken(url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 403, { erro: "Sessao invalida" });
+      return json(res, 200, { grupos: await carregarEstagios(perfil.token) });
     }
 
     // Estado da assinatura do cliente (o painel usa para liberar ou cobrar).
@@ -2774,6 +2800,11 @@ Contact: contato@contratax.com.br
     }
     if (rota === "/equipe" || rota === "/equipe.html") {
       const html = await readFile(EQUIPE, "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(injetarAnalytics(html));
+    }
+    if (rota === "/planejamento" || rota === "/planejamento.html") {
+      const html = await readFile(PLANEJAMENTO, "utf8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(injetarAnalytics(html));
     }

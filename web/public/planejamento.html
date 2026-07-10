@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" href="/logo-favicon.png" type="image/png" />
+<meta name="robots" content="noindex" />
+<title>ContrataX: Planejamento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#64748b; --linha:#E4E7F0; --fundo:#FAF9F5; --verde:#16A34A; --vermelho:#DC2626; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); line-height:1.5; }
+  h1,h2,h3,.logo { font-family:'Manrope',sans-serif; }
+  nav { background:#fff; border-bottom:1px solid var(--linha); position:sticky; top:0; z-index:20; }
+  nav .wrap { max-width:1600px; margin:0 auto; padding:0 22px; height:60px; display:flex; align-items:center; gap:16px; }
+  .logo { font-weight:900; font-size:21px; color:var(--indigo); }
+  nav a.voltar { margin-left:auto; font-size:14px; font-weight:600; color:var(--cinza); text-decoration:none; }
+  .wrap-main { max-width:1600px; margin:0 auto; padding:26px 22px 60px; }
+  h1 { font-size:24px; font-weight:800; letter-spacing:-.4px; }
+  .sub { color:var(--cinza); font-size:14.5px; margin:6px 0 22px; }
+  .colunas { display:grid; grid-template-columns:repeat(6, minmax(230px, 1fr)); gap:12px; overflow-x:auto; padding-bottom:8px; }
+  .coluna { background:#fff; border:1px solid var(--linha); border-radius:14px; min-width:230px; display:flex; flex-direction:column; max-height:calc(100vh - 190px); }
+  .coluna-cab { padding:13px 14px; border-bottom:1px solid var(--linha); display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; color:var(--cinza); }
+  .coluna-cab .ponto { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .coluna-cab .contagem { margin-left:auto; background:var(--fundo); color:var(--cinza-c); font-size:11px; font-weight:800; padding:2px 8px; border-radius:99px; }
+  .coluna-corpo { flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px; min-height:80px; }
+  .coluna-corpo.sobre-arraste { background:#EEF0FF; }
+  .vazio-coluna { text-align:center; color:var(--cinza-c); font-size:12px; padding:18px 8px; border:1.5px dashed var(--linha); border-radius:10px; }
+  .planej-card { background:#fff; border:1px solid var(--linha); border-radius:11px; padding:11px 12px; cursor:grab; box-shadow:0 1px 3px rgba(16,21,43,.05); }
+  .planej-card:active { cursor:grabbing; }
+  .planej-card.arrastando { opacity:.4; }
+  .planej-card .topo { display:flex; justify-content:space-between; align-items:flex-start; gap:6px; margin-bottom:6px; }
+  .planej-card .local { font-size:10.5px; font-weight:700; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.3px; }
+  .planej-card .remover { background:none; border:none; color:var(--cinza-c); font-size:15px; cursor:pointer; line-height:1; padding:0 2px; flex-shrink:0; }
+  .planej-card .remover:hover { color:var(--vermelho); }
+  .planej-card .objeto { font-size:13px; color:var(--tinta); line-height:1.4; margin-bottom:8px; }
+  .planej-card .rodape { display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:11.5px; }
+  .planej-card .valor { font-weight:800; color:var(--tinta); }
+  .planej-card .prazo { color:var(--cinza-c); }
+  .planej-card a.abrir { display:block; margin-top:8px; font-size:11.5px; font-weight:700; color:var(--indigo); text-decoration:none; }
+  .carregando { text-align:center; padding:40px; color:var(--cinza-c); }
+  @media (max-width:1080px) { .colunas { grid-template-columns:repeat(6, 260px); } }
+</style>
+</head>
+<body>
+  <nav><div class="wrap"><span class="logo"><img src="/logo-horizontal.png" alt="ContrataX" style="height:32px;width:auto;display:block" /></span><a class="voltar" id="voltar" href="#">← Voltar ao painel</a></div></nav>
+  <div class="wrap-main">
+    <h1>Planejamento</h1>
+    <div class="sub">Acompanhe cada licitação que você decidiu perseguir, do achado até o resultado. Arraste os cards entre as colunas.</div>
+    <div id="quadro"><div class="carregando">Carregando...</div></div>
+  </div>
+
+<script>
+const token = new URLSearchParams(location.search).get("c") || "";
+document.getElementById("voltar").href = "/painel?c=" + encodeURIComponent(token);
+
+const ESTAGIOS = [
+  { id: "identificada", rotulo: "Identificada", cor: "#64748b" },
+  { id: "em_analise", rotulo: "Em análise", cor: "#2563eb" },
+  { id: "elaborando_proposta", rotulo: "Elaborando proposta", cor: "#b45309" },
+  { id: "enviada", rotulo: "Enviada", cor: "#7c3aed" },
+  { id: "aguardando_resultado", rotulo: "Aguardando resultado", cor: "#0891b2" },
+  { id: "encerrada", rotulo: "Encerrada", cor: "#16A34A" },
+];
+
+const esc = s => (s ?? "").toString().replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const brl = v => (v == null || Number(v) === 0) ? "valor não divulgado" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+function diasAte(iso) { if (!iso) return null; const d = new Date(iso); if (isNaN(d)) return null; return Math.ceil((d - new Date()) / 864e5); }
+function prazoTxt(iso) {
+  const d = diasAte(iso);
+  if (d == null) return "";
+  if (d < 0) return "encerrado";
+  if (d === 0) return "encerra hoje";
+  if (d === 1) return "encerra amanhã";
+  return `encerra em ${d}d`;
+}
+
+function cardHTML(item) {
+  const e = item.edital || {};
+  const local = [e.municipio, e.uf].filter(Boolean).join("/");
+  return `<div class="planej-card" draggable="true" data-id="${esc(item.id)}" data-estagio="${esc(item.estagio)}">
+    <div class="topo">
+      <span class="local">${esc(local || "Local não informado")}${e.orgao ? " · " + esc(e.orgao) : ""}</span>
+      <button type="button" class="remover" title="Remover do planejamento" onclick="removerCard('${esc(item.id)}')">×</button>
+    </div>
+    <div class="objeto">${esc((e.objeto || "Edital sem descrição").slice(0, 130))}</div>
+    <div class="rodape"><span class="valor">${brl(e.valorEstimado)}</span><span class="prazo">${esc(prazoTxt(e.encerramento))}</span></div>
+    ${e.id ? `<a class="abrir" href="/painel?c=${encodeURIComponent(token)}&edital=${encodeURIComponent(e.id)}">Ver edital →</a>` : ""}
+  </div>`;
+}
+
+function colunaHTML(estagio, itens) {
+  const corpo = itens.length
+    ? itens.map(cardHTML).join("")
+    : `<div class="vazio-coluna">Solte cards aqui</div>`;
+  return `<div class="coluna" data-coluna="${estagio.id}">
+    <div class="coluna-cab"><span class="ponto" style="background:${estagio.cor}"></span>${esc(estagio.rotulo)}<span class="contagem">${itens.length}</span></div>
+    <div class="coluna-corpo" data-estagio="${estagio.id}">${corpo}</div>
+  </div>`;
+}
+
+let GRUPOS = {};
+
+async function carregarQuadro() {
+  const quadro = document.getElementById("quadro");
+  try {
+    const d = await (await fetch("/api/planejamento?c=" + encodeURIComponent(token))).json();
+    GRUPOS = d.grupos || {};
+    quadro.innerHTML = `<div class="colunas">${ESTAGIOS.map(es => colunaHTML(es, GRUPOS[es.id] || [])).join("")}</div>`;
+    ligarDragDrop();
+  } catch (e) {
+    quadro.innerHTML = `<div class="carregando">Não consegui carregar o planejamento agora.</div>`;
+  }
+}
+
+function ligarDragDrop() {
+  document.querySelectorAll(".planej-card").forEach(card => {
+    card.addEventListener("dragstart", (ev) => {
+      card.classList.add("arrastando");
+      ev.dataTransfer.setData("text/plain", card.dataset.id);
+      ev.dataTransfer.effectAllowed = "move";
+    });
+    card.addEventListener("dragend", () => card.classList.remove("arrastando"));
+  });
+  document.querySelectorAll(".coluna-corpo").forEach(corpo => {
+    corpo.addEventListener("dragover", (ev) => { ev.preventDefault(); corpo.classList.add("sobre-arraste"); });
+    corpo.addEventListener("dragleave", () => corpo.classList.remove("sobre-arraste"));
+    corpo.addEventListener("drop", async (ev) => {
+      ev.preventDefault();
+      corpo.classList.remove("sobre-arraste");
+      const editalId = ev.dataTransfer.getData("text/plain");
+      const novoEstagio = corpo.dataset.estagio;
+      const card = document.querySelector(`.planej-card[data-id="${CSS.escape(editalId)}"]`);
+      if (!card || card.dataset.estagio === novoEstagio) return;
+      const estagioAntigo = card.dataset.estagio;
+      card.dataset.estagio = novoEstagio;
+      corpo.appendChild(card); // move na hora (otimista), sem esperar o servidor
+      atualizarVazios();
+      atualizarContagens();
+      try {
+        const r = await fetch("/api/planejamento", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ c: token, editalId, estagio: novoEstagio }) });
+        if (!r.ok) throw new Error();
+      } catch { carregarQuadro(); } // falhou: recarrega do zero pra nao ficar dessincronizado
+    });
+  });
+}
+
+function atualizarVazios() {
+  document.querySelectorAll(".coluna-corpo").forEach(corpo => {
+    const semCards = !corpo.querySelector(".planej-card");
+    const jaTemVazio = corpo.querySelector(".vazio-coluna");
+    if (semCards && !jaTemVazio) corpo.innerHTML = `<div class="vazio-coluna">Solte cards aqui</div>`;
+    else if (!semCards && jaTemVazio) jaTemVazio.remove();
+  });
+}
+function atualizarContagens() {
+  document.querySelectorAll(".coluna").forEach(col => {
+    const n = col.querySelectorAll(".planej-card").length;
+    col.querySelector(".contagem").textContent = n;
+  });
+}
+
+async function removerCard(editalId) {
+  if (!confirm("Remover este edital do planejamento?")) return;
+  const card = document.querySelector(`.planej-card[data-id="${CSS.escape(editalId)}"]`);
+  if (card) card.remove();
+  atualizarVazios();
+  atualizarContagens();
+  try {
+    await fetch("/api/planejamento", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ c: token, editalId, remover: true }) });
+  } catch {}
+}
+
+carregarQuadro();
+</script>
+<script src="/sessao-heartbeat.js" defer></script>
+</body>
+</html>
