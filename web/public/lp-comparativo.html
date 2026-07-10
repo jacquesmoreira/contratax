@@ -15,67 +15,70 @@
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; --vermelho:#dc2626; --vermelho-bg:#fef2f2; }
+  :root { --navy:#0B1E3A; --indigo:#4338CA; --indigo-d:#312e81; --azul:#2563EB; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#64748B; --linha:#E4E7F0; --creme:#FAF9F5; --verde:#16A34A; --verde-bg:#DCFCE7; --vermelho:#DC2626; --vermelho-bg:#FEE2E2;
+    --sombra-navy:0 30px 70px -30px rgba(11,30,58,.4); --glow-indigo:0 10px 24px -8px rgba(67,56,202,.55); --grad-acento:linear-gradient(135deg,#4338CA,#2B2599); }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
-  nav { background:#fff; border-bottom:1px solid var(--linha); }
+  body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--creme); color:var(--tinta); }
+  nav { position:sticky; top:0; z-index:10; background:rgba(250,249,245,.85); backdrop-filter:blur(10px); border-bottom:1px solid var(--linha); }
   nav .wrap { max-width:1080px; margin:0 auto; display:flex; align-items:center; height:64px; gap:18px; padding:0 20px; }
   nav .logo img { height:32px; display:block; }
   nav .dir { margin-left:auto; display:flex; gap:22px; font-size:14.5px; font-weight:600; align-items:center; }
   nav .dir a { color:var(--cinza); text-decoration:none; }
-  nav .dir a.cta { background:var(--indigo); color:#fff; padding:9px 17px; border-radius:10px; }
-  header.hero { background:radial-gradient(900px 500px at 50% -10%, #eef2ff 0%, var(--fundo) 60%); padding:60px 20px 36px; text-align:center; }
-  header.hero h1 { font-size:42px; font-weight:900; letter-spacing:-1px; max-width:780px; margin:0 auto 16px; line-height:1.15; }
+  nav .dir a.cta { background:var(--indigo); color:#fff; padding:9px 17px; border-radius:10px; box-shadow:var(--glow-indigo); }
+  header.hero { background:radial-gradient(900px 500px at 50% -10%, rgba(67,56,202,.10) 0%, var(--creme) 60%); padding:60px 20px 36px; text-align:center; }
+  header.hero h1 { font-family:'Manrope',sans-serif; font-size:42px; font-weight:800; letter-spacing:-.02em; max-width:780px; margin:0 auto 16px; line-height:1.15; color:var(--navy); }
   header.hero h1 span { color:var(--indigo); }
   header.hero .sub { font-size:17.5px; color:var(--cinza); max-width:660px; margin:0 auto 24px; line-height:1.55; }
   header.hero .ctas { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
   .btn { font-weight:800; font-size:15px; padding:13px 22px; border-radius:11px; text-decoration:none; display:inline-block; }
-  .btn.primario { background:var(--indigo); color:#fff; }
+  .btn.primario { background:var(--indigo); color:#fff; box-shadow:var(--glow-indigo); }
   .btn.primario:hover { background:var(--indigo-d); }
   .btn.sec { background:#fff; color:var(--indigo); border:1.5px solid var(--indigo); }
   .wrap-main { max-width:1080px; margin:0 auto; padding:40px 20px 60px; }
   section { margin-bottom:48px; }
-  h2 { font-size:30px; font-weight:800; letter-spacing:-.6px; text-align:center; margin-bottom:10px; }
+  h2 { font-family:'Manrope',sans-serif; font-size:30px; font-weight:800; letter-spacing:-.02em; text-align:center; margin-bottom:10px; color:var(--navy); }
   .sub-sec { font-size:16px; color:var(--cinza); text-align:center; max-width:680px; margin:0 auto 30px; }
   /* Tabela comparativa */
-  .tabela { width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--linha); border-radius:18px; overflow:hidden; box-shadow:0 12px 36px rgba(15,23,42,.06); }
+  .tabela { width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--linha); border-radius:18px; overflow:hidden; box-shadow:var(--sombra-navy); }
   .tabela th, .tabela td { padding:18px 20px; text-align:left; border-bottom:1px solid var(--linha); }
   .tabela tr:last-child td { border-bottom:none; }
-  .tabela thead th { background:var(--fundo); font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--cinza-c); }
-  .tabela th.contratax { background:linear-gradient(135deg, var(--indigo), var(--azul)); color:#fff; font-size:14px; font-weight:800; text-transform:none; letter-spacing:0; }
+  .tabela thead th { background:var(--creme); font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--cinza-c); }
+  .tabela th.contratax { background:var(--grad-acento); color:#fff; font-size:14px; font-weight:800; text-transform:none; letter-spacing:0; }
   .tabela td.label { font-weight:700; font-size:14.5px; color:var(--tinta); width:32%; }
-  .tabela td.contratax { background:#eef2ff; font-weight:800; color:var(--indigo); }
+  .tabela td.contratax { background:#EEF0FF; font-weight:800; color:var(--indigo); }
   .tabela td.outros { color:var(--cinza); }
   .ic { display:inline-block; width:22px; text-align:center; font-weight:900; }
   .ic.sim { color:var(--verde); }
   .ic.nao { color:var(--vermelho); }
   /* Beneficios cards */
   .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; }
-  .card { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:22px; }
-  .card .ic-grande { width:46px; height:46px; border-radius:11px; background:#eef2ff; color:var(--indigo); display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:12px; }
-  .card h3 { font-size:17px; font-weight:800; margin-bottom:6px; }
+  .card { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:22px; transition:transform .25s ease, box-shadow .25s ease; }
+  .card:hover { transform:translateY(-4px); box-shadow:0 18px 36px -20px rgba(11,30,58,.4); }
+  .card .ic-grande { width:46px; height:46px; border-radius:11px; background:#EEF0FF; color:var(--indigo); display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:12px; }
+  .card h3 { font-family:'Manrope',sans-serif; font-size:17px; font-weight:800; color:var(--navy); margin-bottom:6px; }
   .card p { font-size:14.5px; color:var(--cinza); line-height:1.55; }
   /* Planos */
   .planos { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; max-width:740px; margin:0 auto; }
-  .plano { background:#fff; border:1.5px solid var(--linha); border-radius:14px; padding:22px; text-align:center; }
+  .plano { background:#fff; border:1.5px solid var(--linha); border-radius:14px; padding:22px; text-align:center; transition:transform .25s ease, box-shadow .25s ease; }
+  .plano:hover { transform:translateY(-4px); box-shadow:0 18px 36px -20px rgba(11,30,58,.4); }
   .plano.destaque { border-color:var(--indigo); }
   .plano .nome { font-size:12px; font-weight:800; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; }
-  .plano .preco { font-size:30px; font-weight:900; color:var(--indigo); margin:6px 0; }
+  .plano .preco { font-family:'Manrope',sans-serif; font-size:30px; font-weight:800; color:var(--navy); margin:6px 0; }
   .plano .preco small { font-size:14px; color:var(--cinza); font-weight:600; }
   .plano .desc { font-size:13.5px; color:var(--cinza); margin-bottom:12px; }
   /* FAQ */
   details { background:#fff; border:1px solid var(--linha); border-radius:11px; padding:16px 18px; margin-bottom:10px; }
-  details summary { font-weight:700; cursor:pointer; font-size:15px; }
+  details summary { font-weight:700; cursor:pointer; font-size:15px; color:var(--navy); }
   details p { color:var(--cinza); font-size:14.5px; margin-top:10px; line-height:1.6; }
   /* Final CTA */
-  .cta-final { background:linear-gradient(135deg, var(--indigo) 0%, var(--azul) 100%); color:#fff; border-radius:20px; padding:42px 28px; text-align:center; }
+  .cta-final { background:var(--grad-acento); color:#fff; border-radius:20px; padding:42px 28px; text-align:center; }
   .cta-final h2 { color:#fff; margin-bottom:12px; }
-  .cta-final p { color:#c7d2fe; font-size:16px; max-width:540px; margin:0 auto 20px; }
-  .cta-final .btn { background:#fff; color:var(--indigo); }
-  footer { background:#fff; border-top:1px solid var(--linha); padding:24px 20px; text-align:center; color:var(--cinza-c); font-size:13px; }
-  footer a { color:var(--cinza); text-decoration:none; margin:0 10px; }
+  .cta-final p { color:#D8D6FA; font-size:16px; max-width:540px; margin:0 auto 20px; }
+  .cta-final .btn { background:#fff; color:var(--indigo); box-shadow:none; }
+  footer { background:var(--navy); border-top:none; padding:24px 20px; text-align:center; color:#8FA3E3; font-size:13px; }
+  footer a { color:#A7B3D1; text-decoration:none; margin:0 10px; }
   @media (max-width:680px) {
     header.hero h1 { font-size:30px; }
     h2 { font-size:24px; }
@@ -282,7 +285,7 @@
       </div>
 
       <!-- Como interpretar -->
-      <div style="background:var(--fundo);border-radius:12px;padding:18px 20px;margin-top:22px;font-size:14px;color:var(--cinza);line-height:1.6">
+      <div style="background:#F1F5F9;border-radius:12px;padding:18px 20px;margin-top:22px;font-size:14px;color:var(--cinza);line-height:1.6">
         <b style="color:var(--tinta);font-size:15px">Lendo a tabela com calma</b><br><br>
         <b>Onde o ContrataX se destaca:</b> é o plano <b>multi-CNPJ mais barato do mercado por empresa</b> entre os que publicam preço (R$ 69,70/empresa no Assessoria 10 vs R$ 393/empresa no Licitei Multiempresas). E o único que entrega <b>conferência de aptidão</b> publicamente: o sistema cruza as exigências do edital com os seus documentos cadastrados, e diz se você está apto.<br><br>
         <b>Onde o ContrataX é mais fraco:</b> não temos <b>robô de lances</b>. Acreditamos que o lance final deve ficar no portal oficial da licitação, com sua decisão. Nosso foco é a inteligência que decide se vale entrar na disputa, não automatizar o clique.<br><br>
