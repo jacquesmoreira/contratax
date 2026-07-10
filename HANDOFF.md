@@ -1023,6 +1023,15 @@ Validação em 3 níveis, sem tocar em nenhuma conta real: `store.mjs` isolado v
 
 Commits: `7aaea7f` (perfil), `d9eaa4a` (chips), `267d72c` (Kanban). Todos em produção.
 
+### 2026-07-10 (continuação) — 4 correções pontuais: Súmula 263, título do CTA final, upgrade de Assessoria, logo do painel + descoberta do Planejamento
+
+1. **Precisão jurídica no prompt de aptidão (`aptidao.mjs`):** a instrução original dizia pra marcar "atende" quando o atestado tivesse pelo menos metade da quantidade exigida no edital, isso conflava a Súmula 263 do TCU (que limita o que o ÓRGÃO pode exigir em relação ao quantitativo total do objeto) com um atalho errado de suficiência, risco de gerar veredito "apto" falso. Jacques deixou a decisão a meu critério ("deixa da forma que você achar melhor"). Corrigido pra comparar a quantidade do atestado com o que o edital literalmente pede (nunca reduzir a exigência pela metade por conta própria); a Súmula 263 só entra como observação de possível ponto impugnável, nunca decide o veredito sozinha. Commit `00dda40`.
+2. **Título do CTA final da LP ainda quebrando linha** (`lp.html`): Jacques pegou numa captura que a seção `#cta-final` tinha escapado do lote anterior de ajuste de `max-width`. Alargado de 900px pra 1100px, mesma técnica já aplicada nas outras 4 seções. Commit `dacd38d`.
+3. **Upgrade de plano não cobria a família Assessoria** (`conta.html`): a lista de candidatos a upgrade era fixa (`["starter","basico","pro"]`), então um cliente de Assessoria 10 não via NENHUMA opção de upgrade pra Assessoria 25 (não é que via opção errada, o backend já validava por preço via `calcularProRata` e escondia opções inválidas, mas o problema real era a ausência total da opção certa). Corrigido pra montar a lista dinamicamente a partir do catálogo `/api/planos`, comparando por preço e filtrando pela mesma família (`assessoria: true/false`), então cada plano só sobe dentro da própria família. Testado com 3 cenários mockados (assessoria10→assessoria25, básico→pro, pro→lista vazia). Commit `5126acd`.
+4. **Dois bugs de UX reportados pelo Jacques usando o painel:** (a) a logo dentro do painel logado apontava pra `/` (LP pública), então clicar nela derrubava o cliente numa tela de login, parecendo que ele tinha sido deslogado, corrigido pra sempre voltar pro `/painel?c=token` do próprio cliente; (b) o Kanban de Planejamento (item 3 do benchmark QLicitações acima) tinha ficado escondido demais, o link saiu do dropdown "Mais" e virou item fixo da nav, e o botão "+ Planejamento" no card ganhou tooltip explicando o que é e, depois de clicado, virou link direto pro quadro em vez de só mudar de cor sem levar a lugar nenhum. Commit `b13af08`.
+
+Todos os 4 validados (parse-check dos scripts + teste funcional no navegador com fetch interceptado) e em produção.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
