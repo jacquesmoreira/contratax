@@ -122,6 +122,10 @@
   .btn-primario { background:var(--indigo); color:#fff; box-shadow:var(--glow-indigo); }
   .btn-primario:hover { transform:translateY(-2px); box-shadow:0 16px 30px -8px rgba(67,56,202,.65); }
 
+  /* PROMO BAR (sobria: faixa limpa da oferta, sem shimmer/emoji) */
+  .promo-bar { position:relative; z-index:2; background:var(--grad-acento); color:#fff; text-align:center; font-size:13.5px; font-weight:700; padding:10px 16px; letter-spacing:.01em; }
+  .promo-bar b { font-weight:800; }
+
   /* HEADER */
   header.topo { position:sticky; top:0; z-index:100; background:rgba(250,249,245,.85); backdrop-filter:blur(10px); border-bottom:1px solid var(--linha); }
   header.topo .barra { max-width:var(--wrap); margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:14px 32px; gap:20px; }
@@ -144,7 +148,7 @@
   .selo-topo .ponto { width:7px; height:7px; border-radius:50%; background:var(--verde); display:inline-block; animation:pulse 2s ease-in-out infinite; }
   .hero h1 { font-weight:800; font-size:clamp(34px,4.4vw,52px); line-height:1.08; letter-spacing:-.02em; margin:22px 0 20px; color:var(--navy); }
   .hero h1 .ac { color:var(--indigo); }
-  .hero .sub { font-size:19px; line-height:1.6; color:var(--cinza); margin:0 0 28px; max-width:560px; }
+  .hero .sub { font-size:19px; line-height:1.6; color:var(--cinza); margin:0 0 28px; }
   .hero .sub strong { color:var(--navy); }
   .hero-ctas { display:flex; align-items:center; gap:16px; margin-bottom:26px; flex-wrap:wrap; }
   .hero-ctas .btn-primario { font-size:16px; padding:15px 26px; border-radius:12px; }
@@ -170,6 +174,9 @@
   .hero-form select:focus, .hero-form input:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
   .hero-form .btn-primario { width:100%; margin-top:4px; padding:13px; border-radius:10px; font-size:15px; }
   #resultados { margin-top:14px; }
+
+  /* Seção "Experimente" (busca interativa realocada do hero) */
+  .busca-exp { background:#fff; border:1px solid var(--linha); border-radius:18px; padding:24px; box-shadow:var(--sombra-navy); text-align:left; }
 
   /* SECOES */
   section.bloco { padding:96px 32px; }
@@ -342,6 +349,8 @@
 </head>
 <body>
   <canvas id="cx-net" aria-hidden="true"></canvas>
+  <!-- PROMO BAR -->
+  <div class="promo-bar"><b>7 dias grátis</b>, sem cartão de crédito · cancele quando quiser</div>
   <!-- HEADER -->
   <header class="topo">
     <div class="barra">
@@ -384,27 +393,31 @@
         </div>
       </div>
 
-      <!-- Card navy do mock, com a busca interativa dentro -->
+      <!-- Card navy do mock: mockup do painel (triagem por prioridade) -->
       <div class="hero-card">
         <div class="hero-card-in">
           <div class="hero-card-bar">
             <span class="d" style="background:#EF4444"></span><span class="d" style="background:#F59E0B"></span><span class="d" style="background:#22C55E"></span>
             <span class="url">app.contratax.com.br/painel</span>
           </div>
-          <div class="hero-busca">
-            <div class="tit"><b>Licitações do seu ramo — agora</b><span class="aovivo">● ao vivo</span></div>
-            <div class="hero-form">
-              <div>
-                <label for="uf">Estado</label>
-                <select id="uf"></select>
-              </div>
-              <div>
-                <label for="termo">O que a sua empresa vende</label>
-                <input id="termo" type="text" placeholder="ex: limpeza, merenda, informática, obras" />
-              </div>
-              <button class="btn btn-primario" id="btn-buscar">Ver agora, grátis</button>
+          <div style="background:#fff;border-radius:12px;padding:18px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              <div style="font-weight:800;font-family:'Manrope',sans-serif;font-size:14px;color:#0B1E3A">Licitações do seu ramo — hoje</div>
+              <div style="font-size:12px;font-weight:700;color:#16A34A;background:#DCFCE7;padding:4px 10px;border-radius:999px">● ao vivo</div>
             </div>
-            <div id="resultados"></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+              <div style="background:#EEF0FF;border-radius:10px;padding:10px 8px;text-align:center"><div class="hmk-num" data-alvo="1139" style="font-weight:800;font-size:18px;color:#4338CA;font-family:'Manrope',sans-serif">1.139</div><div style="font-size:10px;font-weight:700;color:#4338CA;opacity:.8">Total</div></div>
+              <div style="background:#FEE2E2;border-radius:10px;padding:10px 8px;text-align:center"><div class="hmk-num" data-alvo="763" style="font-weight:800;font-size:18px;color:#DC2626;font-family:'Manrope',sans-serif">763</div><div style="font-size:10px;font-weight:700;color:#DC2626;opacity:.8">Alta</div></div>
+              <div style="background:#FEF3C7;border-radius:10px;padding:10px 8px;text-align:center"><div class="hmk-num" data-alvo="315" style="font-weight:800;font-size:18px;color:#B45309;font-family:'Manrope',sans-serif">315</div><div style="font-size:10px;font-weight:700;color:#B45309;opacity:.8">Média</div></div>
+              <div style="background:#F1F5F9;border-radius:10px;padding:10px 8px;text-align:center"><div class="hmk-num" data-alvo="61" style="font-weight:800;font-size:18px;color:#64748B;font-family:'Manrope',sans-serif">61</div><div style="font-size:10px;font-weight:700;color:#64748B;opacity:.8">Baixa</div></div>
+            </div>
+            <div style="border:1px solid #EEF0F5;border-radius:10px;overflow:hidden">
+              <div style="display:grid;grid-template-columns:58px 1fr 66px 52px;background:#F8FAFC;padding:8px 10px;font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.03em"><div>Prior.</div><div>Objeto</div><div>Valor</div><div>Encerra</div></div>
+              <div style="display:grid;grid-template-columns:58px 1fr 66px 52px;padding:9px 10px;font-size:11.5px;border-top:1px solid #F1F3F8;align-items:center"><div><span style="background:#FEE2E2;color:#DC2626;font-weight:700;font-size:9.5px;padding:2px 6px;border-radius:5px">Alta</span></div><div style="color:#1E293B;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px">Reforma de Infraestrutura Viária</div><div style="color:#334155;font-weight:700">R$ 2,08M</div><div style="color:#94A3B8">31/03</div></div>
+              <div style="display:grid;grid-template-columns:58px 1fr 66px 52px;padding:9px 10px;font-size:11.5px;border-top:1px solid #F1F3F8;align-items:center"><div><span style="background:#FEE2E2;color:#DC2626;font-weight:700;font-size:9.5px;padding:2px 6px;border-radius:5px">Alta</span></div><div style="color:#1E293B;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px">Construção de Refeitório Escolar</div><div style="color:#334155;font-weight:700">R$ 130k</div><div style="color:#94A3B8">31/03</div></div>
+              <div style="display:grid;grid-template-columns:58px 1fr 66px 52px;padding:9px 10px;font-size:11.5px;border-top:1px solid #F1F3F8;align-items:center"><div><span style="background:#FEF3C7;color:#B45309;font-weight:700;font-size:9.5px;padding:2px 6px;border-radius:5px">Média</span></div><div style="color:#1E293B;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px">Aquisição de Materiais de Construção</div><div style="color:#334155;font-weight:700">R$ 73k</div><div style="color:#94A3B8">30/03</div></div>
+              <div style="display:grid;grid-template-columns:58px 1fr 66px 52px;padding:9px 10px;font-size:11.5px;border-top:1px solid #F1F3F8;align-items:center"><div><span style="background:#F1F5F9;color:#64748B;font-weight:700;font-size:9.5px;padding:2px 6px;border-radius:5px">Baixa</span></div><div style="color:#1E293B;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px">Vigilância e Segurança Patrimonial</div><div style="color:#334155;font-weight:700">R$ 76k</div><div style="color:#94A3B8">05/04</div></div>
+            </div>
           </div>
         </div>
       </div>
@@ -417,6 +430,31 @@
       <div class="lbl">Editais de todos os portais oficiais, reunidos para você</div>
       <div class="pills">
         <span class="pill">PNCP</span><span class="pill">Comprasnet</span><span class="pill">BLL</span><span class="pill">BNC</span><span class="pill">Licitar Digital</span><span class="pill">Licitações-e</span><span class="pill">BBM Net</span><span class="pill">Portal de Compras</span><span class="pill">Licitanet</span><span class="pill">Compras BR</span><span class="pill">AMM Licita</span><span class="pill">PE Integrado</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPERIMENTE (busca interativa com dados reais do PNCP) -->
+  <section class="bloco" id="experimente" style="padding-top:76px;padding-bottom:76px">
+    <div class="wrap" style="max-width:620px;margin:0 auto">
+      <div class="cabec centro reveal" style="margin-bottom:26px;max-width:620px">
+        <div class="kicker">Experimente agora</div>
+        <h2>As licitações do seu ramo — de graça, sem cadastro</h2>
+        <p>Dados reais do PNCP, atualizados todo dia. Diga o que a sua empresa vende e veja o que está aberto agora.</p>
+      </div>
+      <div class="busca-exp reveal">
+        <div class="hero-form">
+          <div>
+            <label for="uf">Estado</label>
+            <select id="uf"></select>
+          </div>
+          <div>
+            <label for="termo">O que a sua empresa vende</label>
+            <input id="termo" type="text" placeholder="ex: limpeza, merenda, informática, obras" />
+          </div>
+          <button class="btn btn-primario" id="btn-buscar">Ver agora, grátis →</button>
+        </div>
+        <div id="resultados"></div>
       </div>
     </div>
   </section>
@@ -560,18 +598,19 @@
     <div class="wrap">
       <div class="cabec centro reveal">
         <div class="kicker claro">Por que o ContrataX</div>
-        <h2>Direto ao ponto. Sem vendedor, sem contrato.</h2>
-        <p>A maioria das plataformas foi feita para a assessoria que cobra caro. O ContrataX é para a sua empresa fazer sozinha.</p>
+        <h2>Todo mundo te avisa que o edital existe. A gente te diz se vale a pena.</h2>
+        <p>Monitorar e alertar é o mínimo — quase toda plataforma faz. O que muda o seu jogo é saber onde você ganha, disputar com dado na mão e receber o que é seu. Do edital ao pagamento.</p>
       </div>
       <div class="comp reveal">
-        <div class="h"><div></div><div style="text-align:center">ContrataX</div><div style="text-align:center">Plataformas tradicionais</div></div>
-        <div class="r"><div class="lbl">Preço na tela, sem falar com vendedor</div><div class="us">Sim</div><div class="them">Fale com vendas</div></div>
-        <div class="r"><div class="lbl">Sem fidelidade, cancele quando quiser</div><div class="us">Sim</div><div class="them">Contrato 6–12 meses</div></div>
-        <div class="r"><div class="lbl">IA lê o edital e confere a sua aptidão</div><div class="us">Sim</div><div class="them">Só busca e alerta</div></div>
-        <div class="r"><div class="lbl">Reputação de pagamento do órgão</div><div class="us">Sim</div><div class="them">Não tem</div></div>
-        <div class="r"><div class="lbl">Cobrança de órgão atrasado, pós-vitória</div><div class="us">Sim</div><div class="them">Não tem</div></div>
-        <div class="r"><div class="lbl">Teste grátis, sem cartão</div><div class="us">Sim</div><div class="them">Depende</div></div>
-        <div class="r"><div class="lbl">Preço de entrada</div><div class="us">R$ 59/mês</div><div class="them">R$ 390+/mês</div></div>
+        <div class="h"><div></div><div style="text-align:center">ContrataX</div><div style="text-align:center">Outras plataformas</div></div>
+        <div class="r"><div class="lbl">Diz se <b>você</b> está apto, cruzando com os seus documentos</div><div class="us">Sim</div><div class="them">Resumo genérico</div></div>
+        <div class="r"><div class="lbl">Reputação de pagamento: quais órgãos pagam em dia</div><div class="us">Sim</div><div class="them">Não tem</div></div>
+        <div class="r"><div class="lbl">Preço de referência pra montar o seu lance</div><div class="us">Sim</div><div class="them">Não tem</div></div>
+        <div class="r"><div class="lbl">Quem mais ganha no seu ramo e na sua região</div><div class="us">Sim</div><div class="them">Não tem</div></div>
+        <div class="r"><div class="lbl">Radar de contratos a vencer (a próxima licitação)</div><div class="us">Sim</div><div class="them">Raro</div></div>
+        <div class="r"><div class="lbl">Cobrança do órgão quando o pagamento atrasa</div><div class="us">Sim</div><div class="them">Não tem</div></div>
+        <div class="r"><div class="lbl">Declarações e dossiê de impugnação prontos</div><div class="us">Sim</div><div class="them">Manual / avulso</div></div>
+        <div class="r"><div class="lbl">Sem fidelidade, cancele quando quiser</div><div class="us">Sim</div><div class="them">Varia</div></div>
       </div>
     </div>
   </section>
@@ -840,6 +879,14 @@ document.getElementById("termo").addEventListener("keydown", e => { if (e.key ==
     document.getElementById("tab-k").textContent = dados[i].k;
     document.getElementById("tab-t").textContent = dados[i].t;
     document.getElementById("tab-d").textContent = dados[i].d;
+  });
+})();
+
+// ===== Count-up dos contadores do mockup do hero =====
+(function () {
+  if (typeof contarAte !== "function") return;
+  document.querySelectorAll(".hmk-num[data-alvo]").forEach(function (el) {
+    contarAte(el, Number(el.dataset.alvo), 1100);
   });
 })();
 
