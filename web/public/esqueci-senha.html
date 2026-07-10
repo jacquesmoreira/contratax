@@ -8,20 +8,21 @@
 <title>ContrataX — Esqueci minha senha</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-:root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --vermelho:#dc2626; }
+:root { --navy:#0B1E3A; --indigo:#4338CA; --indigo-d:#312e81; --azul:#2563EB; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#64748B; --linha:#E4E7F0; --creme:#FAF9F5; --verde:#16A34A; --vermelho:#DC2626;
+  --sombra-navy:0 30px 70px -30px rgba(11,30,58,.4); --glow-indigo:0 10px 24px -8px rgba(67,56,202,.55); }
 * { box-sizing:border-box; margin:0; padding:0; }
-body { font-family:"Inter",-apple-system,sans-serif; background:var(--fundo); color:var(--tinta); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
-.card { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:34px; max-width:420px; width:100%; box-shadow:0 6px 30px rgba(15,23,42,.06); }
+body { font-family:'Public Sans',-apple-system,sans-serif; background:radial-gradient(1000px 500px at 50% -10%, rgba(67,56,202,.10) 0%, var(--creme) 60%); color:var(--tinta); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+.card { background:#fff; border:1px solid var(--linha); border-radius:20px; padding:34px; max-width:420px; width:100%; box-shadow:var(--sombra-navy); }
 .logo { margin-bottom:18px; }
 .logo img { height:32px; }
-h1 { font-size:22px; font-weight:800; letter-spacing:-.4px; margin-bottom:6px; }
+h1 { font-family:'Manrope',sans-serif; font-size:22px; font-weight:800; letter-spacing:-.02em; margin-bottom:6px; color:var(--navy); }
 .sub { color:var(--cinza); font-size:14px; line-height:1.5; margin-bottom:20px; }
 label { display:block; font-size:12px; font-weight:700; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin:0 0 6px; }
 input { width:100%; padding:13px 14px; border:1px solid var(--linha); border-radius:10px; font-size:15px; font-family:inherit; outline:none; }
 input:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
-.btn { width:100%; margin-top:18px; background:var(--indigo); color:#fff; border:none; padding:14px; border-radius:11px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; }
+.btn { width:100%; margin-top:18px; background:var(--indigo); color:#fff; border:none; padding:14px; border-radius:11px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:var(--glow-indigo); }
 .btn:hover { background:var(--indigo-d); }
 .btn:disabled { background:var(--cinza-c); cursor:default; }
 .spinner { display:inline-block; width:14px; height:14px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:girar .7s linear infinite; vertical-align:middle; margin-right:7px; }

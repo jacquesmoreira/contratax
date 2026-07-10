@@ -8,20 +8,21 @@
 <title>Obrigado — ContrataX</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-  :root { --indigo:#4338ca; --indigo-d:#312e81; --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; }
+  :root { --navy:#0B1E3A; --indigo:#4338CA; --indigo-d:#312e81; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#64748B; --linha:#E4E7F0; --creme:#FAF9F5; --verde:#16A34A; --verde-bg:#DCFCE7;
+    --sombra-navy:0 30px 70px -30px rgba(11,30,58,.4); --glow-indigo:0 10px 24px -8px rgba(67,56,202,.55); }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:radial-gradient(900px 500px at 50% -10%, #eef2ff 0%, var(--fundo) 60%); color:var(--tinta); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
-  .card { background:#fff; border:1px solid var(--linha); border-radius:22px; box-shadow:0 30px 80px rgba(15,23,42,.10); width:100%; max-width:520px; padding:42px 38px; text-align:center; }
+  body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:radial-gradient(900px 500px at 50% -10%, rgba(67,56,202,.10) 0%, var(--creme) 60%); color:var(--tinta); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card { background:#fff; border:1px solid var(--linha); border-radius:20px; box-shadow:var(--sombra-navy); width:100%; max-width:520px; padding:42px 38px; text-align:center; }
   .logo img { height:38px; width:auto; margin:0 auto 26px; display:block; }
   .ico-wrap { width:88px; height:88px; border-radius:50%; background:var(--verde-bg); border:3px solid #a7f3d0; display:flex; align-items:center; justify-content:center; margin:0 auto 22px; font-size:46px; }
-  h1 { font-size:26px; font-weight:800; letter-spacing:-.5px; margin-bottom:8px; color:var(--tinta); }
+  h1 { font-family:'Manrope',sans-serif; font-size:26px; font-weight:800; letter-spacing:-.02em; margin-bottom:8px; color:var(--navy); }
   .sub { color:var(--cinza); font-size:15px; line-height:1.55; margin-bottom:14px; }
   .status { background:#fef3c7; border:1px solid #fde68a; color:#92400e; padding:11px 16px; border-radius:11px; font-size:13.5px; font-weight:600; margin:18px 0 24px; }
   .status.pago { background:var(--verde-bg); border-color:#a7f3d0; color:var(--verde); }
   .acoes { display:flex; flex-direction:column; gap:10px; }
-  .btn { background:var(--indigo); color:#fff; border:none; padding:14px 18px; border-radius:11px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; text-decoration:none; transition:background .12s; }
+  .btn { background:var(--indigo); color:#fff; border:none; padding:14px 18px; border-radius:11px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; text-decoration:none; box-shadow:var(--glow-indigo); transition:background .12s; }
   .btn:hover { background:var(--indigo-d); }
   .btn.sec { background:#fff; color:var(--indigo); border:1.5px solid var(--indigo); }
   .nota { font-size:12.5px; color:var(--cinza-c); margin-top:18px; line-height:1.55; }
