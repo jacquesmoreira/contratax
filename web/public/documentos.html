@@ -28,14 +28,22 @@
   input, select, textarea { width:100%; padding:12px 14px; border:1px solid var(--linha); border-radius:10px; font-size:15px; font-family:inherit; outline:none; }
   input:focus, select:focus, textarea:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .grid3 { display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:14px; }
   .cert { display:grid; grid-template-columns:1fr 170px; gap:12px; align-items:center; padding:11px 0; border-bottom:1px solid var(--linha); }
   .cert:last-child { border:none; }
   .cert .nome { font-size:14.5px; font-weight:600; }
   .cert .nome small { display:block; color:var(--cinza-c); font-weight:400; font-size:12px; }
   .btn { width:100%; background:var(--indigo); color:#fff; border:none; padding:15px; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; }
   .btn:hover { background:var(--indigo-d); }
+  .btn-sec { width:100%; background:#fff; color:var(--indigo); border:1.5px dashed var(--linha); padding:11px; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; margin-top:8px; }
+  .btn-sec:hover { border-color:var(--indigo); }
+  .item-linha { border:1px solid var(--linha); border-radius:12px; padding:14px; margin-bottom:10px; position:relative; }
+  .item-linha .remover { position:absolute; top:10px; right:10px; background:none; border:none; color:var(--cinza-c); font-size:18px; cursor:pointer; line-height:1; padding:2px 6px; }
+  .item-linha .remover:hover { color:#dc2626; }
+  .item-linha label { margin-top:0; }
+  .item-linha .grid3 label:first-child { margin-top:0; }
   .msg { text-align:center; margin-top:14px; font-size:14px; font-weight:600; }
-  @media (max-width:560px){ .grid2,.cert{ grid-template-columns:1fr; } }
+  @media (max-width:560px){ .grid2,.grid3,.cert{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -47,7 +55,7 @@
     <form id="form">
       <div class="card">
         <h2>Dados da empresa</h2>
-        <div class="dica">Usados para conferir exigências de porte e qualificação econômica.</div>
+        <div class="dica">Usados para conferir exigências de porte e qualificação econômico-financeira.</div>
         <div class="grid2">
           <div>
             <label for="porte">Porte</label>
@@ -68,6 +76,33 @@
             <div style="font-size:11.5px;color:var(--cinza-c);margin-top:5px;line-height:1.4">Capital social registrado no contrato social. Editais grandes podem exigir mínimo de <b>10% do valor estimado</b>.</div>
           </div>
         </div>
+        <div class="grid2">
+          <div>
+            <label for="faturamento">Faturamento anual (R$)</label>
+            <input id="faturamento" type="number" placeholder="Ex: 800000" />
+            <div style="font-size:11.5px;color:var(--cinza-c);margin-top:5px;line-height:1.4">Alguns editais exigem faturamento mínimo (qualificação econômico-financeira). Opcional, mas ajuda a IA a filtrar editais fora do seu alcance.</div>
+          </div>
+          <div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Responsável técnico</h2>
+        <div class="dica">Editais de obras, engenharia e serviços técnicos costumam exigir um responsável técnico com registro em conselho profissional. Deixe em branco se não se aplica ao seu ramo.</div>
+        <div class="grid3">
+          <div>
+            <label for="rtNome">Nome</label>
+            <input id="rtNome" type="text" placeholder="Nome do responsável técnico" />
+          </div>
+          <div>
+            <label for="rtCpf">CPF</label>
+            <input id="rtCpf" type="text" placeholder="000.000.000-00" />
+          </div>
+          <div>
+            <label for="rtRegistro">Registro (CREA/CAU/outro)</label>
+            <input id="rtRegistro" type="text" placeholder="Ex: CREA-SP 123456" />
+          </div>
+        </div>
       </div>
 
       <div class="card">
@@ -82,8 +117,9 @@
 
       <div class="card">
         <h2>Atestados de capacidade técnica</h2>
-        <div class="dica">Descreva os serviços/fornecimentos que você já comprovou (um por linha). Ajuda na conferência da qualificação técnica.</div>
-        <textarea id="atestados" rows="4" placeholder="Ex: Serviço de limpeza predial em órgãos públicos, R$ 600 mil/ano"></textarea>
+        <div class="dica">Um atestado por item: o objeto do que você já entregou, a quantidade e, se tiver, o número do CAT. A IA compara a quantidade exigida no edital com o que você já comprovou.</div>
+        <div id="atestados-lista"></div>
+        <button type="button" class="btn-sec" id="btn-add-atestado">+ Adicionar atestado</button>
       </div>
 
       <button class="btn" type="submit" id="btn">Salvar meus documentos</button>
@@ -96,24 +132,80 @@ const token = new URLSearchParams(location.search).get("c") || "";
 document.getElementById("voltar").href = "/painel?c=" + encodeURIComponent(token);
 const CERTS = ["federalConjunta","fgts","trabalhistaCNDT","estadual","municipal"];
 
+function linhaAtestado(item) {
+  item = item || {};
+  const div = document.createElement("div");
+  div.className = "item-linha";
+  div.innerHTML = `
+    <button type="button" class="remover" title="Remover" aria-label="Remover atestado">×</button>
+    <div class="grid3">
+      <div>
+        <label>Objeto</label>
+        <input type="text" class="at-objeto" placeholder="Ex: serviço de limpeza predial em órgão público" />
+      </div>
+      <div>
+        <label>Quantidade</label>
+        <input type="text" class="at-quantidade" placeholder="Ex: 3.000 m²/mês" />
+      </div>
+      <div>
+        <label>Nº do CAT (opcional)</label>
+        <input type="text" class="at-cat" placeholder="Ex: 12345678" />
+      </div>
+    </div>`;
+  div.querySelector(".at-objeto").value = item.objeto || "";
+  div.querySelector(".at-quantidade").value = item.quantidade || "";
+  div.querySelector(".at-cat").value = item.cat || "";
+  div.querySelector(".remover").onclick = () => div.remove();
+  return div;
+}
+
+function adicionarAtestado(item) {
+  document.getElementById("atestados-lista").appendChild(linhaAtestado(item));
+}
+document.getElementById("btn-add-atestado").onclick = () => adicionarAtestado();
+
 // Carrega os dados existentes
 fetch("/api/documentos?c=" + encodeURIComponent(token)).then(r=>r.json()).then(d=>{
   const e = d.empresa || {};
   if (e.porte) document.getElementById("porte").value = e.porte;
   if (e.capitalSocial) document.getElementById("capital").value = e.capitalSocial;
-  if (e.atestados) document.getElementById("atestados").value = e.atestados;
+  if (e.faturamentoAnual) document.getElementById("faturamento").value = e.faturamentoAnual;
+  const rt = e.responsavelTecnico || {};
+  if (rt.nome) document.getElementById("rtNome").value = rt.nome;
+  if (rt.cpf) document.getElementById("rtCpf").value = rt.cpf;
+  if (rt.registro) document.getElementById("rtRegistro").value = rt.registro;
   for (const c of CERTS) if (e.certidoes && e.certidoes[c] && e.certidoes[c].validade) document.getElementById(c).value = e.certidoes[c].validade;
-}).catch(()=>{});
+
+  // Atestados: formato novo (array de objetos) ja migrado, ou string antiga
+  // (texto livre por linha) convertida em uma linha por item na primeira vez
+  // que o cliente abrir esta tela, sem perder o que ja tinha preenchido.
+  if (Array.isArray(e.atestados) && e.atestados.length) {
+    e.atestados.forEach(adicionarAtestado);
+  } else if (typeof e.atestados === "string" && e.atestados.trim()) {
+    e.atestados.trim().split("\n").map(l => l.trim()).filter(Boolean).forEach(objeto => adicionarAtestado({ objeto }));
+  }
+  if (!document.getElementById("atestados-lista").children.length) adicionarAtestado();
+}).catch(() => { adicionarAtestado(); });
 
 document.getElementById("form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const msg = document.getElementById("msg"), btn = document.getElementById("btn");
   const certidoes = {};
   for (const c of CERTS) { const v = document.getElementById(c).value; if (v) certidoes[c] = { validade: v }; }
+  const atestados = [...document.querySelectorAll("#atestados-lista .item-linha")].map(el => ({
+    objeto: el.querySelector(".at-objeto").value.trim(),
+    quantidade: el.querySelector(".at-quantidade").value.trim(),
+    cat: el.querySelector(".at-cat").value.trim(),
+  })).filter(a => a.objeto || a.quantidade || a.cat);
+  const rtNome = document.getElementById("rtNome").value.trim();
+  const rtCpf = document.getElementById("rtCpf").value.trim();
+  const rtRegistro = document.getElementById("rtRegistro").value.trim();
   const empresa = {
     porte: document.getElementById("porte").value,
     capitalSocial: Number(document.getElementById("capital").value) || null,
-    atestados: document.getElementById("atestados").value.trim(),
+    faturamentoAnual: Number(document.getElementById("faturamento").value) || null,
+    responsavelTecnico: (rtNome || rtCpf || rtRegistro) ? { nome: rtNome, cpf: rtCpf, registro: rtRegistro } : null,
+    atestados,
     certidoes,
   };
   btn.disabled = true; btn.textContent = "Salvando...";

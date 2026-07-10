@@ -51,6 +51,11 @@ Responda SOMENTE com JSON valido, sem texto fora dele, nesta estrutura:
 
 Seja rigoroso: na duvida use "confirmar". Nao invente exigencias nem capacidades.
 
+Como usar campos especificos do perfil, quando presentes:
+- "faturamentoAnual": compare com qualquer exigencia de faturamento minimo (qualificacao economico-financeira). Se o edital nao exigir faturamento minimo, ignore o campo.
+- "responsavelTecnico": se o edital exigir responsavel tecnico com registro em conselho profissional (CREA, CAU etc), confira se o campo "registro" esta preenchido e e compativel com o tipo de registro pedido. Se o edital nao exigir responsavel tecnico, ignore o campo.
+- "atestados": e uma lista de itens com "objeto", "quantidade" e "cat" (numero do CAT, quando houver). Para cada exigencia de atestado de capacidade tecnica, procure um atestado cujo objeto seja compativel e cuja quantidade atenda o minimo pedido no edital. Lembre que o TCU limita a exigencia de atestado a no maximo 50% do quantitativo do objeto licitado (Sumula 263 do TCU): se a quantidade do atestado for pelo menos metade do quantitativo exigido no edital, considere "atende".
+
 Nunca use travessao longo (—) em nenhum campo de texto; use virgula, ponto ou parenteses.`;
 
 // Monta o corpo da chamada de IA (so texto, reaproveita a analise da Camada 3).
