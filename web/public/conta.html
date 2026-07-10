@@ -87,7 +87,7 @@
 
       <label style="margin-top:18px">Estados onde você atua *</label>
       <div class="mods" id="ufs-chips-completar" style="gap:7px"></div>
-      <div class="dica">💡 Selecione seu(s) estado(s) — ou marque <b>🇧🇷 Brasil todo</b>. Focar na sua região deixa o radar mais limpo.</div>
+      <div class="dica">💡 Selecione seu(s) estado(s), ou marque <b>🇧🇷 Brasil todo</b>. Focar na sua região deixa o radar mais limpo.</div>
 
       <button class="btn" id="btn-completar" style="margin-top:18px;width:100%">Liberar meu painel</button>
       <div class="ok" id="completar-ok"></div>
@@ -180,7 +180,7 @@
     <div class="card" style="border-color:#fecaca;background:#fff">
       <h2 style="color:#991b1b">Cancelar assinatura</h2>
       <p style="font-size:14px;color:var(--cinza);margin-bottom:14px;line-height:1.55">
-        Sem multa, sem fidelidade. A renovação para imediatamente e seu acesso continua valendo até o fim do período já pago. Se você contratou há menos de 7 dias, tem direito ao reembolso integral (CDC art. 49) — escreva para <a href="mailto:contato@contratax.com.br" style="color:var(--indigo);font-weight:700">contato@contratax.com.br</a>.
+        Sem multa, sem fidelidade. A renovação para imediatamente e seu acesso continua valendo até o fim do período já pago. Se você contratou há menos de 7 dias, tem direito ao reembolso integral (CDC art. 49), escreva para <a href="mailto:contato@contratax.com.br" style="color:var(--indigo);font-weight:700">contato@contratax.com.br</a>.
       </p>
       <button class="btn" id="abrir-cancelar" style="background:#fff;color:#991b1b;border:1.5px solid #fca5a5;margin-top:6px">Quero cancelar</button>
 
@@ -445,7 +445,7 @@ async function carregarCardPlano() {
     card.style.display = "block";
 
     const fmtDataBR = (iso) => { try { return new Date(iso).toLocaleDateString("pt-BR"); } catch { return ""; } };
-    const dataRenova = a.expiraEm ? fmtDataBR(a.expiraEm) : "—";
+    const dataRenova = a.expiraEm ? fmtDataBR(a.expiraEm) : "-";
     document.getElementById("info-plano-atual").innerHTML =
       `Seu plano atual: <b>${nivel.replace(/^./, c => c.toUpperCase())}</b>. Renova em <b>${dataRenova}</b>.`;
 
@@ -495,7 +495,7 @@ async function carregarCardPlano() {
       opcoesEl.appendChild(card);
     }
     if (!opcoesEl.children.length) {
-      opcoesEl.innerHTML = `<div style="font-size:14px;color:var(--cinza-c)">Você já está no plano mais alto. Para mudar de plano para um inferior, escreva para <a href="mailto:contato@contratax.com.br" style="color:var(--indigo);font-weight:700">contato@contratax.com.br</a> — o downgrade aplica na próxima renovação.</div>`;
+      opcoesEl.innerHTML = `<div style="font-size:14px;color:var(--cinza-c)">Você já está no plano mais alto. Para mudar de plano para um inferior, escreva para <a href="mailto:contato@contratax.com.br" style="color:var(--indigo);font-weight:700">contato@contratax.com.br</a>, o downgrade aplica na próxima renovação.</div>`;
     }
   } catch (e) {
     console.error("[carregar card plano]", e);

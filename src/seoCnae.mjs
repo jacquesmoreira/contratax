@@ -50,7 +50,7 @@ function esc(s) {
 function brl(v) {
   return (Number(v) || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL", maximumFractionDigits:0 });
 }
-function dataBR(s) { if (!s) return "—"; const d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString("pt-BR"); }
+function dataBR(s) { if (!s) return "-"; const d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString("pt-BR"); }
 
 export function cnaePorCodigo(codigo) {
   const c = String(codigo || "").trim();
@@ -187,7 +187,7 @@ export function paginaCnae(codigo) {
 // ===== Hub /cnae =====
 export function paginaHubCnae() {
   const canonical = `${BASE}/cnae`;
-  const title = "Licitações por CNAE — Encontre editais para o seu segmento | ContrataX";
+  const title = "Licitações por CNAE: encontre editais para o seu segmento | ContrataX";
   const description = "Lista de CNAEs com licitações públicas ativas no Brasil. Encontre editais para o segmento da sua empresa: limpeza, informática, alimentação, construção e mais.";
 
   const lista = CNAES.map((c) => `<div class="card">

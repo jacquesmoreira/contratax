@@ -40,7 +40,7 @@ function htmlAlerta(nome, certidoes) {
         </td></tr></table>
       </td>
     </tr></table>
-    <h2 style="color:#0f172a;font-size:20px;margin-bottom:8px">Certidões próximas do vencimento — ${nome}</h2>
+    <h2 style="color:#0f172a;font-size:20px;margin-bottom:8px">Certidões próximas do vencimento de ${nome}</h2>
     <p style="color:#475569;font-size:15px;margin-bottom:20px">Renove antes que vençam para não ser inabilitada em licitações.</p>
     <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
       <thead><tr style="background:#f8fafc">
@@ -52,7 +52,7 @@ function htmlAlerta(nome, certidoes) {
     <p style="color:#475569;font-size:13px;margin-top:20px">
       <a href="https://www.contratax.com.br/documentos" style="color:#4338ca;font-weight:700">Atualizar meus documentos →</a>
     </p>
-    <p style="color:#94a3b8;font-size:12px;margin-top:24px">ContrataX — Gestão Inteligente de Licitações</p>
+    <p style="color:#94a3b8;font-size:12px;margin-top:24px">ContrataX, gestão inteligente de licitações</p>
   </div>`;
 }
 
@@ -93,7 +93,7 @@ export async function verificarCertidoesVencendo({ log = console.log } = {}) {
     try {
       await enviar({
         para: p.email,
-        assunto: `Atenção: ${alertar.length} ${alertar.length > 1 ? "certidões" : "certidão"} vencendo — ${p.razaoSocial || p.nome}`,
+        assunto: `Atenção: ${alertar.length} ${alertar.length > 1 ? "certidões" : "certidão"} vencendo (${p.razaoSocial || p.nome})`,
         html: htmlAlerta(p.razaoSocial || p.nome, alertar),
       });
       // Marca que já foi enviado hoje

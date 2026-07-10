@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
-<title>ContrataX — Admin</title>
+<title>ContrataX: Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <style>
   :root { --indigo:#4338ca; --indigo-d:#312e81; --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; --ambar:#b45309; --ambar-bg:#fffbeb; --vermelho:#dc2626; --vermelho-bg:#fef2f2; }
@@ -58,7 +58,7 @@ const token = new URLSearchParams(location.search).get("c") || "";
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
 const brl = (n) => "R$ " + Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const dataBR = (s) => s ? new Date(s).toLocaleDateString("pt-BR") : "—";
+const dataBR = (s) => s ? new Date(s).toLocaleDateString("pt-BR") : "-";
 
 // Ramos podem ter dezenas/centenas de termos e poluem a tabela. Mostra os
 // primeiros e esconde o resto atras de um "+N mais" (toggle).
@@ -139,7 +139,7 @@ async function carregar() {
     <div class="c"><div class="n">${(s.editais?.abertos ?? 0).toLocaleString("pt-BR")}</div><div class="l">Editais abertos</div></div>
     <div class="c"><div class="n">${(s.contratos?.total ?? 0).toLocaleString("pt-BR")}</div><div class="l">Contratos no acervo</div></div>
     <div class="c"><div class="n">${cu.analises ?? 0}</div><div class="l">Análises por mês</div></div>
-    <div class="c"><div class="n">${brl(cu.brlTotal ?? 0)}</div><div class="l">Custo total (${cu.custoMedioPorAnaliseBRL ? brl(cu.custoMedioPorAnaliseBRL)+"/análise" : "—"})</div></div>
+    <div class="c"><div class="n">${brl(cu.brlTotal ?? 0)}</div><div class="l">Custo total (${cu.custoMedioPorAnaliseBRL ? brl(cu.custoMedioPorAnaliseBRL)+"/análise" : "-"})</div></div>
   </div>`;
 
   const contAtivos = cli.d.clientes.filter((c) => grupoStatus(c.status) === "ativos").length;
@@ -168,7 +168,7 @@ async function carregar() {
     const margem = c.status === "ativo" ? Math.round(100 * (1 - ia.mes / receita)) : null;
     html += `<tr>
       <td><b>${esc(c.razaoSocial || c.nome)}</b><br><span class="mut">${esc(c.cnpj || "sem CNPJ")} · ${esc(c.uf || "BR")}</span><br>${ramoCell(c.ramo)}</td>
-      <td>${esc(c.email || "—")}<br><span class="mut">desde ${dataBR(c.criadoEm)}</span></td>
+      <td>${esc(c.email || "-")}<br><span class="mut">desde ${dataBR(c.criadoEm)}</span></td>
       <td><span class="pill ${c.status}">${esc(c.status)}</span> ${venc ? `<span class="mut">${venc}</span>` : ""}<br><span class="mut">${esc(c.planoNome)}${c.formaPagamento ? " · " + esc(c.formaPagamento) : ""}</span>${(() => {
         const r = c.regua || { onboard: 0, winback: 0 };
         const enviou = r.onboard + r.winback > 0;
@@ -206,7 +206,7 @@ async function carregar() {
 
   const fbs = s.feedbacks || [];
   const naoLidos = fbs.filter(f => !f.lido).length;
-  html += `<h2>Voz do cliente${naoLidos ? ` — <span style="color:#dc2626">${naoLidos} não lido${naoLidos>1?"s":""}</span>` : ` — ${fbs.length}`}</h2><div class="leads">${
+  html += `<h2>Voz do cliente${naoLidos ? ` (<span style="color:#dc2626">${naoLidos} não lido${naoLidos>1?"s":""}</span>)` : ` (${fbs.length})`}</h2><div class="leads">${
     fbs.length ? fbs.map(f => {
       const sup = f.tipo === "suporte";
       const cor = sup ? "#b45309" : "#4338ca", bg = sup ? "#fffbeb" : "#eef2ff";
@@ -223,7 +223,7 @@ async function carregar() {
   }</div>`;
 
   const leads = s.leads || [];
-  html += `<h2 style="margin-top:26px">Interessados (leads) — ${leads.length}</h2><div class="leads">${
+  html += `<h2 style="margin-top:26px">Interessados (leads): ${leads.length}</h2><div class="leads">${
     leads.length ? leads.slice().reverse().slice(0, 50).map(l => `<div>${esc(l.email)} <span class="mut">· ${esc(l.termo || "")} ${esc(l.uf || "")} · ${dataBR(l.em)}</span></div>`).join("") : '<span class="mut">Nenhum lead ainda.</span>'
   }</div>`;
 

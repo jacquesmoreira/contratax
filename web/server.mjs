@@ -1551,11 +1551,11 @@ const servidor = createServer(async (req, res) => {
         if (corpo.tipo === "avulso") {
           const a = AVULSOS[corpo.id];
           if (!a) return json(res, 400, { erro: "Pacote invalido" });
-          r = await criarCobrancaAvulsa({ clienteId, valor: precoNumero(a.preco), descricao: `ContrataX — ${a.nome}`, externalReference: `avulso:${perfil.token}:${a.id}`, successUrl });
+          r = await criarCobrancaAvulsa({ clienteId, valor: precoNumero(a.preco), descricao: `ContrataX: ${a.nome}`, externalReference: `avulso:${perfil.token}:${a.id}`, successUrl });
         } else {
           const pl = PLANOS[corpo.id];
           if (!pl) return json(res, 400, { erro: "Plano invalido" });
-          r = await criarAssinatura({ clienteId, valor: precoNumero(pl.preco), descricao: `ContrataX — Plano ${pl.nome}`, externalReference: `sub:${perfil.token}:${pl.id}`, successUrl });
+          r = await criarAssinatura({ clienteId, valor: precoNumero(pl.preco), descricao: `ContrataX: Plano ${pl.nome}`, externalReference: `sub:${perfil.token}:${pl.id}`, successUrl });
           // Salva o subscriptionId no perfil pra permitir cancelamento self-service.
           if (r.subscriptionId) {
             const perfis2 = await lerPerfis();
@@ -1623,7 +1623,7 @@ const servidor = createServer(async (req, res) => {
                   await atualizarValorAssinatura(
                     perfilU.asaasSubscriptionId,
                     novoValor,
-                    `ContrataX — Plano ${PLANOS[novoNivel].nome}`,
+                    `ContrataX: Plano ${PLANOS[novoNivel].nome}`,
                   );
                 }
                 await enviarConversao(perfilU, {
@@ -1661,7 +1661,7 @@ const servidor = createServer(async (req, res) => {
                 await atualizarValorAssinatura(
                   perfilA.asaasSubscriptionId,
                   valorMensalRecorrente(perfilA),
-                  `ContrataX — Plano ${planoDe(perfilA).nome} + ${perfilA.assentosPagos} acesso(s) extra(s)`,
+                  `ContrataX: Plano ${planoDe(perfilA).nome} + ${perfilA.assentosPagos} acesso(s) extra(s)`,
                 );
               } else {
                 console.warn(`[assentos] ${token}: sem asaasSubscriptionId; assentos liberados mas recorrencia nao atualizada.`);
@@ -1706,7 +1706,7 @@ const servidor = createServer(async (req, res) => {
 <table cellpadding="0" cellspacing="0" border="0" style="margin:20px 0"><tr><td align="center">
 <a href="${linkPg}" style="display:inline-block;background:#4338ca;color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 28px;border-radius:11px">Pagar agora</a>
 </td></tr></table>
-<p style="font-size:13.5px;color:#64748b">Se ja pagou nas ultimas horas, ignore este e-mail — a confirmacao pode levar alguns minutos.</p>
+<p style="font-size:13.5px;color:#64748b">Se ja pagou nas ultimas horas, ignore este e-mail, a confirmacao pode levar alguns minutos.</p>
 <p style="font-size:13.5px;color:#64748b">Duvidas? Responda este e-mail ou escreva para <a href="mailto:contato@contratax.com.br" style="color:#4338ca">contato@contratax.com.br</a>.</p>
 </td></tr>
 <tr><td style="background:#f8fafc;padding:16px 26px;text-align:center;border-top:1px solid #e2e8f0">
@@ -1791,7 +1791,7 @@ const servidor = createServer(async (req, res) => {
         const r = await criarCobrancaAvulsa({
           clienteId,
           valor: calc.valor,
-          descricao: `ContrataX — ${calc.descricao}`,
+          descricao: `ContrataX: ${calc.descricao}`,
           externalReference: `upgrade:${perfil.token}:${corpo.novo}`,
           successUrl,
         });
@@ -1833,7 +1833,7 @@ const servidor = createServer(async (req, res) => {
         const r = await criarCobrancaAvulsa({
           clienteId,
           valor: calc.valor,
-          descricao: `ContrataX — ${calc.qtd} acesso(s) extra(s)`,
+          descricao: `ContrataX: ${calc.qtd} acesso(s) extra(s)`,
           externalReference: `assentos:${perfil.token}:${calc.qtd}`,
           successUrl,
         });
@@ -2169,7 +2169,7 @@ const servidor = createServer(async (req, res) => {
       const rl = tentarUsoVisitante(ip, "chat");
       if (!rl.ok) {
         return json(res, 200, {
-          resposta: "Voce ja fez muitas perguntas hoje. Para continuar, escreva para contato@contratax.com.br ou abra /contato — respondemos em 1 dia util.",
+          resposta: "Voce ja fez muitas perguntas hoje. Para continuar, escreva para contato@contratax.com.br ou abra /contato, respondemos em 1 dia util.",
           bloqueado: true,
         });
       }

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
-<title>Obrigado — ContrataX</title>
+<title>Obrigado: ContrataX</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -41,7 +41,7 @@
       <a class="btn" id="btn-painel" href="#">Ir para o meu painel →</a>
       <a class="btn sec" id="btn-suporte" href="mailto:contato@contratax.com.br">Algum problema? Falar com a gente</a>
     </div>
-    <div class="nota">Pode ser que o status no painel demore alguns segundos para atualizar — o sistema libera assim que o gateway confirma.</div>
+    <div class="nota">Pode ser que o status no painel demore alguns segundos para atualizar, o sistema libera assim que o gateway confirma.</div>
   </div>
 
 <script>
@@ -59,7 +59,7 @@ async function checar() {
       document.getElementById("texto").textContent = "Sua conta está ativa. Bem-vindo ao ContrataX.";
       const st = document.getElementById("status");
       st.className = "status pago";
-      st.innerHTML = "✓ Plano " + (d.nivel || "ativo") + " liberado — " + (d.uso?.limite || 100) + " análises este mês";
+      st.innerHTML = "✓ Plano " + (d.nivel || "ativo") + " liberado, " + (d.uso?.limite || 100) + " análises este mês";
       return true;
     }
   } catch {}

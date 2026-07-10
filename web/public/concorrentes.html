@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
-<title>ContrataX — Análise de Concorrentes</title>
+<title>ContrataX: Análise de Concorrentes</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
 :root { --indigo:#4338ca; --indigo-d:#312e81; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#64748b; --linha:#E4E7F0; --fundo:#FAF9F5; --verde:#16A34A; }
@@ -50,7 +50,7 @@ td { padding:9px 8px; border-top:1px solid var(--linha); font-size:13.5px; verti
 
 <div class="wrap-main">
   <h1>Análise de Concorrentes</h1>
-  <div class="sub">Digite o CNPJ de um concorrente e veja os contratos públicos que ele já ganhou — órgãos, valores e objetos. Dados oficiais do PNCP.</div>
+  <div class="sub">Digite o CNPJ de um concorrente e veja os contratos públicos que ele já ganhou: órgãos, valores e objetos. Dados oficiais do PNCP.</div>
 
   <div class="busca">
     <input id="cnpj" type="text" placeholder="Digite o CNPJ do concorrente (ex: 12.345.678/0001-90)" />
@@ -65,8 +65,8 @@ const token = new URLSearchParams(location.search).get("c") || "";
 document.getElementById("link-painel").href = "/painel?c=" + encodeURIComponent(token);
 document.getElementById("voltar").href = "/painel?c=" + encodeURIComponent(token);
 const esc = s => (s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const brl = v => (v == null || Number(v) === 0) ? "—" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-const dataBR = iso => { if (!iso) return "—"; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString("pt-BR"); };
+const brl = v => (v == null || Number(v) === 0) ? "-" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+const dataBR = iso => { if (!iso) return "-"; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString("pt-BR"); };
 
 document.getElementById("cnpj").addEventListener("keydown", e => { if (e.key === "Enter") buscar(); });
 
@@ -84,14 +84,14 @@ async function buscar() {
     }
     const orgaos = d.porOrgao.map(o => `<tr><td>${esc(o.orgao)} <span class="mut">${esc(o.uf || "")}</span></td><td class="right">${o.qtd}</td><td class="right">${brl(o.valor)}</td></tr>`).join("");
     const contratos = d.contratos.map(c => `<tr>
-      <td>${esc(c.objeto || "—")}</td>
-      <td>${esc(c.orgao || "—")} <span class="mut">${esc(c.municipio || "")}/${esc(c.uf || "")}</span></td>
+      <td>${esc(c.objeto || "-")}</td>
+      <td>${esc(c.orgao || "-")} <span class="mut">${esc(c.municipio || "")}/${esc(c.uf || "")}</span></td>
       <td class="right">${brl(c.valor)}</td>
       <td class="right mut">${dataBR(c.vigenciaInicio)}</td>
     </tr>`).join("");
     res.innerHTML = `
       <div class="stats">
-        <div class="stat"><div class="lbl">Empresa</div><div class="v" style="font-size:16px">${esc(d.nome || "—")}</div></div>
+        <div class="stat"><div class="lbl">Empresa</div><div class="v" style="font-size:16px">${esc(d.nome || "-")}</div></div>
         <div class="stat"><div class="lbl">Contratos ganhos (acervo)</div><div class="v">${d.total}</div></div>
         <div class="stat"><div class="lbl">Valor total</div><div class="v" style="color:var(--verde)">${brl(d.valorTotal)}</div></div>
       </div>

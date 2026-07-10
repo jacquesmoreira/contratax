@@ -15,7 +15,7 @@ function brl(v) {
   return (Number(v) || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL", maximumFractionDigits:0 });
 }
 function dataBR(s) {
-  if (!s) return "—";
+  if (!s) return "-";
   const d = new Date(s);
   return isNaN(d) ? s : d.toLocaleDateString("pt-BR");
 }
@@ -115,7 +115,7 @@ export async function paginaOrgao(slug) {
 
   const onde = [orgao.municipio, orgao.uf].filter(Boolean).join("/");
   const canonical = `${BASE}/orgaos/${slug}`;
-  const title = `Licitações de ${orgao.nome} — Editais Abertos e Contratos | ContrataX`;
+  const title = `Licitações de ${orgao.nome}: editais abertos e contratos | ContrataX`;
   const description = `${detalhe.editais.length} editais abertos e ${detalhe.totalContratos.toLocaleString("pt-BR")} contratos no histórico de ${orgao.nome}${onde ? " (" + onde + ")" : ""}. Acompanhe oportunidades de venda para esse órgão.`;
 
   // Reputação de pagamento (CAPAG)
@@ -195,7 +195,7 @@ export async function paginaOrgao(slug) {
 export function paginaHubOrgaos() {
   const top = topOrgaos({ limite: 100, minimoContratos: 50 });
   const canonical = `${BASE}/orgaos`;
-  const title = "Órgãos públicos no PNCP — Acompanhe editais por órgão | ContrataX";
+  const title = "Órgãos públicos no PNCP: acompanhe editais por órgão | ContrataX";
   const description = "Lista de órgãos públicos com maior volume de licitações no PNCP. Veja editais abertos, contratos firmados e reputação de pagamento de cada órgão.";
 
   const lista = top.map((o) => `<div class="card">

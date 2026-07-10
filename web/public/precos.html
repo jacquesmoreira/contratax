@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
-<title>ContrataX — Pesquisa de Preços</title>
+<title>ContrataX: Pesquisa de Preços</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
 :root { --navy:#0B1E3A; --indigo:#4338CA; --indigo-d:#312e81; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#64748B; --linha:#E4E7F0; --creme:#FAF9F5; --verde:#16A34A; --amarelo:#B45309; --amarelo-bg:#FEF3C7; }
@@ -48,8 +48,8 @@ td { padding:9px 8px; border-top:1px solid var(--linha); font-size:13px; vertica
 
 <div class="wrap-main">
   <h1>Pesquisa de Preços</h1>
-  <div class="sub">Veja por quanto os órgãos públicos <b>realmente compraram</b> (preço homologado do vencedor) — referência de mercado pra você montar sua proposta.</div>
-  <div class="aviso" id="aviso">📈 <b>Base em construção:</b> nossa base de preços homologados <b>cresce a cada licitação que encerra</b>. Se você não encontrar um produto agora, é porque ainda não capturamos — volte em alguns dias que a cobertura vai aumentando.</div>
+  <div class="sub">Veja por quanto os órgãos públicos <b>realmente compraram</b> (preço homologado do vencedor), referência de mercado pra você montar sua proposta.</div>
+  <div class="aviso" id="aviso">📈 <b>Base em construção:</b> nossa base de preços homologados <b>cresce a cada licitação que encerra</b>. Se você não encontrar um produto agora, é porque ainda não capturamos, volte em alguns dias que a cobertura vai aumentando.</div>
 
   <div class="busca">
     <input id="termo" type="text" placeholder="O que você quer cotar? (ex: papel A4, notebook, cadeira, pneu...)" />
@@ -64,8 +64,8 @@ const token = new URLSearchParams(location.search).get("c") || "";
 document.getElementById("link-painel").href = "/painel?c=" + encodeURIComponent(token);
 document.getElementById("voltar").href = "/painel?c=" + encodeURIComponent(token);
 const esc = s => (s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const brl = v => (v == null) ? "—" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-const dataBR = iso => { if (!iso) return "—"; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString("pt-BR"); };
+const brl = v => (v == null) ? "-" : "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+const dataBR = iso => { if (!iso) return "-"; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString("pt-BR"); };
 document.getElementById("termo").addEventListener("keydown", e => { if (e.key === "Enter") buscar(); });
 
 async function buscar() {
@@ -75,10 +75,10 @@ async function buscar() {
   res.innerHTML = `<div class="vazio">Buscando preços homologados...</div>`;
   try {
     const d = await (await fetch("/api/precos?c=" + encodeURIComponent(token) + "&termo=" + encodeURIComponent(termo))).json();
-    document.getElementById("aviso").innerHTML = `📈 <b>Base em construção:</b> já capturamos <b>${(d.baseTotal||0).toLocaleString("pt-BR")}</b> preços homologados e crescendo a cada dia. Se não achou um produto, é porque ainda não entrou — volte depois.`;
+    document.getElementById("aviso").innerHTML = `📈 <b>Base em construção:</b> já capturamos <b>${(d.baseTotal||0).toLocaleString("pt-BR")}</b> preços homologados e crescendo a cada dia. Se não achou um produto, é porque ainda não entrou, volte depois.`;
     if (d.erro) { res.innerHTML = `<div class="vazio">${esc(d.erro)}</div>`; return; }
     if (!d.total) {
-      res.innerHTML = `<div class="vazio">Ainda não temos preços homologados para <b>"${esc(termo)}"</b> na base.<br><span class="mut">A base cresce a cada licitação que encerra — tente um termo mais amplo ou volte em alguns dias.</span></div>`;
+      res.innerHTML = `<div class="vazio">Ainda não temos preços homologados para <b>"${esc(termo)}"</b> na base.<br><span class="mut">A base cresce a cada licitação que encerra, tente um termo mais amplo ou volte em alguns dias.</span></div>`;
       return;
     }
     const v = d.valores;
@@ -86,8 +86,8 @@ async function buscar() {
       <td>${esc(i.descricao)}</td>
       <td class="right" style="font-weight:700;color:var(--verde)">${brl(i.valorUnitario)}</td>
       <td class="mut">${esc((i.unidade||"").replace(/ - .*/, ""))}</td>
-      <td>${esc(i.orgao || "—")} <span class="mut">${esc(i.municipio||"")}/${esc(i.uf||"")}</span></td>
-      <td>${esc(i.fornecedor || "—")}${i.porte && /me|epp/i.test(i.porte) ? ' <span style="font-size:10px;font-weight:800;color:#166534;background:#dcfce7;padding:1px 6px;border-radius:99px">ME/EPP</span>' : ""}</td>
+      <td>${esc(i.orgao || "-")} <span class="mut">${esc(i.municipio||"")}/${esc(i.uf||"")}</span></td>
+      <td>${esc(i.fornecedor || "-")}${i.porte && /me|epp/i.test(i.porte) ? ' <span style="font-size:10px;font-weight:800;color:#166534;background:#dcfce7;padding:1px 6px;border-radius:99px">ME/EPP</span>' : ""}</td>
       <td class="right mut">${dataBR(i.data)}</td>
     </tr>`).join("");
     res.innerHTML = `
@@ -101,7 +101,7 @@ async function buscar() {
         <div style="overflow-x:auto"><table>
           <thead><tr><th>Descrição</th><th class="right">Vlr unit.</th><th>Un.</th><th>Órgão</th><th>Vencedor</th><th class="right">Data</th></tr></thead>
           <tbody>${itens}</tbody></table></div>
-        <div class="mut" style="margin-top:14px">Mostrando ${d.itens.length} de ${d.total}. Preço unitário homologado (real do vencedor). Fonte: dados públicos do PNCP. Use como referência — cada licitação tem suas condições.</div>
+        <div class="mut" style="margin-top:14px">Mostrando ${d.itens.length} de ${d.total}. Preço unitário homologado (real do vencedor). Fonte: dados públicos do PNCP. Use como referência, cada licitação tem suas condições.</div>
       </div>`;
   } catch (e) {
     res.innerHTML = `<div class="vazio">Erro ao buscar. Tente de novo.</div>`;

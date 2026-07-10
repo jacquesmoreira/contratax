@@ -103,7 +103,7 @@ function layout({ title, description, canonical, jsonld = "", body, noindex = fa
 <nav><div class="w"><a href="/"><img src="/logo-horizontal.png" alt="ContrataX" style="height:30px;display:block"/></a>
 <div class="dir"><a href="/licitacoes">Ramos</a><a href="/entrar">Entrar</a><a class="cta" href="/cadastro">Criar conta grátis</a></div></div></nav>
 ${body}
-<footer><div class="w"><b style="color:#fff">ContrataX</b> — Monitoramento de licitações públicas do PNCP.<br>
+<footer><div class="w"><b style="color:#fff">ContrataX</b>: monitoramento de licitações públicas do PNCP.<br>
 <a href="/licitacoes">Todos os ramos</a> · <a href="/cadastro">Criar conta grátis</a> · Dados públicos do PNCP.</div></footer>
 </body></html>`;
 }
@@ -130,12 +130,12 @@ export function paginaCategoria(slug, ufSigla = null) {
   const onde = uf ? `em ${uf.nome}` : "no Brasil";
   const ondeCurto = uf ? uf.sigla : "Brasil";
   const canonical = `${BASE}/licitacoes/${slug}${uf ? "/" + uf.sigla.toLowerCase() : ""}`;
-  const title = `Licitações de ${cat.nome} ${onde} — Editais Abertos | ContrataX`;
+  const title = `Licitações de ${cat.nome} ${onde}: editais abertos | ContrataX`;
   const description = `${total} licitações de ${cat.nome.toLowerCase()} abertas agora ${onde}. Editais do PNCP atualizados hoje, com prazo e valor. Receba alertas grátis dos editais do seu ramo.`;
 
   const lista = editais.length
     ? editais.map(editalHTML).join("")
-    : `<div class="como"><p>No momento não há editais de ${esc(cat.nome.toLowerCase())} abertos ${esc(onde)}. Novos editais entram todo dia — crie uma conta grátis e seja avisado assim que surgir um.</p></div>`;
+    : `<div class="como"><p>No momento não há editais de ${esc(cat.nome.toLowerCase())} abertos ${esc(onde)}. Novos editais entram todo dia, crie uma conta grátis e seja avisado assim que surgir um.</p></div>`;
 
   // INTELIGENCIA DE MERCADO: dados reais do historico de contratos do ramo na
   // regiao. Conteudo UNICO por ramo+UF que NAO some quando os editais expiram -
@@ -219,7 +219,7 @@ export function paginaCategoria(slug, ufSigla = null) {
   const body = `<header class="hero"><div class="w">
     <div class="bc"><a href="/">Início</a> › <a href="/licitacoes">Licitações</a> › ${esc(cat.nome)} ${esc(uf ? "em " + uf.nome : "")}</div>
     <h1>Licitações de ${esc(cat.nome)} ${esc(onde)}</h1>
-    <p class="intro">Acompanhe os editais de ${esc(cat.nome.toLowerCase())} abertos ${esc(onde)}, com dados oficiais do PNCP atualizados todos os dias. Veja prazo, valor e órgão de cada licitação — e receba no e-mail os novos editais do seu ramo.</p>
+    <p class="intro">Acompanhe os editais de ${esc(cat.nome.toLowerCase())} abertos ${esc(onde)}, com dados oficiais do PNCP atualizados todos os dias. Veja prazo, valor e órgão de cada licitação, e receba no e-mail os novos editais do seu ramo.</p>
     </div></header>
     <div class="w">
     <div class="count">${total} ${total === 1 ? "edital aberto" : "editais abertos"} ${esc(ondeCurto === "Brasil" ? "no Brasil" : "em " + ondeCurto)}</div>
@@ -232,7 +232,7 @@ export function paginaCategoria(slug, ufSigla = null) {
     ${outrosRamos}
     <div class="sec"><div class="como"><h3>Como participar de licitações de ${esc(cat.nome)}</h3>
     <p>As licitações de ${esc(cat.nome.toLowerCase())} são publicadas no PNCP por prefeituras, governos estaduais e órgãos federais. Para participar, a empresa precisa estar com a documentação de habilitação em dia (certidões fiscais, trabalhista e qualificação técnica) e enviar a proposta no portal indicado no edital.</p>
-    <p>O ContrataX reúne esses editais num só lugar, lê cada um e cruza as exigências com a sua empresa, mostrando se você está apto e o que falta — antes de você gastar tempo montando a papelada.</p></div></div>
+    <p>O ContrataX reúne esses editais num só lugar, lê cada um e cruza as exigências com a sua empresa, mostrando se você está apto e o que falta, antes de você gastar tempo montando a papelada.</p></div></div>
     </div>`;
 
   // noindex apenas quando a pagina e genuinamente vazia: 0 editais abertos E
@@ -244,7 +244,7 @@ export function paginaCategoria(slug, ufSigla = null) {
 // ---- Hub /licitacoes ----
 export function paginaHub() {
   const canonical = `${BASE}/licitacoes`;
-  const title = "Licitações Públicas por Ramo e Estado — Editais Abertos | ContrataX";
+  const title = "Licitações Públicas por Ramo e Estado: editais abertos | ContrataX";
   const description = "Encontre licitações públicas abertas por ramo de atividade e por estado. Editais do PNCP atualizados todo dia, com prazo e valor. Crie sua conta grátis.";
   const body = `<header class="hero"><div class="w">
     <div class="bc"><a href="/">Início</a> › Licitações</div>

@@ -82,7 +82,7 @@ export function icsEdital(edital) {
     // Lembrete 1: 3 dias antes
     "BEGIN:VALARM",
     "ACTION:DISPLAY",
-    "DESCRIPTION:Licitação encerra em 3 dias — prepare a proposta",
+    "DESCRIPTION:Licitação encerra em 3 dias, prepare a proposta",
     "TRIGGER:-P3D",
     "END:VALARM",
     // Lembrete 2: 1 hora antes

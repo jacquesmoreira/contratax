@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
-<title>ContrataX — Recebíveis (NFs emitidas pra órgãos)</title>
+<title>ContrataX: Recebíveis (NFs emitidas pra órgãos)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -219,7 +219,7 @@ function renderLista(notas) {
     const status = n.situacao;
     const labels = { pendente:"No prazo", vencendo:"Vence logo", atrasada:`Atrasada ${n.diasAtraso}d`, paga:"Paga" };
     return `<tr>
-      <td><b>${n.numero || "—"}</b><br><small style="color:var(--cinza)">${n.orgao_nome || "Órgão não informado"}</small></td>
+      <td><b>${n.numero || "-"}</b><br><small style="color:var(--cinza)">${n.orgao_nome || "Órgão não informado"}</small></td>
       <td>${dt(n.data_emissao)}</td>
       <td><b>${brl(n.valor)}</b></td>
       <td><span class="tag ${status}">${labels[status]}</span></td>
@@ -308,7 +308,7 @@ let notaAtual = null;
 function abrirEscada(n) {
   notaAtual = n;
   const atraso = n.diasAtraso || 0;
-  $("escada-resumo").innerHTML = `NF <b>${n.numero || "—"}</b> · ${brl(n.valor)} · ${n.orgao_nome || "órgão não informado"}${atraso > 0 ? ` · <span style="color:#dc2626">atrasada ${atraso} dias</span>` : ""}`;
+  $("escada-resumo").innerHTML = `NF <b>${n.numero || "-"}</b> · ${brl(n.valor)} · ${n.orgao_nome || "órgão não informado"}${atraso > 0 ? ` · <span style="color:#dc2626">atrasada ${atraso} dias</span>` : ""}`;
 
   // Cada passo: titulo, descricao, acao. Marca quais ja "liberaram" pelo atraso.
   const url = (tipo) => `/recebiveis/peca?c=${encodeURIComponent(token)}&id=${n.id}&tipo=${tipo}`;
@@ -328,7 +328,7 @@ function abrirEscada(n) {
     {
       n: 3, lib: atraso >= 30, cor: "#dc2626",
       titulo: "Representação ao Tribunal de Contas (TCE/TCM)",
-      desc: "Pede apuração de quebra da ordem cronológica e responsabilização do ordenador de despesas. É o que gestor público mais teme — costuma destravar o pagamento rápido.",
+      desc: "Pede apuração de quebra da ordem cronológica e responsabilização do ordenador de despesas. É o que gestor público mais teme, costuma destravar o pagamento rápido.",
       botao: `<a class="btn sm" target="_blank" href="${url("tce")}">Gerar representação</a>`,
     },
     {

@@ -329,7 +329,7 @@
       <div id="ferr-grid" class="ferr-grid">
         <div class="ferr-card ferr-ia">
           <div class="ferr-cab">🤖 Inteligência Artificial <span class="ferr-badge">IA</span></div>
-          <p class="ferr-desc">Resumo, perguntas, análise de risco e conferência de documentos — tudo <b>dentro de cada edital</b>, com um clique.</p>
+          <p class="ferr-desc">Resumo, perguntas, análise de risco e conferência de documentos, tudo <b>dentro de cada edital</b>, com um clique.</p>
           <div class="ferr-ia-itens">
             <span>Resumo do edital</span><span>Pergunte ao edital</span><span>Análise &amp; impugnação</span><span>Conferência de docs</span>
           </div>
@@ -419,9 +419,9 @@ function oportBadge(o, rep) {
   if (!o || !o.nivel) return "";
   const m = { forte: ["#065f46", "#d1fae5", "🟢 Oportunidade forte"], regular: ["#1e40af", "#dbeafe", "🟡 Regular"], avaliar: ["#b45309", "#fef3c7", "⚪ Avaliar"] };
   const [cor, bg, txt] = m[o.nivel] || m.avaliar;
-  const fatores = (o.fatores || []).length ? o.fatores.join(" · ") : "Sinais limitados — avalie o edital.";
+  const fatores = (o.fatores || []).length ? o.fatores.join(" · ") : "Sinais limitados, avalie o edital.";
   const dias = rep?.diasMedios ? ` (pagamento ~${rep.diasMedios} dias)` : "";
-  return `<span title="Por que: ${esc(fatores)}${dias}. Sinal transparente, baseado nos dados do órgão — confira o edital." style="font-size:10.5px;font-weight:800;color:${cor};background:${bg};padding:2px 8px;border-radius:99px;white-space:nowrap">${txt}</span>`;
+  return `<span title="Por que: ${esc(fatores)}${dias}. Sinal transparente, baseado nos dados do órgão, confira o edital." style="font-size:10.5px;font-weight:800;color:${cor};background:${bg};padding:2px 8px;border-radius:99px;white-space:nowrap">${txt}</span>`;
 }
 function cardHTML(e) {
   store[e.id] = e;
@@ -429,7 +429,7 @@ function cardHTML(e) {
   const visto = lerVistos().has(e.id) ? " ja-visto" : "";
   return `<div class="card${visto}" data-id="${esc(e.id)}" data-fav="${e.favorito ? 1 : 0}" data-texto="${esc((local+" "+(e.orgao||"")+" "+(e.objeto||"")).toLowerCase())}">
     <div class="card-topo"><button class="fav-btn" onclick="event.stopPropagation();toggleFavorito('${esc(e.id)}',this)" title="Favoritar este edital" style="background:none;border:none;cursor:pointer;font-size:17px;line-height:1;padding:0;color:${e.favorito ? "#f59e0b" : "var(--cinza-c)"}">${e.favorito ? "★" : "☆"}</button><span class="orgao">${local} · ${esc(e.orgao ?? e.unidade ?? "Órgão público")}</span>
-      ${e.novo ? '<span class="selo-novo">NOVO</span>' : ""}${e.situacao === "Suspensa" ? '<span style="background:#fef3c7;color:#b45309;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px" title="Edital suspenso pelo órgão. Pode ser retomado ou cancelado — confira no portal antes de investir tempo.">⚠️ SUSPENSA</span>' : ""}${prazoHTML(e.encerramento)}
+      ${e.novo ? '<span class="selo-novo">NOVO</span>' : ""}${e.situacao === "Suspensa" ? '<span style="background:#fef3c7;color:#b45309;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px" title="Edital suspenso pelo órgão. Pode ser retomado ou cancelado, confira no portal antes de investir tempo.">⚠️ SUSPENSA</span>' : ""}${prazoHTML(e.encerramento)}
       <span class="badge-trilha badge-visto">já visto</span>
       <span class="badge-trilha badge-analisado">analisado pela ContrataX.IA</span></div>
     <div class="objeto">${esc(e.objeto)}</div>
@@ -1116,7 +1116,7 @@ function reputacaoHTML(r) {
     fonteTag = `<span style="background:#DCFCE7;color:#065f46;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:99px;letter-spacing:.3px">DADOS REAIS · ${r.n} pagamentos</span>`;
     explicacao = `<b>Como calculamos:</b> média dos dias entre a emissão da nota fiscal e o pagamento efetivo, registrados por outros clientes do ContrataX que já receberam desse mesmo órgão (CNPJ). Quanto mais clientes registram, mais precisa fica essa média.`;
   } else if (r.fonte === "capag") {
-    const nota = r.fonteDetalhe?.nota || "—";
+    const nota = r.fonteDetalhe?.nota || "-";
     fonteTag = `<span style="background:#eff6ff;color:#1d4ed8;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:99px;letter-spacing:.3px">CAPAG ${nota} · TESOURO NACIONAL</span>`;
     explicacao = `<b>Como classificamos:</b> usamos a <b>nota CAPAG (Capacidade de Pagamento)</b> que o Tesouro Nacional publica anualmente para cada município brasileiro. A nota varia de A+ (capacidade alta) a D- (situação crítica) e é baseada em três indicadores fiscais oficiais: endividamento, poupança corrente e liquidez. A estimativa de dias até receber é uma tradução da nota CAPAG em prazo médio observado. <a href="https://www.tesourotransparente.gov.br/temas/estados-e-municipios/capacidade-de-pagamento-capag" target="_blank" rel="noopener" style="color:var(--indigo)">Saiba mais sobre o CAPAG →</a>`;
   } else {
@@ -1136,7 +1136,7 @@ function reputacaoHTML(r) {
     <details style="margin-top:10px"><summary style="cursor:pointer;font-size:12.5px;color:var(--indigo);font-weight:700">Como esse número é calculado?</summary>
       <p style="font-size:12.5px;color:var(--cinza);margin-top:8px;line-height:1.55">${explicacao}</p>
     </details>
-    <p style="font-size:11.5px;color:var(--cinza-c);margin-top:8px">Base legal: Lei 14.133/2021, art. 141 — prazo de 30 dias. Atrasos geram direito a correção monetária pelo IPCA + juros moratórios de 0,5% ao mês.</p>
+    <p style="font-size:11.5px;color:var(--cinza-c);margin-top:8px">Base legal: Lei 14.133/2021, art. 141 (prazo de 30 dias). Atrasos geram direito a correção monetária pelo IPCA + juros moratórios de 0,5% ao mês.</p>
   </div>`;
 }
 
@@ -1169,7 +1169,7 @@ function referenciaHTML(r) {
     <div style="border-top:1px solid var(--linha);margin-top:16px;padding-top:16px">
       <div style="font-weight:800;font-size:14px;margin-bottom:4px">🎯 Assistente de Lance</div>
       <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;color:#1e3a5f;line-height:1.5">
-        <b>Como funciona:</b> o lance você dá no <b>portal oficial</b> (link "Ir para o portal" acima) — de graça, onde sua empresa já tem acesso. Aqui a gente te dá a <b>inteligência</b> pra você calibrar: até onde dá pra baixar com margem, e o ponto onde vira prejuízo. <b>A ContrataX não dá lance por você</b> — você decide e executa, com dado em vez de chute.
+        <b>Como funciona:</b> o lance você dá no <b>portal oficial</b> (link "Ir para o portal" acima), de graça, onde sua empresa já tem acesso. Aqui a gente te dá a <b>inteligência</b> pra você calibrar: até onde dá pra baixar com margem, e o ponto onde vira prejuízo. <b>A ContrataX não dá lance por você</b>, você decide e executa, com dado em vez de chute.
       </div>
       <div style="font-size:12.5px;color:var(--cinza);margin-bottom:12px">Informe o seu custo para este contrato e veja sua margem em cada cenário de preço:</div>
       <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px">
@@ -1208,7 +1208,7 @@ function calcDisputa(input) {
     </table>
     <div style="background:${venceMin ? "#DCFCE7" : "#FEE2E2"};border:1px solid ${venceMin ? "#a7f3d0" : "#fecaca"};border-radius:9px;padding:11px 13px;font-size:13px;color:${venceMin ? "#065f46" : "#991b1b"}">
       <b>Ponto de desistência: ${brl(custo)}.</b> ${venceMin
-        ? "Seu custo está abaixo do menor preço já praticado — há espaço pra competir com margem."
+        ? "Seu custo está abaixo do menor preço já praticado, há espaço pra competir com margem."
         : "Atenção: seu custo está acima do menor preço já praticado nesse ramo. Vencer pode significar prejuízo. Reveja seu custo ou só dispute se conseguir condições melhores."}
     </div>`;
 }
@@ -1233,7 +1233,7 @@ function precoHTML(p) {
     : "";
   const conc = p.fornecedoresDistintos || 0;
   const concBox = conc ? `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:11px 13px;margin-bottom:12px;font-size:13px;color:#1e3a5f;line-height:1.5">
-      <b>🎯 Concorrência no seu ramo:</b> ${conc} ${conc > 1 ? "empresas diferentes ganharam" : "empresa ganhou"} contratos ${localFrase} ${periodo}.${conc <= 5 ? " <b>Mercado concentrado</b> — poucos fornecedores dominam aqui." : ""}
+      <b>🎯 Concorrência no seu ramo:</b> ${conc} ${conc > 1 ? "empresas diferentes ganharam" : "empresa ganhou"} contratos ${localFrase} ${periodo}.${conc <= 5 ? " <b>Mercado concentrado</b>: poucos fornecedores dominam aqui." : ""}
       <div style="font-size:11.5px;color:#64748b;margin-top:5px">Quem ganhou contrato, não quantos disputaram. Use como leitura do mercado.</div>
     </div>` : "";
   return `<div class="bloco"><h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${titulo}${btnExportar}</h3>
@@ -1347,7 +1347,7 @@ async function abrirDrawer(id) {
   const temLances = /preg[aã]o/i.test(ed.modalidade || "");
   const portalLabel = linkDireto
     ? (temLances ? "Ir para o portal de lances onde acontece a disputa →" : "Ir para o portal oficial e acompanhar esta contratação →")
-    : (temLances ? "Abrir no PNCP — de lá você acessa o sistema oficial da disputa →" : "Abrir no PNCP — de lá você acompanha esta contratação →");
+    : (temLances ? "Abrir no PNCP, de lá você acessa o sistema oficial da disputa →" : "Abrir no PNCP, de lá você acompanha esta contratação →");
 
   let html = "";
   // TL;DR no topo (gancho rapido): se ja tem cache, renderiza; senao mostra

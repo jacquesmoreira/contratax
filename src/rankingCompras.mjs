@@ -107,7 +107,7 @@ export function paginaRanking(slug) {
 
   const linhas = rankingPorTermo({ termo: cat.termo, limite: 50 });
   const canonical = `${BASE}/ranking/${cat.slug}`;
-  const title = `Quem mais comprou ${cat.nome.toLowerCase()} no Brasil — Ranking de órgãos públicos | ContrataX`;
+  const title = `Quem mais comprou ${cat.nome.toLowerCase()} no Brasil: ranking de órgãos públicos | ContrataX`;
   const description = `Ranking dos órgãos públicos que mais gastaram com ${cat.nome.toLowerCase()} nos últimos 18 meses, com base em dados oficiais do PNCP. Valor total, número de contratos e localização.`;
 
   const linhasHtml = linhas.length
@@ -116,7 +116,7 @@ export function paginaRanking(slug) {
         const nomeLink = slugO ? `<a href="/orgaos/${slugO}">${esc(o.nome)}</a>` : esc(o.nome);
         return `<tr>
           <td class="pos">${i + 1}</td>
-          <td class="org">${nomeLink}<span class="loc">${esc([o.municipio, o.uf].filter(Boolean).join("/") || "—")}</span></td>
+          <td class="org">${nomeLink}<span class="loc">${esc([o.municipio, o.uf].filter(Boolean).join("/") || "-")}</span></td>
           <td class="val">${brl(o.total)}</td>
           <td class="n">${o.contratos} contrato${o.contratos > 1 ? "s" : ""}</td>
         </tr>`;
@@ -154,7 +154,7 @@ export function paginaRanking(slug) {
     <div class="sub">Ranking dos órgãos públicos (prefeituras, governos estaduais, autarquias e órgãos federais) com maior volume de compras de ${esc(cat.nome.toLowerCase())}, com base nos contratos publicados no PNCP nos últimos 18 meses.</div>
 
     ${semDados
-      ? `<div class="metodologia"><p>Ainda não temos volume suficiente de contratos históricos para este ramo no acervo. Volte em breve — o acervo é atualizado continuamente.</p></div>`
+      ? `<div class="metodologia"><p>Ainda não temos volume suficiente de contratos históricos para este ramo no acervo. Volte em breve, o acervo é atualizado continuamente.</p></div>`
       : `<div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Órgão</th><th>Valor total</th><th>Contratos</th></tr></thead><tbody>${linhasHtml}</tbody></table></div>`
     }
 
@@ -179,7 +179,7 @@ export function paginaRanking(slug) {
 // ===== Hub /ranking =====
 export function paginaHubRanking() {
   const canonical = `${BASE}/ranking`;
-  const title = "Rankings de Compras Públicas por Ramo — Quem Mais Compra no Brasil | ContrataX";
+  const title = "Rankings de Compras Públicas por Ramo: quem mais compra no Brasil | ContrataX";
   const description = "Ranking dos órgãos públicos brasileiros que mais compram em cada ramo (material hospitalar, merenda escolar, limpeza, informática e mais), com base em dados oficiais do PNCP.";
 
   const lista = CATEGORIAS.map((c) => `<div style="background:#fff;border:1px solid #E4E7F0;border-radius:12px;padding:16px" >

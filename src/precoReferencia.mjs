@@ -141,7 +141,7 @@ export function precoReferencia(edital, { meses = 18, termosPerfil = [] } = {}) 
     if (valorEstimado >= stats.p75 * 5) {
       perfil = {
         tipo: "grande",
-        texto: "Edital de grande porte — provavelmente Registro de Preços ou contratação ampla. A faixa abaixo reflete contratos individuais semelhantes.",
+        texto: "Edital de grande porte, provavelmente Registro de Preços ou contratação ampla. A faixa abaixo reflete contratos individuais semelhantes.",
       };
     } else if (valorEstimado >= stats.p25 && valorEstimado <= stats.p75 * 3) {
       perfil = {
@@ -151,7 +151,7 @@ export function precoReferencia(edital, { meses = 18, termosPerfil = [] } = {}) 
     } else if (valorEstimado < stats.p25) {
       perfil = {
         tipo: "pequeno",
-        texto: "Edital de pequeno porte — abaixo da faixa típica de contratos do segmento.",
+        texto: "Edital de pequeno porte, abaixo da faixa típica de contratos do segmento.",
       };
     }
   }
