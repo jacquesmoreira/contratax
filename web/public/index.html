@@ -8,22 +8,23 @@
 <meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   :root {
     --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --roxo:#6d28d9;
-    --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b;
-    --linha:#e2e8f0; --fundo:#f8fafc; --branco:#fff;
-    --verde:#059669; --verde-bg:#ecfdf5; --ambar:#d97706; --ambar-bg:#fffbeb;
-    --vermelho:#dc2626; --vermelho-bg:#fef2f2;
-    --raio:16px; --sombra:0 12px 40px rgba(15,23,42,.10); --sombra-sm:0 3px 14px rgba(15,23,42,.05);
+    --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#64748b;
+    --linha:#E4E7F0; --fundo:#FAF9F5; --branco:#fff;
+    --verde:#16A34A; --verde-bg:#DCFCE7; --ambar:#B45309; --ambar-bg:#FEF3C7;
+    --vermelho:#dc2626; --vermelho-bg:#FEE2E2;
+    --raio:16px; --sombra:0 30px 70px -30px rgba(11,30,58,.4); --sombra-sm:0 18px 36px -20px rgba(11,30,58,.25);
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   /* overflow-x:hidden protege contra o drawer (off-canvas via transform) forcar
      scroll horizontal/estourar a largura da viewport em alguns navegadores/webviews
      mobile, mesmo estando visualmente fora da tela quando fechado. */
   html { overflow-x:hidden; }
-  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--fundo); color:var(--tinta); line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--fundo); color:var(--tinta); line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  h1,h2,h3,.logo { font-family:'Manrope',sans-serif; }
   .wrap { width:min(1760px, 95vw); max-width:none; margin:0 auto; padding:0 32px; }
   /* Cards de editais em grade: usa a largura da tela (2-3 colunas) em vez de
      uma coluna unica esticada. Inspirado no layout full-width do mercado. */
@@ -93,7 +94,7 @@
   .busca-box input { flex:1; min-width:220px; padding:14px 16px; border-radius:11px; border:none; font-size:15px; font-family:inherit; outline:none; }
   .busca-box select { padding:0 12px; height:48px; border-radius:11px; border:none; font-size:14px; font-family:inherit; outline:none; background:#fff; cursor:pointer; }
   .busca-box > button { background:#fff; color:var(--indigo); border:none; border-radius:11px; padding:0 24px; height:48px; font-weight:800; font-size:15px; cursor:pointer; font-family:inherit; }
-  .busca-box > button:hover { background:#eef2ff; }
+  .busca-box > button:hover { background:#EEF0FF; }
   .uf-chip-busca { padding:5px 10px; border:1.5px solid var(--linha); border-radius:99px; font-size:12.5px; font-weight:600; cursor:pointer; background:#fff; color:var(--cinza); transition:all .1s; }
   .uf-chip-busca.sel { background:var(--indigo); color:#fff; border-color:var(--indigo); }
 
@@ -105,7 +106,7 @@
   .perfil-nome { font-size:19px; font-weight:800; }
   .chip { font-size:12.5px; font-weight:700; padding:4px 11px; border-radius:999px; }
   .chip-uf { background:var(--indigo); color:#fff; }
-  .chip-stat { background:#eef2ff; color:var(--indigo); }
+  .chip-stat { background:#EEF0FF; color:var(--indigo); }
   .chip-novo { background:var(--verde-bg); color:var(--verde); }
   .perfil-atualizado { margin-left:auto; font-size:12.5px; color:var(--cinza-c); }
 
@@ -119,8 +120,8 @@
      a classe correspondente esta no card. Visual discreto (nao polui), mas
      suficiente pro cliente nao se perder no scroll. */
   .badge-trilha { display:none; font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:99px; letter-spacing:.3px; text-transform:uppercase; }
-  .card.ja-visto .badge-visto { display:inline-block; background:#e2e8f0; color:#475569; }
-  .card.ja-analisado .badge-analisado { display:inline-block; background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; }
+  .card.ja-visto .badge-visto { display:inline-block; background:#E4E7F0; color:#475569; }
+  .card.ja-analisado .badge-analisado { display:inline-block; background:#EEF0FF; color:#4338ca; border:1px solid #c7d2fe; }
   .card.ja-visto { background:#fafbfc; }
   .card.ja-analisado { border-left:3px solid #4338ca; }
   .prazo { margin-left:auto; font-size:12px; font-weight:700; padding:3px 11px; border-radius:999px; }
@@ -133,7 +134,7 @@
   .valor { font-weight:800; }
   .abrir { color:var(--indigo); font-weight:800; }
   .baixar-edital { margin-left:auto; color:var(--indigo); font-weight:700; text-decoration:none; border:1px solid var(--linha); padding:5px 11px; border-radius:8px; font-size:12.5px; white-space:nowrap; }
-  .baixar-edital:hover { background:#eef2ff; border-color:var(--indigo); }
+  .baixar-edital:hover { background:#EEF0FF; border-color:var(--indigo); }
 
   /* Estado vazio */
   .vazio { background:#fff; border:1px dashed var(--cinza-c); border-radius:16px; padding:44px 28px; text-align:center; color:var(--cinza); }
@@ -144,7 +145,7 @@
   /* Banner teste */
   .banner-teste { background:var(--ambar-bg); color:#92400e; padding:13px 18px; border-radius:12px; margin-bottom:20px; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; }
   .banner-teste a { margin-left:auto; background:var(--ambar); color:#fff; padding:7px 15px; border-radius:9px; font-weight:700; font-size:13px; white-space:nowrap; text-decoration:none; }
-  .banner-teste.urgente { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; }
+  .banner-teste.urgente { background:#FEE2E2; border:1px solid #fecaca; color:#991b1b; }
   .banner-teste.urgente a { background:#dc2626; }
   .banner-cta { background:linear-gradient(135deg,#4338ca 0%,#2563eb 100%); color:#fff; padding:22px 24px; border-radius:14px; margin-bottom:24px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
   .banner-cta .ico { font-size:32px; flex-shrink:0; }
@@ -152,12 +153,12 @@
   .banner-cta .tit { font-size:17px; font-weight:800; margin-bottom:3px; }
   .banner-cta .sub { font-size:13.5px; color:#c7d2fe; font-weight:500; }
   .banner-cta a.btn-cta { background:#fff; color:var(--indigo); font-weight:800; font-size:14.5px; padding:11px 20px; border-radius:10px; text-decoration:none; white-space:nowrap; }
-  .banner-cta a.btn-cta:hover { background:#eef2ff; }
+  .banner-cta a.btn-cta:hover { background:#EEF0FF; }
   #nav-plano { padding:6px 12px; border-radius:8px; font-size:12.5px; font-weight:800; text-decoration:none; white-space:nowrap; line-height:1; display:inline-flex; align-items:center; gap:4px; }
   #nav-plano.chip-teste { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
   #nav-plano.chip-teste.urgente { background:#fee2e2; color:#991b1b; border-color:#fecaca; animation:pulsa 1.6s ease-in-out infinite; }
-  #nav-plano.chip-ativo { background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; }
-  #nav-plano.chip-upgrade { background:#eef2ff; color:var(--indigo); border:1px solid #c7d2fe; }
+  #nav-plano.chip-ativo { background:#DCFCE7; color:#047857; border:1px solid #a7f3d0; }
+  #nav-plano.chip-upgrade { background:#EEF0FF; color:var(--indigo); border:1px solid #c7d2fe; }
   @keyframes pulsa { 0%,100% { opacity:1 } 50% { opacity:.65 } }
 
   /* Paywall */
@@ -480,7 +481,7 @@ function perfilHTML(p) {
       ${novasHoje ? `<span class="chip" style="background:#dcfce7;color:#166534;font-weight:800">🆕 ${novasHoje} ${novasHoje > 1 ? "novas hoje" : "nova hoje"}</span>` : ""}
       ${novos ? `<span class="chip chip-novo">${novos} novos</span>` : ""}
       <span class="perfil-atualizado">atualizado ${at}</span>
-      ${editais.length ? `<button type="button" onclick="alternarSoFavoritos(this)" style="margin-left:auto;background:#eef2ff;border:1px solid #c7d2fe;color:var(--indigo);font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:8px;cursor:pointer;font-family:inherit" title="Mostrar só os editais que você favoritou">★ Só favoritos</button>` : ""}
+      ${editais.length ? `<button type="button" onclick="alternarSoFavoritos(this)" style="margin-left:auto;background:#EEF0FF;border:1px solid #c7d2fe;color:var(--indigo);font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:8px;cursor:pointer;font-family:inherit" title="Mostrar só os editais que você favoritou">★ Só favoritos</button>` : ""}
       ${editais.length ? `<a href="#" onclick="exportar('editais');return false" style="font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Exportar resultado para Excel/CSV">📊 Excel</a>` : ""}
     </div>`;
   // Aviso de painel alargado: o estado do cliente tinha poucos editais do ramo,
@@ -515,7 +516,7 @@ function perfilHTML(p) {
   const inpCq = "width:100%;padding:8px 9px;border:1.5px solid var(--linha);border-radius:8px;font-size:13px;font-family:inherit;margin-top:3px";
   const certCard = (p.analisou && !p.temCertidao) ? `
     <div style="background:#fff;border:2px solid #c7d2fe;border-radius:16px;padding:20px 22px;margin-bottom:20px">
-      <div style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:4px">🔓 Destrave o seu veredito personalizado</div>
+      <div style="font-size:16px;font-weight:800;color:#0B1E3A;margin-bottom:4px">🔓 Destrave o seu veredito personalizado</div>
       <div style="font-size:13.5px;color:var(--cinza);margin-bottom:14px;line-height:1.5">Com as datas das suas certidões, a IA passa a dizer se <b>VOCÊ</b> está apto em cada edital, ou exatamente o que falta. Sem elas, é só o resumo. Leva 1 minuto.</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
         <label style="font-size:11.5px;font-weight:700;color:var(--cinza-c)">Federal (Receita/PGFN)<input type="date" id="cq-federalConjunta" style="${inpCq}"></label>
@@ -534,11 +535,11 @@ function perfilHTML(p) {
   const dMelhor = melhor ? diasAte(melhor.encerramento) : null;
   const prazoMelhor = dMelhor == null ? "" : dMelhor <= 0 ? " · encerra hoje" : ` · encerra em ${dMelhor} dia${dMelhor > 1 ? "s" : ""}`;
   const oppCard = melhor ? `
-    <div style="background:linear-gradient(135deg,#059669,#0d9488);color:#fff;border-radius:16px;padding:18px 22px;margin-bottom:20px;box-shadow:0 10px 26px rgba(5,150,105,.25)">
+    <div style="background:linear-gradient(135deg,#16A34A,#0d9488);color:#fff;border-radius:16px;padding:18px 22px;margin-bottom:20px;box-shadow:0 10px 26px rgba(5,150,105,.25)">
       <div style="font-size:11.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.9;margin-bottom:6px">🎯 Sua melhor oportunidade agora</div>
       <div style="font-size:15.5px;font-weight:700;line-height:1.35;margin-bottom:8px">${esc((melhor.objeto || "").slice(0, 110))}</div>
       <div style="font-size:13px;opacity:.95;margin-bottom:14px">${esc(melhor.municipio ?? "")}/${esc(melhor.uf ?? "")} · ${esc(melhor.orgao ?? "")} · <b>${valMelhor}</b>${melhor.reputacao?.classificacao === "rapido" ? " · órgão paga rápido" : ""}${prazoMelhor}</div>
-      <button type="button" data-id="${esc(melhor.id)}" onclick="abrirDrawer(this.dataset.id)" style="background:#fff;color:#059669;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">Abrir e disputar →</button>
+      <button type="button" data-id="${esc(melhor.id)}" onclick="abrirDrawer(this.dataset.id)" style="background:#fff;color:#16A34A;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">Abrir e disputar →</button>
     </div>` : "";
   const corpo = editais.length
     ? `<div class="cards-grid">${editais.map(cardHTML).join("")}</div>`
@@ -548,7 +549,7 @@ function perfilHTML(p) {
 
 function radarHTML(lista) {
   if (!lista || !lista.length) {
-    return `<div style="background:#eef2ff;border-radius:12px;padding:13px 18px;margin-bottom:20px;font-size:13.5px;color:var(--indigo);font-weight:600">🛰️ Radar de renovação: estamos mapeando os contratos do seu ramo que vão vencer, para você se preparar antes da próxima licitação.</div>`;
+    return `<div style="background:#EEF0FF;border-radius:12px;padding:13px 18px;margin-bottom:20px;font-size:13.5px;color:var(--indigo);font-weight:600">🛰️ Radar de renovação: estamos mapeando os contratos do seu ramo que vão vencer, para você se preparar antes da próxima licitação.</div>`;
   }
   const itens = lista.map(c => {
     const d = diasAte(c.vigenciaFim);
@@ -632,7 +633,7 @@ function bannerUpgrade(acesso) {
       <a class="btn-cta" href="/assinar?c=${encodeURIComponent(token)}">Fazer upgrade</a>
     </div>`;
   }
-  return `<div class="banner-teste" style="background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3">
+  return `<div class="banner-teste" style="background:#EEF0FF;border:1px solid #c7d2fe;color:#3730a3">
     <span>📊 Você usou <b>${u.usados}/${u.limite}</b> análises (${restantes} restantes). Quer mais este mês? Compre um pacote avulso sem trocar de plano.</span>
     <a href="/assinar?c=${encodeURIComponent(token)}" style="background:var(--indigo)">Ver pacotes</a>
   </div>`;
@@ -720,7 +721,7 @@ function bannerVencimento(a) {
 // Atraso em carencia: banner vermelho urgente + popup. Bloqueia apos a carencia.
 function bannerAtrasado(a) {
   const restamBloqueio = Math.max(0, (a.gracaDias ?? 3) - (a.diasAtraso ?? 0));
-  return `<div class="banner-teste" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c">⚠️ <b>Pagamento em atraso.</b> Não identificamos o pagamento da sua mensalidade. Regularize ${restamBloqueio > 0 ? `em <b>${restamBloqueio} dia${restamBloqueio !== 1 ? "s" : ""}</b>` : "agora"} para não ter o acesso bloqueado. <a href="/assinar?c=${encodeURIComponent(token)}" style="color:#991b1b">Regularizar</a></div>`;
+  return `<div class="banner-teste" style="background:#FEE2E2;border-color:#fecaca;color:#b91c1c">⚠️ <b>Pagamento em atraso.</b> Não identificamos o pagamento da sua mensalidade. Regularize ${restamBloqueio > 0 ? `em <b>${restamBloqueio} dia${restamBloqueio !== 1 ? "s" : ""}</b>` : "agora"} para não ter o acesso bloqueado. <a href="/assinar?c=${encodeURIComponent(token)}" style="color:#991b1b">Regularizar</a></div>`;
 }
 function popupAtrasado(a) {
   const chave = "avisoAtraso-" + (a.diasAtraso ?? 0);
@@ -811,16 +812,16 @@ async function avisarCertidoesVencendo() {
     const top = alertas.sort((a, b) => a.dias - b.dias).slice(0, 3);
     const ic = (d) => d < 0 ? "🔴" : d <= 3 ? "🔴" : d <= 7 ? "🟠" : d <= 15 ? "🟡" : "🟢";
     const texto = (d) => d < 0 ? `VENCIDA há ${Math.abs(d)}d` : d === 0 ? "vence HOJE" : d === 1 ? "vence amanhã" : `vence em ${d} dias`;
-    const corBorda = top[0].dias <= 3 ? "#dc2626" : top[0].dias <= 7 ? "#d97706" : "#0891b2";
+    const corBorda = top[0].dias <= 3 ? "#dc2626" : top[0].dias <= 7 ? "#B45309" : "#0891b2";
     const box = document.createElement("div");
     box.id = "alerta-cert";
     box.style.cssText = `position:fixed;bottom:22px;left:22px;background:#fff;border-left:5px solid ${corBorda};border-radius:14px;padding:18px 20px;max-width:360px;box-shadow:0 18px 50px rgba(15,23,42,.18);z-index:80;font-family:inherit`;
     box.innerHTML = `
       <div style="display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:10px">
-        <div style="font-size:14.5px;font-weight:800;color:#0f172a">⚠️ Certidões precisando atenção</div>
+        <div style="font-size:14.5px;font-weight:800;color:#0B1E3A">⚠️ Certidões precisando atenção</div>
         <button id="fechar-cert" style="background:none;border:none;font-size:20px;color:#64748b;cursor:pointer;line-height:1;padding:0" aria-label="Fechar">×</button>
       </div>
-      ${top.map(t => `<div style="font-size:13px;color:#475569;padding:6px 0;border-top:1px solid #f1f5f9">${ic(t.dias)} <b style="color:#0f172a">${esc(t.documento)}</b><br><span style="color:${t.dias < 7 ? "#b91c1c" : "#475569"};font-weight:600;font-size:12.5px">${texto(t.dias)}</span></div>`).join("")}
+      ${top.map(t => `<div style="font-size:13px;color:#475569;padding:6px 0;border-top:1px solid #f1f5f9">${ic(t.dias)} <b style="color:#0B1E3A">${esc(t.documento)}</b><br><span style="color:${t.dias < 7 ? "#b91c1c" : "#475569"};font-weight:600;font-size:12.5px">${texto(t.dias)}</span></div>`).join("")}
       ${alertas.length > 3 ? `<div style="font-size:11.5px;color:#64748b;margin-top:6px">+ ${alertas.length - 3} outra(s) certidão(ões) próximas do vencimento</div>` : ""}
       <a href="/documentos?c=${encodeURIComponent(token)}" style="display:block;text-align:center;margin-top:12px;background:#4338ca;color:#fff;font-weight:700;padding:10px;border-radius:9px;text-decoration:none;font-size:13.5px">Atualizar meus documentos →</a>
     `;
@@ -841,7 +842,7 @@ async function carregarOnboarding() {
     if (d.completo || d.dispensado) { el.innerHTML = ""; return; }
     const pct = Math.round((d.feitos / d.total) * 100);
     const passos = d.passos.map((p) => `
-      <a href="${p.link === "#painel" ? "#" : p.link + "?c=" + encodeURIComponent(token)}" style="background:#fff;border:1.5px solid ${p.feito ? "#10b981" : "#e2e8f0"};border-radius:11px;padding:13px 14px;text-decoration:none;color:var(--tinta);display:flex;flex-direction:column;gap:4px;transition:transform .12s, box-shadow .12s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 18px rgba(15,23,42,.08)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <a href="${p.link === "#painel" ? "#" : p.link + "?c=" + encodeURIComponent(token)}" style="background:#fff;border:1.5px solid ${p.feito ? "#10b981" : "#E4E7F0"};border-radius:11px;padding:13px 14px;text-decoration:none;color:var(--tinta);display:flex;flex-direction:column;gap:4px;transition:transform .12s, box-shadow .12s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 18px rgba(15,23,42,.08)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:18px">${p.feito ? "✅" : p.icone}</span>
           <span style="font-size:13.5px;font-weight:800;flex:1">${p.titulo}</span>
@@ -849,13 +850,13 @@ async function carregarOnboarding() {
         <div style="font-size:12px;color:var(--cinza);line-height:1.4">${p.descricao}</div>
         ${p.progresso && !p.feito ? `<div style="font-size:11px;color:var(--indigo);font-weight:700;margin-top:2px">${p.progresso}</div>` : ""}
       </a>`).join("");
-    el.innerHTML = `<div style="background:linear-gradient(135deg,#eef2ff 0%, #fff 60%);border:1px solid #c7d2fe;border-radius:14px;padding:20px;margin-bottom:24px">
+    el.innerHTML = `<div style="background:linear-gradient(135deg,#EEF0FF 0%, #fff 60%);border:1px solid #c7d2fe;border-radius:14px;padding:20px;margin-bottom:24px">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
         <div style="flex:1">
           <div style="font-size:16px;font-weight:800;color:var(--tinta);margin-bottom:2px">👋 Bem-vindo ao ContrataX</div>
           <div style="font-size:13.5px;color:var(--cinza)">Configure sua conta pra extrair o máximo: <b>${d.feitos}/${d.total} passos concluídos</b></div>
         </div>
-        <div style="width:90px;height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;flex-shrink:0"><div style="width:${pct}%;height:100%;background:var(--indigo);transition:width .3s"></div></div>
+        <div style="width:90px;height:8px;background:#E4E7F0;border-radius:99px;overflow:hidden;flex-shrink:0"><div style="width:${pct}%;height:100%;background:var(--indigo);transition:width .3s"></div></div>
         <a href="#" onclick="dispensarOnb();return false" style="font-size:12px;color:var(--cinza-c);font-weight:600;text-decoration:none">Esconder</a>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">${passos}</div>
@@ -992,19 +993,19 @@ function iconHTML(s){ const [cls,ch] = ICON[s] ?? ['dd','·']; return `<span cla
 
 function tldrHTML(t, id, msg) {
   if (t === "limite-dia") {
-    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid #d97706;background:linear-gradient(135deg,#fffbeb 0%,#fff 60%)">
+    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid #B45309;background:linear-gradient(135deg,#FEF3C7 0%,#fff 60%)">
       <h3>⚡ Resumo rápido do edital</h3>
       <p style="font-size:13.5px;color:#78350f;margin:6px 0 0;line-height:1.5">${esc(msg || "Limite diário atingido. Volta a funcionar amanhã.")}</p>
     </div>`;
   }
   if (t === "gerando") {
-    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--indigo);background:linear-gradient(135deg,#eef2ff 0%,#fff 60%)">
+    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--indigo);background:linear-gradient(135deg,#EEF0FF 0%,#fff 60%)">
       <h3>⚡ Resumo rápido do edital</h3>
       <div style="padding:10px 0;font-size:14px;color:var(--cinza)"><span class="spinner"></span>Lendo o edital... isso leva 5–10 segundos.</div>
     </div>`;
   }
   if (t === "sob-demanda") {
-    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--indigo);background:linear-gradient(135deg,#eef2ff 0%,#fff 60%)">
+    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--indigo);background:linear-gradient(135deg,#EEF0FF 0%,#fff 60%)">
       <h3>⚡ Resumo rápido do edital</h3>
       <p style="font-size:13.5px;color:var(--cinza);margin:6px 0 12px">Objeto, valor, prazo e exigências em 5 a 10 segundos. Gere sob demanda para evitar consumo desnecessário da sua cota.</p>
       <button id="btn-tldr-on" onclick="iniciarTldr('${id}')" style="background:var(--indigo);color:#fff;border:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer">Gerar resumo rápido</button>
@@ -1013,14 +1014,14 @@ function tldrHTML(t, id, msg) {
   if (t === "sem-cota") {
     // Estado raro: TL;DR e ilimitado pra assinantes; so cai aqui se assinatura
     // estiver bloqueada (ex: vencida apos carencia).
-    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid #b45309;background:linear-gradient(135deg,#fffbeb 0%,#fff 60%)">
+    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid #b45309;background:linear-gradient(135deg,#FEF3C7 0%,#fff 60%)">
       <h3>⚡ Resumo rápido do edital</h3>
       <p style="font-size:14px;color:#78350f;margin:6px 0 12px">Sua assinatura está pausada. Regularize o pagamento para ler editais.</p>
       <a href="/assinar?c=${encodeURIComponent(token)}" style="display:inline-block;background:var(--indigo);color:#fff;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:14px">Regularizar</a>
     </div>`;
   }
   if (t === "erro") {
-    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--cinza-c);background:#f8fafc">
+    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--cinza-c);background:#FAF9F5">
       <h3>⚡ Resumo rápido do edital</h3>
       <p style="font-size:13.5px;color:var(--cinza);margin:6px 0 0">Não foi possível ler este edital automaticamente. Tente abrir o PDF no portal de origem.</p>
     </div>`;
@@ -1030,11 +1031,11 @@ function tldrHTML(t, id, msg) {
   // cliente). NAO e o veredito pessoal do cliente (esse mora na Aptidao, que cruza
   // com os documentos). Por isso o texto fala do edital, nao de "voce esta apto".
   const rotulo = {
-    apto: ["#059669", "#ecfdf5", "✓ EXIGÊNCIAS PADRÃO"],
-    apto_pendencias: ["#b45309", "#fffbeb", "⚠ EXIGE REQUISITOS ESPECÍFICOS"],
-    nao_apto: ["#dc2626", "#fef2f2", "✕ ACESSO RESTRITO"],
-    indefinido: ["#475569", "#f8fafc", "? A CONFERIR"],
-  }[t.veredito] || ["#475569", "#f8fafc", t.veredito || "?"];
+    apto: ["#16A34A", "#DCFCE7", "✓ EXIGÊNCIAS PADRÃO"],
+    apto_pendencias: ["#b45309", "#FEF3C7", "⚠ EXIGE REQUISITOS ESPECÍFICOS"],
+    nao_apto: ["#dc2626", "#FEE2E2", "✕ ACESSO RESTRITO"],
+    indefinido: ["#475569", "#FAF9F5", "? A CONFERIR"],
+  }[t.veredito] || ["#475569", "#FAF9F5", t.veredito || "?"];
   const [cor, bg, txt] = rotulo;
   const exigencias = (t.exigencias || []).map(e =>
     `<li style="padding:4px 0;font-size:13.5px;color:var(--tinta)"><span style="color:var(--cinza-c);margin-right:6px">•</span>${esc(e)}</li>`
@@ -1101,18 +1102,18 @@ async function perguntarEdital(id) {
 
 function reputacaoHTML(r) {
   if (!r) return "";
-  const cor = r.classificacao === "rapido" ? "#059669"
+  const cor = r.classificacao === "rapido" ? "#16A34A"
             : r.classificacao === "lento" ? "#dc2626"
-            : "#d97706";
-  const bg  = r.classificacao === "rapido" ? "#ecfdf5"
-            : r.classificacao === "lento" ? "#fef2f2"
-            : "#fffbeb";
+            : "#B45309";
+  const bg  = r.classificacao === "rapido" ? "#DCFCE7"
+            : r.classificacao === "lento" ? "#FEE2E2"
+            : "#FEF3C7";
   const rotulo = r.classificacao === "rapido" ? "Paga rápido"
               : r.classificacao === "lento" ? "Tende a atrasar"
               : "Pagamento regular";
   let fonteTag, explicacao;
   if (r.fonte === "dados_proprios") {
-    fonteTag = `<span style="background:#ecfdf5;color:#065f46;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:99px;letter-spacing:.3px">DADOS REAIS · ${r.n} pagamentos</span>`;
+    fonteTag = `<span style="background:#DCFCE7;color:#065f46;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:99px;letter-spacing:.3px">DADOS REAIS · ${r.n} pagamentos</span>`;
     explicacao = `<b>Como calculamos:</b> média dos dias entre a emissão da nota fiscal e o pagamento efetivo, registrados por outros clientes do ContrataX que já receberam desse mesmo órgão (CNPJ). Quanto mais clientes registram, mais precisa fica essa média.`;
   } else if (r.fonte === "capag") {
     const nota = r.fonteDetalhe?.nota || "—";
@@ -1149,17 +1150,17 @@ function referenciaHTML(r) {
   // Cor do badge do perfil (sinalizacao honesta sobre o tamanho do edital)
   const corPerfil = r.perfil?.tipo === "grande" ? "#b45309"
     : r.perfil?.tipo === "pequeno" ? "#0369a1"
-    : "#059669";
-  const bgPerfil = r.perfil?.tipo === "grande" ? "#fffbeb"
+    : "#16A34A";
+  const bgPerfil = r.perfil?.tipo === "grande" ? "#FEF3C7"
     : r.perfil?.tipo === "pequeno" ? "#f0f9ff"
-    : "#ecfdf5";
+    : "#DCFCE7";
   return `<div class="bloco"><h3>💰 Preços praticados em contratos similares</h3>
     <div style="font-size:13px;color:var(--cinza);margin-bottom:14px">${s.n.toLocaleString("pt-BR")} contratos fechados ${escopo} no ${periodo}, no segmento <b>${esc((r.termos||[]).join(", "))}</b>.</div>
     ${r.perfil ? `<div style="background:${bgPerfil};border:1px solid ${corPerfil}33;border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:13.5px;color:${corPerfil};font-weight:600">${esc(r.perfil.texto)}</div>` : ""}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;text-align:center">
       <div style="background:var(--fundo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--cinza-c);font-weight:700;text-transform:uppercase;letter-spacing:.3px">Mínimo</div><div style="font-size:14px;font-weight:800;color:var(--tinta);margin-top:3px">${brl(s.min)}</div></div>
       <div style="background:var(--fundo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--cinza-c);font-weight:700;text-transform:uppercase;letter-spacing:.3px">25% Abaixo</div><div style="font-size:14px;font-weight:800;color:var(--tinta);margin-top:3px">${brl(s.p25)}</div></div>
-      <div style="background:#eef2ff;border:1px solid var(--indigo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--indigo);font-weight:700;text-transform:uppercase;letter-spacing:.3px">Mediana</div><div style="font-size:15px;font-weight:900;color:var(--indigo);margin-top:3px">${brl(s.mediana)}</div></div>
+      <div style="background:#EEF0FF;border:1px solid var(--indigo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--indigo);font-weight:700;text-transform:uppercase;letter-spacing:.3px">Mediana</div><div style="font-size:15px;font-weight:900;color:var(--indigo);margin-top:3px">${brl(s.mediana)}</div></div>
       <div style="background:var(--fundo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--cinza-c);font-weight:700;text-transform:uppercase;letter-spacing:.3px">25% Acima</div><div style="font-size:14px;font-weight:800;color:var(--tinta);margin-top:3px">${brl(s.p75)}</div></div>
       <div style="background:var(--fundo);border-radius:10px;padding:12px 8px"><div style="font-size:10.5px;color:var(--cinza-c);font-weight:700;text-transform:uppercase;letter-spacing:.3px">Máximo</div><div style="font-size:14px;font-weight:800;color:var(--tinta);margin-top:3px">${brl(s.max)}</div></div>
     </div>
@@ -1193,7 +1194,7 @@ function calcDisputa(input) {
   const margem = (preco) => preco > 0 ? Math.round(100 * (preco - custo) / preco) : 0;
   const linha = (rotulo, preco) => {
     const m = margem(preco);
-    const cor = m >= 15 ? "#059669" : m >= 0 ? "#d97706" : "#dc2626";
+    const cor = m >= 15 ? "#16A34A" : m >= 0 ? "#B45309" : "#dc2626";
     const txt = m >= 0 ? `margem de ${m}%` : `prejuízo de ${Math.abs(m)}%`;
     return `<tr><td style="padding:7px 0;font-size:13px;color:var(--tinta)">${rotulo}</td><td style="padding:7px 0;text-align:right;font-size:13px;font-weight:700">${brl(preco)}</td><td style="padding:7px 0;text-align:right;font-size:13px;font-weight:700;color:${cor}">${txt}</td></tr>`;
   };
@@ -1205,7 +1206,7 @@ function calcDisputa(input) {
       ${linha("Vencer 25% abaixo", p25)}
       ${linha("Vencer na mediana", mediana)}
     </table>
-    <div style="background:${venceMin ? "#ecfdf5" : "#fef2f2"};border:1px solid ${venceMin ? "#a7f3d0" : "#fecaca"};border-radius:9px;padding:11px 13px;font-size:13px;color:${venceMin ? "#065f46" : "#991b1b"}">
+    <div style="background:${venceMin ? "#DCFCE7" : "#FEE2E2"};border:1px solid ${venceMin ? "#a7f3d0" : "#fecaca"};border-radius:9px;padding:11px 13px;font-size:13px;color:${venceMin ? "#065f46" : "#991b1b"}">
       <b>Ponto de desistência: ${brl(custo)}.</b> ${venceMin
         ? "Seu custo está abaixo do menor preço já praticado — há espaço pra competir com margem."
         : "Atenção: seu custo está acima do menor preço já praticado nesse ramo. Vencer pode significar prejuízo. Reveja seu custo ou só dispute se conseguir condições melhores."}
@@ -1228,7 +1229,7 @@ function precoHTML(p) {
   const titulo = p.escopo === "orgao" ? "🏆 Quem mais ganha neste órgão" : "🏆 Quem ganha no seu ramo nesta região";
   // Botao de download dos contratos analisados (so quando escopo for "orgao", que e o caso mais util)
   const btnExportar = p.escopo === "orgao" && editalAtual
-    ? `<a href="/api/exportar?tipo=concorrentes&editalId=${encodeURIComponent(editalAtual)}&c=${encodeURIComponent(token)}" style="font-size:12.5px;font-weight:700;color:var(--indigo);text-decoration:none;display:inline-flex;align-items:center;gap:5px;background:#eef2ff;padding:6px 11px;border-radius:8px;border:1px solid #c7d2fe;margin-left:auto;white-space:nowrap" title="Baixar planilha com os contratos analisados">📊 Baixar contratos</a>`
+    ? `<a href="/api/exportar?tipo=concorrentes&editalId=${encodeURIComponent(editalAtual)}&c=${encodeURIComponent(token)}" style="font-size:12.5px;font-weight:700;color:var(--indigo);text-decoration:none;display:inline-flex;align-items:center;gap:5px;background:#EEF0FF;padding:6px 11px;border-radius:8px;border:1px solid #c7d2fe;margin-left:auto;white-space:nowrap" title="Baixar planilha com os contratos analisados">📊 Baixar contratos</a>`
     : "";
   const conc = p.fornecedoresDistintos || 0;
   const concBox = conc ? `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:11px 13px;margin-bottom:12px;font-size:13px;color:#1e3a5f;line-height:1.5">
@@ -1287,14 +1288,14 @@ function copiarMinuta() {
 // edital oficial nem profissional habilitado. Protege juridicamente (clausula
 // 6.2 dos Termos).
 function disclaimerIA() {
-  return `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:12.5px;color:#78350f;line-height:1.5">
+  return `<div style="background:#FEF3C7;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:12.5px;color:#78350f;line-height:1.5">
     <b>Aviso ContrataX.IA:</b> esta leitura foi gerada pela nossa inteligência artificial e é uma referência para apoiar sua decisão. <b>Sempre confira no edital oficial no PNCP.</b> Em caso de divergência, prevalece o edital oficial.
   </div>`;
 }
 // Botao destacado pra abrir o PNCP do edital. Mostrado junto com cada analise.
 function linkPncpHTML(linkPncp) {
   if (!linkPncp) return "";
-  return `<div style="margin:0 0 12px"><a href="${esc(linkPncp)}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#059669;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700;font-size:14px">Ver edital oficial no PNCP <span style="opacity:.85">↗</span></a></div>`;
+  return `<div style="margin:0 0 12px"><a href="${esc(linkPncp)}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#16A34A;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700;font-size:14px">Ver edital oficial no PNCP <span style="opacity:.85">↗</span></a></div>`;
 }
 
 function analiseHTML(a) {
@@ -1416,7 +1417,7 @@ async function abrirDrawer(id) {
     html += `<button class="botao-ia" id="btn-analisar">🔍 Analisar este edital</button>`;
   } else if (d.temChave && d.ia && d.ia.motivo === "assinatura") {
     // Recurso do plano: aparece para todos (gancho), mas pede assinatura para usar.
-    html += `<div class="bloco" style="border:1px solid var(--linha);background:linear-gradient(180deg,#fff, #f8fafc)">
+    html += `<div class="bloco" style="border:1px solid var(--linha);background:linear-gradient(180deg,#fff, #FAF9F5)">
       <h3>🔒 Analise dos editais, recurso do plano</h3>
       <p style="font-size:13.5px;color:var(--cinza);margin:6px 0 12px">O sistema lê o edital inteiro e cruza com os seus documentos: diz, em segundos, <b>se você está apto</b> e <b>o que falta</b> para participar. Disponível para assinantes.</p>
       <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;text-align:center;background:var(--indigo);color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none">Assinar e liberar a análise →</a>
@@ -1453,7 +1454,7 @@ async function abrirDrawer(id) {
         det.innerHTML = d.contratos.map((c) => `
           <div style="padding:11px 0;border-top:1px solid var(--linha);font-size:13px">
             <div style="font-size:11.5px;font-weight:700;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px">${esc(c.orgao || "Órgão público")}</div>
-            <div style="color:var(--tinta);line-height:1.4;margin-bottom:5px">${esc((c.objeto || "").slice(0, 200))}${c.itens > 1 ? ` <span style="font-size:11px;font-weight:700;color:var(--indigo);background:#eef2ff;padding:2px 7px;border-radius:6px;white-space:nowrap">${c.itens} itens agrupados</span>` : ""}</div>
+            <div style="color:var(--tinta);line-height:1.4;margin-bottom:5px">${esc((c.objeto || "").slice(0, 200))}${c.itens > 1 ? ` <span style="font-size:11px;font-weight:700;color:var(--indigo);background:#EEF0FF;padding:2px 7px;border-radius:6px;white-space:nowrap">${c.itens} itens agrupados</span>` : ""}</div>
             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--cinza)">
               <span><b style="color:var(--tinta)">${brl(c.valor)}</b>${c.itens > 1 ? ` <span style="color:var(--cinza-c)">(total)</span>` : ""}</span>
               ${c.vigenciaInicio ? `<span>📅 ${dataBR(c.vigenciaInicio)}${c.vigenciaFim ? ` → ${dataBR(c.vigenciaFim)}` : ""}</span>` : ""}
@@ -1705,7 +1706,7 @@ async function carregarEmpresas() {
   navId.style.cursor = "pointer";
   const menu = document.getElementById("empresa-menu");
   menu.innerHTML = `<div style="padding:11px 14px;font-weight:800;font-size:12px;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--linha)">Trocar de empresa</div>` +
-    empresas.map((e) => `<a href="/painel?c=${encodeURIComponent(e.token)}" style="display:flex;gap:9px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--linha);text-decoration:none;color:var(--tinta);${e.atual ? "background:#eef2ff" : ""}">
+    empresas.map((e) => `<a href="/painel?c=${encodeURIComponent(e.token)}" style="display:flex;gap:9px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--linha);text-decoration:none;color:var(--tinta);${e.atual ? "background:#EEF0FF" : ""}">
       <span style="font-size:15px">${e.atual ? "✅" : "🏢"}</span>
       <span style="flex:1;min-width:0"><span style="font-weight:600;font-size:13.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.nome)}</span>${e.cnpj ? `<span style="color:var(--cinza-c);font-size:11px">${esc(e.cnpj)}</span>` : ""}</span>
     </a>`).join("");
@@ -1762,7 +1763,7 @@ function alternarSoFavoritos(btn) {
     c.style.display = (window._soFavoritos && c.dataset.fav !== "1") ? "none" : "";
   });
   if (btn) {
-    btn.style.background = window._soFavoritos ? "#f59e0b" : "#eef2ff";
+    btn.style.background = window._soFavoritos ? "#f59e0b" : "#EEF0FF";
     btn.style.color = window._soFavoritos ? "#fff" : "var(--indigo)";
     btn.textContent = window._soFavoritos ? "★ Mostrando favoritos" : "★ Só favoritos";
   }
@@ -2033,7 +2034,7 @@ carregar();
   btnSug.title = "Enviar sugestão ou dúvida";
   btnSug.innerHTML = "💡 Sugestão";
   btnSug.style.cssText = "background:#fff;color:#4338ca;border:1.5px solid #4338ca;border-radius:99px;padding:12px 20px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(67,56,202,.2);font-family:inherit;display:flex;align-items:center;gap:6px";
-  btnSug.onmouseover = () => { btnSug.style.background = "#eef2ff"; btnSug.style.transform = "translateY(-2px)"; };
+  btnSug.onmouseover = () => { btnSug.style.background = "#EEF0FF"; btnSug.style.transform = "translateY(-2px)"; };
   btnSug.onmouseout = () => { btnSug.style.background = "#fff"; btnSug.style.transform = ""; };
   btnSug.onclick = () => abrirFeedback();
   barra.appendChild(btnSug);
@@ -2057,9 +2058,9 @@ carregar();
       </div>
       <p style="font-size:13.5px;color:#475569;margin-bottom:16px">Conta o que está acontecendo, respondemos em até 1 dia útil no seu e-mail.</p>
       <label style="display:block;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Seu e-mail</label>
-      <input id="sup-email" type="email" required placeholder="voce@empresa.com.br" style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;margin-bottom:14px" />
+      <input id="sup-email" type="email" required placeholder="voce@empresa.com.br" style="width:100%;padding:11px 13px;border:1.5px solid #E4E7F0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;margin-bottom:14px" />
       <label style="display:block;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Assunto</label>
-      <select id="sup-assunto" required style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;margin-bottom:14px;background:#fff">
+      <select id="sup-assunto" required style="width:100%;padding:11px 13px;border:1.5px solid #E4E7F0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;margin-bottom:14px;background:#fff">
         <option value="">Selecione...</option>
         <option>Dúvida sobre plano ou pagamento</option>
         <option>Problema técnico</option>
@@ -2068,7 +2069,7 @@ carregar();
         <option>Outra coisa</option>
       </select>
       <label style="display:block;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Sua mensagem</label>
-      <textarea id="sup-msg" required rows="5" placeholder="O que aconteceu? Quanto mais detalhe, mais rápido a gente resolve." style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;resize:vertical;margin-bottom:6px"></textarea>
+      <textarea id="sup-msg" required rows="5" placeholder="O que aconteceu? Quanto mais detalhe, mais rápido a gente resolve." style="width:100%;padding:11px 13px;border:1.5px solid #E4E7F0;border-radius:9px;font-size:14.5px;font-family:inherit;outline:none;resize:vertical;margin-bottom:6px"></textarea>
       <div id="sup-erro" style="color:#dc2626;font-size:13px;margin-bottom:8px;display:none"></div>
       <button id="sup-enviar" style="width:100%;background:#4338ca;color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:6px">Enviar mensagem</button>
       <div style="font-size:11.5px;color:#64748b;margin-top:10px;text-align:center">Dá uma olhada antes na <a href="/ajuda" target="_blank" style="color:#4338ca;font-weight:700">Central de Ajuda</a>, talvez você ache a resposta lá.</div>

@@ -8,12 +8,13 @@
 <title>ContrataX, Minha conta</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; }
+  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#64748b; --linha:#E4E7F0; --fundo:#FAF9F5; --verde:#16A34A; --verde-bg:#DCFCE7; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
-  nav { background:#fff; border-bottom:1px solid var(--linha); }
+  body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
+  h1,h2,h3,.logo { font-family:'Manrope',sans-serif; }
+  nav { background:rgba(250,249,245,.85); backdrop-filter:blur(10px); border-bottom:1px solid var(--linha); }
   nav .wrap { max-width:760px; margin:0 auto; display:flex; align-items:center; height:60px; gap:18px; padding:0 20px; }
   .logo { font-weight:900; font-size:20px; color:var(--indigo); text-decoration:none; }
   .logo span { color:var(--cinza-c); }
@@ -57,7 +58,7 @@
     <div class="sub" id="sub-conta">Altere o seu ramo e a sua região quando precisar. O painel se atualiza na hora.</div>
 
     <!-- Bloco de COMPLETAR CADASTRO (so aparece no fluxo Google: ?completar=1) -->
-    <div class="card" id="card-completar" style="display:none;border:2px solid var(--indigo);background:linear-gradient(135deg,#eef2ff 0%,#fff 60%)">
+    <div class="card" id="card-completar" style="display:none;border:2px solid var(--indigo);background:linear-gradient(135deg,#EEF0FF 0%,#fff 60%)">
       <h2>Falta 1 minuto pra seu painel ficar pronto</h2>
       <div class="cap" style="font-size:13.5px;color:var(--cinza);margin-bottom:14px">Você entrou com o Google. Conta rapidinho: que tipo de empresa você tem e o que vende. Em segundos seu painel mostra os editais do seu ramo.</div>
 
@@ -349,10 +350,10 @@ if (modoCompletar) {
     const ov = document.createElement("div");
     ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px";
     ov.innerHTML = `<div style="background:#fff;border-radius:18px;max-width:440px;width:100%;padding:30px 28px;box-shadow:0 30px 80px rgba(0,0,0,.35)">
-      <h2 style="font-size:20px;font-weight:800;margin-bottom:10px;color:#0f172a">CNPJ é obrigatório pra licitação pública</h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:10px;color:#0B1E3A">CNPJ é obrigatório pra licitação pública</h2>
       <p style="color:#475569;font-size:14.5px;margin-bottom:14px;line-height:1.55">Pelas regras do governo (Lei 14.133/2021), só empresas com CNPJ podem participar de licitações. <b>MEI também serve</b> e abre em 5 minutos no Portal do Empreendedor (gratuito).</p>
       <p style="color:#475569;font-size:14.5px;margin-bottom:18px;line-height:1.55">Posso te avisar quando você tiver o CNPJ pronto pra ativar sua conta?</p>
-      <input type="email" id="email-avisar" placeholder="seu melhor email" style="width:100%;padding:13px;border:1px solid #e2e8f0;border-radius:10px;font-size:15px;margin-bottom:12px;font-family:inherit;outline:none" />
+      <input type="email" id="email-avisar" placeholder="seu melhor email" style="width:100%;padding:13px;border:1px solid #E4E7F0;border-radius:10px;font-size:15px;margin-bottom:12px;font-family:inherit;outline:none" />
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button id="confirmar-avisar" class="btn" style="flex:1;background:var(--indigo);color:#fff;border:none;padding:13px;border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit">Me avise quando tiver</button>
         <button id="fechar-avisar" class="btn" style="background:#f1f5f9;color:var(--tinta);border:none;padding:13px 20px;border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit">Voltar</button>
@@ -465,7 +466,7 @@ async function carregarCardPlano() {
         <div style="font-size:13px;font-weight:700;color:var(--indigo);letter-spacing:.5px">UPGRADE</div>
         <div style="font-size:18px;font-weight:800;margin:4px 0 8px">${preview.planoNovo.nome}</div>
         <div style="font-size:13px;color:var(--cinza);margin-bottom:6px">R$ ${preview.planoNovo.preco}/mês a partir da próxima renovação</div>
-        <div style="font-size:14px;color:var(--tinta);background:#eef2ff;border-radius:9px;padding:10px 12px;margin:10px 0">
+        <div style="font-size:14px;color:var(--tinta);background:#EEF0FF;border-radius:9px;padding:10px 12px;margin:10px 0">
           Diferença proporcional hoje:<br>
           <b style="font-size:18px;color:var(--indigo)">R$ ${preview.valor.toFixed(2).replace(".", ",")}</b>
           <span style="font-size:12px;color:var(--cinza-c)"> · ${preview.diasRestantes} dias restantes</span>

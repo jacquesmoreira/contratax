@@ -8,11 +8,12 @@
 <title>ContrataX — Equipe da conta</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; }
+  :root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#64748b; --linha:#E4E7F0; --fundo:#FAF9F5; --verde:#16A34A; --verde-bg:#DCFCE7; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
+  body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
+  h1,h2,h3,.logo { font-family:'Manrope',sans-serif; }
   nav { background:#fff; border-bottom:1px solid var(--linha); }
   nav .wrap { max-width:880px; margin:0 auto; display:flex; align-items:center; height:60px; gap:18px; padding:0 20px; }
   .logo { font-weight:900; font-size:20px; color:var(--indigo); text-decoration:none; }
@@ -32,13 +33,13 @@
   .barra > div { height:100%; background:var(--indigo); border-radius:99px; }
   .membro { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--linha); }
   .membro:last-child { border-bottom:none; }
-  .ava { width:38px; height:38px; border-radius:50%; background:#eef2ff; color:var(--indigo); font-weight:800; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .ava { width:38px; height:38px; border-radius:50%; background:#EEF0FF; color:var(--indigo); font-weight:800; display:flex; align-items:center; justify-content:center; font-size:15px; }
   .membro .info { flex:1; min-width:0; }
   .membro .nome { font-weight:700; font-size:15px; }
   .membro .mail { font-size:13px; color:var(--cinza); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .tag { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; padding:3px 9px; border-radius:99px; }
   .tag.admin { background:var(--verde-bg); color:var(--verde); }
-  .tag.membro { background:#eef2ff; color:var(--indigo); }
+  .tag.membro { background:#EEF0FF; color:var(--indigo); }
   .rm { background:none; border:none; color:#dc2626; font-weight:700; font-size:13px; cursor:pointer; }
   label { display:block; font-size:12px; font-weight:700; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin:14px 0 6px; }
   input { width:100%; padding:12px 13px; border:1px solid var(--linha); border-radius:10px; font-size:15px; font-family:inherit; outline:none; }
@@ -48,7 +49,7 @@
   .btn:disabled { background:var(--cinza-c); cursor:default; }
   .erro { color:#dc2626; font-size:14px; margin-top:12px; }
   .ok { color:var(--verde); font-size:14px; margin-top:12px; }
-  .aviso { background:#fffbeb; border:1px solid #fde68a; color:#92400e; border-radius:10px; padding:13px 14px; font-size:13.5px; margin-top:16px; }
+  .aviso { background:#FEF3C7; border:1px solid #fde68a; color:#92400e; border-radius:10px; padding:13px 14px; font-size:13.5px; margin-top:16px; }
 </style>
 </head>
 <body>

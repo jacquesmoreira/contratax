@@ -8,11 +8,12 @@
 <title>ContrataX — Meus contratos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-:root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0f172a; --cinza:#475569; --cinza-c:#64748b; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; --vermelho:#dc2626; --vermelho-bg:#fef2f2; --amarelo:#d97706; --amarelo-bg:#fffbeb; }
+:root { --indigo:#4338ca; --indigo-d:#312e81; --azul:#2563eb; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#64748b; --linha:#E4E7F0; --fundo:#FAF9F5; --verde:#16A34A; --verde-bg:#DCFCE7; --vermelho:#dc2626; --vermelho-bg:#FEE2E2; --amarelo:#B45309; --amarelo-bg:#FEF3C7; }
 * { box-sizing:border-box; margin:0; padding:0; }
-body { font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif; background:var(--fundo); color:var(--tinta); }
+body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,sans-serif; background:var(--fundo); color:var(--tinta); }
+  h1,h2,h3,.logo { font-family:'Manrope',sans-serif; }
 nav { background:#fff; border-bottom:1px solid var(--linha); }
 nav .wrap { max-width:1080px; margin:0 auto; display:flex; align-items:center; height:60px; gap:18px; padding:0 20px; }
 .logo img { height:32px; display:block; }
@@ -36,7 +37,7 @@ h1 { font-size:26px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px; }
 .contrato .num { font-weight:800; font-size:16px; }
 .contrato .org { color:var(--cinza); font-size:13.5px; margin-top:2px; }
 .contrato .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin:14px 0; }
-.contrato .grid div { background:#f8fafc; padding:10px 12px; border-radius:9px; }
+.contrato .grid div { background:#FAF9F5; padding:10px 12px; border-radius:9px; }
 .contrato .grid .lbl { font-size:10.5px; font-weight:800; color:var(--cinza-c); text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
 .contrato .grid .v { font-weight:700; font-size:14px; }
 .contrato .acoes { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
@@ -264,7 +265,7 @@ $("btn-novo").onclick = () => { ["f-num","f-pregao","f-processo","f-org","f-cnpj
 $("btn-importar").onclick = () => { $("f-arquivo").value=""; $("status-import").innerHTML=""; abrir("m-import"); };
 const dropC = $("drop-c"), inputArq = $("f-arquivo");
 dropC.onclick = () => inputArq.click();
-dropC.ondragover = (e) => { e.preventDefault(); dropC.style.borderColor = "var(--indigo)"; dropC.style.background = "#eef2ff"; };
+dropC.ondragover = (e) => { e.preventDefault(); dropC.style.borderColor = "var(--indigo)"; dropC.style.background = "#EEF0FF"; };
 dropC.ondragleave = () => { dropC.style.borderColor = "var(--linha)"; dropC.style.background = ""; };
 dropC.ondrop = (e) => { e.preventDefault(); dropC.style.borderColor = "var(--linha)"; dropC.style.background = ""; processarArquivo(e.dataTransfer.files[0]); };
 inputArq.onchange = (e) => processarArquivo(e.target.files[0]);
@@ -306,7 +307,7 @@ async function processarArquivo(arq) {
     fechar("m-import");
     abrir("m-novo");
     // banner de confirmacao no topo do modal de cadastro
-    const banner = `<div style="background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:10px 12px;border-radius:9px;font-size:13.5px;margin-bottom:8px">Dados extraídos automaticamente (fonte: ${d.fonte === "xml" ? "XML do PNCP" : "PDF"}). Revise e clique em Salvar.</div>`;
+    const banner = `<div style="background:#DCFCE7;border:1px solid #a7f3d0;color:#065f46;padding:10px 12px;border-radius:9px;font-size:13.5px;margin-bottom:8px">Dados extraídos automaticamente (fonte: ${d.fonte === "xml" ? "XML do PNCP" : "PDF"}). Revise e clique em Salvar.</div>`;
     const card = document.querySelector("#m-novo .modal-card");
     const antigo = card.querySelector(".banner-extracao"); if (antigo) antigo.remove();
     const wrap = document.createElement("div"); wrap.className = "banner-extracao"; wrap.innerHTML = banner;
