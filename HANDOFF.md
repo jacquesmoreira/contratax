@@ -1009,6 +1009,20 @@ Commits: `7637b0f` (blog + ajuda), `da26155` (prompts de IA, documentos, painel,
 
 **Preferência registrada permanentemente na memória:** ver `jacques-copy-humanizada-sem-travessao.md`, nunca mais usar travessão longo em copy voltada ao usuário, em nenhum projeto.
 
+### 2026-07-10 (continuação) — benchmark contra QLicitações: perfil mais rico, chips de oportunidade e Kanban de Planejamento
+
+Jacques mandou 14 prints da plataforma QLicitações pra comparar painéis. Análise honesta: o forte deles é dashboard de BI de mercado nacional e gestão de pipeline (CRM), não a análise profunda de aptidão por IA, que continua sendo o nosso trunfo. Recomendei não perseguir o BI de mercado nem o SINAPI/BDI (nicho de engenharia, esforço alto, não reforça nosso diferencial) e priorizar 3 coisas que somam esforço razoável a ganho real. Auditei o gap primeiro (via subagent Explore) antes de decidir o que construir.
+
+**1. Reforço do perfil da empresa (`documentos.html` + `aptidao.mjs`):** a auditoria confirmou que `montarCorpoAptidao` já manda o objeto `empresa` inteiro pra IA via `JSON.stringify`, então bastava coletar dado mais rico, sem tocar na lógica de IA. Adicionado: faturamento anual (numérico), responsável técnico (nome/CPF/registro CREA-CAU), e atestados de capacidade técnica que eram texto livre solto viraram uma lista estruturada (objeto/quantidade/CAT) com "+ Adicionar atestado". Dado antigo em texto é migrado automaticamente pra uma linha na primeira abertura da tela, sem perder o que já tinha. Prompt do `aptidao.mjs` ganhou instruções explícitas de como cruzar os campos novos, incluindo a regra do TCU (Súmula 263, atestado só pode exigir até 50% do quantitativo).
+
+**2. Chips de filtro por nível de oportunidade (`index.html`):** decisão consciente de **não** copiar o slider de "score mínimo" 0-100% do concorrente, que seria um número inventado. Em vez disso, reaproveitamos o selo honesto que já calculávamos por edital (`oportunidade.nivel`: forte/regular/avaliar, baseado em reputação de pagamento + Registro de Preços) e demos controle ao cliente via 3 chips clicáveis com multi-seleção, nas mesmas cores do badge que já existe no card. Compõe com o filtro "Só favoritos" já existente via lógica E, reaproveitando e generalizando o padrão (`aplicarFiltrosCards`).
+
+**3. Kanban de Planejamento (`planejamento.html`, novo):** funil de 6 colunas (Identificada → Em análise → Elaborando proposta → Enviada → Aguardando resultado → Encerrada) pra o cliente acompanhar cada licitação que decidiu perseguir, em vez de ficar só na cabeça dele ou numa planilha. Drag-and-drop nativo em HTML5, sem biblioteca (mantendo zero-dependência). Dados em `data/estagios.json`, seguindo exatamente o mesmo padrão já usado pelas notas privadas (`salvarNota`/`carregarNota`) e vistos (`carregarVistos`/`marcarVistos`) em `store.mjs`: guarda um retrato do edital no momento de adicionar, pra o card sobreviver no funil mesmo se o edital sair do resultado ao vivo da busca depois. Rota nova protegida por assinatura ativa (mesmo padrão de recebíveis/contratos/documentos), link no menu "Mais", e botão "+ Planejamento" em cada card da busca no painel principal.
+
+Validação em 3 níveis, sem tocar em nenhuma conta real: `store.mjs` isolado via Node com token de teste descartável (salvar, mover preservando retrato antigo, estágio inválido rejeitado, remover), parse-check + `node --check` de todos os arquivos, e lógica client-side completa testada no navegador com `fetch` interceptado (render das 6 colunas, drag-and-drop com payload correto, chips de nível com multi-seleção e composição com favoritos, payload do botão "+ Planejamento").
+
+Commits: `7aaea7f` (perfil), `d9eaa4a` (chips), `267d72c` (Kanban). Todos em produção.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
