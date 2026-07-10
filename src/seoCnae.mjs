@@ -63,8 +63,8 @@ export function urlsCnae() {
 
 const CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Inter,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.6}
-nav{background:#fff;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:10}
+body{font-family:'Public Sans',sans-serif;background:#FAF9F5;color:#0B1E3A;line-height:1.6}h1,h2,h3{font-family:'Manrope','Public Sans',sans-serif}
+nav{background:#fff;border-bottom:1px solid #E4E7F0;position:sticky;top:0;z-index:10}
 nav .w{max-width:980px;margin:0 auto;display:flex;align-items:center;height:60px;padding:0 20px;gap:18px}
 nav .w img{height:30px}
 nav .dir{margin-left:auto;display:flex;gap:18px;font-size:14px;font-weight:600}
@@ -75,23 +75,23 @@ nav .dir a.cta{background:#4338ca;color:#fff;padding:9px 17px;border-radius:9px}
 .bc a{color:#4338ca;text-decoration:none}
 h1{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.2;margin-bottom:8px}
 .sub{color:#475569;font-size:15.5px;margin-bottom:22px}
-.cnae-tag{display:inline-block;background:#eef2ff;color:#4338ca;padding:6px 13px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:16px}
+.cnae-tag{display:inline-block;background:#EEF0FF;color:#4338ca;padding:6px 13px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:16px}
 h2{font-size:22px;font-weight:800;margin:30px 0 12px}
 h3{font-size:17px;font-weight:700;margin:18px 0 10px}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:11px}
+.card{background:#fff;border:1px solid #E4E7F0;border-radius:12px;padding:16px;margin-bottom:11px}
 .card .org{font-size:12.5px;color:#64748b;font-weight:600;margin-bottom:5px}
-.card .obj{font-size:14.5px;color:#0f172a;line-height:1.45;margin-bottom:7px}
+.card .obj{font-size:14.5px;color:#0B1E3A;line-height:1.45;margin-bottom:7px}
 .card .meta{display:flex;gap:14px;font-size:13px;color:#475569;flex-wrap:wrap}
-.card .meta b{color:#0f172a}
-.cta-box{background:linear-gradient(135deg,#eef2ff,#fff);border:1px solid #c7d2fe;border-radius:14px;padding:22px;margin:24px 0;text-align:center}
+.card .meta b{color:#0B1E3A}
+.cta-box{background:linear-gradient(135deg,#EEF0FF,#fff);border:1px solid #c7d2fe;border-radius:14px;padding:22px;margin:24px 0;text-align:center}
 .cta-box h2{margin-top:0;font-size:19px}
 .cta-box a{display:inline-block;background:#4338ca;color:#fff;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:700;margin-top:6px}
-.como{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 22px;margin:20px 0;font-size:14.5px;color:#475569}
+.como{background:#fff;border:1px solid #E4E7F0;border-radius:12px;padding:18px 22px;margin:20px 0;font-size:14.5px;color:#475569}
 .como p{margin-bottom:10px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
-.chips a{background:#fff;border:1px solid #e2e8f0;color:#475569;padding:8px 14px;border-radius:9px;font-size:13.5px;font-weight:600;text-decoration:none}
+.chips a{background:#fff;border:1px solid #E4E7F0;color:#475569;padding:8px 14px;border-radius:9px;font-size:13.5px;font-weight:600;text-decoration:none}
 .chips a:hover{border-color:#4338ca;color:#4338ca}
-footer{background:#0f172a;color:#cbd5e1;padding:30px 20px;text-align:center;font-size:13px}
+footer{background:#0B1E3A;color:#cbd5e1;padding:30px 20px;text-align:center;font-size:13px}
 footer a{color:#a5b4fc;text-decoration:none;margin:0 9px}
 `;
 
@@ -108,8 +108,8 @@ function layout({ title, description, canonical, jsonld = "", body }) {
 <meta property="og:image" content="${BASE}/og-image.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap"></noscript>
 <style>${CSS}</style>${jsonld}</head><body>
 <nav><div class="w"><a href="/"><img src="/logo-horizontal.png" alt="ContrataX"/></a>
 <div class="dir"><a href="/licitacoes">Ramos</a><a href="/blog">Blog</a><a class="cta" href="/cadastro">Criar conta grátis</a></div></div></nav>

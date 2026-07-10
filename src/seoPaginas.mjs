@@ -44,15 +44,15 @@ function portalUrl(e) {
 }
 
 const CSS = `
-:root{--navy:#0f1e46;--azul:#2563eb;--azul-c:#1e40af;--tinta:#0f172a;--cinza:#475569;--cinza-c:#94a3b8;--linha:#e2e8f0;--fundo:#f8fafc;--verde:#059669;--verde-bg:#ecfdf5}
+:root{--navy:#0B1E3A;--azul:#2563eb;--azul-c:#1e40af;--tinta:#0B1E3A;--cinza:#475569;--cinza-c:#94a3b8;--linha:#E4E7F0;--fundo:#FAF9F5;--verde:#16A34A;--verde-bg:#DCFCE7}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--tinta);background:var(--fundo);line-height:1.55}
+body{font-family:'Public Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--tinta);background:var(--fundo);line-height:1.55}h1,h2,h3{font-family:'Manrope','Public Sans',sans-serif}
 nav{background:#fff;border-bottom:1px solid var(--linha)}
 nav .w{max-width:980px;margin:0 auto;height:62px;display:flex;align-items:center;gap:18px;padding:0 20px}
 nav .dir{margin-left:auto;display:flex;gap:18px;font-size:14px;font-weight:600}
 nav a{color:var(--cinza);text-decoration:none}
 nav a.cta{background:var(--azul);color:#fff;padding:9px 16px;border-radius:9px}
-.hero{background:linear-gradient(180deg,#eef2ff,#fff);padding:38px 0 26px}
+.hero{background:linear-gradient(180deg,#EEF0FF,#fff);padding:38px 0 26px}
 .w{max-width:980px;margin:0 auto;padding:0 20px}
 .bc{font-size:13px;color:var(--cinza-c);margin-bottom:10px}
 .bc a{color:var(--azul);text-decoration:none}
@@ -98,7 +98,7 @@ function layout({ title, description, canonical, jsonld = "", body, noindex = fa
 <meta property="og:site_name" content="ContrataX"/><meta property="og:title" content="${esc(title)}"/>
 <meta property="og:description" content="${esc(description)}"/><meta property="og:url" content="${canonical}"/>
 <meta property="og:image" content="${BASE}/og-image.png"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>${CSS}</style>${jsonld}</head><body>
 <nav><div class="w"><a href="/"><img src="/logo-horizontal.png" alt="ContrataX" style="height:30px;display:block"/></a>
 <div class="dir"><a href="/licitacoes">Ramos</a><a href="/entrar">Entrar</a><a class="cta" href="/cadastro">Criar conta grátis</a></div></div></nav>
@@ -152,14 +152,14 @@ export function paginaCategoria(slug, ufSigla = null) {
     <h2>Panorama do mercado de ${esc(cat.nome.toLowerCase())} ${esc(onde)}</h2>
     <p>Nos últimos 12 meses, <b>${mercado.stats.n.toLocaleString("pt-BR")} contratos</b> de ${esc(cat.nome.toLowerCase())} foram firmados ${esc(onde)} com base em dados do PNCP. Esses números ajudam a calibrar a sua proposta antes de disputar.</p>
     <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:14px">
-      <tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;color:#475569">Menor valor de contrato</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700">${brlExato(mercado.stats.min)}</td></tr>
-      <tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;color:#475569">Valor mediano</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700">${brlExato(mercado.stats.mediana)}</td></tr>
-      <tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;color:#475569">Maior valor de contrato</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700">${brlExato(mercado.stats.max)}</td></tr>
+      <tr><td style="padding:8px 10px;border-bottom:1px solid #E4E7F0;color:#475569">Menor valor de contrato</td><td style="padding:8px 10px;border-bottom:1px solid #E4E7F0;text-align:right;font-weight:700">${brlExato(mercado.stats.min)}</td></tr>
+      <tr><td style="padding:8px 10px;border-bottom:1px solid #E4E7F0;color:#475569">Valor mediano</td><td style="padding:8px 10px;border-bottom:1px solid #E4E7F0;text-align:right;font-weight:700">${brlExato(mercado.stats.mediana)}</td></tr>
+      <tr><td style="padding:8px 10px;border-bottom:1px solid #E4E7F0;color:#475569">Maior valor de contrato</td><td style="padding:8px 10px;border-bottom:1px solid #E4E7F0;text-align:right;font-weight:700">${brlExato(mercado.stats.max)}</td></tr>
     </table>
     ${mercado.topFornecedores && mercado.topFornecedores.length ? `
       <h3>Empresas que mais venceram licitações de ${esc(cat.nome.toLowerCase())} ${esc(onde)}</h3>
       <table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:14px">
-        ${mercado.topFornecedores.map((f) => `<tr><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0">${esc((f.fornecedor || "").slice(0, 60))}</td><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;color:#475569;white-space:nowrap">${f.qtd} contrato${f.qtd > 1 ? "s" : ""} · ${brlCurto(f.valorTotal)}</td></tr>`).join("")}
+        ${mercado.topFornecedores.map((f) => `<tr><td style="padding:7px 10px;border-bottom:1px solid #E4E7F0">${esc((f.fornecedor || "").slice(0, 60))}</td><td style="padding:7px 10px;border-bottom:1px solid #E4E7F0;text-align:right;color:#475569;white-space:nowrap">${f.qtd} contrato${f.qtd > 1 ? "s" : ""} · ${brlCurto(f.valorTotal)}</td></tr>`).join("")}
       </table>
       <p style="font-size:13.5px;color:#64748b">Conhecer quem já fornece para a região ajuda a entender a concorrência antes de entrar na disputa.</p>
     ` : ""}

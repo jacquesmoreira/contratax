@@ -189,8 +189,8 @@ export async function renderizarArtigo(slug, baseUrl) {
   const todos = await listarArtigos();
   const outros = todos.filter((p) => p.slug !== slug).slice(0, 3);
   const relacionados = outros.map((p) => `
-    <a href="/blog/${p.slug}" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;text-decoration:none;color:inherit;display:block">
-      <div style="font-weight:700;font-size:15px;color:#0f172a;margin-bottom:6px">${escHtml(p.title)}</div>
+    <a href="/blog/${p.slug}" style="background:#fff;border:1px solid #E4E7F0;border-radius:12px;padding:16px;text-decoration:none;color:inherit;display:block">
+      <div style="font-weight:700;font-size:15px;color:#0B1E3A;margin-bottom:6px">${escHtml(p.title)}</div>
       <div style="font-size:13px;color:#475569;line-height:1.4">${escHtml(p.description)}</div>
     </a>`).join("");
 
@@ -222,9 +222,9 @@ export async function renderizarArtigo(slug, baseUrl) {
 export async function renderizarListagem(baseUrl) {
   const posts = await listarArtigos();
   const itens = posts.map((p) => `
-    <a href="/blog/${p.slug}" style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px;text-decoration:none;color:inherit;display:block;transition:transform .12s,box-shadow .12s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 28px rgba(15,23,42,.08)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+    <a href="/blog/${p.slug}" style="background:#fff;border:1px solid #E4E7F0;border-radius:14px;padding:22px;text-decoration:none;color:inherit;display:block;transition:transform .12s,box-shadow .12s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 28px rgba(15,23,42,.08)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
       <div style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">${p.date ? new Date(p.date).toLocaleDateString("pt-BR") : ""}</div>
-      <h2 style="font-size:19px;font-weight:800;color:#0f172a;line-height:1.3;margin-bottom:8px">${escHtml(p.title)}</h2>
+      <h2 style="font-size:19px;font-weight:800;color:#0B1E3A;line-height:1.3;margin-bottom:8px">${escHtml(p.title)}</h2>
       <p style="font-size:14px;color:#475569;line-height:1.5">${escHtml(p.description)}</p>
       <div style="margin-top:14px;font-size:13.5px;color:#4338ca;font-weight:700">Ler artigo →</div>
     </a>`).join("");
@@ -271,13 +271,14 @@ ${keywords ? `<meta name="keywords" content="${escHtml(keywords)}" />` : ""}
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet" />
 ${ld ? `<script type="application/ld+json">${JSON.stringify(ld)}</script>` : ""}
 <style>
-  :root { --indigo:#4338ca; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; }
+  :root { --indigo:#4338ca; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#94a3b8; --linha:#E4E7F0; --fundo:#FAF9F5; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
-  nav { background:#fff; border-bottom:1px solid var(--linha); }
+  body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
+  h1,h2,h3 { font-family:'Manrope','Public Sans',sans-serif; }
+  nav { background:rgba(250,249,245,.85); backdrop-filter:blur(10px); border-bottom:1px solid var(--linha); }
   nav .wrap { max-width:920px; margin:0 auto; display:flex; align-items:center; height:64px; gap:18px; padding:0 20px; }
   nav .logo { font-weight:900; color:var(--indigo); text-decoration:none; }
   nav .dir { margin-left:auto; display:flex; gap:22px; font-size:14.5px; font-weight:600; }
@@ -285,15 +286,15 @@ ${ld ? `<script type="application/ld+json">${JSON.stringify(ld)}</script>` : ""}
   nav .dir a.cta { background:var(--indigo); color:#fff; padding:8px 16px; border-radius:9px; }
   .wrap-main { max-width:760px; margin:0 auto; padding:42px 20px 60px; }
   .post .conteudo-post { font-family:"Lora", Georgia, serif; font-size:17.5px; line-height:1.7; color:#1e293b; }
-  .conteudo-post h2 { font-family:"Inter",sans-serif; font-size:24px; font-weight:800; margin:32px 0 12px; letter-spacing:-.3px; color:#0f172a; }
-  .conteudo-post h3 { font-family:"Inter",sans-serif; font-size:19px; font-weight:800; margin:24px 0 8px; color:#0f172a; }
+  .conteudo-post h2 { font-family:'Manrope',sans-serif; font-size:24px; font-weight:800; margin:32px 0 12px; letter-spacing:-.3px; color:#0B1E3A; }
+  .conteudo-post h3 { font-family:'Manrope',sans-serif; font-size:19px; font-weight:800; margin:24px 0 8px; color:#0B1E3A; }
   .conteudo-post p { margin-bottom:16px; }
   .conteudo-post ul, .conteudo-post ol { margin:0 0 16px 24px; }
   .conteudo-post li { margin-bottom:6px; }
   .conteudo-post a { color:var(--indigo); }
-  .conteudo-post code { background:#eef2ff; color:#3730a3; padding:2px 7px; border-radius:5px; font-family:Monaco, Consolas, monospace; font-size:14.5px; }
-  .conteudo-post strong { color:#0f172a; font-weight:700; }
-  .conteudo-post blockquote { border-left:4px solid var(--indigo); padding:8px 16px; margin:18px 0; background:#eef2ff; color:#3730a3; font-style:italic; border-radius:0 8px 8px 0; }
+  .conteudo-post code { background:#EEF0FF; color:#3730a3; padding:2px 7px; border-radius:5px; font-family:Monaco, Consolas, monospace; font-size:14.5px; }
+  .conteudo-post strong { color:#0B1E3A; font-weight:700; }
+  .conteudo-post blockquote { border-left:4px solid var(--indigo); padding:8px 16px; margin:18px 0; background:#EEF0FF; color:#3730a3; font-style:italic; border-radius:0 8px 8px 0; }
   footer { background:#fff; border-top:1px solid var(--linha); padding:28px 20px; text-align:center; color:var(--cinza-c); font-size:13px; }
   footer a { color:var(--cinza); text-decoration:none; margin:0 10px; }
 </style>

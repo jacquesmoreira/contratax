@@ -27,12 +27,13 @@ function template({ title, description, canonical, conteudo }) {
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-  :root { --indigo:#4338ca; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; --verde:#059669; --verde-bg:#ecfdf5; }
+  :root { --indigo:#4338ca; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#94a3b8; --linha:#E4E7F0; --fundo:#FAF9F5; --verde:#16A34A; --verde-bg:#DCFCE7; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); line-height:1.6; }
-  nav { background:#fff; border-bottom:1px solid var(--linha); }
+  body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); line-height:1.6; }
+  h1,h2,h3 { font-family:'Manrope','Public Sans',sans-serif; }
+  nav { background:rgba(250,249,245,.85); backdrop-filter:blur(10px); border-bottom:1px solid var(--linha); }
   nav .wrap { max-width:920px; margin:0 auto; display:flex; align-items:center; height:64px; gap:18px; padding:0 20px; }
   nav .logo img { height:30px; display:block; }
   nav .dir { margin-left:auto; display:flex; gap:22px; font-size:14.5px; font-weight:600; }

@@ -122,7 +122,7 @@ if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
       var b = document.createElement("div");
       b.id = "cx-cookie-banner";
-      b.style.cssText = "position:fixed;left:14px;right:14px;bottom:14px;max-width:560px;margin:0 auto;background:#0f172a;color:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 12px 40px rgba(0,0,0,.25);z-index:9999;font-family:Inter,-apple-system,sans-serif;display:flex;gap:14px;align-items:center;flex-wrap:wrap";
+      b.style.cssText = "position:fixed;left:14px;right:14px;bottom:14px;max-width:560px;margin:0 auto;background:#0B1E3A;color:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 30px 70px -30px rgba(11,30,58,.55);z-index:9999;font-family:'Public Sans',-apple-system,sans-serif;display:flex;gap:14px;align-items:center;flex-wrap:wrap";
       b.innerHTML = '<div style="flex:1;min-width:200px;font-size:13.5px;line-height:1.5">Usamos cookies para manter seu acesso e melhorar a plataforma. Ao continuar, você concorda com a nossa <a href="/privacidade" style="color:#a5b4fc;font-weight:700">Política de Privacidade</a>.</div><button id="cx-cookie-ok" style="background:#4338ca;color:#fff;border:none;padding:11px 22px;border-radius:9px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;white-space:nowrap">Aceitar</button>';
       document.body.appendChild(b);
       document.getElementById("cx-cookie-ok").onclick = function(){

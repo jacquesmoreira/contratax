@@ -61,7 +61,7 @@ export async function renderizarContato(baseUrl, { token = "", erro = "", sucess
     description: "Envie sua mensagem para o suporte do ContrataX. Respondemos em até 1 dia útil.",
     canonical: `${baseUrl}/contato`,
     conteudo: sucesso ? `
-      <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:30px;text-align:center;max-width:540px;margin:0 auto">
+      <div style="background:#DCFCE7;border:1px solid #a7f3d0;border-radius:14px;padding:30px;text-align:center;max-width:540px;margin:0 auto">
         <div style="font-size:48px;margin-bottom:10px">✓</div>
         <h1 style="font-size:24px;font-weight:800;color:#047857;margin-bottom:8px">Mensagem enviada!</h1>
         <p style="color:#475569;font-size:15px;margin-bottom:18px">Recebemos sua mensagem e vamos responder em até 1 dia útil no e-mail que você informou.</p>
@@ -73,12 +73,12 @@ export async function renderizarContato(baseUrl, { token = "", erro = "", sucess
         <p style="font-size:16px;color:#475569;max-width:560px;margin:0 auto">Respondemos em até <b>1 dia útil</b> no e-mail que você informar. Pra dúvidas comuns, dá uma olhada antes na <a href="/ajuda" style="color:#4338ca;font-weight:700">Central de Ajuda</a>.</p>
       </header>
       ${erro ? `<div style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:12px 16px;border-radius:10px;margin:0 auto 18px;max-width:560px;font-size:14px;font-weight:600">${escHtml(erro)}</div>` : ""}
-      <form method="POST" action="/contato" style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:28px;max-width:560px;margin:0 auto;box-shadow:0 12px 36px rgba(15,23,42,.06)">
+      <form method="POST" action="/contato" style="background:#fff;border:1px solid #E4E7F0;border-radius:16px;padding:28px;max-width:560px;margin:0 auto;box-shadow:0 12px 36px rgba(15,23,42,.06)">
         <label style="display:block;font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Seu e-mail</label>
-        <input name="email" type="email" required placeholder="voce@empresa.com.br" style="width:100%;padding:13px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:inherit;outline:none;margin-bottom:18px" />
+        <input name="email" type="email" required placeholder="voce@empresa.com.br" style="width:100%;padding:13px 14px;border:1.5px solid #E4E7F0;border-radius:10px;font-size:15px;font-family:inherit;outline:none;margin-bottom:18px" />
 
         <label style="display:block;font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Assunto</label>
-        <select name="assunto" required style="width:100%;padding:13px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:inherit;outline:none;margin-bottom:18px;background:#fff">
+        <select name="assunto" required style="width:100%;padding:13px 14px;border:1.5px solid #E4E7F0;border-radius:10px;font-size:15px;font-family:inherit;outline:none;margin-bottom:18px;background:#fff">
           <option value="">Selecione...</option>
           <option value="Dúvida sobre plano ou pagamento">Dúvida sobre plano ou pagamento</option>
           <option value="Problema técnico">Problema técnico</option>
@@ -88,7 +88,7 @@ export async function renderizarContato(baseUrl, { token = "", erro = "", sucess
         </select>
 
         <label style="display:block;font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Mensagem</label>
-        <textarea name="mensagem" required rows="6" placeholder="Conte o que está acontecendo..." style="width:100%;padding:13px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:inherit;outline:none;resize:vertical;margin-bottom:18px"></textarea>
+        <textarea name="mensagem" required rows="6" placeholder="Conte o que está acontecendo..." style="width:100%;padding:13px 14px;border:1.5px solid #E4E7F0;border-radius:10px;font-size:15px;font-family:inherit;outline:none;resize:vertical;margin-bottom:18px"></textarea>
 
         ${token ? `<input type="hidden" name="token" value="${escHtml(token)}" />` : ""}
         <button type="submit" style="width:100%;background:#4338ca;color:#fff;border:none;padding:14px;border-radius:11px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Enviar mensagem</button>
@@ -118,11 +118,11 @@ export async function processarContato({ email, assunto, mensagem, token, meta =
   if (meta.url) linhasMeta.push(`URL: ${meta.url}`);
 
   const html = `
-    <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:20px">
-      <h2 style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:12px">Novo contato, ContrataX</h2>
+    <div style="font-family:'Public Sans',sans-serif;max-width:560px;margin:0 auto;padding:20px">
+      <h2 style="font-size:18px;font-weight:800;color:#0B1E3A;margin-bottom:12px">Novo contato, ContrataX</h2>
       <p style="font-size:14px;color:#475569;margin-bottom:8px"><b>De:</b> ${escHtml(email)}</p>
       <p style="font-size:14px;color:#475569;margin-bottom:14px"><b>Assunto:</b> ${escHtml(assunto)}</p>
-      <div style="background:#f8fafc;border-left:4px solid #4338ca;padding:14px 18px;border-radius:0 8px 8px 0;white-space:pre-wrap;font-size:14.5px;color:#1e293b;line-height:1.55">${escHtml(mensagem)}</div>
+      <div style="background:#FAF9F5;border-left:4px solid #4338ca;padding:14px 18px;border-radius:0 8px 8px 0;white-space:pre-wrap;font-size:14.5px;color:#1e293b;line-height:1.55">${escHtml(mensagem)}</div>
       ${linhasMeta.length ? `<div style="font-size:12px;color:#94a3b8;margin-top:16px">${linhasMeta.map(l => escHtml(l)).join("<br>")}</div>` : ""}
       <p style="font-size:12px;color:#94a3b8;margin-top:24px">Para responder, basta clicar em Responder no seu e-mail, o endereço de retorno é do cliente.</p>
     </div>`;
@@ -157,12 +157,13 @@ function template({ title, description, canonical, conteudo }) {
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
-  :root { --indigo:#4338ca; --tinta:#0f172a; --cinza:#475569; --cinza-c:#94a3b8; --linha:#e2e8f0; --fundo:#f8fafc; }
+  :root { --indigo:#4338ca; --tinta:#0B1E3A; --cinza:#475569; --cinza-c:#94a3b8; --linha:#E4E7F0; --fundo:#FAF9F5; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
-  nav { background:#fff; border-bottom:1px solid var(--linha); }
+  body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--fundo); color:var(--tinta); }
+  h1,h2,h3 { font-family:'Manrope','Public Sans',sans-serif; }
+  nav { background:rgba(250,249,245,.85); backdrop-filter:blur(10px); border-bottom:1px solid var(--linha); }
   nav .wrap { max-width:920px; margin:0 auto; display:flex; align-items:center; height:64px; gap:18px; padding:0 20px; }
   nav .logo img { height:30px; display:block; }
   nav .dir { margin-left:auto; display:flex; gap:22px; font-size:14.5px; font-weight:600; }
@@ -170,13 +171,13 @@ function template({ title, description, canonical, conteudo }) {
   nav .dir a.cta { background:var(--indigo); color:#fff; padding:8px 16px; border-radius:9px; }
   .wrap-main { max-width:760px; margin:0 auto; padding:42px 20px 60px; }
   .post .conteudo-post { font-family:"Lora", Georgia, serif; font-size:16.5px; line-height:1.7; color:#1e293b; }
-  .conteudo-post h2 { font-family:"Inter",sans-serif; font-size:22px; font-weight:800; margin:34px 0 10px; letter-spacing:-.2px; color:#0f172a; padding-bottom:8px; border-bottom:2px solid #eef2ff; }
-  .conteudo-post h3 { font-family:"Inter",sans-serif; font-size:17px; font-weight:800; margin:22px 0 6px; color:#0f172a; }
+  .conteudo-post h2 { font-family:'Manrope',sans-serif; font-size:22px; font-weight:800; margin:34px 0 10px; letter-spacing:-.2px; color:#0B1E3A; padding-bottom:8px; border-bottom:2px solid #EEF0FF; }
+  .conteudo-post h3 { font-family:'Manrope',sans-serif; font-size:17px; font-weight:800; margin:22px 0 6px; color:#0B1E3A; }
   .conteudo-post p { margin-bottom:14px; }
   .conteudo-post ul, .conteudo-post ol { margin:0 0 14px 22px; }
   .conteudo-post li { margin-bottom:5px; }
   .conteudo-post a { color:var(--indigo); font-weight:600; }
-  .conteudo-post strong { color:#0f172a; font-weight:700; }
+  .conteudo-post strong { color:#0B1E3A; font-weight:700; }
   footer { background:#fff; border-top:1px solid var(--linha); padding:24px 20px; text-align:center; color:var(--cinza-c); font-size:13px; }
   footer a { color:var(--cinza); text-decoration:none; margin:0 10px; }
 </style>

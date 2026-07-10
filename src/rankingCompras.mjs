@@ -38,8 +38,8 @@ export function urlsRanking() {
 
 const CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Inter,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.6}
-nav{background:#fff;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:10}
+body{font-family:'Public Sans',sans-serif;background:#FAF9F5;color:#0B1E3A;line-height:1.6}h1,h2,h3{font-family:'Manrope','Public Sans',sans-serif}
+nav{background:#fff;border-bottom:1px solid #E4E7F0;position:sticky;top:0;z-index:10}
 nav .w{max-width:980px;margin:0 auto;display:flex;align-items:center;height:60px;padding:0 20px;gap:18px}
 nav .w img{height:30px}
 nav .dir{margin-left:auto;display:flex;gap:18px;font-size:14px;font-weight:600}
@@ -50,27 +50,27 @@ nav .dir a.cta{background:#4338ca;color:#fff;padding:9px 17px;border-radius:9px}
 .bc a{color:#4338ca;text-decoration:none}
 h1{font-size:28px;font-weight:800;letter-spacing:-.5px;line-height:1.25;margin-bottom:8px}
 .sub{color:#475569;font-size:15.5px;margin-bottom:22px}
-.tag{display:inline-block;background:#eef2ff;color:#4338ca;padding:6px 13px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:16px}
+.tag{display:inline-block;background:#EEF0FF;color:#4338ca;padding:6px 13px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:16px}
 h2{font-size:21px;font-weight:800;margin:28px 0 12px}
 h3{font-size:17px;font-weight:700;margin:18px 0 10px}
-table{width:100%;min-width:520px;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;font-size:14px}
-th,td{text-align:left;padding:11px 13px;border-bottom:1px solid #e2e8f0;vertical-align:top}
-th{background:#f8fafc;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#64748b}
+table{width:100%;min-width:520px;border-collapse:collapse;background:#fff;border:1px solid #E4E7F0;border-radius:12px;overflow:hidden;font-size:14px}
+th,td{text-align:left;padding:11px 13px;border-bottom:1px solid #E4E7F0;vertical-align:top}
+th{background:#FAF9F5;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#64748b}
 tr:last-child td{border-bottom:none}
 td.pos{font-weight:800;color:#94a3b8;width:36px}
-td.org a{color:#0f172a;text-decoration:none;font-weight:700}
+td.org a{color:#0B1E3A;text-decoration:none;font-weight:700}
 td.org a:hover{color:#4338ca}
 td.org .loc{display:block;font-size:12.5px;color:#64748b;font-weight:400;margin-top:2px}
-td.val{font-weight:800;color:#059669;white-space:nowrap}
+td.val{font-weight:800;color:#16A34A;white-space:nowrap}
 td.n{color:#64748b;white-space:nowrap}
-.metodologia{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 22px;margin:22px 0;font-size:13.5px;color:#475569}
-.cta-box{background:linear-gradient(135deg,#eef2ff,#fff);border:1px solid #c7d2fe;border-radius:14px;padding:22px;margin:24px 0;text-align:center}
+.metodologia{background:#fff;border:1px solid #E4E7F0;border-radius:12px;padding:18px 22px;margin:22px 0;font-size:13.5px;color:#475569}
+.cta-box{background:linear-gradient(135deg,#EEF0FF,#fff);border:1px solid #c7d2fe;border-radius:14px;padding:22px;margin:24px 0;text-align:center}
 .cta-box h2{margin-top:0;font-size:19px}
 .cta-box a{display:inline-block;background:#4338ca;color:#fff;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:700;margin-top:6px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
-.chips a{background:#fff;border:1px solid #e2e8f0;color:#475569;padding:8px 14px;border-radius:9px;font-size:13.5px;font-weight:600;text-decoration:none}
+.chips a{background:#fff;border:1px solid #E4E7F0;color:#475569;padding:8px 14px;border-radius:9px;font-size:13.5px;font-weight:600;text-decoration:none}
 .chips a:hover{border-color:#4338ca;color:#4338ca}
-footer{background:#0f172a;color:#cbd5e1;padding:30px 20px;text-align:center;font-size:13px}
+footer{background:#0B1E3A;color:#cbd5e1;padding:30px 20px;text-align:center;font-size:13px}
 footer a{color:#a5b4fc;text-decoration:none;margin:0 9px}
 `;
 
@@ -87,8 +87,8 @@ function layout({ title, description, canonical, jsonld = "", body }) {
 <meta property="og:image" content="${BASE}/og-image.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap"></noscript>
 <style>${CSS}</style>${jsonld}</head><body>
 <nav><div class="w"><a href="/"><img src="/logo-horizontal.png" alt="ContrataX"/></a>
 <div class="dir"><a href="/ranking">Rankings</a><a href="/licitacoes">Ramos</a><a class="cta" href="/cadastro">Criar conta grátis</a></div></div></nav>
@@ -182,7 +182,7 @@ export function paginaHubRanking() {
   const title = "Rankings de Compras Públicas por Ramo — Quem Mais Compra no Brasil | ContrataX";
   const description = "Ranking dos órgãos públicos brasileiros que mais compram em cada ramo (material hospitalar, merenda escolar, limpeza, informática e mais), com base em dados oficiais do PNCP.";
 
-  const lista = CATEGORIAS.map((c) => `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px" >
+  const lista = CATEGORIAS.map((c) => `<div style="background:#fff;border:1px solid #E4E7F0;border-radius:12px;padding:16px" >
     <a href="/ranking/${c.slug}" style="color:#4338ca;text-decoration:none;font-weight:700;font-size:15px">${esc(c.nome)}</a>
   </div>`).join("");
 
