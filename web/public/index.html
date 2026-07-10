@@ -427,7 +427,7 @@ function cardHTML(e) {
   store[e.id] = e;
   const local = `${esc(e.municipio) ?? "?"}/${esc(e.uf) ?? "?"}`;
   const visto = lerVistos().has(e.id) ? " ja-visto" : "";
-  return `<div class="card${visto}" data-id="${esc(e.id)}" data-fav="${e.favorito ? 1 : 0}" data-texto="${esc((local+" "+(e.orgao||"")+" "+(e.objeto||"")).toLowerCase())}">
+  return `<div class="card${visto}" data-id="${esc(e.id)}" data-fav="${e.favorito ? 1 : 0}" data-nivel="${esc(e.oportunidade?.nivel || "")}" data-texto="${esc((local+" "+(e.orgao||"")+" "+(e.objeto||"")).toLowerCase())}">
     <div class="card-topo"><button class="fav-btn" onclick="event.stopPropagation();toggleFavorito('${esc(e.id)}',this)" title="Favoritar este edital" style="background:none;border:none;cursor:pointer;font-size:17px;line-height:1;padding:0;color:${e.favorito ? "#f59e0b" : "var(--cinza-c)"}">${e.favorito ? "★" : "☆"}</button><span class="orgao">${local} · ${esc(e.orgao ?? e.unidade ?? "Órgão público")}</span>
       ${e.novo ? '<span class="selo-novo">NOVO</span>' : ""}${e.situacao === "Suspensa" ? '<span style="background:#fef3c7;color:#b45309;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px" title="Edital suspenso pelo órgão. Pode ser retomado ou cancelado, confira no portal antes de investir tempo.">⚠️ SUSPENSA</span>' : ""}${prazoHTML(e.encerramento)}
       <span class="badge-trilha badge-visto">já visto</span>
@@ -968,11 +968,13 @@ async function carregar() {
     }
     // Radar saiu do topo do painel: agora abre sob demanda em "Suas ferramentas"
     // (item "Radar de renovação" -> verRadar()). Deixa a tela principal mais limpa.
-    c.innerHTML = banner + (perfis.length ? perfis.map(perfilHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Seu painel está sendo preparado.</div>`);
+    const temEditais = perfis.some((p) => (p.editais || []).length);
+    c.innerHTML = banner + (temEditais ? chipsNivelHTML() : "") + (perfis.length ? perfis.map(perfilHTML).join("") : `<div class="vazio"><span class="emoji">🔭</span>Seu painel está sendo preparado.</div>`);
     // Apos render, pergunta ao backend quais desses editais ja foram analisados
     // (cache global). Marca visualmente os que sim.
     const idsRender = [...c.querySelectorAll(".card[data-id]")].map((x) => x.dataset.id);
     marcarAnalisadosDaLista(idsRender);
+    aplicarFiltrosCards();
   } catch (e) { c.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`; }
 }
 
@@ -1757,16 +1759,46 @@ async function toggleFavorito(id, btn) {
   } catch {}
 }
 // Filtro "so favoritos": mostra/esconde os cards sem estrela.
+// Filtro por nivel de oportunidade (forte/regular/avaliar, o mesmo selo
+// honesto que ja aparece no card via oportBadge). Chips multi-selecao: nenhum
+// marcado = mostra tudo. Composto com o filtro de favoritos na mesma funcao,
+// os dois juntos decidem se o card fica visivel.
+window._niveisAtivos = window._niveisAtivos || new Set();
+function aplicarFiltrosCards() {
+  document.querySelectorAll(".card[data-id]").forEach((c) => {
+    const passaFav = !window._soFavoritos || c.dataset.fav === "1";
+    const passaNivel = !window._niveisAtivos.size || window._niveisAtivos.has(c.dataset.nivel);
+    c.style.display = (passaFav && passaNivel) ? "" : "none";
+  });
+}
 function alternarSoFavoritos(btn) {
   window._soFavoritos = !window._soFavoritos;
-  document.querySelectorAll(".card[data-id]").forEach((c) => {
-    c.style.display = (window._soFavoritos && c.dataset.fav !== "1") ? "none" : "";
-  });
+  aplicarFiltrosCards();
   if (btn) {
     btn.style.background = window._soFavoritos ? "#f59e0b" : "#EEF0FF";
     btn.style.color = window._soFavoritos ? "#fff" : "var(--indigo)";
     btn.textContent = window._soFavoritos ? "★ Mostrando favoritos" : "★ Só favoritos";
   }
+}
+const NIVEL_CHIP = {
+  forte:   { cor: "#065f46", bg: "#d1fae5", txt: "🟢 Forte" },
+  regular: { cor: "#1e40af", bg: "#dbeafe", txt: "🟡 Regular" },
+  avaliar: { cor: "#b45309", bg: "#fef3c7", txt: "⚪ Avaliar" },
+};
+function chipsNivelHTML() {
+  const btns = Object.entries(NIVEL_CHIP).map(([nivel, v]) =>
+    `<button type="button" class="chip-nivel" data-nivel-btn="${nivel}" onclick="alternarNivel('${nivel}',this)" style="border:1.5px solid ${v.cor}22;background:#fff;color:${v.cor};font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:999px;cursor:pointer;font-family:inherit">${v.txt}</button>`
+  ).join("");
+  return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px">Oportunidade</span>${btns}</div>`;
+}
+function alternarNivel(nivel, btn) {
+  if (window._niveisAtivos.has(nivel)) window._niveisAtivos.delete(nivel);
+  else window._niveisAtivos.add(nivel);
+  const ligado = window._niveisAtivos.has(nivel);
+  const v = NIVEL_CHIP[nivel];
+  btn.style.background = ligado ? v.cor : "#fff";
+  btn.style.color = ligado ? "#fff" : v.cor;
+  aplicarFiltrosCards();
 }
 
 // Carrega e mostra os itens da licitacao (lazy, ao clicar).
