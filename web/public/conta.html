@@ -449,14 +449,25 @@ async function carregarCardPlano() {
     document.getElementById("info-plano-atual").innerHTML =
       `Seu plano atual: <b>${nivel.replace(/^./, c => c.toUpperCase())}</b>. Renova em <b>${dataRenova}</b>.`;
 
-    // Hierarquia (so mostra upgrade)
-    const ordem = ["starter", "basico", "pro"];
-    const idxAtual = ordem.indexOf(nivel);
+    // Candidatos a upgrade: busca o catalogo real (nao hardcoded, os precos
+    // vem de env var e podem mudar) e filtra so os planos da MESMA familia do
+    // atual (empresa: starter/basico/pro, ou assessoria: assessoria10/25) com
+    // preco maior, ordenados do mais barato pro mais caro. Isso cobre tanto o
+    // caso normal quanto o upgrade entre planos de assessoria (ex: Assessoria
+    // 10 -> Assessoria 25), que antes nao tinha nenhuma opcao na tela.
+    const catalogo = await (await fetch("/api/planos")).json();
+    const precoNum = (s) => Number(String(s).replace(/\./g, "").replace(",", "."));
+    const planoAtualObj = (catalogo.planos || []).find((p) => p.id === nivel);
+    const ehAssessoriaAtual = Boolean(planoAtualObj?.assessoria);
+    const precoAtualNum = planoAtualObj ? precoNum(planoAtualObj.preco) : 0;
+    const candidatos = (catalogo.planos || [])
+      .filter((p) => Boolean(p.assessoria) === ehAssessoriaAtual && precoNum(p.preco) > precoAtualNum)
+      .sort((a, b) => precoNum(a.preco) - precoNum(b.preco));
     const opcoesEl = document.getElementById("opcoes-planos");
     opcoesEl.innerHTML = "";
 
-    for (let i = idxAtual + 1; i < ordem.length; i++) {
-      const novoId = ordem[i];
+    for (const candidato of candidatos) {
+      const novoId = candidato.id;
       const previewR = await fetch(`/api/conta/upgrade-preview?c=${encodeURIComponent(token)}&novo=${novoId}`);
       const preview = await previewR.json();
       if (preview.erro || !preview.permitido) continue;
