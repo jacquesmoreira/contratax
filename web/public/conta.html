@@ -110,6 +110,7 @@
       <label for="ramo">O que a sua empresa vende (seu ramo)</label>
       <input id="ramo" type="text" placeholder="Ex: material hospitalar, seringa, luva" />
       <div class="dica">Separe por vírgula. São essas palavras que trazem as licitações para o seu painel.</div>
+      <div id="ramo-aviso" style="display:none;margin-top:8px;background:#EEF0FF;border:1px solid #c7d2fe;border-radius:9px;padding:9px 12px;font-size:13px;color:var(--indigo-d)">🔔 Adicionamos o termo que você buscou. Revise a lista acima e clique em <b>Salvar alterações</b> pra passar a receber isso automaticamente.</div>
 
       <div id="termos-ia-box" style="display:none;margin-top:10px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:12px 14px">
         <div style="font-size:12.5px;font-weight:700;color:var(--indigo);margin-bottom:6px">A ContrataX.IA também busca por estes termos relacionados ao seu ramo</div>
@@ -231,6 +232,19 @@ async function carregar() {
   $("nome").value = d.nome || "";
   $("ramo").value = d.ramo || "";
   $("excluir").value = d.excluir || "";
+  // Veio de "Monitorar" numa busca avulsa do painel: pre-adiciona o termo ao
+  // ramo (sem salvar sozinho, o cliente revisa e confirma) em vez de criar um
+  // conceito paralelo de "alerta", reaproveitando o mesmo digest diario do ramo.
+  const novoTermo = (new URLSearchParams(location.search).get("novoTermo") || "").trim();
+  if (novoTermo) {
+    const jaTem = (d.ramo || "").split(",").map(t => t.trim().toLowerCase()).includes(novoTermo.toLowerCase());
+    if (!jaTem) {
+      $("ramo").value = d.ramo ? `${d.ramo}, ${novoTermo}` : novoTermo;
+      $("ramo-aviso").style.display = "block";
+    }
+    $("ramo").scrollIntoView({ behavior: "smooth", block: "center" });
+    $("ramo").focus();
+  }
   // Termos relacionados gerados pela ContrataX.IA (transparencia: o cliente ve
   // por que recebe certos editais). So mostra se houver.
   const iaBox = $("termos-ia-box"), iaChips = $("termos-ia-chips");

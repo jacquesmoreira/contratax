@@ -895,9 +895,10 @@ const servidor = createServer(async (req, res) => {
       // digest diario.
       let editais = [];
       let alargado = false;
+      let totalBruto = 0;
       try {
         const r = await monitorar(perfil, { marcar: false, salvar: false });
-        editais = r.filtrados; alargado = r.alargado;
+        editais = r.filtrados; alargado = r.alargado; totalBruto = r.total;
       } catch (e) { console.error("[api/editais] monitorar:", e.message); }
       // Selo de reputacao de pagamento no card (versao leve, so CAPAG/heuristica).
       // Cache por UF|municipio: orgaos repetem, evita recomputar. Best-effort.
@@ -940,6 +941,7 @@ const servidor = createServer(async (req, res) => {
           atualizadoEm: new Date().toISOString(),
           editais,
           alargado,
+          totalBruto,
           // Ativacao: se ainda nao rodou nenhuma analise, o painel mostra o card
           // "comece por aqui" que leva a 1a analise (momento "uau").
           analisou: (perfil.analises?.usados || 0) > 0,

@@ -494,6 +494,12 @@ function perfilHTML(p) {
   const banner = p.alargado
     ? `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:11px 16px;margin-bottom:14px;font-size:13.5px;color:#1e40af;line-height:1.5">📍 Poucos editais do seu ramo abertos ${p.uf ? `em <b>${esc(p.uf)}</b>` : "no seu estado"} agora, então ampliamos para o <b>Brasil todo</b>. Você ajusta os estados nas configurações do seu ramo.</div>`
     : "";
+  // Transparencia: quantos editais abertos existem no recorte do cliente (UF/modalidade/valor)
+  // antes do filtro por palavra-chave do ramo. Mesmo espirito do "conferir no PNCP":
+  // o cliente ve que nao estamos escondendo nada, so descartando o que nao e do ramo dele.
+  const transparencia = (p.totalBruto > editais.length)
+    ? `<div style="font-size:12.5px;color:var(--cinza);margin:-8px 0 14px">Encontramos <b>${p.totalBruto.toLocaleString("pt-BR")}</b> editais abertos ${p.alargado ? "no Brasil" : (p.uf ? `em ${esc(p.uf)}` : "no seu recorte")} agora. <b>${editais.length.toLocaleString("pt-BR")}</b> ${editais.length === 1 ? "bate" : "batem"} com o ramo cadastrado, o resto foi descartado por palavra-chave.</div>`
+    : "";
   // Pra os cards de aha e de melhor oportunidade, prefere editais do(s) estado(s)
   // do cliente; so cai no nacional (quando o painel alargou) se nao houver nenhum
   // no estado. Evita o card sugerir um edital de outro estado do nada.
@@ -549,7 +555,7 @@ function perfilHTML(p) {
   const corpo = editais.length
     ? `<div class="cards-grid">${editais.map(cardHTML).join("")}</div>`
     : `<div class="vazio"><span class="emoji">🔭</span>Nenhum edital do seu ramo está aberto agora.<br>Assim que surgir, aparece aqui e você recebe por e-mail.<br><br><b>Dica:</b> termos mais amplos pegam mais oportunidades (ex: <b>"hospitalar"</b> em vez de "material hospitalar").</div>`;
-  return `<section class="perfil">${cabecalho}${banner}${ahaCard}${certCard}${oppCard}${corpo}</section>`;
+  return `<section class="perfil">${cabecalho}${transparencia}${banner}${ahaCard}${certCard}${oppCard}${corpo}</section>`;
 }
 
 function radarHTML(lista) {
@@ -2000,6 +2006,7 @@ async function buscarPainel(pagina = 1) {
       <span style="font-size:18px;font-weight:800">${d.total} resultado${d.total!==1?"s":""}${termo?' para "'+esc(termo)+'"':""}</span>
       <span style="color:var(--cinza)">em ${esc(onde)}</span>
       ${d.total ? `<a href="#" onclick="exportarBusca();return false" style="font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none">📊 Excel</a>` : ""}
+      ${d.total && termo ? `<a href="/conta?c=${encodeURIComponent(token)}&novoTermo=${encodeURIComponent(termo)}" style="font-size:13px;font-weight:700;color:var(--indigo);text-decoration:none" title="Adiciona este termo ao seu ramo cadastrado, pra passar a receber isso automaticamente por e-mail, sem precisar buscar de novo">🔔 Monitorar "${esc(termo)}"</a>` : ""}
       <a href="#" id="voltar-painel" style="margin-left:auto;color:var(--indigo);font-weight:700">← Voltar ao meu painel</a></div>`;
     // Lista cheia (recall), com os PRECISOS ja no topo (ranqueados no backend).
     html += d.editais.length ? `<div class="cards-grid">${d.editais.map(cardHTML).join("")}</div>` : `<div class="vazio"><span class="emoji">🔭</span>Nada encontrado. Tente outro termo, outra cidade ou amplie os filtros.</div>`;
