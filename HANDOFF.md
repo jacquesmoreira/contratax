@@ -1030,7 +1030,7 @@ Commits: `7aaea7f` (perfil), `d9eaa4a` (chips), `267d72c` (Kanban). Todos em pro
 3. **Upgrade de plano não cobria a família Assessoria** (`conta.html`): a lista de candidatos a upgrade era fixa (`["starter","basico","pro"]`), então um cliente de Assessoria 10 não via NENHUMA opção de upgrade pra Assessoria 25 (não é que via opção errada, o backend já validava por preço via `calcularProRata` e escondia opções inválidas, mas o problema real era a ausência total da opção certa). Corrigido pra montar a lista dinamicamente a partir do catálogo `/api/planos`, comparando por preço e filtrando pela mesma família (`assessoria: true/false`), então cada plano só sobe dentro da própria família. Testado com 3 cenários mockados (assessoria10→assessoria25, básico→pro, pro→lista vazia). Commit `5126acd`.
 4. **Dois bugs de UX reportados pelo Jacques usando o painel:** (a) a logo dentro do painel logado apontava pra `/` (LP pública), então clicar nela derrubava o cliente numa tela de login, parecendo que ele tinha sido deslogado, corrigido pra sempre voltar pro `/painel?c=token` do próprio cliente; (b) o Kanban de Planejamento (item 3 do benchmark QLicitações acima) tinha ficado escondido demais, o link saiu do dropdown "Mais" e virou item fixo da nav, e o botão "+ Planejamento" no card ganhou tooltip explicando o que é e, depois de clicado, virou link direto pro quadro em vez de só mudar de cor sem levar a lugar nenhum. Commit `b13af08`.
 
-Todos os 4 validados (parse-check dos scripts + teste funcional no navegador com fetch interceptado). **Correção: ainda NÃO estão em produção**, ficaram commitados local (esperando confirmação do Jacques pra dar push, já que isso dispara deploy automático no Railway pro painel que clientes reais usam agora).
+Todos os 4 validados (parse-check dos scripts + teste funcional no navegador com fetch interceptado). **Status de deploy (conferido direto com `git log origin/main..HEAD`, não supor):** os itens 1, 2 e 3 (`00dda40`, `dacd38d`, `5126acd`) já estão em produção. O item 4 (`b13af08`) ainda está só commitado local, esperando confirmação do Jacques pra dar push (dispara deploy automático no Railway pro painel que clientes reais usam agora).
 
 ### 2026-07-10 (continuação) — mais 2 ideias do benchmark com o PainelGov (site parecido que o Jacques mandou prints)
 
@@ -1041,7 +1041,7 @@ Jacques mandou ~20 prints do `painelgov.com.br`, concorrente direto. Achado prin
 
 Validado com parse-check dos 3 arquivos + teste funcional no navegador (fetch interceptado, sem tocar em conta real): transparência aparece/some corretamente conforme os números, concordância gramatical testada nos dois casos, link "Monitorar" gera a URL certa, `conta.html` pré-adiciona e não duplica termo já existente.
 
-Commit `07137dc`. **Também ainda não está em produção**, aguardando push.
+Commit `07137dc`. Ainda não está em produção, aguardando push (junto com `b13af08` acima, ver seção anterior).
 
 ---
 
