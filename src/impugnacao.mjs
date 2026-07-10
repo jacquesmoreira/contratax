@@ -25,7 +25,9 @@ Responda SOMENTE com JSON valido, sem texto fora dele, nesta estrutura:
 }
 
 Seja tecnico e conservador: so aponte o que realmente tem fundamento. Se o edital
-parecer regular, retorne temPontos=false e clausulas vazias.`;
+parecer regular, retorne temPontos=false e clausulas vazias.
+
+Nunca use travessao longo (—) em nenhum campo de texto, incluindo a minuta; use virgula, ponto ou parenteses.`;
 
 export function montarCorpoImpugnacao(analise, { modelo = MODELO } = {}) {
   const texto = `${INSTRUCAO}

@@ -38,7 +38,8 @@ Regras:
 - Se um campo nao for encontrado, use null (nao invente).
 - Datas: se houver 'sessenta dias' ou 'doze meses', traduza para AAAA-MM-DD baseado na data inicio.
 - valorTotal: se houver 'valor mensal' e 'numero de meses', multiplique. Se houver apenas valor mensal, registre o anual.
-- A CONTRATANTE e o orgao publico, NAO a empresa privada. Cuidado para nao trocar.`;
+- A CONTRATANTE e o orgao publico, NAO a empresa privada. Cuidado para nao trocar.
+- No campo "objeto", nunca use travessao longo (—); use virgula, ponto ou parenteses.`;
 
 // 1) Parser de XML do instrumento contratual do PNCP.
 //    Estrutura tipica: <contrato>...</contrato> com tags identificaveis.

@@ -63,7 +63,7 @@ function cabecalho(empresa, nota, refTitulo) {
     </div>
     <div class="meta">
       ${esc(empresa?.cidade || "")}${empresa?.uf ? "/" + esc(empresa.uf) : ""}, ${dataExtenso(new Date())}<br>
-      Ref.: NF nº ${esc(nota.numero || "—")} — ${esc(refTitulo)}
+      Ref.: NF nº ${esc(nota.numero || "-")}, ${esc(refTitulo)}
     </div>
   </header>`;
 }
@@ -151,7 +151,7 @@ export function gerarOuvidoriaHtml({ nota, empresa }) {
 ${cabecalho(empresa, nota, "Manifestacao a Ouvidoria")}
 <div class="dest">À Ouvidoria do órgão<br><b>${orgao}</b></div>
 
-<h1>Manifestação de Ouvidoria — Atraso de Pagamento</h1>
+<h1>Manifestação de Ouvidoria: Atraso de Pagamento</h1>
 
 <p><b>Tipo de manifestação:</b> Reclamação.</p>
 

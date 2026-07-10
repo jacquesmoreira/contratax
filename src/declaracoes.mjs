@@ -14,7 +14,7 @@ export function gerarDeclaracoes(dados = {}) {
   const repCargo = campo(rep.cargo, "CARGO");
 
   const cab = `${rz}, inscrita no CNPJ sob o nº ${cnpj}, com sede em ${end}, por meio de seu representante legal ${repNome}, ${repCargo}, inscrito(a) no CPF nº ${repCpf}`;
-  const rodape = `\n\n[CIDADE], [DIA] de [MÊS] de [ANO].\n\n______________________________________________\n${repNome} — ${repCargo}\n${rz} — CNPJ ${cnpj}`;
+  const rodape = `\n\n[CIDADE], [DIA] de [MÊS] de [ANO].\n\n______________________________________________\n${repNome}, ${repCargo}\n${rz}, CNPJ ${cnpj}`;
 
   return [
     {

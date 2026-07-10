@@ -33,7 +33,7 @@ Regras para o veredito:
 - "nao_apto": claramente restrito (cooperativa exclusiva, registro especifico, regiao limitada)
 - "indefinido": objeto muito vago ou edital nao conclusivo
 
-Seja objetivo. Nao inclua texto fora do JSON.`;
+Seja objetivo. Nao inclua texto fora do JSON. Nunca use travessao longo (—); use virgula, ponto ou parenteses.`;
 
 export function temChaveIA() {
   return Boolean(process.env.ANTHROPIC_API_KEY);

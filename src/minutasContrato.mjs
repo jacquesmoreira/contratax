@@ -25,7 +25,7 @@ function cabecalho(empresa, contrato, refTitulo) {
     <div style="font-size:10pt">CNPJ ${esc(empresa.cnpj)}</div>
   </div><div class="meta">
     ${esc(empresa.cidade || "")}${empresa.uf ? "/" + esc(empresa.uf) : ""}, ${dataExtenso(new Date())}<br>
-    Ref.: Contrato nº ${esc(contrato.numero || "—")} — ${esc(refTitulo)}
+    Ref.: Contrato nº ${esc(contrato.numero || "-")}, ${esc(refTitulo)}
   </div></header>
   <div class="dest">
     Ao(A) Senhor(a) Gestor(a) do Contrato<br>

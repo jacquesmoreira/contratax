@@ -49,7 +49,9 @@ Responda SOMENTE com JSON valido, sem texto fora dele, nesta estrutura:
   "proximosPassos": ["acoes concretas e praticas"]
 }
 
-Seja rigoroso: na duvida use "confirmar". Nao invente exigencias nem capacidades.`;
+Seja rigoroso: na duvida use "confirmar". Nao invente exigencias nem capacidades.
+
+Nunca use travessao longo (—) em nenhum campo de texto; use virgula, ponto ou parenteses.`;
 
 // Monta o corpo da chamada de IA (so texto, reaproveita a analise da Camada 3).
 export function montarCorpoAptidao(analiseEdital, empresa, { modelo = MODELO } = {}) {
