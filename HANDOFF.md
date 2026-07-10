@@ -972,6 +972,19 @@ Commits: `d0d9e94` (canvas+ROI), `a012400` (SEO/blog/legal/cookie). Todos em pro
 
 **Estado do redesign:** a essa altura, praticamente TODA a superfície visível do produto está no novo sistema de design (navy/indigo, Manrope+Public Sans) — LP, funil de conversão, painel logado inteiro, comparativo, SEO programático, blog, institucionais, legais e o banner de cookies global. Único não-tratado conhecido: `admin.html` (painel interno só do Jacques, não visível a cliente) e `erro-500.html`/`obrigado`/`declaracoes` já cobertos. Se aparecer algo com Inter/cor antiga, é candidato a swap.
 
+### 2026-07-10 (continuação) — feedback do Jacques comparando a LP com o design dele
+
+Jacques comparou a LP no ar com o design original dele e levantou 4 pontos. Resolvidos:
+
+1. **Barra promo "7 dias grátis"** — adicionada no topo, versão sóbria (gradiente da marca, sem shimmer/emoji — evita cara amadora). É padrão de SaaS sério.
+2. **Subtítulo do hero** — removido o `max-width:560px` que apertava a frase; agora ocupa a coluna inteira, como no design dele.
+3. **Imagem do hero** — trocada a busca interativa pelo **mockup estático do painel** (triagem por prioridade Alta/Média/Baixa + tabela, com count-up nos 4 contadores), fiel ao design dele. A **busca interativa (dados reais do PNCP) foi realocada** pra uma seção própria `#experimente` logo após os portais — não se perdeu a ferramenta.
+4. **Comparativo reescrito com diferenciais REAIS** (crítica correta do Jacques: os textos antigos eram furados/desmentíveis — tem concorrente < R$50, vários com self-service, quase todos com IA; e era risco de propaganda comparativa enganosa). Removido: preço de entrada, "sem vendedor", "tem IA". Mantido só o que de fato diferencia: aptidão contra os SEUS documentos, reputação de pagamento do órgão, preço de referência, inteligência de concorrência, cobrança pós-vitória, radar de renovação. Novo eixo honesto: "todo mundo te avisa que o edital existe; a gente diz se vale a pena e cuida até o pagamento". Coluna deles = "Outras plataformas" com valores honestos (Resumo genérico / Não tem / Raro / Varia), sem strawman.
+
+Preço: já tinha a mesma estrutura do design dele; mantido o subtítulo descritivo que vende.
+
+**DECISÃO DE CONVERSÃO (hero mockup vs busca interativa) — registrar pra validar:** Jacques deixou a meu critério. Escolhi **mockup estático no hero + busca interativa numa seção logo abaixo (`#experimente`)**, e repontei o botão secundário do hero pra `#experimente` ("Ver as licitações do meu ramo"). Motivos: (a) performance/LCP — tínhamos LCP 6,8s, hero interativo é mais pesado; (b) o mockup conta a história da triagem por prioridade (nosso diferencial real) melhor que resultado de busca cru; (c) controle de risco (busca ao vivo pode dar resultado fraco pra ramo nichado); (d) padrão que converte (Linear/Stripe/Vercel usam produto estático no hero). **É uma decisão genuinamente A/B-testável.** O que observar pra validar/reverter: engajamento na seção `#experimente` (Clarity — cliques no botão de busca), taxa de scroll até ela, e conversão trial. Se a interação despencar, é trivial trazer a busca de volta pro hero (swap do bloco `.hero-card` com o `.busca-exp`). Commits: `cf30f34`, `ee605e2`. Em produção.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
