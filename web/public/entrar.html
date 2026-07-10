@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="icon" href="/logo-favicon.png" type="image/png" />
-<title>ContrataX — Entrar</title>
+<title>ContrataX · Entrar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -84,7 +84,7 @@ const motivoSessao = params.get("sessao");
 if (motivoSessao) {
   const av = document.getElementById("aviso-sessao");
   av.textContent = motivoSessao === "revogada"
-    ? "Sua conta foi acessada em outro dispositivo. Por segurança, só uma sessão fica ativa por vez — entre novamente para continuar aqui."
+    ? "Sua conta foi acessada em outro dispositivo. Por segurança, só uma sessão fica ativa por vez. Entre novamente para continuar aqui."
     : "Sua sessão expirou ou você ainda não entrou neste dispositivo. Faça login para continuar.";
   av.style.display = "block";
 }
