@@ -25,10 +25,10 @@ Quem te disser que "MEI não dá pra licitação" está desinformado. Em 2026, *
 
 A lei brasileira deliberadamente favorece pequenos. Razões:
 
-1. **Política de inclusão econômica** — diversificar fornecedores do governo
-2. **Reduzir concentração** — evitar que poucas empresas grandes dominem
-3. **Estimular regularização** — formalizar quem trabalha no informal
-4. **Desenvolvimento local** — preferência pra fornecedores da própria região
+1. **Política de inclusão econômica**: diversificar fornecedores do governo
+2. **Reduzir concentração**: evitar que poucas empresas grandes dominem
+3. **Estimular regularização**: formalizar quem trabalha no informal
+4. **Desenvolvimento local**: preferência pra fornecedores da própria região
 
 Por isso, na hora de cadastrar sua proposta, deixar claro que você é **MEI ou ME/EPP** ativa todos esses benefícios automaticamente.
 
@@ -51,15 +51,15 @@ Antes de aceitar contrato grande, atenção ao seu teto:
 Diferente de empresas maiores, o MEI tem documentação simplificada. A lista oficial:
 
 ### Documentos da empresa
-- **CCMEI** (Certificado de Condição de Microempreendedor Individual) — emitido em [gov.br/empreendedor](https://www.gov.br/empresas-e-negocios/pt-br/empreendedor)
+- **CCMEI** (Certificado de Condição de Microempreendedor Individual), emitido em [gov.br/empreendedor](https://www.gov.br/empresas-e-negocios/pt-br/empreendedor)
 - **CNPJ ativo** com situação cadastral regular
 - **Inscrição estadual e municipal** (algumas atividades)
 - **Alvará de funcionamento** (se exigido na sua cidade)
 
 ### Certidões obrigatórias
-- **CND Federal** (Receita Federal) — válida 180 dias
-- **CRF FGTS** (Caixa) — válida 30 dias
-- **CNDT** (Justiça do Trabalho) — válida 180 dias
+- **CND Federal** (Receita Federal), válida 180 dias
+- **CRF FGTS** (Caixa), válida 30 dias
+- **CNDT** (Justiça do Trabalho), válida 180 dias
 - **CND Estadual** (se a atividade exige)
 - **CND Municipal**
 
@@ -138,12 +138,12 @@ Você é MEI, quer começar a vender pro governo. Este é o roteiro:
 
 O [PNCP](/blog/o-que-e-pncp) é a vitrine, mas o lance acontece em outros portais. Os principais:
 
-- **Comprasnet** (compras.gov.br) — federal e muitos estados
-- **BLL** (bllcompras.com) — muitos municípios e estados
-- **BNC** (bnc.org.br) — alternativa ao BLL
-- **Licitações-e** (licitacoes-e.com.br) — Banco do Brasil, prefeituras pequenas
+- **Comprasnet** (compras.gov.br), federal e muitos estados
+- **BLL** (bllcompras.com), muitos municípios e estados
+- **BNC** (bnc.org.br), alternativa ao BLL
+- **Licitações-e** (licitacoes-e.com.br), Banco do Brasil, prefeituras pequenas
 
-Cadastro é **gratuito** em todos. Leva 30-60 minutos cada. Você precisa de **certificado digital e-CNPJ** (e-CPF não basta) — investimento de ~R$ 200-400/ano.
+Cadastro é **gratuito** em todos. Leva 30-60 minutos cada. Você precisa de **certificado digital e-CNPJ** (e-CPF não basta), investimento de ~R$ 200-400/ano.
 
 ### Passo 2: Mantém as certidões em dia
 
@@ -159,7 +159,7 @@ Quem perde licitação porque a certidão venceu **no dia da sessão** é estat�
 
 Se você nunca forneceu pra ninguém, **não tem atestado**. Como resolver:
 
-- Comece com **dispensas pequenas** (até R$ 17 mil) — geralmente não exigem atestado
+- Comece com **dispensas pequenas** (até R$ 17 mil), geralmente não exigem atestado
 - Vende pra **empresas privadas** primeiro e pede atestado deles
 - Faz **doações simbólicas** pra ONGs e pede declaração
 - Pega **serviços de associações** locais e formaliza
@@ -168,7 +168,7 @@ Cada contrato ganho é mais um atestado pra próximo. Veja [como conseguir atest
 
 ### Passo 4: Acompanha o PNCP
 
-Garimpa manualmente todo dia (1-2h) ou usa ferramenta que automatiza. O [ContrataX](https://www.contratax.com.br) tem plano Starter de R$ 59/mês especialmente pensado pra MEI — vê todos os editais do seu ramo no Brasil todo + 3 análises completas de edital com IA por mês.
+Garimpa manualmente todo dia (1-2h) ou usa ferramenta que automatiza. O [ContrataX](https://www.contratax.com.br) tem plano Starter de R$ 59/mês especialmente pensado pra MEI, vê todos os editais do seu ramo no Brasil todo + 3 análises completas de edital com IA por mês.
 
 ### Passo 5: Lê o edital ANTES de propor
 
@@ -289,7 +289,7 @@ Sim. Foi pensado pra pequeno fornecedor. Plano Starter R$ 59/mês cabe no orçam
 
 MEI pode (e deve) participar de licitação pública em 2026. A lei te favorece com **exclusividade até R$ 95.849, empate ficto, regularização tardia e cotas obrigatórias**. O caminho é simples na teoria: certidões em dia, cadastro nos portais, leitura cuidadosa de cada edital e participação consistente.
 
-O que mata MEI iniciante não é falta de oportunidade — é **falta de organização**. Quem mantém certidões, lê cada edital antes de propor e calcula preço com margem realista, em 6-12 meses tem um fluxo razoável de contratos.
+O que mata MEI iniciante não é falta de oportunidade, é **falta de organização**. Quem mantém certidões, lê cada edital antes de propor e calcula preço com margem realista, em 6-12 meses tem um fluxo razoável de contratos.
 
 ---
 

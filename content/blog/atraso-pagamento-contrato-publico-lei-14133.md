@@ -15,7 +15,7 @@ A regra está no **art. 141 da Lei 14.133/2021**:
 
 Esse prazo vale pra praticamente todos os contratos administrativos. Há exceções pontuais (alguns serviços específicos têm prazo diferente em legislação especial), mas a regra geral é 30 dias.
 
-A contagem começa **da liquidação**, que é o ato em que o servidor responsável atesta que você entregou conforme o contrato. Na prática, a liquidação costuma acontecer alguns dias depois da emissão da nota — se você não foi avisado da data exata, conte 30 dias da emissão.
+A contagem começa **da liquidação**, que é o ato em que o servidor responsável atesta que você entregou conforme o contrato. Na prática, a liquidação costuma acontecer alguns dias depois da emissão da nota, se você não foi avisado da data exata, conte 30 dias da emissão.
 
 ## A ordem cronológica de pagamento
 
@@ -75,11 +75,11 @@ Protocole **ofício de cobrança formal** com:
 - Prazo de 15 dias úteis pra regularização
 - Aviso de adoção de medidas judiciais cabíveis se não houver pagamento
 
-Use o gerador automático em [/recebiveis](/recebiveis) — gera o ofício pronto pra protocolar.
+Use o gerador automático em [/recebiveis](/recebiveis), gera o ofício pronto pra protocolar.
 
 ### Dia 60 (2 meses de atraso)
 
-Você ganhou o **direito de suspender a execução do contrato** (art. 137, § 2º, IV). Avise formalmente o órgão que, com base nesse artigo, está suspendendo até regularização. Esse passo costuma destravar a situação rapidamente — gestor público não quer paralisação registrada.
+Você ganhou o **direito de suspender a execução do contrato** (art. 137, § 2º, IV). Avise formalmente o órgão que, com base nesse artigo, está suspendendo até regularização. Esse passo costuma destravar a situação rapidamente, gestor público não quer paralisação registrada.
 
 ### Dia 75-90 (após reiterar o ofício)
 
@@ -118,7 +118,7 @@ Mantenha tudo no plano formal, escrito, fundamentado. A relação institucional 
 No módulo [/recebiveis](/recebiveis), você:
 
 1. **Cadastra cada NF emitida** pra órgão público (em 30 segundos manual ou 5 segundos arrastando o XML)
-2. **Recebe alertas automáticos** nos dias 25, 30, 45 e 60 — você nunca esquece de cobrar
+2. **Recebe alertas automáticos** nos dias 25, 30, 45 e 60, você nunca esquece de cobrar
 3. **Gera o ofício formal** com correção monetária e juros já calculados, fundamentado na lei
 4. **Escalona pra advogado parceiro** quando a cobrança formal não resolver
 

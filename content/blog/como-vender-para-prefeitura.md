@@ -5,7 +5,7 @@ date: 2026-05-20
 keywords: como vender para prefeitura, vender para o governo, fornecer para prefeitura, licitação prefeitura, vender produtos governo
 ---
 
-Prefeituras compram de tudo: papel, alimentos, material de limpeza, manutenção predial, uniformes, combustível, serviços de informática, obras. São milhares de compras por mês, no Brasil inteiro. E a maioria das pequenas empresas nunca tentou vender pra elas — não por falta de oportunidade, mas porque acha complicado demais.
+Prefeituras compram de tudo: papel, alimentos, material de limpeza, manutenção predial, uniformes, combustível, serviços de informática, obras. São milhares de compras por mês, no Brasil inteiro. E a maioria das pequenas empresas nunca tentou vender pra elas, não por falta de oportunidade, mas porque acha complicado demais.
 
 Este guia mostra, do zero, como sua empresa pode começar a fornecer pra prefeituras.
 
@@ -13,11 +13,11 @@ Este guia mostra, do zero, como sua empresa pode começar a fornecer pra prefeit
 
 Três motivos práticos:
 
-1. **Cliente que não dá calote**: prefeitura paga (pode atrasar, mas paga — é dinheiro público, com fiscalização).
+1. **Cliente que não dá calote**: prefeitura paga (pode atrasar, mas paga, é dinheiro público, com fiscalização).
 2. **Volume previsível**: uma prefeitura compra o mesmo tipo de item todo ano. Ganhou uma vez, tende a ter recompra.
 3. **Mercado gigante e pulverizado**: são 5.570 municípios. Mesmo focando só na sua região, há dezenas de prefeituras comprando.
 
-A contrapartida: você precisa seguir as regras da **Lei 14.133/2021** (a lei de licitações). Não dá pra simplesmente "oferecer" — a compra pública tem processo.
+A contrapartida: você precisa seguir as regras da **Lei 14.133/2021** (a lei de licitações). Não dá pra simplesmente "oferecer", a compra pública tem processo.
 
 ## Os 3 caminhos para vender pra prefeitura
 
@@ -35,7 +35,7 @@ A prefeitura pode "pegar carona" numa ata de registro de preços feita por outro
 ### Passo 1: Tenha o CNPJ regularizado
 Pode ser MEI, ME, EPP ou empresa maior. O importante é estar **ativo** e com a atividade (CNAE) compatível com o que você quer vender.
 
-> MEI pode vender pra prefeitura sim — só fica atento ao limite de R$ 81 mil de faturamento por ano.
+> MEI pode vender pra prefeitura sim, só fica atento ao limite de R$ 81 mil de faturamento por ano.
 
 ### Passo 2: Emita suas certidões
 Pra participar de qualquer compra pública, você precisa de um conjunto de certidões que provam que a empresa está em dia:
@@ -49,7 +49,7 @@ Pra participar de qualquer compra pública, você precisa de um conjunto de cert
 Veja onde emitir cada uma no nosso guia de [documentos de habilitação](/blog/documentos-habilitacao-licitacao).
 
 ### Passo 3: Cadastre-se no SICAF
-O **SICAF** é o cadastro unificado de fornecedores do governo federal — mas muitas prefeituras também o aceitam. Com ele, você não precisa reapresentar documentos a cada licitação. Cadastro grátis em [gov.br/compras](https://www.gov.br/compras).
+O **SICAF** é o cadastro unificado de fornecedores do governo federal, mas muitas prefeituras também o aceitam. Com ele, você não precisa reapresentar documentos a cada licitação. Cadastro grátis em [gov.br/compras](https://www.gov.br/compras).
 
 ### Passo 4: Cadastre-se nas plataformas de pregão
 A disputa acontece em plataformas eletrônicas. As principais que prefeituras usam:
@@ -69,7 +69,7 @@ Todas as licitações e dispensas de prefeitura são publicadas no **PNCP** ([pn
 - Em **dispensa**: muitas prefeituras publicam "cotações" no PNCP ou em mural eletrônico. Você manda seu preço.
 
 ### Passo 7: Entregue e receba
-Ganhou? A prefeitura emite uma **nota de empenho** (a "ordem de compra" oficial). Você entrega, emite nota fiscal, e recebe — normalmente em 30 dias.
+Ganhou? A prefeitura emite uma **nota de empenho** (a "ordem de compra" oficial). Você entrega, emite nota fiscal, e recebe, normalmente em 30 dias.
 
 ## Quanto a prefeitura paga
 
@@ -77,11 +77,11 @@ O preço é definido pela **disputa**. A prefeitura estima um valor máximo (pes
 
 ## Erros que travam quem está começando
 
-1. **Certidão vencida no dia do pregão** — eliminação automática.
-2. **Não ler o edital até o fim** — as exigências que desclassificam estão nas últimas páginas.
-3. **Lance sem calcular custo** — você ganha, mas perde dinheiro na entrega.
-4. **Esquecer o frete** — produto físico exige entrega; calcule isso no preço.
-5. **Não acompanhar a sessão do pregão** — o pregoeiro pode pedir documentos na hora.
+1. **Certidão vencida no dia do pregão**: eliminação automática.
+2. **Não ler o edital até o fim**: as exigências que desclassificam estão nas últimas páginas.
+3. **Lance sem calcular custo**: você ganha, mas perde dinheiro na entrega.
+4. **Esquecer o frete**: produto físico exige entrega; calcule isso no preço.
+5. **Não acompanhar a sessão do pregão**: o pregoeiro pode pedir documentos na hora.
 
 ## Dispensa: a porta de entrada mais fácil
 
@@ -93,7 +93,7 @@ Entenda melhor no nosso guia de [dispensa de licitação](/blog/dispensa-de-lici
 
 Vender pra prefeitura é um jogo de **constância**. As empresas que faturam são as que monitoram as compras todos os dias e respondem rápido às oportunidades certas.
 
-Plataformas como o [ContrataX](https://www.contratax.com.br) monitoram todas as compras de prefeituras no PNCP, filtram pelo seu ramo e pela sua região, e te avisam por e-mail todo dia. Você ainda recebe a leitura completa de cada edital, sabendo se está apto antes de gastar tempo — e o histórico de quem ganhou contratos parecidos, pra calibrar sua proposta.
+Plataformas como o [ContrataX](https://www.contratax.com.br) monitoram todas as compras de prefeituras no PNCP, filtram pelo seu ramo e pela sua região, e te avisam por e-mail todo dia. Você ainda recebe a leitura completa de cada edital, sabendo se está apto antes de gastar tempo, e o histórico de quem ganhou contratos parecidos, pra calibrar sua proposta.
 
 ## Resumo
 

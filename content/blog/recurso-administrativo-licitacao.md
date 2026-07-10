@@ -11,7 +11,7 @@ Perder uma licitação por uma decisão que você considera errada não é o fim
 
 É o pedido formal que uma empresa licitante faz pra que o próprio órgão **revise uma decisão** tomada durante a licitação. Está previsto no **art. 165 da Lei 14.133/2021**.
 
-Diferente da [impugnação](/blog/como-impugnar-edital-restritivo) — que ataca o **edital** antes da disputa —, o recurso ataca uma **decisão tomada durante ou depois** da disputa: habilitação, julgamento, classificação, desclassificação.
+Diferente da [impugnação](/blog/como-impugnar-edital-restritivo), que ataca o **edital** antes da disputa, o recurso ataca uma **decisão tomada durante ou depois** da disputa: habilitação, julgamento, classificação, desclassificação.
 
 ## Quando você pode recorrer
 
@@ -27,7 +27,7 @@ As situações mais comuns:
 
 No **pregão eletrônico**, o rito é rápido:
 
-1. Após a decisão (habilitação do vencedor), abre-se o prazo de **manifestação de intenção de recorrer** — imediato, na própria sessão. **Se você não manifestar a intenção na hora, perde o direito de recorrer.** Esse é o erro fatal mais comum.
+1. Após a decisão (habilitação do vencedor), abre-se o prazo de **manifestação de intenção de recorrer**, imediato, na própria sessão. **Se você não manifestar a intenção na hora, perde o direito de recorrer.** Esse é o erro fatal mais comum.
 2. Manifestada a intenção, você tem **3 dias úteis** pra apresentar as **razões do recurso** (o documento completo).
 3. Os outros licitantes têm **3 dias úteis** pra apresentar **contrarrazões** (a defesa deles).
 4. O pregoeiro reavalia e decide. Se mantiver a decisão, encaminha pra autoridade superior.
@@ -73,7 +73,7 @@ Data, nome do responsável, assinatura.
 
 ## Modelo simplificado de recurso
 
-> **RECURSO ADMINISTRATIVO — PREGÃO ELETRÔNICO Nº [número]**
+> **RECURSO ADMINISTRATIVO, PREGÃO ELETRÔNICO Nº [número]**
 >
 > [RAZÃO SOCIAL], CNPJ [número], tendo manifestado tempestivamente a intenção de recorrer na sessão de [data], vem apresentar as razões do presente recurso, com fundamento no art. 165 da Lei 14.133/2021:
 >
@@ -88,7 +88,7 @@ Data, nome do responsável, assinatura.
 
 ## As contrarrazões
 
-Se um concorrente recorrer contra você (ex: questionando a sua habilitação como vencedor), você tem o direito de apresentar **contrarrazões** — a sua defesa — também em 3 dias úteis. Estrutura parecida: rebata os argumentos dele, mostre que você cumpre o edital, peça a manutenção da decisão.
+Se um concorrente recorrer contra você (ex: questionando a sua habilitação como vencedor), você tem o direito de apresentar **contrarrazões**, a sua defesa, também em 3 dias úteis. Estrutura parecida: rebata os argumentos dele, mostre que você cumpre o edital, peça a manutenção da decisão.
 
 Fique atento: muitos vencedores perdem o contrato por **não apresentarem contrarrazões**, deixando o recurso do concorrente sem resposta.
 
@@ -100,10 +100,10 @@ Fique atento: muitos vencedores perdem o contrato por **não apresentarem contra
 
 ## Como não perder o momento de recorrer
 
-O ponto crítico é a **manifestação de intenção na sessão** — que é imediata. Pra isso, você precisa estar acompanhando o pregão em tempo real e entender rápido se a decisão te prejudicou.
+O ponto crítico é a **manifestação de intenção na sessão**, que é imediata. Pra isso, você precisa estar acompanhando o pregão em tempo real e entender rápido se a decisão te prejudicou.
 
 Ter a leitura clara das exigências do edital **antes** da sessão ajuda muito: você já sabe quais pontos podem gerar recurso. Plataformas como o [ContrataX](https://www.contratax.com.br) entregam o resumo completo das exigências de cada edital e destacam cláusulas problemáticas, o que te deixa preparado pra reconhecer, na hora, se cabe recurso.
 
 ## Resumo
 
-O recurso administrativo permite questionar decisões da licitação — habilitação, julgamento, classificação. No pregão eletrônico, o passo decisivo é **manifestar a intenção de recorrer na própria sessão**; sem isso, você perde o direito. Depois, são 3 dias úteis pras razões e 3 pras contrarrazões. Recorra com fundamento objetivo (item do edital + artigo da lei), não por frustração. E se for vencedor questionado, nunca deixe de apresentar contrarrazões.
+O recurso administrativo permite questionar decisões da licitação, habilitação, julgamento, classificação. No pregão eletrônico, o passo decisivo é **manifestar a intenção de recorrer na própria sessão**; sem isso, você perde o direito. Depois, são 3 dias úteis pras razões e 3 pras contrarrazões. Recorra com fundamento objetivo (item do edital + artigo da lei), não por frustração. E se for vencedor questionado, nunca deixe de apresentar contrarrazões.

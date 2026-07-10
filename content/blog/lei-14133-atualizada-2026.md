@@ -23,10 +23,10 @@ A consolidação em uma única lei buscou modernizar processos, reduzir burocrac
 
 A lei foi sancionada em abril/2021 mas teve período de transição. Datas-chave:
 
-- **01/04/2021** — Publicação
-- **01/04/2023** — Revogação total da Lei 8.666 e leis correlatas
-- **2024-2025** — Adequação dos sistemas municipais e estaduais
-- **2026** — Aplicação plena em todo o país, com valores atualizados
+- **01/04/2021**: Publicação
+- **01/04/2023**: Revogação total da Lei 8.666 e leis correlatas
+- **2024-2025**: Adequação dos sistemas municipais e estaduais
+- **2026**: Aplicação plena em todo o país, com valores atualizados
 
 A partir de janeiro/2026, **todas as licitações têm que seguir a Lei 14.133**, sem exceção.
 
@@ -72,9 +72,9 @@ Mantido. Pra venda de bens públicos. Não é compra de fornecedor.
 ### Procedimentos auxiliares
 A Lei 14.133 também criou os procedimentos auxiliares, que não são licitações em si:
 
-- **Sistema de Registro de Preços (SRP)** — ata válida por 1 ano, prorrogável
-- **Pré-qualificação** — cadastro prévio de fornecedores ou bens
-- **Procedimento de manifestação de interesse (PMI)** — chamada pública pra ideias
+- **Sistema de Registro de Preços (SRP)**: ata válida por 1 ano, prorrogável
+- **Pré-qualificação**: cadastro prévio de fornecedores ou bens
+- **Procedimento de manifestação de interesse (PMI)**: chamada pública pra ideias
 
 ## Modos de disputa em 2026
 
@@ -106,11 +106,11 @@ Inclui:
 - Certidão Negativa de Débitos Federais (CND)
 - Certidão Estadual e Municipal
 - Regularidade FGTS
-- **Certidão Negativa de Débitos Trabalhistas (CNDT)** — obrigatória
-- Para 2026, novidade: **Cadastro de Empregadores que tenham submetido trabalhadores a condições análogas à de escravo** (Lista Suja) — checado automaticamente
+- **Certidão Negativa de Débitos Trabalhistas (CNDT)**: obrigatória
+- Para 2026, novidade: **Cadastro de Empregadores que tenham submetido trabalhadores a condições análogas à de escravo** (Lista Suja), checado automaticamente
 
 ### 3. Habilitação técnica
-Atestados de capacidade técnica, registros em conselhos profissionais, certificações. **Não pode mais ser excessivamente restritiva** — a Lei 14.133 explicitou isso. Edital que pede atestado de obra "idêntica" pode ser impugnado. Veja [como impugnar edital restritivo](/blog/como-impugnar-edital-restritivo).
+Atestados de capacidade técnica, registros em conselhos profissionais, certificações. **Não pode mais ser excessivamente restritiva**, a Lei 14.133 explicitou isso. Edital que pede atestado de obra "idêntica" pode ser impugnado. Veja [como impugnar edital restritivo](/blog/como-impugnar-edital-restritivo).
 
 ### 4. Qualificação econômico-financeira
 Balanço, índices contábeis, patrimônio líquido mínimo. A Lei 14.133 limitou o patrimônio líquido exigido a **10% do valor estimado** (na 8.666 era flexível e às vezes abusivo).
@@ -172,7 +172,7 @@ De **0,5% a 30% do valor do contrato** ou da proposta. Aplicada por inadimplemen
 ### Declaração de inidoneidade
 **Até 6 anos**. Aplicada por TODA a administração pública. Casos graves: fraude, conluio, comportamento doloso.
 
-A Lei 14.133 também trouxe **possibilidade de acordo de leniência** (ANCO, Anvisa, etc.) — empresa que cooperar pode reduzir penalidades.
+A Lei 14.133 também trouxe **possibilidade de acordo de leniência** (ANCO, Anvisa, etc.), empresa que cooperar pode reduzir penalidades.
 
 ## Pagamentos e reajuste
 

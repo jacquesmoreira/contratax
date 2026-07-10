@@ -5,7 +5,7 @@ date: 2026-05-26
 keywords: ME licitação, EPP licitação, microempresa licitação, empate ficto, tratamento diferenciado ME
 ---
 
-A Lei Complementar 123/2006 garante à **Microempresa (ME)** e à **Empresa de Pequeno Porte (EPP)** uma série de vantagens em licitações públicas. A Lei 14.133/2021 manteve e ampliou esses benefícios. O resultado: hoje, **ME e EPP têm vantagem competitiva real** em pregão eletrônico — desde que saibam usar.
+A Lei Complementar 123/2006 garante à **Microempresa (ME)** e à **Empresa de Pequeno Porte (EPP)** uma série de vantagens em licitações públicas. A Lei 14.133/2021 manteve e ampliou esses benefícios. O resultado: hoje, **ME e EPP têm vantagem competitiva real** em pregão eletrônico, desde que saibam usar.
 
 Este guia explica o que muda, quais os limites e onde estão as armadilhas.
 
@@ -30,7 +30,7 @@ Pra ter direito ao tratamento diferenciado em licitação, a empresa precisa:
 ### 1. Itens exclusivos pra ME/EPP até R$ 80 mil
 Pela Lei 14.133, em compras de **até R$ 80.000 por item**, o órgão é **obrigado a licitar exclusivamente entre ME e EPP**. Empresa grande nem pode participar.
 
-Como isso afeta a sua estratégia? Foca em itens menores. Se você é ME, esse é seu "campo livre" — competição só com empresas do seu tamanho.
+Como isso afeta a sua estratégia? Foca em itens menores. Se você é ME, esse é seu "campo livre", competição só com empresas do seu tamanho.
 
 ### 2. Cota de 25% pra ME/EPP em compras maiores
 Mesmo em pregões grandes (acima de R$ 80 mil), o edital **deve reservar 25% do quantitativo** pra ME/EPP, em cotas separadas. Você compete só com seus pares por essa fatia.
@@ -87,7 +87,7 @@ O limite é por **ano-calendário**. Cuide o acumulado. Em outubro você pode es
 Empresa pode estar **fora do Simples** mas ainda ser ME/EPP pelo faturamento. O contrário também: pode estar no Simples e ter faturado mais que o limite (caso raro).
 
 ### 3. Não atualizar a Junta Comercial
-A condição de ME/EPP é registrada na Junta Comercial. Se você cresceu e não atualizou, pode receber benefício indevidamente em pregão — e ser desclassificado depois.
+A condição de ME/EPP é registrada na Junta Comercial. Se você cresceu e não atualizou, pode receber benefício indevidamente em pregão, e ser desclassificado depois.
 
 ### 4. Edital com cota errada
 Muitos órgãos esquecem de incluir a cota de 25% pra ME/EPP em compras grandes. Isso **pode ser impugnado**.
@@ -97,15 +97,15 @@ A pressão de "cobrir o lance" pode fazer você aceitar preço sem margem. Tenha
 
 ## Estratégia ME/EPP que funciona
 
-1. **Mire em itens até R$ 80 mil** primeiro — competição menor, prioridade legal.
-2. **Em pregões grandes, foque na cota de 25%** — você sabe que vai ter espaço.
-3. **Use o empate ficto pra arriscar lances 5-10% acima** do que daria conforto — se virar lance, você cobre.
-4. **Mantenha as certidões em dia** — mesmo com regularização tardia, ganhar e perder 5 dias regularizando passa imagem ruim e atrasa contrato.
-5. **Cuidado com faturamento acumulado** — planeje quais licitações disputa no final do ano.
+1. **Mire em itens até R$ 80 mil** primeiro, competição menor, prioridade legal.
+2. **Em pregões grandes, foque na cota de 25%**: você sabe que vai ter espaço.
+3. **Use o empate ficto pra arriscar lances 5-10% acima** do que daria conforto, se virar lance, você cobre.
+4. **Mantenha as certidões em dia**: mesmo com regularização tardia, ganhar e perder 5 dias regularizando passa imagem ruim e atrasa contrato.
+5. **Cuidado com faturamento acumulado**: planeje quais licitações disputa no final do ano.
 
 ## Sai de ME/EPP, perde os benefícios
 
-Se você cresce e passa do limite, vira **empresa de médio porte**. Perde **todos** os benefícios listados acima. Algumas empresas planejam estrategicamente esse crescimento, abrindo CNPJs adicionais com sócios diferentes pra manter ME/EPP — prática que está numa **zona cinza** legalmente e pode ser questionada se houver indícios de fraude.
+Se você cresce e passa do limite, vira **empresa de médio porte**. Perde **todos** os benefícios listados acima. Algumas empresas planejam estrategicamente esse crescimento, abrindo CNPJs adicionais com sócios diferentes pra manter ME/EPP, prática que está numa **zona cinza** legalmente e pode ser questionada se houver indícios de fraude.
 
 ## Ferramenta que ajuda
 
@@ -113,4 +113,4 @@ Plataformas como o [ContrataX](https://www.contratax.com.br) filtram automaticam
 
 ## Resumo
 
-Ser ME ou EPP em licitação **não é só formalidade** — é uma vantagem competitiva real. Item exclusivo até R$ 80 mil, cota de 25% em pregões grandes, empate ficto e regularização tardia são instrumentos poderosos. Quem entende e usa, vence licitação com margem maior. Quem ignora, deixa dinheiro na mesa.
+Ser ME ou EPP em licitação **não é só formalidade**, é uma vantagem competitiva real. Item exclusivo até R$ 80 mil, cota de 25% em pregões grandes, empate ficto e regularização tardia são instrumentos poderosos. Quem entende e usa, vence licitação com margem maior. Quem ignora, deixa dinheiro na mesa.

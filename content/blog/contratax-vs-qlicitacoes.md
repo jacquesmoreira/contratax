@@ -13,11 +13,11 @@ Os dois produtos são plataformas modernas com IA própria e foco em automatizar
 
 | Item | **ContrataX** | **QLicitações** |
 |---|---|---|
-| **Preço inicial** | **R$ 59/mês** (Starter para MEI) | Sob consulta — modelo por segmento |
+| **Preço inicial** | **R$ 59/mês** (Starter para MEI) | Sob consulta, modelo por segmento |
 | **Trial gratuito** | **7 dias sem cartão** | Não claro publicamente |
 | **Fidelidade** | **Nenhuma** | Não publicado |
 | **Pagamento** | Pix, cartão, boleto | Não especificado |
-| **IA** | **ContrataX.IA** (Claude da Anthropic) lê PDF completo | "QLIA" — IA própria |
+| **IA** | **ContrataX.IA** (Claude da Anthropic) lê PDF completo | "QLIA", IA própria |
 | **Cadastro self-service** | **Sim, libera em 3 segundos** | Sim com proposta personalizada |
 | **Painel de planos público** | **Sim, todos transparentes** | Modelo por segmento |
 | **Volume monitorado** | 1,2 milhão de contratos no acervo | 5.700 editais/dia, 166.696 ativos |
@@ -65,7 +65,7 @@ Onde a abordagem **difere** do ContrataX:
 
 | Recurso | ContrataX | QLicitações |
 |---|---|---|
-| Modelo de IA usado | Claude (Anthropic) — declarado | QLIA — proprietária |
+| Modelo de IA usado | Claude (Anthropic), declarado | QLIA, proprietária |
 | Leitura do PDF completo do edital | ✅ Automática | ✅ Análise |
 | Geração de propostas | Parcial (declarações) | ✅ Forte |
 | Veredito de aptidão (apto/não apto) | ✅ | ✅ |
@@ -148,7 +148,7 @@ São modelos diferentes. **QLIA é proprietária** (QLicitações não publica d
 Os dois consomem o PNCP, que tem **2.000 a 4.000 editais novos por dia** em média no Brasil. ContrataX tem **1,2 milhão de contratos no acervo** dos últimos 18 meses. Os números de marketing diferem em métrica, mas a cobertura efetiva é equivalente.
 
 ### Posso usar QLicitações e ContrataX ao mesmo tempo?
-Sim. ContrataX tem **trial 7 dias grátis sem cartão** — você pode comparar lado a lado.
+Sim. ContrataX tem **trial 7 dias grátis sem cartão**, você pode comparar lado a lado.
 
 ### QLicitações tem programa de afiliados. ContrataX tem?
 Não. ContrataX é foco self-service direto pro cliente final. Sem programa de revenda.

@@ -19,7 +19,7 @@ Esse prazo é contado da liquidação da despesa (quando o órgão atesta que o 
 2. **Juros moratórios** de **0,5% ao mês** (jurisprudência consolidada do STJ e do TCU sobre contratos administrativos)
 3. **Manutenção do equilíbrio econômico-financeiro** do contrato
 
-Esses direitos não são "opcionais". Eles existem mesmo que o contrato não diga nada a respeito — vêm da lei.
+Esses direitos não são "opcionais". Eles existem mesmo que o contrato não diga nada a respeito, vêm da lei.
 
 ## Por que tão poucas empresas cobram
 
@@ -111,7 +111,7 @@ Se passados os 15 dias úteis o pagamento não sair, você tem dois caminhos:
 1. **Reiterar o pedido** com tom mais firme e prazo menor (5 dias úteis).
 2. **Acionar advogado** especialista em contratos administrativos pra entrar com execução judicial. O título (NF + ofício de cobrança + comprovante de envio) é prova robusta. Existem advogados que aceitam atuar **só com comissão no sucesso**, sem honorários iniciais.
 
-O ContrataX tem um botão "Escalonar para advogado parceiro" justamente pra esses casos — você manda o pedido, nossa equipe indica um especialista em até 1 dia útil.
+O ContrataX tem um botão "Escalonar para advogado parceiro" justamente pra esses casos, você manda o pedido, nossa equipe indica um especialista em até 1 dia útil.
 
 ## Resumo prático
 

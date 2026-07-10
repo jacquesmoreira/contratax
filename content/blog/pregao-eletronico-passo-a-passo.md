@@ -1,6 +1,6 @@
 ---
 title: Pregão eletrônico passo a passo: como participar e vencer
-description: Guia completo do pregão eletrônico — como funciona, fases, prazos, etiqueta da disputa de lances, e estratégias práticas pra vencer.
+description: Guia completo do pregão eletrônico, como funciona, fases, prazos, etiqueta da disputa de lances, e estratégias práticas pra vencer.
 date: 2026-05-22
 keywords: pregão eletrônico, como participar pregão eletrônico, passo a passo pregão, fases pregão eletrônico, comprasnet
 ---
@@ -19,19 +19,19 @@ Está previsto na **Lei 14.133/2021** e regulado em detalhes pelo **Decreto 10.0
 
 A licitação é **anunciada no PNCP**, mas a disputa acontece em plataformas próprias. As principais:
 
-- **Compras.gov.br** (Comprasnet) — federal e muitos estados/municípios
-- **BLL Compras** — vários municípios
-- **Licitações-e** (Banco do Brasil) — federal e Estados
-- **Portal de Compras Públicas** — municipal/estadual
-- **BBMNet** — diversos
-- **Plataformas próprias** — Petrobras, BNDES, alguns estados
+- **Compras.gov.br** (Comprasnet), federal e muitos estados/municípios
+- **BLL Compras**: vários municípios
+- **Licitações-e** (Banco do Brasil), federal e Estados
+- **Portal de Compras Públicas**: municipal/estadual
+- **BBMNet**: diversos
+- **Plataformas próprias**: Petrobras, BNDES, alguns estados
 
 **Você precisa estar cadastrado em cada plataforma** que vai usar. Cadastro grátis, leva 1-2 dias úteis.
 
 ## Antes de participar: o cadastro
 
 ### 1. CNPJ ativo
-Cuidado: MEI também é CNPJ — vale.
+Cuidado: MEI também é CNPJ, vale.
 
 ### 2. Certificado digital
 Necessário em **algumas** plataformas (Compras.gov.br exige). Modelos:
@@ -166,18 +166,18 @@ Pregão de produto físico exige entrega. Calcule frete, taxa, embalagem antes d
 ## Estratégia que funciona
 
 1. **Foque em 1-2 ramos** que você conhece bem e pode competir com margem
-2. **Tenha as certidões sempre em dia** — calendário com lembrete 30 dias antes
+2. **Tenha as certidões sempre em dia**: calendário com lembrete 30 dias antes
 3. **Cadastre-se no SICAF** + nas 3 plataformas principais (Comprasnet, BLL, Banco do Brasil)
 4. **Calcule custo real** antes de cada lance: insumo + frete + impostos + margem
-5. **Esteja online durante a sessão inteira** — pregoeiro pode pedir coisas a qualquer momento
+5. **Esteja online durante a sessão inteira**: pregoeiro pode pedir coisas a qualquer momento
 6. **Monitore o PNCP diariamente** pra editais novos do seu ramo
-7. **Se for ME/EPP, sempre declare** — não desperdice o benefício
-8. **Acompanhe atas de RP** que você ganhar — pedidos podem chegar nos próximos 12-24 meses
+7. **Se for ME/EPP, sempre declare**: não desperdice o benefício
+8. **Acompanhe atas de RP** que você ganhar, pedidos podem chegar nos próximos 12-24 meses
 
 ## Ferramenta que ajuda
 
-Plataformas como o [ContrataX](https://www.contratax.com.br) monitoram todos os editais do seu ramo no PNCP, leem o PDF completo e dizem se você está apto antes mesmo de você abrir. O alerta diário por e-mail garante que nenhum pregão importante passa batido — e o calendário automático de certidões evita o erro #2 da lista acima.
+Plataformas como o [ContrataX](https://www.contratax.com.br) monitoram todos os editais do seu ramo no PNCP, leem o PDF completo e dizem se você está apto antes mesmo de você abrir. O alerta diário por e-mail garante que nenhum pregão importante passa batido, e o calendário automático de certidões evita o erro #2 da lista acima.
 
 ## Resumo
 
-Pregão eletrônico é o caminho principal pra vender ao governo brasileiro. Tem 10 fases, prazos curtos e exige atenção a detalhes. Quem mantém documentação em dia, calcula custo com cuidado e acompanha a sessão inteira ganha — independente de tamanho da empresa. A nova Lei 14.133 manteve a dinâmica do pregão da Lei 10.520, com pequenas melhorias. Estudar o edital antes da disputa e ter preço mínimo calculado **antes** de entrar no leilão é o que separa quem fatura de quem reclama.
+Pregão eletrônico é o caminho principal pra vender ao governo brasileiro. Tem 10 fases, prazos curtos e exige atenção a detalhes. Quem mantém documentação em dia, calcula custo com cuidado e acompanha a sessão inteira ganha, independente de tamanho da empresa. A nova Lei 14.133 manteve a dinâmica do pregão da Lei 10.520, com pequenas melhorias. Estudar o edital antes da disputa e ter preço mínimo calculado **antes** de entrar no leilão é o que separa quem fatura de quem reclama.

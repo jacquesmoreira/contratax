@@ -54,10 +54,10 @@ Identifique o item de custo que pesou. Pra serviços com mão de obra intensa, g
 
 Compare o valor do insumo na **data-base do contrato** com o valor **hoje**. O índice oficial costuma ser:
 
-- **IPCA** (IBGE) — inflação ao consumidor geral
-- **INPC** (IBGE) — inflação dos assalariados
-- **INCC** (FGV) — custo da construção civil
-- **ICV** (DIEESE) — custo de vida
+- **IPCA** (IBGE), inflação ao consumidor geral
+- **INPC** (IBGE), inflação dos assalariados
+- **INCC** (FGV), custo da construção civil
+- **ICV** (DIEESE), custo de vida
 - Preços de combustível **ANP** (mensal)
 - Tarifas de energia **ANEEL**
 
@@ -143,9 +143,9 @@ A minuta gerada inclui a base legal e a estrutura formal correta. Você só comp
 | Quando | Por quê |
 |---|---|
 | Variação >5% num insumo essencial | Gatilho consagrado pela jurisprudência |
-| Mudança regulatória ou tributária | Art. 124, II — fato do príncipe |
-| Caso fortuito ou força maior | Art. 124, II — álea extraordinária |
-| Decisão da Administração que afeta o custo | Art. 135 — equilíbrio econômico |
+| Mudança regulatória ou tributária | Art. 124, II, fato do príncipe |
+| Caso fortuito ou força maior | Art. 124, II, álea extraordinária |
+| Decisão da Administração que afeta o custo | Art. 135, equilíbrio econômico |
 
 Empresa pequena que assina contrato público sem acompanhar índices perde dinheiro silenciosamente todo mês. Pedir reequilíbrio quando você tem direito é parte da gestão do contrato, não uma briga.
 

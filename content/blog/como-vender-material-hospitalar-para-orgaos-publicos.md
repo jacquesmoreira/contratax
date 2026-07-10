@@ -32,7 +32,7 @@ Sem o registro ANVISA dos produtos que você vende, você não consegue se habil
 
 ## Como encontrar os editais de material hospitalar
 
-As compras de saúde são publicadas no **PNCP**, misturadas com todas as outras. Achar só as de material hospitalar do seu estado, manualmente, consome muito tempo — e nesse ramo perder o prazo é comum porque os editais são muitos.
+As compras de saúde são publicadas no **PNCP**, misturadas com todas as outras. Achar só as de material hospitalar do seu estado, manualmente, consome muito tempo, e nesse ramo perder o prazo é comum porque os editais são muitos.
 
 No ContrataX você acompanha as [licitações de material hospitalar abertas agora](/licitacoes/material-hospitalar), por estado, com prazo, valor e as exigências de cada uma já destacadas.
 
@@ -58,7 +58,7 @@ A precificação nesse ramo tem particularidades:
 
 ## Cuidado com editais restritivos
 
-Material hospitalar é um ramo onde aparecem **cláusulas restritivas** — exigências que direcionam para uma marca específica ou um fornecedor. Se você encontrar um edital que parece feito sob medida para outro, você pode impugnar. Veja [como impugnar um edital restritivo](/blog/como-impugnar-edital-restritivo).
+Material hospitalar é um ramo onde aparecem **cláusulas restritivas**, exigências que direcionam para uma marca específica ou um fornecedor. Se você encontrar um edital que parece feito sob medida para outro, você pode impugnar. Veja [como impugnar um edital restritivo](/blog/como-impugnar-edital-restritivo).
 
 ## Depois de ganhar: pagamento e contrato
 
@@ -66,7 +66,7 @@ Material hospitalar é um ramo onde aparecem **cláusulas restritivas** — exig
 
 ## Resumo
 
-Vender material hospitalar para o governo é um mercado grande e contínuo, com a vantagem de que as exigências sanitárias afastam parte da concorrência. O fornecedor organizado — com registro ANVISA em dia, certidões regulares e atestados — disputa com menos gente. O segredo é cumprir as exigências antes de mirar o preço.
+Vender material hospitalar para o governo é um mercado grande e contínuo, com a vantagem de que as exigências sanitárias afastam parte da concorrência. O fornecedor organizado (com registro ANVISA em dia, certidões regulares e atestados) disputa com menos gente. O segredo é cumprir as exigências antes de mirar o preço.
 
 ---
 

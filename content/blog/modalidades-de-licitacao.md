@@ -18,7 +18,7 @@ A nova lei eliminou algumas modalidades antigas (Convite, Tomada de Preços) e o
 5. **Leilão**
 6. **Inexigibilidade** *(tecnicamente uma contratação direta, não uma modalidade clássica)*
 
-Além delas, existe a **Dispensa de Licitação** — também contratação direta, separada na lei.
+Além delas, existe a **Dispensa de Licitação**, também contratação direta, separada na lei.
 
 ## 1. Pregão
 
@@ -36,7 +36,7 @@ Veja o detalhamento no guia de [pregão eletrônico passo a passo](/blog/pregao-
 
 ## 2. Concorrência
 
-Modalidade pra contratações **maiores e mais complexas** — obras, serviços de engenharia, contratos de grande valor. Tem rito mais formal e prazos mais longos.
+Modalidade pra contratações **maiores e mais complexas**, obras, serviços de engenharia, contratos de grande valor. Tem rito mais formal e prazos mais longos.
 
 **Quando é usada:** obras públicas, serviços de engenharia de alto valor, contratações grandes que não se encaixam no pregão.
 
@@ -75,12 +75,12 @@ Pra **venda de bens públicos** (não compra). O órgão vende, e quem oferece o
 Tecnicamente não são "modalidades" no sentido clássico, mas são **formas de contratação** sem licitação formal.
 
 ### Dispensa de Licitação
-Quando a lei **permite** a contratação direta — principalmente compras de baixo valor (até R$ 50 mil em compras, R$ 100 mil em obras). Há cotação de preço, mas o processo é simplificado.
+Quando a lei **permite** a contratação direta, principalmente compras de baixo valor (até R$ 50 mil em compras, R$ 100 mil em obras). Há cotação de preço, mas o processo é simplificado.
 
 **Veja o guia completo:** [Dispensa de licitação](/blog/dispensa-de-licitacao).
 
 ### Inexigibilidade
-Quando a competição é **inviável** — fornecedor único, profissional notório, exclusividade de marca. Não há disputa, o órgão contrata diretamente quem é o único capaz.
+Quando a competição é **inviável**, fornecedor único, profissional notório, exclusividade de marca. Não há disputa, o órgão contrata diretamente quem é o único capaz.
 
 **Quando aparece:** software proprietário, peça de reposição exclusiva, palestra de profissional renomado, serviço com exclusividade comprovada.
 
@@ -101,8 +101,8 @@ Quando a competição é **inviável** — fornecedor único, profissional notó
 
 Pra quem está começando ou tem porte menor, foque em **2 portas**:
 
-1. **Pregão eletrônico** — alcance nacional, 80% do mercado, prioridade pra ME/EPP em itens até R$ 80 mil.
-2. **Dispensa eletrônica** — processo mais rápido, menor concorrência, ótimo pra construir histórico inicial.
+1. **Pregão eletrônico**: alcance nacional, 80% do mercado, prioridade pra ME/EPP em itens até R$ 80 mil.
+2. **Dispensa eletrônica**: processo mais rápido, menor concorrência, ótimo pra construir histórico inicial.
 
 Concorrência, Diálogo Competitivo e Concurso atendem nichos específicos com maior exigência técnica. Leilão é uma porta diferente (você compra do governo). Inexigibilidade depende de você ter exclusividade comprovada.
 
@@ -110,8 +110,8 @@ Concorrência, Diálogo Competitivo e Concurso atendem nichos específicos com m
 
 No PNCP ([pncp.gov.br](https://www.pncp.gov.br)) você filtra os editais por modalidade. Mas saber **quais modalidades concentram as oportunidades do seu segmento** é o que diferencia quem trabalha com método de quem garimpa no escuro.
 
-Plataformas como o [ContrataX](https://www.contratax.com.br) classificam todas as oportunidades por modalidade e mostram, no histórico do seu ramo, em qual delas se fechou mais contrato no último ano. Você foca onde realmente há volume — sem perder tempo com modalidades que quase nunca trazem o que você vende.
+Plataformas como o [ContrataX](https://www.contratax.com.br) classificam todas as oportunidades por modalidade e mostram, no histórico do seu ramo, em qual delas se fechou mais contrato no último ano. Você foca onde realmente há volume, sem perder tempo com modalidades que quase nunca trazem o que você vende.
 
 ## Resumo
 
-A Lei 14.133/2021 organiza as licitações em 6 modalidades — pregão, concorrência, diálogo competitivo, concurso, leilão e contratação direta (dispensa/inexigibilidade). Pra pequena empresa, **pregão eletrônico** e **dispensa eletrônica** concentram a maioria das oportunidades viáveis. As outras modalidades atendem nichos específicos com exigências maiores. Focar nas modalidades certas é metade do caminho pra vender pro governo de forma consistente.
+A Lei 14.133/2021 organiza as licitações em 6 modalidades, pregão, concorrência, diálogo competitivo, concurso, leilão e contratação direta (dispensa/inexigibilidade). Pra pequena empresa, **pregão eletrônico** e **dispensa eletrônica** concentram a maioria das oportunidades viáveis. As outras modalidades atendem nichos específicos com exigências maiores. Focar nas modalidades certas é metade do caminho pra vender pro governo de forma consistente.

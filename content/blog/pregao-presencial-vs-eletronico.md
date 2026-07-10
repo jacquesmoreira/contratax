@@ -24,7 +24,7 @@ No pregão presencial, os representantes das empresas **comparecem fisicamente**
 4. Define-se o vencedor e faz-se a habilitação ali.
 
 ### Quando ainda é usado
-A Lei 14.133 **prioriza o eletrônico**. O presencial só pode ser usado em situações **excepcionais e justificadas** — por exemplo, quando há inviabilidade técnica ou desvantagem no eletrônico, devidamente fundamentada. Na prática, ficou raro.
+A Lei 14.133 **prioriza o eletrônico**. O presencial só pode ser usado em situações **excepcionais e justificadas**, por exemplo, quando há inviabilidade técnica ou desvantagem no eletrônico, devidamente fundamentada. Na prática, ficou raro.
 
 ## Pregão eletrônico
 
@@ -52,11 +52,11 @@ Veja o detalhamento completo no guia de [pregão eletrônico passo a passo](/blo
 
 ## Vantagens do eletrônico (por que ele domina)
 
-1. **Você participa de qualquer lugar** — uma empresa de SC pode disputar pregão de uma prefeitura do Pará.
-2. **Mais oportunidades** — sem limite geográfico, você acessa o país inteiro.
-3. **Menos custo** — nada de viagem, hospedagem, tempo perdido.
-4. **Mais transparência** — cada lance fica registrado no sistema.
-5. **Agilidade** — a sessão é mais rápida que a presencial.
+1. **Você participa de qualquer lugar**: uma empresa de SC pode disputar pregão de uma prefeitura do Pará.
+2. **Mais oportunidades**: sem limite geográfico, você acessa o país inteiro.
+3. **Menos custo**: nada de viagem, hospedagem, tempo perdido.
+4. **Mais transparência**: cada lance fica registrado no sistema.
+5. **Agilidade**: a sessão é mais rápida que a presencial.
 
 A contrapartida: como o alcance é nacional, a **concorrência é maior**. No presencial, você competia com quem estava na sala; no eletrônico, com o Brasil todo.
 
@@ -76,15 +76,15 @@ Como o eletrônico domina, foque sua preparação nele:
 
 1. **Cadastre-se nas plataformas eletrônicas** (Compras.gov.br, BLL, Banco do Brasil).
 2. **Tenha o [SICAF](/blog/sicaf-o-que-e-como-cadastrar) em dia.**
-3. **Monitore os pregões do seu ramo no Brasil todo** — já que você não tem limite geográfico.
-4. **Esteja preparado pra concorrência nacional** — calcule bem o [preço](/blog/como-calcular-preco-licitacao).
+3. **Monitore os pregões do seu ramo no Brasil todo**: já que você não tem limite geográfico.
+4. **Esteja preparado pra concorrência nacional**: calcule bem o [preço](/blog/como-calcular-preco-licitacao).
 
 O lado bom: o eletrônico abriu o mercado nacional pra você. Uma pequena empresa do interior pode hoje fornecer pra órgãos em qualquer estado, sem sair de casa. É uma oportunidade que não existia na era do presencial.
 
 ## Como aproveitar o alcance nacional
 
-A vantagem do eletrônico — participar de qualquer lugar — só vira faturamento se você consegue **encontrar** as oportunidades no país inteiro. Monitorar manualmente os pregões de centenas de órgãos é inviável. Plataformas como o [ContrataX](https://www.contratax.com.br) monitoram todos os pregões eletrônicos do PNCP, em todos os estados, e filtram pelo seu ramo — então você aproveita o alcance nacional sem ter que garimpar portal por portal.
+A vantagem do eletrônico (participar de qualquer lugar) só vira faturamento se você consegue **encontrar** as oportunidades no país inteiro. Monitorar manualmente os pregões de centenas de órgãos é inviável. Plataformas como o [ContrataX](https://www.contratax.com.br) monitoram todos os pregões eletrônicos do PNCP, em todos os estados, e filtram pelo seu ramo, então você aproveita o alcance nacional sem ter que garimpar portal por portal.
 
 ## Resumo
 
-O pregão presencial exige presença física e está praticamente extinto, usado só em casos excepcionais justificados. O pregão eletrônico é o padrão: tudo online, alcance nacional, mais ágil e transparente. A contrapartida do eletrônico é a concorrência maior, mas a vantagem é enorme — você vende pro Brasil inteiro sem sair de casa. Foque sua preparação no eletrônico: cadastro nas plataformas, SICAF em dia e monitoramento nacional das oportunidades do seu ramo.
+O pregão presencial exige presença física e está praticamente extinto, usado só em casos excepcionais justificados. O pregão eletrônico é o padrão: tudo online, alcance nacional, mais ágil e transparente. A contrapartida do eletrônico é a concorrência maior, mas a vantagem é enorme, você vende pro Brasil inteiro sem sair de casa. Foque sua preparação no eletrônico: cadastro nas plataformas, SICAF em dia e monitoramento nacional das oportunidades do seu ramo.

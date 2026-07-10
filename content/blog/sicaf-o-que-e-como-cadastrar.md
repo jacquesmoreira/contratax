@@ -36,12 +36,12 @@ Se o seu foco é só prefeitura pequena, talvez você use mais a plataforma muni
 
 O cadastro tem **6 níveis**, e cada licitação exige um conjunto deles. Os principais:
 
-- **Nível I — Credenciamento**: dados básicos da empresa. Obrigatório, é a base.
-- **Nível II — Habilitação Jurídica**: contrato social, CNPJ.
-- **Nível III — Regularidade Fiscal e Trabalhista Federal**: certidões federais, FGTS, CNDT.
-- **Nível IV — Regularidade Fiscal Estadual/Municipal**: certidões estaduais e municipais.
-- **Nível V — Qualificação Técnica**: atestados de capacidade técnica.
-- **Nível VI — Qualificação Econômico-Financeira**: balanço, certidão de falência.
+- **Nível I, Credenciamento**: dados básicos da empresa. Obrigatório, é a base.
+- **Nível II, Habilitação Jurídica**: contrato social, CNPJ.
+- **Nível III, Regularidade Fiscal e Trabalhista Federal**: certidões federais, FGTS, CNDT.
+- **Nível IV, Regularidade Fiscal Estadual/Municipal**: certidões estaduais e municipais.
+- **Nível V, Qualificação Técnica**: atestados de capacidade técnica.
+- **Nível VI, Qualificação Econômico-Financeira**: balanço, certidão de falência.
 
 Você não precisa preencher todos de uma vez. Comece pelos níveis I a IV, que cobrem a maioria dos pregões, e complete os outros conforme as licitações que você for disputar exigirem.
 
@@ -68,7 +68,7 @@ Para cada nível, anexe os documentos correspondentes:
 Os documentos passam por validação. Alguns são checados automaticamente (certidões emitidas online), outros podem levar alguns dias. Você acompanha o status no próprio sistema.
 
 ### Passo 6: Mantenha atualizado
-Certidões vencem. O SICAF avisa quando algo está perto de vencer, mas a responsabilidade de renovar é sua. **Um SICAF desatualizado pode te desclassificar** numa licitação, mesmo você tendo a certidão válida em mãos — porque o sistema consulta o que está cadastrado.
+Certidões vencem. O SICAF avisa quando algo está perto de vencer, mas a responsabilidade de renovar é sua. **Um SICAF desatualizado pode te desclassificar** numa licitação, mesmo você tendo a certidão válida em mãos, porque o sistema consulta o que está cadastrado.
 
 ## Erros comuns no SICAF
 

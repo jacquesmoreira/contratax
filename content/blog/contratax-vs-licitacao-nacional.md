@@ -62,7 +62,7 @@ Pontos onde a abordagem **difere** do ContrataX:
 
 | Recurso | ContrataX | Licitação Nacional |
 |---|---|---|
-| Modelo de IA | Claude (Anthropic) — declarado | "Plataforma com IA" — sem detalhe |
+| Modelo de IA | Claude (Anthropic), declarado | "Plataforma com IA", sem detalhe |
 | Leitura do PDF completo | ✅ Automática (Claude) | Parcial |
 | Cruzamento com documentos da empresa | ✅ Sim | Não claro |
 | Veredito de aptidão | ✅ Apto/não apto/apto com pendências | Não claro |
@@ -94,7 +94,7 @@ Pontos onde a abordagem **difere** do ContrataX:
 - **Quer saber o preço antes de cadastrar** (nenhum "fale com vendas")
 - **Trial 7 dias grátis sem cartão**
 - **Não quer fidelidade**: cancela quando quiser
-- **Quer cobrir o ciclo todo** — achar edital, ganhar, entregar, cobrar
+- **Quer cobrir o ciclo todo**: achar edital, ganhar, entregar, cobrar
 - **Multi-CNPJ pra consultoria** (a partir de R$ 697 pra 10 CNPJs)
 - **CAPAG embutido**: saber ANTES se o município paga em dia
 - **Dossiê de impugnação automático**: petição jurídica pronta

@@ -13,7 +13,7 @@ Os dois produtos atendem o mesmo público: empresas que vendem (ou querem vender
 
 | Item | **ContrataX** | **Effecti** |
 |---|---|---|
-| **Preço inicial** | **R$ 59/mês** (Starter para MEI) | Não publicado — proposta personalizada |
+| **Preço inicial** | **R$ 59/mês** (Starter para MEI) | Não publicado, proposta personalizada |
 | **Trial gratuito** | **7 dias sem cartão** | Demonstração gratuita agendada |
 | **Fidelidade** | **Nenhuma** (cancela pelo painel) | Contratos longos |
 | **Pagamento** | Pix, cartão, boleto (mensal) | Boleto bancário |
@@ -106,7 +106,7 @@ Se você se enquadra em pelo menos um perfil, ContrataX provavelmente é a melho
 - **Quer testar antes de pagar** (7 dias grátis sem cartão, sem agendar demonstração)
 - **Não quer fidelidade** (cancela pelo painel a qualquer momento)
 - **Valoriza IA real** que lê o edital inteiro, não só automatiza lance
-- **Quer cobrir o ciclo todo** — achar edital, ganhar, entregar e cobrar
+- **Quer cobrir o ciclo todo**: achar edital, ganhar, entregar e cobrar
 - **Vai consultar reputação do órgão** antes de licitar (CAPAG do Tesouro)
 - **Quer impugnar editais ilegais** com dossiê jurídico automático
 

@@ -5,13 +5,13 @@ date: 2026-05-12
 keywords: certidões negativas licitação, certidão negativa débitos, onde emitir certidão licitação, validade certidão negativa
 ---
 
-As certidões negativas são o calcanhar de aquiles de quem participa de licitação. Não é exagero: a causa número um de desclassificação não é o preço — é uma certidão vencida no dia do pregão. Este guia lista todas, mostra onde emitir cada uma online e como manter o controle pra nunca mais perder uma licitação por isso.
+As certidões negativas são o calcanhar de aquiles de quem participa de licitação. Não é exagero: a causa número um de desclassificação não é o preço, é uma certidão vencida no dia do pregão. Este guia lista todas, mostra onde emitir cada uma online e como manter o controle pra nunca mais perder uma licitação por isso.
 
 ## O que é uma certidão negativa
 
 É um documento oficial que comprova que sua empresa **não tem débitos** com determinado órgão (Receita, FGTS, Justiça do Trabalho, etc). "Negativa" significa: nada consta contra você.
 
-Quando há débito mas ele está parcelado ou suspenso, sai uma **Certidão Positiva com Efeitos de Negativa** — que vale o mesmo pra licitação.
+Quando há débito mas ele está parcelado ou suspenso, sai uma **Certidão Positiva com Efeitos de Negativa**, que vale o mesmo pra licitação.
 
 ## A lista completa das certidões
 
@@ -24,7 +24,7 @@ Quando há débito mas ele está parcelado ou suspenso, sai uma **Certidão Posi
 ### 2. Certificado de Regularidade do FGTS (CRF)
 - **Cobre**: depósitos de FGTS dos empregados
 - **Onde emitir**: [consulta-crf.caixa.gov.br](https://consulta-crf.caixa.gov.br/)
-- **Validade**: 30 dias (a que vence mais rápido — atenção!)
+- **Validade**: 30 dias (a que vence mais rápido, atenção!)
 - **Custo**: gratuito
 
 ### 3. Certidão Negativa de Débitos Trabalhistas (CNDT)
@@ -66,7 +66,7 @@ Quando há débito mas ele está parcelado ou suspenso, sai uma **Certidão Posi
 
 ## Por que tanta gente é desclassificada
 
-O problema não é não ter a certidão — é **perder o controle das datas**. Cada uma vence em um prazo diferente. Você emite todas hoje, e daqui a 30 dias a do FGTS já venceu, mas a federal ainda vale 5 meses. Sem um controle organizado, você chega no dia do pregão com uma vencida e descobre tarde demais.
+O problema não é não ter a certidão, é **perder o controle das datas**. Cada uma vence em um prazo diferente. Você emite todas hoje, e daqui a 30 dias a do FGTS já venceu, mas a federal ainda vale 5 meses. Sem um controle organizado, você chega no dia do pregão com uma vencida e descobre tarde demais.
 
 ## Como manter tudo sob controle
 
@@ -77,13 +77,13 @@ Crie uma planilha com cada certidão e a data de vencimento. Configure um lembre
 Antes de uma licitação que vale a pena, emita todas as certidões na semana do pregão. Garante que estarão válidas.
 
 ### Opção 3: Alerta automático
-Plataformas como o [ContrataX](https://www.contratax.com.br) deixam você cadastrar a data de validade de cada certidão e enviam um aviso por e-mail **30, 15, 7 e 3 dias antes** de cada vencimento. Você nunca mais é pego de surpresa — e ainda recebe a conferência automática que mostra, em cada edital, se suas certidões cobrem as exigências.
+Plataformas como o [ContrataX](https://www.contratax.com.br) deixam você cadastrar a data de validade de cada certidão e enviam um aviso por e-mail **30, 15, 7 e 3 dias antes** de cada vencimento. Você nunca mais é pego de surpresa, e ainda recebe a conferência automática que mostra, em cada edital, se suas certidões cobrem as exigências.
 
 ## Detalhe importante para ME/EPP
 
 Microempresas e empresas de pequeno porte têm um benefício: se ganharem o pregão com **alguma certidão fiscal/trabalhista vencida**, têm **5 dias úteis pra regularizar** antes de perder o contrato. Empresa grande seria desclassificada na hora.
 
-Mas atenção: isso vale só pras certidões **fiscais e trabalhistas** — não vale pra contrato social, atestado, balanço. E mesmo tendo o benefício, é melhor não depender dele. Veja mais no guia de [ME e EPP em licitação](/blog/me-epp-em-licitacao).
+Mas atenção: isso vale só pras certidões **fiscais e trabalhistas**, não vale pra contrato social, atestado, balanço. E mesmo tendo o benefício, é melhor não depender dele. Veja mais no guia de [ME e EPP em licitação](/blog/me-epp-em-licitacao).
 
 ## Erros comuns
 
@@ -94,4 +94,4 @@ Mas atenção: isso vale só pras certidões **fiscais e trabalhistas** — não
 
 ## Resumo
 
-São seis certidões principais pra licitação, todas emitidas online e quase todas gratuitas. O problema nunca é consegui-las — é controlar as datas, já que cada uma vence em um prazo diferente (a do FGTS, em só 30 dias, é a mais perigosa). Organize um sistema de lembrete, ou use uma ferramenta que avise automaticamente, e você elimina de vez a causa número um de desclassificação em licitação.
+São seis certidões principais pra licitação, todas emitidas online e quase todas gratuitas. O problema nunca é consegui-las, é controlar as datas, já que cada uma vence em um prazo diferente (a do FGTS, em só 30 dias, é a mais perigosa). Organize um sistema de lembrete, ou use uma ferramenta que avise automaticamente, e você elimina de vez a causa número um de desclassificação em licitação.

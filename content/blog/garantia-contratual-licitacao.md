@@ -58,7 +58,7 @@ Pra pequena empresa, o **seguro-garantia** quase sempre é a melhor escolha:
 - O custo é só o prêmio da apólice (1% a 4% do valor garantido por ano).
 - O processo de contratação é relativamente rápido.
 
-Exemplo: contrato de R$ 100 mil, garantia de 5% = R$ 5 mil de cobertura. Com seguro-garantia a 3% ao ano, você paga cerca de R$ 150 de prêmio — em vez de imobilizar R$ 5 mil em dinheiro.
+Exemplo: contrato de R$ 100 mil, garantia de 5% = R$ 5 mil de cobertura. Com seguro-garantia a 3% ao ano, você paga cerca de R$ 150 de prêmio, em vez de imobilizar R$ 5 mil em dinheiro.
 
 ## Como contratar o seguro-garantia
 
@@ -71,7 +71,7 @@ Empresas novas podem ter mais dificuldade ou prêmio mais alto, mas o mercado de
 
 ## A devolução da garantia
 
-A garantia é **liberada quando você cumpre o contrato**. Cumpriu tudo, sem pendências? O órgão libera a caução em dinheiro, ou a apólice/fiança é encerrada. Você não perde nada — a garantia só é executada se você **descumprir**.
+A garantia é **liberada quando você cumpre o contrato**. Cumpriu tudo, sem pendências? O órgão libera a caução em dinheiro, ou a apólice/fiança é encerrada. Você não perde nada, a garantia só é executada se você **descumprir**.
 
 ## Inclua a garantia no seu cálculo de preço
 
@@ -81,16 +81,16 @@ Ao [calcular o preço da sua proposta](/blog/como-calcular-preco-licitacao), emb
 
 ## Cuidados
 
-1. **Leia se o edital exige garantia** antes de disputar — está na minuta do contrato.
+1. **Leia se o edital exige garantia** antes de disputar, está na minuta do contrato.
 2. **Calcule o custo da garantia no seu preço.**
 3. **Prefira seguro-garantia** pra não imobilizar caixa.
-4. **Cumpra o contrato** — a garantia só vira problema se você falhar.
+4. **Cumpra o contrato**: a garantia só vira problema se você falhar.
 5. **Guarde os comprovantes** de liberação ao fim do contrato.
 
 ## Como saber se um edital exige garantia (sem ler tudo)
 
-A exigência de garantia fica na minuta do contrato, lá no fim do edital. Descobrir isso só na hora de assinar é desconfortável. Plataformas como o [ContrataX](https://www.contratax.com.br) fazem a leitura completa do edital e destacam as condições do contrato — incluindo se há exigência de garantia e qual o percentual — pra você já considerar isso no preço, antes de disputar.
+A exigência de garantia fica na minuta do contrato, lá no fim do edital. Descobrir isso só na hora de assinar é desconfortável. Plataformas como o [ContrataX](https://www.contratax.com.br) fazem a leitura completa do edital e destacam as condições do contrato, incluindo se há exigência de garantia e qual o percentual, pra você já considerar isso no preço, antes de disputar.
 
 ## Resumo
 
-A garantia contratual é um valor (de até 5%, ou 10% em obras complexas) que o vencedor oferece pra assegurar o cumprimento do contrato. Você escolhe a modalidade, e pra pequena empresa o **seguro-garantia** costuma ser o mais econômico, porque não imobiliza capital — você paga só um prêmio anual de 1% a 4%. A garantia é devolvida ao fim do contrato cumprido. O segredo é ler o edital com antecedência e embutir esse custo no seu preço.
+A garantia contratual é um valor (de até 5%, ou 10% em obras complexas) que o vencedor oferece pra assegurar o cumprimento do contrato. Você escolhe a modalidade, e pra pequena empresa o **seguro-garantia** costuma ser o mais econômico, porque não imobiliza capital, você paga só um prêmio anual de 1% a 4%. A garantia é devolvida ao fim do contrato cumprido. O segredo é ler o edital com antecedência e embutir esse custo no seu preço.

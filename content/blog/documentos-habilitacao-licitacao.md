@@ -5,7 +5,7 @@ date: 2026-06-13
 keywords: documentos licitação, documentos habilitação licitação, certidões licitação, lista documentos licitação, lei 14133 habilitação, documentos pregão eletrônico, documentos dispensa eletrônica
 ---
 
-A documentação de habilitação é o que mais derruba empresas em licitação pública no Brasil. Não é falta de capacidade técnica nem preço — é uma certidão vencida, um atestado em formato errado ou uma declaração esquecida. **30% das desclassificações em pregão eletrônico em 2026 ainda acontecem por documentação**, segundo dados do PNCP.
+A documentação de habilitação é o que mais derruba empresas em licitação pública no Brasil. Não é falta de capacidade técnica nem preço, é uma certidão vencida, um atestado em formato errado ou uma declaração esquecida. **30% das desclassificações em pregão eletrônico em 2026 ainda acontecem por documentação**, segundo dados do PNCP.
 
 Este guia traz a lista completa dos documentos exigidos em licitação pela Lei 14.133, organizada por categoria, com onde emitir cada certidão, prazo de validade, diferenças por modalidade e o que muda para MEI, ME e EPP.
 
@@ -28,11 +28,11 @@ Cada categoria tem documentos específicos. Em pregões pequenos e dispensas, al
 Comprova que a empresa **existe legalmente** e está apta a contratar com o poder público.
 
 ### Para MEI
-- **CCMEI** (Certificado de Condição de Microempreendedor Individual) — emitido no [Portal do Empreendedor](https://www.gov.br/empresas-e-negocios/pt-br/empreendedor)
+- **CCMEI** (Certificado de Condição de Microempreendedor Individual), emitido no [Portal do Empreendedor](https://www.gov.br/empresas-e-negocios/pt-br/empreendedor)
 - **RG e CPF do titular**
 
 ### Para ME, EPP e empresas maiores
-- **Contrato social** (e suas alterações consolidadas) — registrado na Junta Comercial
+- **Contrato social** (e suas alterações consolidadas), registrado na Junta Comercial
 - **Ata de eleição da diretoria** (sociedades anônimas)
 - **CNPJ ativo** na situação cadastral
 - **Inscrição no Registro Civil de Pessoas Jurídicas** (cooperativas, fundações)
@@ -79,7 +79,7 @@ A categoria que mais derruba empresas. São **7 certidões diferentes**, cada um
 - **Em 2026**: consultado **automaticamente** pelo órgão, não precisa enviar
 
 ### Lista Suja do Trabalho Escravo
-- **Onde consultar**: [trabalho.gov.br](https://www.trabalho.gov.br) — Cadastro de Empregadores
+- **Onde consultar**: [trabalho.gov.br](https://www.trabalho.gov.br), Cadastro de Empregadores
 - **Em 2026**: consultado **automaticamente**
 
 ### Validade conjunta
@@ -100,7 +100,7 @@ Comprova que a empresa **sabe fazer** o que está propondo. Variável por edital
   - Quantidade
   - Período de execução
   - Avaliação da qualidade (geralmente "satisfatória")
-- **Cuidado**: a Lei 14.133 limitou a exigência. O edital **não pode pedir atestado de objeto idêntico** (apenas similar ou compatível). Se pediu, é cláusula restritiva e pode ser impugnada — veja [como impugnar edital restritivo](/blog/como-impugnar-edital-restritivo).
+- **Cuidado**: a Lei 14.133 limitou a exigência. O edital **não pode pedir atestado de objeto idêntico** (apenas similar ou compatível). Se pediu, é cláusula restritiva e pode ser impugnada, veja [como impugnar edital restritivo](/blog/como-impugnar-edital-restritivo).
 
 ### Como conseguir o primeiro atestado
 Quem nunca forneceu nada não tem atestado. Como sair desse círculo:

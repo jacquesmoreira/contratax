@@ -11,18 +11,18 @@ Existe um limite pra baixar o preço numa licitação. Quando uma proposta é ba
 
 Uma proposta é **inexequível** quando o preço oferecido é tão baixo que **não cobre os custos** de cumprir o contrato. Ou seja: nem com lucro zero a empresa conseguiria entregar por aquele valor.
 
-A Lei 14.133/2021, no **art. 59**, prevê que o órgão pode (e deve) desclassificar propostas inexequíveis — porque elas geram risco de o contrato não ser cumprido, ou de o fornecedor abandonar no meio.
+A Lei 14.133/2021, no **art. 59**, prevê que o órgão pode (e deve) desclassificar propostas inexequíveis, porque elas geram risco de o contrato não ser cumprido, ou de o fornecedor abandonar no meio.
 
 ## Por que o órgão se preocupa com preço baixo
 
-Pode parecer estranho — afinal, o governo quer pagar menos. Mas preço irreal traz problemas:
+Pode parecer estranho, afinal, o governo quer pagar menos. Mas preço irreal traz problemas:
 
 - O fornecedor não consegue entregar e abandona o contrato.
 - A qualidade despenca pra "fechar a conta".
 - O órgão tem que refazer a licitação, perdendo tempo.
 - Pode haver má-fé (entrar baixo só pra depois pedir aditivo).
 
-Por isso, preço baixo demais não é vantagem — é risco. E a lei manda o órgão investigar.
+Por isso, preço baixo demais não é vantagem, é risco. E a lei manda o órgão investigar.
 
 ## Como o órgão avalia a inexequibilidade
 
@@ -53,7 +53,7 @@ Se você ofereceu um preço baixo (mas que você consegue cumprir) e o órgão p
 3. **Junte documentos**: tabela de fornecedor, nota fiscal de compra do insumo, contrato com transportadora.
 4. **Seja objetivo**: o órgão quer ver que o número fecha, não promessa vaga.
 
-Se você realmente consegue cumprir, a inexequibilidade não se sustenta — basta provar.
+Se você realmente consegue cumprir, a inexequibilidade não se sustenta, basta provar.
 
 ## Como questionar um concorrente com preço irreal
 
@@ -63,7 +63,7 @@ Do outro lado: se você perdeu pra um concorrente cujo preço é claramente impo
 2. Apresentar [recurso administrativo](/blog/recurso-administrativo-licitacao) apontando a inexequibilidade.
 3. Demonstrar, com números, que aquele preço não cobre os custos mínimos do objeto.
 
-Muitos contratos são salvos assim: o concorrente entra com preço irreal, ganha na largada, mas é desclassificado depois por não comprovar exequibilidade — e o segundo colocado (você) leva.
+Muitos contratos são salvos assim: o concorrente entra com preço irreal, ganha na largada, mas é desclassificado depois por não comprovar exequibilidade, e o segundo colocado (você) leva.
 
 ## Cuidado pra não cair na própria armadilha
 
@@ -72,12 +72,12 @@ Na emoção da disputa de lances, é tentador baixar o preço além do razoável
 - Se ganhar, você cumpre no prejuízo (ou abandona, o que gera penalidade).
 - Se for questionado e não comprovar, é desclassificado e perde tempo.
 
-A defesa é sempre a mesma: **saiba seu preço mínimo antes de entrar no pregão** e não passe dele. O empate ficto e a estratégia de lances ajudam a ganhar com margem — não a vender no vermelho.
+A defesa é sempre a mesma: **saiba seu preço mínimo antes de entrar no pregão** e não passe dele. O empate ficto e a estratégia de lances ajudam a ganhar com margem, não a vender no vermelho.
 
 ## Preço de referência: sua bússola
 
-Pra saber se um preço é exequível (o seu ou o do concorrente), você precisa conhecer a **faixa real praticada** em contratos parecidos. Plataformas como o [ContrataX](https://www.contratax.com.br) mostram, em cada edital, a faixa de preços praticada em contratos similares e o histórico de quem ganhou e por quanto. Você sabe na hora se um preço é viável ou se é fantasia — tanto pra calibrar a sua proposta quanto pra identificar um concorrente que vai cair na diligência.
+Pra saber se um preço é exequível (o seu ou o do concorrente), você precisa conhecer a **faixa real praticada** em contratos parecidos. Plataformas como o [ContrataX](https://www.contratax.com.br) mostram, em cada edital, a faixa de preços praticada em contratos similares e o histórico de quem ganhou e por quanto. Você sabe na hora se um preço é viável ou se é fantasia, tanto pra calibrar a sua proposta quanto pra identificar um concorrente que vai cair na diligência.
 
 ## Resumo
 
-Proposta inexequível é aquela com preço tão baixo que não cobre os custos de cumprir o contrato. A lei manda o órgão dar ao licitante a chance de comprovar a exequibilidade antes de desclassificar — então preço baixo não elimina na hora, mas exige planilha de custos que feche a conta. Use isso dos dois lados: defenda sua proposta com números se for questionada, e questione concorrentes com preço irreal por recurso. E o de sempre: conheça seu preço mínimo e a faixa praticada antes de disputar.
+Proposta inexequível é aquela com preço tão baixo que não cobre os custos de cumprir o contrato. A lei manda o órgão dar ao licitante a chance de comprovar a exequibilidade antes de desclassificar, então preço baixo não elimina na hora, mas exige planilha de custos que feche a conta. Use isso dos dois lados: defenda sua proposta com números se for questionada, e questione concorrentes com preço irreal por recurso. E o de sempre: conheça seu preço mínimo e a faixa praticada antes de disputar.

@@ -13,8 +13,8 @@ Os dois produtos servem ao mesmo público: empresas que vendem (ou querem vender
 
 | Item | **ContrataX** | **ConLicitação** |
 |---|---|---|
-| **Preço inicial** | **R$ 59/mês** (plano Starter para MEI) | Não publicado — só após cadastro |
-| **Trial gratuito** | **7 dias sem cartão** | "Faça o teste" — termos não claros |
+| **Preço inicial** | **R$ 59/mês** (plano Starter para MEI) | Não publicado, só após cadastro |
+| **Trial gratuito** | **7 dias sem cartão** | "Faça o teste", termos não claros |
 | **Fidelidade** | **Nenhuma** (cancela pelo painel) | Semestral, anual ou bienal |
 | **Pagamento** | Pix, cartão, boleto (mensal recorrente) | Pix, boleto, cartão (planos longos) |
 | **Inteligência Artificial** | **ContrataX.IA lê o edital completo** (Claude da Anthropic) | "ConLicita IA" mencionada mas sem detalhe |
@@ -104,7 +104,7 @@ Se você se enquadra em **pelo menos um** desses perfis, ContrataX provavelmente
 - **Quer testar antes de pagar** (7 dias grátis sem cartão é raro nesse mercado)
 - **Não quer fidelidade** (cancela quando quiser sem multa)
 - **Valoriza IA real**, não só etiqueta de marketing (ContrataX.IA usa Claude da Anthropic, lê PDF completo)
-- **Quer cobrir o ciclo todo** — não só achar edital, mas também ganhar, entregar e cobrar
+- **Quer cobrir o ciclo todo**: não só achar edital, mas também ganhar, entregar e cobrar
 - **Vai consultar reputação do órgão** antes de licitar (CAPAG do Tesouro Nacional)
 - **Quer impugnar editais ilegais** com fundamento jurídico automático
 

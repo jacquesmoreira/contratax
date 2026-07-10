@@ -1,6 +1,6 @@
 ---
 title: PNCP: o que é, como usar e como encontrar editais (guia 2026)
-description: Tudo sobre o Portal Nacional de Contratações Públicas (PNCP, às vezes escrito PNCB) em 2026 — o que é, como consultar passo a passo, diferença pro Comprasnet, limitações que ninguém te conta e como achar licitação do seu ramo sem perder tempo.
+description: Tudo sobre o Portal Nacional de Contratações Públicas (PNCP, às vezes escrito PNCB) em 2026, o que é, como consultar passo a passo, diferença pro Comprasnet, limitações que ninguém te conta e como achar licitação do seu ramo sem perder tempo.
 date: 2026-06-13
 keywords: PNCP, PNCB, o que é PNCP, portal nacional contratações públicas, como usar PNCP, pncp gov, pncp.gov.br, PNCP vs Comprasnet, consultar licitação, buscar edital, lei 14133, licitação pública 2026
 ---
@@ -138,9 +138,9 @@ Quem não lê, **manda proposta, é desclassificado, perde o tempo gasto montand
 
 Mesmo se você conseguir ler o edital, o trabalho não acabou. Tem que **cruzar cada exigência com a documentação atualizada da sua empresa**:
 
-- Certidão Negativa de Débitos Federais — está em dia?
-- FGTS — vencimento?
-- CNDT (trabalhista) — vencimento?
+- Certidão Negativa de Débitos Federais, está em dia?
+- FGTS, vencimento?
+- CNDT (trabalhista), vencimento?
 - Regularidade municipal e estadual?
 - Atestado técnico cobre o que o edital pede?
 - Capital social atende?
@@ -209,7 +209,7 @@ Achar o edital no PNCP é só o começo. Pra efetivamente concorrer:
 3. **Atualiza certidões vencidas** (FGTS, CNDT, federal, estadual, municipal)
 4. **Prepara os atestados de capacidade técnica** exigidos
 5. **Calcula o preço com margem viável** (importante: governo nem sempre paga rápido)
-6. **Cadastra-se no portal onde acontece o lance** (Comprasnet, BLL, BNC, Licitações-e — depende do edital)
+6. **Cadastra-se no portal onde acontece o lance** (Comprasnet, BLL, BNC, Licitações-e, depende do edital)
 7. **Envia a proposta dentro do prazo**
 8. **Participa da sessão de lances** na data e hora marcadas
 9. **Em caso de vitória**, envia documentação de habilitação

@@ -46,7 +46,7 @@ O erro mais comum de quem começa é chutar o preço. Em licitação, na maioria
 Duas referências ajudam:
 
 1. **Histórico de contratos parecidos.** Quanto a prefeitura (ou prefeituras vizinhas) pagou por esse item nos últimos meses? Esse dado está no PNCP e mostra a faixa de preço praticada.
-2. **Sua planilha de custo real.** Some o custo do produto, frete, impostos e a margem mínima que você aceita. Nunca dispute abaixo do seu custo para "ganhar experiência" — proposta inexequível é desclassificada (veja [proposta inexequível](/blog/proposta-inexequivel-licitacao)).
+2. **Sua planilha de custo real.** Some o custo do produto, frete, impostos e a margem mínima que você aceita. Nunca dispute abaixo do seu custo para "ganhar experiência", proposta inexequível é desclassificada (veja [proposta inexequível](/blog/proposta-inexequivel-licitacao)).
 
 ## O passo a passo resumido
 
@@ -65,7 +65,7 @@ Ganhar a licitação é metade do caminho. A outra metade é receber. A lei dá 
 
 ## Resumo
 
-Vender material de limpeza para o governo é um dos caminhos mais acessíveis para entrar no mercado de compras públicas: demanda constante, baixa complexidade e muitas oportunidades de pequeno valor. O segredo é organização — certidões em dia, achar os editais certos e calcular o preço com referência, não no chute.
+Vender material de limpeza para o governo é um dos caminhos mais acessíveis para entrar no mercado de compras públicas: demanda constante, baixa complexidade e muitas oportunidades de pequeno valor. O segredo é organização, certidões em dia, achar os editais certos e calcular o preço com referência, não no chute.
 
 ---
 

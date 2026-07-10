@@ -17,7 +17,7 @@ Em outras palavras: o órgão não quer correr o risco de contratar alguém que 
 
 ## Quem emite o atestado
 
-O atestado é emitido por **um cliente seu anterior** — pode ser:
+O atestado é emitido por **um cliente seu anterior**, pode ser:
 
 - Outro órgão público (prefeitura, estado, União)
 - Uma empresa privada
@@ -41,7 +41,7 @@ Um atestado bem feito tem:
 
 Muitos editais exigem atestado provando fornecimento **igual ou maior** ao que está sendo licitado. Isso é **abusivo e ilegal**.
 
-A **Súmula 263 do TCU** estabelece que o órgão só pode exigir comprovação de **parcela** do quantitativo — geralmente **50%**. Ou seja, se a licitação é de 1.000 unidades, o edital não pode exigir atestado de 1.000 unidades; no máximo de 500.
+A **Súmula 263 do TCU** estabelece que o órgão só pode exigir comprovação de **parcela** do quantitativo, geralmente **50%**. Ou seja, se a licitação é de 1.000 unidades, o edital não pode exigir atestado de 1.000 unidades; no máximo de 500.
 
 Se você encontrar um edital exigindo 100% do quantitativo, isso é motivo para [impugnar o edital](/blog/como-impugnar-edital-restritivo).
 
@@ -72,7 +72,7 @@ Se você já prestou serviço mas não tem o atestado formal, é só pedir. Faci
 2. Envie pro cliente já pronto, pedindo só que confira, imprima em papel timbrado e assine.
 3. Quanto menos trabalho pro cliente, mais rápido você recebe.
 
-A maioria dos clientes não tem problema em emitir — afinal, é só confirmar um fato verdadeiro.
+A maioria dos clientes não tem problema em emitir, afinal, é só confirmar um fato verdadeiro.
 
 ## Modelo simplificado de atestado
 
@@ -95,8 +95,8 @@ A maioria dos clientes não tem problema em emitir — afinal, é só confirmar 
 
 ## Como saber se um edital exige atestado (antes de perder tempo)
 
-Ler 80 páginas de edital só pra descobrir, lá na página 65, que ele exige um atestado que você não tem, é frustrante. Plataformas como o [ContrataX](https://www.contratax.com.br) fazem a leitura completa do edital e destacam logo de cara as exigências de qualificação técnica — incluindo se há atestado exigido e qual o quantitativo. Você descobre em segundos se vale a pena disputar.
+Ler 80 páginas de edital só pra descobrir, lá na página 65, que ele exige um atestado que você não tem, é frustrante. Plataformas como o [ContrataX](https://www.contratax.com.br) fazem a leitura completa do edital e destacam logo de cara as exigências de qualificação técnica, incluindo se há atestado exigido e qual o quantitativo. Você descobre em segundos se vale a pena disputar.
 
 ## Resumo
 
-O atestado de capacidade técnica comprova que sua empresa já fez algo parecido com o objeto licitado. É emitido por clientes anteriores (públicos ou privados) e deve trazer descrição, quantidade, valor e período. Empresa nova quebra o ciclo começando por licitações sem exigência técnica e por dispensas, construindo histórico contrato a contrato. E lembre: exigir 100% do quantitativo é ilegal — a regra do TCU é no máximo 50%.
+O atestado de capacidade técnica comprova que sua empresa já fez algo parecido com o objeto licitado. É emitido por clientes anteriores (públicos ou privados) e deve trazer descrição, quantidade, valor e período. Empresa nova quebra o ciclo começando por licitações sem exigência técnica e por dispensas, construindo histórico contrato a contrato. E lembre: exigir 100% do quantitativo é ilegal, a regra do TCU é no máximo 50%.

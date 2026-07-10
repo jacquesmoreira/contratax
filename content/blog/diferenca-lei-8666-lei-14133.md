@@ -5,7 +5,7 @@ date: 2026-05-24
 keywords: lei 14133 mudanças, diferença lei 8666 14133, nova lei licitação, lei licitação 2026
 ---
 
-A **Lei 14.133/2021** substituiu definitivamente a antiga **Lei 8.666/1993** em 30 de dezembro de 2023. Toda licitação publicada a partir dessa data tem que seguir a nova regra. Mas muita empresa ainda confunde — ou aplica regra antiga em pregão novo.
+A **Lei 14.133/2021** substituiu definitivamente a antiga **Lei 8.666/1993** em 30 de dezembro de 2023. Toda licitação publicada a partir dessa data tem que seguir a nova regra. Mas muita empresa ainda confunde, ou aplica regra antiga em pregão novo.
 
 Este artigo lista as **mudanças mais importantes na prática** pra quem fornece pro governo. Não é completo (a lei tem 193 artigos), mas cobre o que afeta o dia a dia do fornecedor.
 
@@ -27,7 +27,7 @@ Este artigo lista as **mudanças mais importantes na prática** pra quem fornece
 ## As 10 mudanças que mais importam
 
 ### 1. Pregão virou modalidade própria (e principal)
-A Lei 8.666 não tinha pregão — ele vinha da Lei 10.520/2002. A Lei 14.133 **incorporou o pregão** como modalidade própria, eletrônico ou presencial, com regras integradas.
+A Lei 8.666 não tinha pregão, ele vinha da Lei 10.520/2002. A Lei 14.133 **incorporou o pregão** como modalidade própria, eletrônico ou presencial, com regras integradas.
 
 **Impacto**: o pregão eletrônico hoje é a modalidade **mais usada** no Brasil. Quem domina pregão, domina o mercado.
 
@@ -95,16 +95,16 @@ Em contratações acima de **R$ 200 milhões**, o vencedor é obrigado a impleme
 
 Entre **2021 e 2023** as duas leis conviveram. Cada órgão escolhia qual usar em cada licitação, declarando no edital. Esse período acabou em **30/12/2023**. Hoje **TODA licitação** tem que ser pela Lei 14.133.
 
-Edital publicado em 2024+ citando Lei 8.666? Vício formal — cabe impugnação.
+Edital publicado em 2024+ citando Lei 8.666? Vício formal, cabe impugnação.
 
 ## O que isso significa pra você
 
 - **Estude a Lei 14.133** (e os Decretos 11.462/2023 e 11.245/2022)
-- **Cadastre-se no SICAF e mantenha atualizado** — economiza tempo em habilitação
-- **Acompanhe os PCAs dos órgãos do seu interesse** no PNCP — planejamento de 1 ano
+- **Cadastre-se no SICAF e mantenha atualizado**: economiza tempo em habilitação
+- **Acompanhe os PCAs dos órgãos do seu interesse** no PNCP, planejamento de 1 ano
 - **Use o pregão eletrônico** como porta principal de entrada
 - **Aproveite a cota ME/EPP** se for seu caso
-- **Evite licitações com edital de Lei 8.666** publicado em 2024+ — pode dar problema
+- **Evite licitações com edital de Lei 8.666** publicado em 2024+, pode dar problema
 
 ## Resumo
 

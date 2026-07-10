@@ -50,7 +50,7 @@ O órgão gerenciador publica a IRP no PNCP, convidando outros órgãos a manife
 Acontece normalmente. Vence quem oferecer **menor preço unitário por item ou lote**.
 
 ### Fase 3: Adjudicação e homologação
-O vencedor é registrado na ata. **Atenção**: a ata pode listar **vários fornecedores** por item — o "1º colocado" tem prioridade, mas se ele se recusar a fornecer, o **2º colocado é convocado**.
+O vencedor é registrado na ata. **Atenção**: a ata pode listar **vários fornecedores** por item, o "1º colocado" tem prioridade, mas se ele se recusar a fornecer, o **2º colocado é convocado**.
 
 ### Fase 4: Vigência da ata
 **12 meses**, prorrogáveis por mais 12 (total: 2 anos máximo).
@@ -65,7 +65,7 @@ Outros órgãos pedem ao gerenciador autorização pra usar a ata. O gerenciador
 
 1. **Receita recorrente**: pode receber pedidos por 1-2 anos da mesma ata
 2. **Vários clientes do mesmo pregão**: cada órgão participante e cada carona é um novo cliente
-3. **Previsibilidade**: você já sabe o preço, prazo de entrega e cliente — só precisa cumprir
+3. **Previsibilidade**: você já sabe o preço, prazo de entrega e cliente, só precisa cumprir
 4. **Não compete novamente**: durante a vigência, ninguém pode te bater no preço
 
 ## Riscos e cuidados
@@ -88,7 +88,7 @@ O órgão pode cancelar a ata se você descumprir entrega, atrasar fornecimento 
 Quanto mais órgãos declararam intenção na IRP, maior seu mercado. Veja na fase de IRP quantos órgãos topam.
 
 ### 2. Calcule preço com margem pra adesão
-Se você acha que a ata vai ter caronas, embuta margem pra escala. Mas sem inflar — o **menor preço** é critério.
+Se você acha que a ata vai ter caronas, embuta margem pra escala. Mas sem inflar, o **menor preço** é critério.
 
 ### 3. Aceite ser 2º ou 3º colocado
 Em ata com **vários fornecedores** por item, você pode ser convocado quando o 1º recusar. Vale ficar na lista mesmo sem ser o melhor preço.
@@ -103,7 +103,7 @@ Se ganhar uma ata grande de início de ano, não compre estoque pra atender 100%
 
 Todos publicados no **PNCP** ([pncp.gov.br](https://www.pncp.gov.br)). Filtre por modalidade "Sistema de Registro de Preços" ou pelo termo "registro de preços" no objeto.
 
-Plataformas como o [ContrataX](https://www.contratax.com.br) destacam editais de RP na busca e mostram, no histórico, **quantas adesões cada ata teve** — o que ajuda a estimar o potencial real de vendas de uma ata vencida.
+Plataformas como o [ContrataX](https://www.contratax.com.br) destacam editais de RP na busca e mostram, no histórico, **quantas adesões cada ata teve**, o que ajuda a estimar o potencial real de vendas de uma ata vencida.
 
 ## Resumo
 

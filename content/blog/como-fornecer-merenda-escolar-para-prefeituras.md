@@ -40,7 +40,7 @@ No ContrataX você acompanha as [licitações de merenda escolar abertas agora](
 
 ## Como precificar gêneros alimentícios
 
-Alimentos têm preço volátil — o custo de hoje pode mudar semana que vem. Por isso:
+Alimentos têm preço volátil, o custo de hoje pode mudar semana que vem. Por isso:
 
 1. **Use o histórico de preços.** Veja por quanto a prefeitura pagou por aquele item nos últimos meses. Esse dado está no PNCP e evita você propor um preço fora da realidade.
 2. **Considere a logística.** Merenda exige entrega frequente, às vezes em várias escolas. Inclua o frete e a frequência de entrega no seu cálculo.
@@ -63,7 +63,7 @@ Contratos de merenda costumam ser de fornecimento contínuo (entregas ao longo d
 
 ## Resumo
 
-Fornecer merenda escolar é um mercado grande, recorrente e protegido por lei (o PNAE garante recursos todo ano). O diferencial desse ramo são as exigências sanitárias — cumpri-las é o que separa quem ganha de quem é desclassificado. Para a agricultura familiar, a chamada pública é uma porta de entrada com menos concorrência.
+Fornecer merenda escolar é um mercado grande, recorrente e protegido por lei (o PNAE garante recursos todo ano). O diferencial desse ramo são as exigências sanitárias, cumpri-las é o que separa quem ganha de quem é desclassificado. Para a agricultura familiar, a chamada pública é uma porta de entrada com menos concorrência.
 
 ---
 
