@@ -1057,8 +1057,8 @@ const servidor = createServer(async (req, res) => {
         const s = saudeDocumental(empresa);
         const vencidas = s.itens.filter((i) => i.situacao === "vencida").length;
         const vencendo = s.itens.filter((i) => i.situacao === "valida" && i.validade && new Date(i.validade) <= em30).length;
-        if (vencidas) notis.push({ icone: "📄", titulo: `${vencidas} certidão${vencidas > 1 ? "ões" : ""} vencida${vencidas > 1 ? "s" : ""}`, link: `/documentos?c=${c}`, urgente: true });
-        else if (vencendo) notis.push({ icone: "📄", titulo: `${vencendo} certidão${vencendo > 1 ? "ões" : ""} vencendo em até 30 dias`, link: `/documentos?c=${c}`, urgente: false });
+        if (vencidas) notis.push({ icone: "📄", titulo: `${vencidas} certid${vencidas > 1 ? "ões" : "ão"} vencida${vencidas > 1 ? "s" : ""}`, link: `/documentos?c=${c}`, urgente: true });
+        else if (vencendo) notis.push({ icone: "📄", titulo: `${vencendo} certid${vencendo > 1 ? "ões" : "ão"} vencendo em até 30 dias`, link: `/documentos?c=${c}`, urgente: false });
       } catch {}
       try {
         const r = estatisticasRecebiveis(perfil.token);
