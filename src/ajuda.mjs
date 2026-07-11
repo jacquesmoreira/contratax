@@ -72,7 +72,7 @@ function passoAPassoHTML() {
     },
     {
       id: "analise-ia",
-      titulo: "2. A leitura do edital pela IA",
+      titulo: "2. A leitura do edital pela ContrataX.IA",
       desc: "Clique em qualquer edital e a ContrataX.IA lê o documento oficial e te diz, em segundos, se vale a pena.",
       shot: `
         <div style="background:linear-gradient(135deg,#4338ca,#6d28d9);color:#fff;border-radius:12px;padding:16px 18px;margin-bottom:12px">
@@ -89,7 +89,7 @@ function passoAPassoHTML() {
         </div>`,
       legenda: [
         "TL;DR do edital: objeto, prazo e pontos de atenção, sem precisar ler o PDF inteiro.",
-        "Veredito de aptidão. Diferente de um checklist genérico, aqui a IA cruza o edital com OS SEUS documentos cadastrados e diz se a sua empresa especificamente está apta.",
+        "Veredito de aptidão. Diferente de um checklist genérico, aqui a ContrataX.IA cruza o edital com OS SEUS documentos cadastrados e diz se a sua empresa especificamente está apta.",
         "Lista das exigências de habilitação, uma por uma, com o que já está ok e o que falta.",
         "Baixa o PDF oficial direto do PNCP, pra você conferir a fonte original quando quiser.",
       ],
@@ -115,7 +115,7 @@ function passoAPassoHTML() {
     {
       id: "documentos",
       titulo: "4. Documentos e certidões da sua empresa",
-      desc: "Cadastre uma vez o que a sua empresa tem, a IA usa isso pra cruzar contra cada edital automaticamente.",
+      desc: "Cadastre uma vez o que a sua empresa tem, a ContrataX.IA usa isso pra cruzar contra cada edital automaticamente.",
       shot: `
         <div style="border:1px solid #E4E7F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
           <span><span class="walk-tag">1</span><span style="font-size:13.5px;font-weight:700;color:#0B1E3A">Certidão Negativa Federal</span></span>
@@ -165,7 +165,7 @@ function passoAPassoHTML() {
           <div style="border:1px solid #E4E7F0;border-radius:9px;padding:10px 12px;font-size:13px;color:#0B1E3A;margin-top:4px">material hospitalar, seringa, luva</div>
         </div>
         <div style="margin-bottom:12px">
-          <span class="walk-tag">2</span><span style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px">Termos sugeridos pela IA</span>
+          <span class="walk-tag">2</span><span style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px">Termos sugeridos pela ContrataX.IA</span>
           <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
             <span style="background:#fff;border:1px solid #ddd6fe;color:#4338CA;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:99px">insumo hospitalar</span>
             <span style="background:#fff;border:1px solid #ddd6fe;color:#4338CA;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:99px">equipamento médico</span>

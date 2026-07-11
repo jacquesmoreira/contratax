@@ -118,7 +118,7 @@ async function carregar() {
       <div class="preco"><b>R$ ${p.preco}</b><span>/mês</span></div>
       <div class="pl-cota">${cotaHtml}</div>
       ${p.degustacao
-        ? `<div style="font-size:12px;color:var(--cinza-c);margin-top:6px;line-height:1.4">Ideal para começar: além dos alertas diários, você já usa a IA que lê o edital e diz se está apto. Volume maior de análises e o pós-venda completo ficam no Básico e Pro.</div>`
+        ? `<div style="font-size:12px;color:var(--cinza-c);margin-top:6px;line-height:1.4">Ideal para começar: além dos alertas diários, você já usa a ContrataX.IA que lê o edital e diz se está apto. Volume maior de análises e o pós-venda completo ficam no Básico e Pro.</div>`
         : `<div style="font-size:12.5px;color:var(--cinza);margin-top:4px">+ ${p.extracoesPdf || 0} extrações de PDF de contrato/mês ${p.empresas > 1 ? "por empresa" : ""}<br><span style="color:var(--cinza-c)">(XML do PNCP é ilimitado)</span></div>`}
       <ul class="inc">${BENEFICIOS.map(b => `<li>${b}</li>`).join("")}${p.assessoria ? '<li style="color:var(--indigo);font-weight:700">Painel único para gerenciar todas as empresas</li>' : ""}</ul>
       <button class="btn" data-tipo="plano" data-id="${p.id}">Assinar ${p.nome}</button>

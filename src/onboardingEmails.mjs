@@ -143,7 +143,7 @@ export function emailAtivacao(perfil, dados) {
       <h2 style="font-size:21px;font-weight:800;margin-bottom:12px;color:#0f172a">Suas oportunidades já estão no painel</h2>
       <p style="margin-bottom:14px">Sua conta está monitorando o <b>${ramo}</b> em tempo real.${dados.total > 0 ? ` Neste momento há <b>${dados.total.toLocaleString("pt-BR")} licitações abertas</b> compatíveis com o seu perfil${dados.soma > 0 ? `, somando <b>${valorTxt(dados.soma)}</b>` : ""}.` : ""}</p>
       ${dados.exemplos.length ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0">${linhasExemplos(dados.exemplos)}</table>` : ""}
-      <p style="margin-bottom:14px">Abra qualquer uma e a nossa IA entrega o resumo em segundos: objeto, valor, prazo e as exigências pra habilitar. É por onde a maioria começa.</p>
+      <p style="margin-bottom:14px">Abra qualquer uma e a ContrataX.IA entrega o resumo em segundos: objeto, valor, prazo e as exigências pra habilitar. É por onde a maioria começa.</p>
       ${botao(link, "Ver meus editais agora →")}
       <p style="font-size:13.5px;color:#475569;margin-top:18px">Dica: comece pelo de maior valor. Durante o teste, o resumo rápido é ilimitado.</p>
     ` + footer(perfil.token),
@@ -195,7 +195,7 @@ export function email3(perfil, totalEditais, somaValor) {
         <tr>
           <td style="padding:12px 14px">
             <b style="color:#4338ca">Básico, R$ ${PRECO_BASICO}/mês</b><br>
-            <span style="font-size:13.5px;color:#475569">Tudo do Starter + a IA lendo o edital completo e dizendo se você está apto (30 análises/mês).</span>
+            <span style="font-size:13.5px;color:#475569">Tudo do Starter + a ContrataX.IA lendo o edital completo e dizendo se você está apto (30 análises/mês).</span>
           </td>
         </tr>
       </table>
@@ -217,7 +217,7 @@ export function emailUltimasHoras(perfil) {
     assunto: `${nome}, seu teste no ContrataX termina hoje`,
     html: header() + `
       <h2 style="font-size:21px;font-weight:800;margin-bottom:12px;color:#0f172a">Seu acesso termina hoje</h2>
-      <p style="margin-bottom:14px">Seu período de teste encerra hoje. A partir de amanhã, os alertas diários do seu ramo e a leitura de editais pela IA ficam pausados até você escolher um plano.</p>
+      <p style="margin-bottom:14px">Seu período de teste encerra hoje. A partir de amanhã, os alertas diários do seu ramo e a leitura de editais pela ContrataX.IA ficam pausados até você escolher um plano.</p>
       <p style="margin-bottom:14px">Pra manter tudo ativo, a partir de <b>R$ ${PRECO_STARTER}/mês</b>. Sem fidelidade, cancela quando quiser no próprio painel.</p>
       ${botao(link, "Manter minha conta ativa →")}
       <p style="font-size:13.5px;color:#475569;margin-top:18px">Se preferir decidir depois, sua conta e suas configurações ficam salvas por 30 dias.</p>

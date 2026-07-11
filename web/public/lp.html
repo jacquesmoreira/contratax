@@ -469,7 +469,7 @@
       </div>
       <div class="g3">
         <div class="card-feat reveal"><div class="ic">💰</div><h3>Sabemos quais órgãos pagam rápido</h3><p>Nenhum concorrente te diz isso. Em cada edital, mostramos se o órgão paga em dia ou enrola, com base na nota CAPAG do Tesouro Nacional.</p></div>
-        <div class="card-feat reveal"><div class="ic">✅</div><h3>Dizemos se VOCÊ está apto</h3><p>A IA lê o edital e confere contra os seus documentos. Não é resumo genérico. É "você pode entrar" ou "falta tal certidão".</p></div>
+        <div class="card-feat reveal"><div class="ic">✅</div><h3>Dizemos se VOCÊ está apto</h3><p>A ContrataX.IA lê o edital e confere contra os seus documentos. Não é resumo genérico. É "você pode entrar" ou "falta tal certidão".</p></div>
         <div class="card-feat reveal"><div class="ic">🎯</div><h3>Você disputa com dado na mão</h3><p>A gente te dá o preço de referência do mercado, quem é a concorrência e até onde dá pra baixar mantendo margem.</p></div>
         <div class="card-feat reveal"><div class="ic">📄</div><h3>Geramos suas declarações</h3><p>As declarações de habilitação que quase todo edital exige, já preenchidas com os dados da sua empresa. É só imprimir e assinar.</p></div>
         <div class="card-feat reveal"><div class="ic">⚖️</div><h3>Mostramos o que dá pra impugnar</h3><p>Quando o edital tem cláusula restritiva ou ilegal, apontamos o ponto, o fundamento na lei e entregamos a minuta pronta.</p></div>
@@ -511,7 +511,7 @@
       <div class="tab-wrap reveal">
         <div class="tab-esq">
           <div class="k" id="tab-k">Conferência de aptidão</div>
-          <h3 id="tab-t">A IA lê o edital e diz se você está apto</h3>
+          <h3 id="tab-t">A ContrataX.IA lê o edital e diz se você está apto</h3>
           <p id="tab-d">Cruza as exigências de habilitação com os documentos da sua empresa. Item a item: o que você atende, o que falta e o próximo passo.</p>
         </div>
         <div class="tab-dir">
@@ -587,7 +587,7 @@
       <div class="g4">
         <div class="passo reveal"><div class="n">1</div><h3>Cadastre seu ramo</h3><p>Diga o que sua empresa vende e em quais estados. Leva 2 minutos, sem cartão.</p></div>
         <div class="passo reveal"><div class="n">2</div><h3>A gente garimpa o PNCP</h3><p>Todo dia, todas as licitações do seu ramo no Brasil, reunidas num só painel.</p></div>
-        <div class="passo reveal"><div class="n">3</div><h3>A IA lê e confere</h3><p>Cada edital resumido, com o veredito de aptidão contra os seus documentos.</p></div>
+        <div class="passo reveal"><div class="n">3</div><h3>A ContrataX.IA lê e confere</h3><p>Cada edital resumido, com o veredito de aptidão contra os seus documentos.</p></div>
         <div class="passo reveal"><div class="n">4</div><h3>Você decide e disputa</h3><p>Entra só no que vale a pena, com preço de referência e a papelada pronta.</p></div>
       </div>
     </div>
@@ -812,7 +812,7 @@ async function buscar() {
       <div class="top"><span class="org">${esc(e.municipio)}/${esc(e.uf)} · ${esc(e.orgao)}</span>${pz(e.encerramento)}</div>
       <div class="obj">${esc((e.objeto||"").slice(0,120))}</div>
       <div class="rod"><span class="mod">${esc(e.modalidade)}</span>${e.valorEstimado > 0 ? `<span class="val">${brl(e.valorEstimado)}</span>` : `<span class="mod" style="font-style:italic">valor não divulgado</span>`}</div>
-      ${e.id ? `<button class="btn-ia" data-ia="${encodeURIComponent(e.id)}" style="margin-top:9px;display:inline-flex;align-items:center;gap:6px;background:#eef2ff;color:var(--indigo);border:1px solid #c7d2fe;border-radius:8px;padding:7px 11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">✨ Ver resumo da IA · grátis</button><div class="ia-box" style="display:none;margin-top:9px"></div>` : ""}
+      ${e.id ? `<button class="btn-ia" data-ia="${encodeURIComponent(e.id)}" style="margin-top:9px;display:inline-flex;align-items:center;gap:6px;background:#eef2ff;color:var(--indigo);border:1px solid #c7d2fe;border-radius:8px;padding:7px 11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">✨ Ver resumo da ContrataX.IA · grátis</button><div class="ia-box" style="display:none;margin-top:9px"></div>` : ""}
     </div>`).join("");
     html += `<div class="cta-trava">
       <h3>+ ${(d.total - Math.min(3,d.amostra.length)).toLocaleString("pt-BR")} esperando você</h3>
@@ -829,7 +829,7 @@ async function buscar() {
 async function verResumoIA(id, btn) {
   const card = btn.closest(".res-card");
   const out = card.querySelector(".ia-box");
-  btn.disabled = true; btn.style.opacity = ".7"; btn.textContent = "⏳ Lendo o edital com a IA...";
+  btn.disabled = true; btn.style.opacity = ".7"; btn.textContent = "⏳ Lendo o edital com a ContrataX.IA...";
   try {
     const r = await fetch(`/api/tldr?id=${encodeURIComponent(id)}`, { method: "POST" });
     const j = await r.json();
@@ -839,12 +839,12 @@ async function verResumoIA(id, btn) {
     }
     if (!r.ok || j.erro || !j.tldr) {
       out.innerHTML = `<div style="color:#64748b;font-size:12.5px">${esc(j.erro || "Não consegui ler este edital agora.")}</div>`;
-      out.style.display = "block"; btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✨ Ver resumo da IA · grátis"; return;
+      out.style.display = "block"; btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✨ Ver resumo da ContrataX.IA · grátis"; return;
     }
     out.innerHTML = renderTldr(j.tldr);
     out.style.display = "block"; btn.style.display = "none";
   } catch (e) {
-    btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✨ Ver resumo da IA · grátis";
+    btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✨ Ver resumo da ContrataX.IA · grátis";
   }
 }
 
@@ -856,7 +856,7 @@ function renderTldr(t) {
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px"><span style="font-size:11px;font-weight:800;color:var(--indigo)">✨ CONTRATAX.IA</span><span style="background:${vbg};color:${vcor};font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:99px">${vtxt}</span></div>
     ${t.motivo ? `<div style="font-size:12.5px;color:var(--tinta);margin-bottom:7px">${esc(t.motivo)}</div>` : ""}
     ${ex ? `<div style="font-size:12px;color:var(--cinza)"><b style="color:var(--tinta)">Exigências:</b><ul style="margin:3px 0 0;padding-left:16px">${ex}</ul></div>` : ""}
-    <div style="margin-top:9px;padding-top:9px;border-top:1px dashed var(--linha);font-size:12px;color:var(--cinza)">É a IA lendo o edital de verdade. <a href="/cadastro" style="color:var(--indigo);font-weight:800">Crie sua conta grátis</a> e veja se a <b>sua</b> empresa está apta.</div>
+    <div style="margin-top:9px;padding-top:9px;border-top:1px dashed var(--linha);font-size:12px;color:var(--cinza)">É a ContrataX.IA lendo o edital de verdade. <a href="/cadastro" style="color:var(--indigo);font-weight:800">Crie sua conta grátis</a> e veja se a <b>sua</b> empresa está apta.</div>
   </div>`;
 }
 document.getElementById("btn-buscar").onclick = buscar;
@@ -865,7 +865,7 @@ document.getElementById("termo").addEventListener("keydown", e => { if (e.key ==
 // ===== Tabs do "Veja por dentro" =====
 (function(){
   const dados = [
-    { k:"Conferência de aptidão", t:"A IA lê o edital e diz se você está apto", d:"Cruza as exigências de habilitação com os documentos da sua empresa. Item a item: o que você atende, o que falta e o próximo passo." },
+    { k:"Conferência de aptidão", t:"A ContrataX.IA lê o edital e diz se você está apto", d:"Cruza as exigências de habilitação com os documentos da sua empresa. Item a item: o que você atende, o que falta e o próximo passo." },
     { k:"Radar de renovação", t:"Saiba da próxima licitação antes do edital existir", d:"Todo contrato vence. Avisamos com meses de antecedência: quem é o fornecedor atual, por quanto fechou, e quando a nova disputa deve abrir." },
     { k:"Inteligência de concorrência", t:"Saiba contra quem você joga", d:"Quem mais ganha no seu ramo e região, quantos contratos cada um tem, e a faixa de preço praticada. Você entra na disputa sabendo." },
     { k:"Recebíveis e cobrança", t:"Ganhar é metade. Receber é a outra.", d:"Cadastre a NF. O sistema calcula o prazo legal, avisa no atraso e gera o ofício de cobrança com correção e juros já calculados." },

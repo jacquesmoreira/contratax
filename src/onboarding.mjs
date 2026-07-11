@@ -25,7 +25,7 @@ export function checklist(perfil) {
     {
       id: "edital",
       titulo: "Rode sua 1ª análise (o momento que decide)",
-      descricao: "Abra qualquer edital do seu painel e a IA lê ele por você em segundos: objeto, prazo, armadilhas e o veredito. É o que a maioria testa primeiro, e é grátis no teste.",
+      descricao: "Abra qualquer edital do seu painel e a ContrataX.IA lê ele por você em segundos: objeto, prazo, armadilhas e o veredito. É o que a maioria testa primeiro, e é grátis no teste.",
       feito: temAnalise,
       link: "#painel",
       icone: "🔍",
@@ -33,7 +33,7 @@ export function checklist(perfil) {
     {
       id: "docs",
       titulo: "Destrave o veredito personalizado",
-      descricao: "Suba as datas das suas certidões e a IA passa a dizer se VOCÊ está apto ou o que falta (ex: certidão X vencida), não só um resumo genérico. É o nosso diferencial, e ainda te avisa antes de cada vencimento.",
+      descricao: "Suba as datas das suas certidões e a ContrataX.IA passa a dizer se VOCÊ está apto ou o que falta (ex: certidão X vencida), não só um resumo genérico. É o nosso diferencial, e ainda te avisa antes de cada vencimento.",
       feito: temDocsCompletos,
       link: "/documentos",
       icone: "📄",

@@ -165,7 +165,7 @@ export function paginaRanking(slug) {
 
     <div class="cta-box">
       <h2>Quer vender ${esc(cat.nome.toLowerCase())} pra algum desses órgãos?</h2>
-      <p>A ContrataX monitora automaticamente quando eles abrem uma nova licitação nesse ramo, e a IA já lê o edital e diz se a sua empresa está apta.</p>
+      <p>A ContrataX monitora automaticamente quando eles abrem uma nova licitação nesse ramo, e a ContrataX.IA já lê o edital e diz se a sua empresa está apta.</p>
       <a href="/cadastro">Criar conta grátis</a>
     </div>
 
