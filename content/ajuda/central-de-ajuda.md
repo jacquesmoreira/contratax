@@ -1,6 +1,6 @@
 ---
 title: Central de Ajuda
-description: Tudo o que você precisa saber para usar o ContrataX, cadastro, busca de licitações, análise de editais, certidões, recebíveis, cobrança formal de órgão atrasado, contratos e reequilíbrio econômico.
+description: Tudo o que você precisa saber para usar o ContrataX, cadastro, busca de licitações, análise de editais, onde e como dar lances no pregão eletrônico, certidões, recebíveis, cobrança formal de órgão atrasado, contratos e reequilíbrio econômico.
 ---
 
 Encontre aqui as respostas para as dúvidas mais comuns. Se não achar o que precisa, fale com a gente em [/contato](/contato).
@@ -80,6 +80,38 @@ Mostramos o **histórico de preços** de contratos similares ao do edital (mín,
 
 ### Como funciona o Dossiê de Impugnação?
 Quando o edital tem cláusulas potencialmente restritivas, o sistema identifica, indica o fundamento legal e gera uma minuta de impugnação pronta. Você revisa, ajusta se quiser e protocola.
+
+---
+
+## Disputa de lances no pregão
+
+### Onde eu dou os lances de um pregão eletrônico?
+Não é no PNCP e nem dentro do ContrataX. O PNCP é só a **publicação oficial** da licitação (onde todo edital tem que ser divulgado por lei), e o ContrataX acha, lê e analisa esse edital pra você. O lance em si acontece na **plataforma que opera aquele pregão**, um sistema externo onde a sessão de disputa roda ao vivo. As mais comuns são:
+
+- **Compras.gov.br** (o antigo Comprasnet, do governo federal)
+- **Portal de Compras Públicas** (aquele "[Portal de Compras Públicas]" que aparece no início de muitos editais)
+- **BLL** (Bolsa de Licitações do Brasil)
+- **Licitanet**
+- **BNC** (Bolsa Nacional de Compras)
+
+No detalhe de cada edital no ContrataX, o botão verde te leva pra essa plataforma (ou, quando o PNCP não fornece o link direto, pra página oficial do edital, de onde você chega ao sistema de origem).
+
+### Preciso me cadastrar em cada plataforma?
+Sim. Pra dar lance, sua empresa precisa estar **credenciada (cadastrada) na plataforma específica** onde o pregão vai rodar, e isso é feito uma vez, antes. Cada plataforma tem seu próprio cadastro. No Compras.gov.br, por exemplo, o credenciamento passa pelo SICAF. Sem estar credenciado e logado lá, você consegue ver o edital, mas não consegue enviar proposta nem lance.
+
+### Como descubro em qual plataforma vai acontecer o pregão?
+Está no próprio edital. Muitos já trazem o nome no começo do objeto (ex: "[Portal de Compras Públicas]"). Na página oficial do edital no PNCP, tem o campo do **sistema de origem** com o link pra plataforma. O botão do ContrataX no detalhe do edital te leva direto pra lá quando esse link existe.
+
+### Como funciona a sessão de disputa, na prática?
+O caminho normal de um pregão eletrônico é:
+
+1. **Antes**: credencie sua empresa na plataforma do pregão (uma vez) e cadastre suas certidões/documentos.
+2. **Envio da proposta**: dentro do prazo do edital, você registra sua proposta inicial na plataforma.
+3. **Sessão de disputa**: no dia e hora marcados, você entra na plataforma e a disputa abre. Os lances são dados ao vivo, você vê sua colocação e pode baixar seu preço pra tentar ganhar, dentro da margem que faz sentido pra você.
+4. **Habilitação**: quem fica em primeiro tem os documentos conferidos (é aqui que ter as certidões em dia decide tudo). Passou, é declarado vencedor.
+
+### A ContrataX dá o lance por mim?
+Não, e isso é de propósito: o lance envolve o login e a decisão da sua empresa, então quem executa é você. O que a ContrataX faz é te dar a **inteligência pra chegar preparado**: acha o edital do seu ramo, a ContrataX.IA lê e diz se você está apto, mostra a reputação de pagamento do órgão e, na calculadora de disputa, te diz **até onde dá pra baixar o preço com margem e onde vira prejuízo**. Você entra na sessão com o número na mão em vez de chutar no calor da hora.
 
 ---
 
