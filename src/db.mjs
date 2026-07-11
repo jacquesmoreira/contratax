@@ -6,7 +6,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdirSync } from "node:fs";
 import { normalizar, aplicarFiltro, tokenSignificativo, contemPalavra, palavrasProximas } from "./filtro.mjs";
-import { expandirTermos, excluirTermos } from "./sinonimos.mjs";
+import { expandirTermos, excluirTermos, expandirRamoCurado } from "./sinonimos.mjs";
 
 // Monta condicoes SQL exigindo TODOS os tokens significativos do termo (mesma
 // regra do painel: "papel A4" pede papel E a4, nao a frase colada). Mantem a
@@ -720,13 +720,14 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
   }
   const candidatos = consultar({ ufs: uf ? [uf] : [], apenasAbertos: true });
   const termos = termo && termo.trim() ? [termo.trim()] : [];
-  // Expande produto -> ramo APENAS pelo dicionario curado (produto especifico ->
-  // frases do ramo, ex: "atadura" -> "material hospitalar"). NAO usa termosAmplos
-  // (derruba uma palavra generica e busca so a distintiva sozinha): pra um termo
-  // que ja e de 2 palavras ("material hospitalar"), reduzir a "hospitalar" trazia
-  // lixo (roupa hospitalar, manutencao hospitalar, engenharia hospitalar). Na
-  // busca o cliente quer PRECISAO; o recall de produto especifico vem do curado.
-  const expandido = [...expandirTermos(termos)];
+  // Expansao curada (produto -> ramo E frase-de-categoria -> frases-irmas), tudo
+  // entre aspas (frase exata/contigua). expandirTermos: "atadura" -> "material
+  // hospitalar". expandirRamoCurado: "material hospitalar" -> "insumo hospitalar",
+  // "produtos para saude", "material de enfermagem"... (recupera o edital que diz
+  // "Produtos para Saude - Insumos" sem a palavra "material"). NAO usa termosAmplos
+  // (que derrubava a palavra generica e buscava a distintiva SOLTA -> trazia
+  // lavanderia/manutencao/engenharia hospitalar). Recall do ramo SEM o lixo.
+  const expandido = [...expandirTermos(termos), ...expandirRamoCurado(termos)];
   // Exclui obra/servico quando o termo e um produto de ramo que pede isso (ex:
   // "cimento" nao deve trazer licitacao de OBRA, so a compra do material).
   const excluirList = excluirTermos(termos);
@@ -778,11 +779,11 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
     casaram = aplicarFiltro(candidatos, { termos, termosExcluir: excluirList });
   } else {
     // Busca livre do PAINEL: PRECISOS (objeto + itens, com proximidade) rankeados
-    // no topo. Expansao de ramo APENAS pelo dicionario curado (produto -> frases
-    // do ramo), sem termosAmplos: derrubar uma palavra generica e buscar so a
-    // distintiva sozinha ("material hospitalar" -> "hospitalar") trazia lixo
-    // (servico/equipamento/roupa hospitalar). Na busca vale PRECISAO.
-    const expandido = [...expandirTermos(termos)];
+    // no topo. Expansao curada de ramo entre aspas (produto -> ramo via
+    // expandirTermos; frase-de-categoria -> frases-irmas via expandirRamoCurado).
+    // Recupera o edital que diz "insumos"/"produtos para saude" sem a palavra
+    // "material", SEM o termosAmplos que trazia lavanderia/manutencao hospitalar.
+    const expandido = [...expandirTermos(termos), ...expandirRamoCurado(termos)];
     casaram = casarComExpansao(candidatos, termos, termo, expandido, excluirList);
   }
   // Registro de Precos (SRP): "sim" so atas, "nao" sem ata.
