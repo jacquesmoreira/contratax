@@ -1089,6 +1089,19 @@ Jacques pesquisou "material hospitalar" e veio lixo: "Aquisição de equipamento
 1. **CSP bloqueava beacons de analytics/ads** (erros vermelhos no console): `analytics.google.com/g/collect` e `ad.doubleclick.net/ccm/s/collect` violavam `connect-src`. Resultado: conversão do Google Ads e medição do GA4 não eram enviadas (dado se perdendo). Adicionado ao `connect-src` em `server.mjs`: `analytics.google.com`, `*.analytics.google.com`, `*.doubleclick.net`. Scripts já carregavam (script-src ok), só o envio estava barrado. **Conferir no GA4/Ads nos próximos dias se o volume de conversões sobe.**
 2. **Selo de reputação (bom/médio/mau pagador) + oportunidade sumia na BUSCA:** só o feed (`/api/editais`) selava; a busca (`/api/buscar`) devolvia editais crus, então o card só mostrava "+ Planejamento". Extraída a lógica pro helper `selarOportunidade()` em `server.mjs`, usado agora nos DOIS (feed e busca), pra o selo ser idêntico e não divergir de novo. Cache de reputação por órgão, best-effort. Testado: busca "material hospitalar"/SC traz cada edital com reputacao + oportunidade.
 
+### 2026-07-10 (continuação) — histórico "raso": diagnóstico + endpoint de cobertura + nota honesta (commit `63b6069`)
+
+Jacques buscou "fralda descartável" em Balneário Camboriú no histórico e viu "1 compra encontrada" num ano todo, estranhou (com razão). Investigado a fundo contra o banco (só leitura): **NÃO é bug de busca, são 2 limitações de dados.**
+
+1. **Granularidade:** contrato público é registrado por CATEGORIA no PNCP ("MATERIAIS AMBULATORIAIS E INSUMOS HOSPITALARES"), a fralda é um ITEM dentro dele. De 10.100 contratos locais, só 25 têm "fralda" no objeto (0,25%). A busca por produto expande pro ramo e mostra os contratos da categoria, não a fralda isolada com valor próprio.
+2. **Cobertura:** minha cópia local tem só 10.100 contratos, `precos_itens` (item-a-item homologado) tem 8 linhas, `itens_edital` gated=0. O código diz "1.2M+ em produção" — **não dá pra confirmar a realidade de produção daqui.**
+
+**Feito:**
+- **NOVO endpoint admin** `GET /api/admin/cobertura?c=ADMIN&uf=&cidade=` (`server.mjs`): fotografa contratos (total, ranges de data pub/vig, top UF, quantos com fralda/hospitalar), precos_itens, editais + itens indexados, e recorte por município. **AÇÃO PRO JACQUES: rodar isso em produção** (`https://contratax.com.br/api/admin/cobertura?c=<LICITA_ADMIN_TOKEN>&uf=SC&cidade=ambori`) pra ver se produção também está rasa (então é backfill) ou cheia (então é só granularidade).
+- **Nota de honestidade no `/historico`** (`historico.html`): quando o cliente busca um PRODUTO específico (gatilho do dicionário), o backend marca `produtoEspecifico` + `ramoCategorias` e o front explica que o contrato é por categoria, o valor é do contrato inteiro, e pro preço do item usar a Pesquisa de Preços. Para de dar a impressão de "só teve 1 compra no ano".
+
+**PENDENTE (fix de verdade da granularidade):** indexar os ITENS dos contratos (tabela + harvester, tipo o `itens_edital` dos editais, ou popular o `precos_itens` que já existe pra Pesquisa de Preços), pra "fralda" casar com a linha de fralda dentro do contrato-categoria, com valor/vencedor do item. Esforço de ingestão/infra, decisão depende do que o endpoint de cobertura mostrar em produção. A Pesquisa de Preços (precos_itens) já é o lugar certo pra dado item-a-item, mas está quase vazia local (o harvester Caminho B enche aos poucos).
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
