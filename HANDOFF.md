@@ -1081,6 +1081,14 @@ Jacques pesquisou "material hospitalar" e veio lixo: "Aquisição de equipamento
 
 **Nota "onde dar o lance" (commit `89e9491`):** Jacques clicou em "ir para a disputa de lances" e caiu na página oficial sem saber onde de fato dar o lance. Adicionada nota curta SÓ em pregão, embaixo do botão do portal no drawer do edital, explicando que o lance não acontece no PNCP (só publicidade oficial), e sim na plataforma que opera o pregão (Compras.gov.br, Portal de Compras Públicas, BLL, Licitanet, BNC), onde a empresa precisa estar credenciada e logada, enviar proposta antes do prazo e entrar na sessão de disputa no horário. O texto se adapta se temos o link direto da plataforma (`ed.link`) ou só o do PNCP.
 
+### 2026-07-10 (continuação) — blog pregão reforçado, CSP libera GA4/Ads, selo de reputação volta na busca
+
+**Blog pregão (commit `78e6336`):** Jacques pediu um pilar novo "como dar lances em pregão 2026". NÃO criei post novo (já existe `pregao-eletronico-passo-a-passo`, 1.328 palavras, cobre o tema todo, um segundo canibalizaria o SEO). Em vez disso reforcei o existente: nova seção no topo "Onde você dá o lance (não é no PNCP)", "Ferramenta que ajuda" agora usa marca ContrataX.IA e cruza com a Central de Ajuda, front-matter ganhou keywords "onde dar lance"/"pregão eletrônico 2026". Decisão registrada explicitamente pro Jacques (dei o retorno honesto em vez de executar cego).
+
+**CSP + selo de reputação (commit `692aa3c`), 2 problemas que o Jacques viu no painel:**
+1. **CSP bloqueava beacons de analytics/ads** (erros vermelhos no console): `analytics.google.com/g/collect` e `ad.doubleclick.net/ccm/s/collect` violavam `connect-src`. Resultado: conversão do Google Ads e medição do GA4 não eram enviadas (dado se perdendo). Adicionado ao `connect-src` em `server.mjs`: `analytics.google.com`, `*.analytics.google.com`, `*.doubleclick.net`. Scripts já carregavam (script-src ok), só o envio estava barrado. **Conferir no GA4/Ads nos próximos dias se o volume de conversões sobe.**
+2. **Selo de reputação (bom/médio/mau pagador) + oportunidade sumia na BUSCA:** só o feed (`/api/editais`) selava; a busca (`/api/buscar`) devolvia editais crus, então o card só mostrava "+ Planejamento". Extraída a lógica pro helper `selarOportunidade()` em `server.mjs`, usado agora nos DOIS (feed e busca), pra o selo ser idêntico e não divergir de novo. Cache de reputação por órgão, best-effort. Testado: busca "material hospitalar"/SC traz cada edital com reputacao + oportunidade.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
