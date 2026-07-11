@@ -131,12 +131,13 @@ async function carregar(pag = 1) {
     : "";
   $("count").innerHTML = `<b>${d.total.toLocaleString("pt-BR")}</b> compra${d.total === 1 ? "" : "s"} encontrada${d.total === 1 ? "" : "s"}${contratosTxt} <span>· página ${d.pagina} de ${d.paginas} · filtro: ${esc(d.termos.join(", ") || "todos")}</span>`;
 
-  // Nota de honestidade: quando o cliente busca um PRODUTO especifico (fralda,
-  // seringa), o contrato publico e registrado por CATEGORIA, entao mostramos os
-  // contratos da categoria onde ele se encaixa. Explica por que "1 compra" e por
-  // que o valor parece grande/generico (e o contrato inteiro, nao so o produto).
+  // Nota de honestidade: so mostra quando REALMENTE existe resultado de categoria
+  // no total (totalExato < total). Antes usava so d.produtoEspecifico (o termo
+  // bater um gatilho do dicionario), o que mostrava a nota mesmo numa pagina 100%
+  // exata (ex: "fralda" tem muitos resultados literais, e a nota dizia "nao e so
+  // o produto que voce buscou" numa pagina que ERA so o produto). Confuso.
   const notaRamo = $("nota-ramo");
-  if (d.produtoEspecifico) {
+  if (d.produtoEspecifico && d.totalExato < d.total) {
     const cat = (d.ramoCategorias || [])[0] ? esc(d.ramoCategorias[0]) : "";
     notaRamo.innerHTML = `<div style="background:#EFF6FF;border:1px solid #bfdbfe;border-radius:11px;padding:12px 14px;margin:0 0 14px;font-size:12.5px;color:#1e40af;line-height:1.55">
       <b>Como ler este resultado:</b> "${esc(d.termos.join(", "))}" é um produto específico, e o contrato público é registrado por <b>categoria</b>${cat ? ` (como "${cat}")` : ""}, não por item. Então mostramos os contratos da categoria onde ele se encaixa, e o valor é do <b>contrato inteiro da categoria</b>, não só do produto que você buscou. Pra preço do item exato, use a <b>Pesquisa de Preços</b> no painel.
