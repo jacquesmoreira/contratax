@@ -180,7 +180,7 @@ function aplicarHeadersSeguranca(res) {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.googletagmanager.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https:",
-    "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://www.google.com https://www.clarity.ms https://*.clarity.ms https://fonts.googleapis.com https://fonts.gstatic.com",
+    "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.googletagmanager.com https://*.doubleclick.net https://www.googleadservices.com https://www.google.com https://www.clarity.ms https://*.clarity.ms https://fonts.googleapis.com https://fonts.gstatic.com",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "object-src 'none'",
@@ -192,6 +192,33 @@ function aplicarHeadersSeguranca(res) {
 async function perfilPorToken(token) {
   const perfis = await lerPerfis();
   return perfis.find((p) => p.token === token) ?? null;
+}
+
+// Sela cada edital com reputacao de pagamento (CAPAG/heuristica, versao leve) e o
+// selo de OPORTUNIDADE (forte/regular/avaliar + os porques). Usado no FEED e na
+// BUSCA, pra o mesmo selo aparecer nos dois (antes so o feed selava, e o cliente
+// estranhava o selo sumir na busca). Cache por orgao, best-effort (nao quebra a
+// resposta se a reputacao falhar).
+async function selarOportunidade(editais) {
+  const cacheRep = new Map();
+  for (const ed of editais) {
+    try {
+      const chave = `${ed.uf || ""}|${ed.municipio || ""}|${ed.orgao || ""}`;
+      if (!cacheRep.has(chave)) {
+        cacheRep.set(chave, await reputacaoLeve({ nome: ed.orgao, uf: ed.uf, municipio: ed.municipio }));
+      }
+      ed.reputacao = cacheRep.get(chave);
+    } catch (e) { console.error("[selarOportunidade] reputacao:", e.message); }
+    const fatores = [];
+    let pts = 0;
+    const rep = ed.reputacao?.classificacao;
+    if (rep === "rapido") { pts += 2; fatores.push("Órgão paga rápido"); }
+    else if (rep === "regular") { pts += 1; fatores.push("Órgão paga em dia"); }
+    else if (rep === "lento") { fatores.push("Órgão costuma pagar devagar"); }
+    if (ed.srp) { pts += 1; fatores.push("Registro de Preços (compra recorrente, dá pra se planejar)"); }
+    ed.oportunidade = { nivel: pts >= 3 ? "forte" : pts >= 1 ? "regular" : "avaliar", fatores };
+  }
+  return editais;
 }
 
 // ===== Guard de acesso: bloqueia ferramentas pagas para conta vencida =====
@@ -878,7 +905,11 @@ const servidor = createServer(async (req, res) => {
       const excluir = (url.searchParams.get("excluir") || "").split(",").map((s) => s.trim()).filter(Boolean);
       const pagina = Number(url.searchParams.get("pagina") || 1);
       const porPag = Math.min(50, Math.max(5, Number(url.searchParams.get("porPag") || 15)));
-      return json(res, 200, buscarEditais({ uf, ufs, termo, modalidades, cidade, prazoDias, dataDe, dataAte, pubDe, pubAte, numeroEdital, valorMin, valorMax, srp, excluir, pagina, porPag }));
+      const resultado = buscarEditais({ uf, ufs, termo, modalidades, cidade, prazoDias, dataDe, dataAte, pubDe, pubAte, numeroEdital, valorMin, valorMax, srp, excluir, pagina, porPag });
+      // Sela o mesmo selo de reputacao/oportunidade do feed, pra a busca mostrar
+      // bom/medio/mau pagador igual ao painel (nao so "+ Planejamento").
+      await selarOportunidade(resultado.editais || []);
+      return json(res, 200, resultado);
     }
 
     // Lista de editais do cliente (filtrada pelo token ?c=). Token admin ve tudo.
@@ -900,35 +931,12 @@ const servidor = createServer(async (req, res) => {
         const r = await monitorar(perfil, { marcar: false, salvar: false });
         editais = r.filtrados; alargado = r.alargado; totalBruto = r.total;
       } catch (e) { console.error("[api/editais] monitorar:", e.message); }
-      // Selo de reputacao de pagamento no card (versao leve, so CAPAG/heuristica).
-      // Cache por UF|municipio: orgaos repetem, evita recomputar. Best-effort.
-      try {
-        const cacheRep = new Map();
-        for (const ed of editais) {
-          const chave = `${ed.uf || ""}|${ed.municipio || ""}|${ed.orgao || ""}`;
-          if (!cacheRep.has(chave)) {
-            cacheRep.set(chave, await reputacaoLeve({ nome: ed.orgao, uf: ed.uf, municipio: ed.municipio }));
-          }
-          ed.reputacao = cacheRep.get(chave);
-        }
-      } catch (e) { console.error("[api/editais] reputacao:", e.message); }
+      // Selo de reputacao de pagamento + oportunidade (forte/regular/avaliar), o
+      // MESMO helper que a busca usa, pra o selo ser identico nos dois lugares.
+      await selarOportunidade(editais);
       // Marca os favoritados do cliente (estrela no card).
       const favSet = new Set(perfil._favoritos || []);
       for (const ed of editais) ed.favorito = favSet.has(ed.id);
-      // Selo de OPORTUNIDADE (honesto, transparente): compoe fatores que a gente
-      // REALMENTE sabe por card, sem custo extra. forte/regular/avaliar + os
-      // porques no tooltip. So usa sinais defensaveis (sem score caixa-preta).
-      for (const ed of editais) {
-        const fatores = [];
-        let pts = 0;
-        const rep = ed.reputacao?.classificacao;
-        if (rep === "rapido") { pts += 2; fatores.push("Órgão paga rápido"); }
-        else if (rep === "regular") { pts += 1; fatores.push("Órgão paga em dia"); }
-        else if (rep === "lento") { fatores.push("Órgão costuma pagar devagar"); }
-        if (ed.srp) { pts += 1; fatores.push("Registro de Preços (compra recorrente, dá pra se planejar)"); }
-        const nivel = pts >= 3 ? "forte" : pts >= 1 ? "regular" : "avaliar";
-        ed.oportunidade = { nivel, fatores };
-      }
       // Pre-aquece o resumo (TL;DR) dos editais mais urgentes em segundo plano,
       // pra abrir instantaneo (como o concorrente faz pre-gerando tudo). Diferenca:
       // so os top-N do painel, nao os 426k -> custo controlado. NAO bloqueia a
