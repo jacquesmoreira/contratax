@@ -1104,6 +1104,14 @@ Jacques buscou "fralda descartável" em Balneário Camboriú no histórico e viu
 
 **RESOLVIDO o pedaço principal (commit `8ad17d9`) — o diagnóstico de PRODUÇÃO mudou o quadro.** Jacques rodou `/api/admin/cobertura` em produção: **3,1M contratos** (não 10k como local, minha cópia era snapshot fino), **SC com 748k**, **Balneário Camboriú com 10.094 contratos**, "fralda" no objeto em **10.721** contratos. Ou seja, cobertura é ÓTIMA. A causa raiz do "1 compra no ano" era outra: `consultarContratos` tinha `LIMIT 10000` aplicado **só por UF**, e o filtro de cidade/termo rodava em JS **depois**. Pra SC (748k), pegava os 10k mais recentes do estado inteiro e o município do cliente quase nunca sobrava. Corrigido empurrando `cidade` e `termosLike` (prefiltro coarse por palavra distintiva no `objeto_norm`) pro WHERE do SQL, então o LIMIT recai sobre linhas já relevantes (município + ramo certos). Cidade casa sem acento via `foldSql` (dobra acentos em SQL, SQLite não tem unaccent; validado local: BC=9, Floripa=67; SC+hospitalar=365 de 3070). **Ainda pendente:** o item-a-item (fralda com valor/vencedor próprio, não a categoria) continua dependendo de indexar itens de contrato / popular `precos_itens`. E watch de performance: pra UF grande o SQL escaneia a partição aplicando REPLACE+LIKE; se lento, criar `municipio_norm` indexado.
 
+### 2026-07-11 — navegação: tira 5 itens do menu escondido "Mais" (commit `9b48976`)
+
+Jacques apontou que Documentos, Declarações, Histórico, Equipe e Conta, escondidos atrás do dropdown "Mais", praticamente perdiam a função (ninguém clica pra descobrir). Documentos em particular é o que destrava o veredito personalizado, item central do produto. Achatados pra nav principal, lado a lado com Planejamento/Recebíveis/Contratos.
+
+**Bug real achado e corrigido durante o teste:** em janelas mais estreitas (~750px, comum em notebook menor ou janela não maximizada), os últimos itens (Equipe, Conta, Sair) saíam da tela **sem jeito de alcançar** (sem scroll, simplesmente inacessíveis, confirmado via `getBoundingClientRect()`). Corrigido com `min-width:0` + `overflow-x:auto` na barra (scrollbar escondida visualmente, mas a rolagem funciona por toque/arrasto): nada fica preso fora da tela, a barra desliza quando não cabe tudo. Validado nas duas pontas: 1400px sem scroll necessário (todos os 9 itens visíveis, como no print do Jacques), 600px com scroll funcionando e "Sair" alcançável rolando.
+
+Removido o dropdown "Mais" (markup + CSS + JS de toggle, morto). Wiring de href por token conferido certo nos 8 links (testado com fetch mockado simulando conta válida).
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
