@@ -1120,6 +1120,12 @@ Cada grupo de contrato agora ganha um flag `exato` (o objeto casa os termos LITE
 
 Validado com dado real de produção: "material de limpeza"/SC = 101 exato de 102. "fralda" nacional = 14 exato + 16 categoria numa mesma página, as duas seções renderizando com contagem certa.
 
+### 2026-07-11 (continuação) — nota de honestidade só quando tem categoria de verdade (commit `e3e87da`)
+
+Jacques mandou print de "fralda"/SC onde a página inteira era resultado literal (392 compras, todas "FRALDAS GERIÁTRICAS E INFANTIS"), mas a nota azul ainda dizia "produto específico... não é só o que você buscou" — confuso numa página que ERA só o produto. Causa: a nota usava só `produtoEspecifico` (termo bate gatilho do dicionário), sem checar se aquela busca específica gerou categoria de verdade. Corrigido: só mostra quando `totalExato < total`. Testado com fetch mockado nos 2 cenários.
+
+**Pergunta do Jacques respondida (não é bug, é dado real):** "está certo aparecer a mesma empresa em todas as licitações como vencedora?" Confirmado no banco local que é padrão amplo do mercado público real, não bug nosso: `ALTERMED MATERIAL MEDICO HOSPITALAR LTDA` ganha em 65 municípios de SC (107 contratos), `CIRÚRGICA SANTA CRUZ` em 61, `MEDILAR` em 56, etc. Mecanismo provável: adesão à Ata de Registro de Preços ("carona"), onde um fornecedor vence uma licitação e várias outras prefeituras aderem à mesma ata sem licitar de novo, comum pra produto de nicho com poucos fornecedores regionais (caso de fralda geriátrica). Sistema está refletindo o dado real do PNCP fielmente.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
