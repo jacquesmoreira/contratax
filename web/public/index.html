@@ -59,10 +59,13 @@
   .nav-id-nome { font-size:13.5px; font-weight:700; color:var(--tinta); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; }
   .nav-id-uso { font-size:11.5px; color:var(--cinza-c); font-weight:600; margin-top:1px; white-space:nowrap; }
   .nav-id-uso b { color:var(--indigo); font-weight:800; }
-  /* min-width:0 deixa o flex item encolher abaixo do conteudo, senao o overflow
-     empurra pra fora da tela em vez de rolar (nenhum item pode ficar inacessivel). */
-  nav .dir { margin-left:auto; display:flex; align-items:center; gap:4px; font-size:13.5px; font-weight:600; color:var(--cinza); min-width:0; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; }
-  nav .dir::-webkit-scrollbar { display:none; }
+  nav .dir { margin-left:auto; display:flex; align-items:center; gap:4px; font-size:13.5px; font-weight:600; color:var(--cinza); min-width:0; }
+  /* O SCROLL fica so nos links (dir-scroll), nunca em .dir inteiro: overflow-x:auto
+     numa caixa forca overflow-y a virar auto tambem (regra do CSS), o que cortava
+     o menu do sino (dropdown que "cai" pra baixo da barra, position:absolute).
+     Sino e Sair ficam FORA da caixa que rola, sempre visiveis e clicaveis. */
+  .dir-scroll { display:flex; align-items:center; gap:4px; min-width:0; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; }
+  .dir-scroll::-webkit-scrollbar { display:none; }
   nav .dir a { padding:8px 12px; border-radius:8px; transition:background .12s, color .12s; text-decoration:none; color:inherit; flex-shrink:0; white-space:nowrap; }
   nav .dir a:hover { color:var(--tinta); background:var(--fundo); }
   .nav-sair { color:var(--cinza-c) !important; font-size:13px !important; }
@@ -71,11 +74,11 @@
   @media (max-width:980px) {
     .nav-id { display:none; }
     nav .dir a { padding:8px 9px; }
-    nav .dir { gap:2px; font-size:13px; }
+    nav .dir, .dir-scroll { gap:2px; font-size:13px; }
   }
   @media (max-width:640px) {
     nav .wrap { gap:8px; }
-    nav .dir { gap:0; }
+    nav .dir, .dir-scroll { gap:0; }
     nav .dir a { padding:6px 7px; font-size:12.5px; }
     #nav-plano { display:none !important; }
   }
@@ -215,20 +218,22 @@
       <div id="empresa-menu" style="display:none;position:absolute;top:calc(100% + 8px);left:0;z-index:120;background:#fff;border:1px solid var(--linha);border-radius:14px;box-shadow:0 18px 50px rgba(15,23,42,.18);width:300px;overflow:hidden;max-height:60vh;overflow-y:auto"></div>
     </div>
     <div class="dir">
-      <a id="nav-plano" href="#" style="display:none"></a>
-      <a id="nav-planejamento" href="#">Planejamento</a>
-      <a id="nav-docs" href="#">Documentos</a>
-      <a id="nav-receb" href="#">Recebíveis</a>
-      <a id="nav-contratos" href="#">Contratos</a>
-      <a id="nav-declaracoes" href="#">Declarações</a>
-      <a id="nav-historico" href="#">Histórico</a>
-      <a id="nav-equipe" href="#">Equipe</a>
-      <a id="nav-conta" href="#">Conta</a>
-      <div id="sino-wrap" style="position:relative;display:none">
+      <div class="dir-scroll">
+        <a id="nav-plano" href="#" style="display:none"></a>
+        <a id="nav-planejamento" href="#">Planejamento</a>
+        <a id="nav-docs" href="#">Documentos</a>
+        <a id="nav-receb" href="#">Recebíveis</a>
+        <a id="nav-contratos" href="#">Contratos</a>
+        <a id="nav-declaracoes" href="#">Declarações</a>
+        <a id="nav-historico" href="#">Histórico</a>
+        <a id="nav-equipe" href="#">Equipe</a>
+        <a id="nav-conta" href="#">Conta</a>
+      </div>
+      <div id="sino-wrap" style="position:relative;display:none;flex-shrink:0">
         <button id="sino-btn" type="button" title="Notificações" style="background:none;border:none;cursor:pointer;font-size:18px;padding:6px 8px;position:relative;line-height:1">🔔<span id="sino-badge" style="display:none;position:absolute;top:0;right:2px;background:#dc2626;color:#fff;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:99px;padding:0 4px;line-height:16px;text-align:center"></span></button>
         <div id="sino-menu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:120;background:#fff;border:1px solid var(--linha);border-radius:14px;box-shadow:0 18px 50px rgba(15,23,42,.18);width:320px;overflow:hidden"></div>
       </div>
-      <a class="nav-sair" href="/api/sair">Sair</a>
+      <a class="nav-sair" href="/api/sair" style="flex-shrink:0">Sair</a>
     </div>
   </div></nav>
 
