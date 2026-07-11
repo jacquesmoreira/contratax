@@ -1415,7 +1415,14 @@ async function abrirDrawer(id) {
     html += `<a href="/api/calendario?id=${encodeURIComponent(ed.id)}" download style="display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;border:1.5px solid var(--indigo);color:var(--indigo);font-weight:700;padding:11px 14px;border-radius:11px;text-decoration:none;margin-bottom:10px;font-size:14px" title="Baixa um arquivo .ics que abre no Google Calendar, Outlook ou Apple Calendar com lembretes 3 dias antes e 1 hora antes">📅 Adicionar ao meu calendário</a>`;
   }
   html += `<div class="bloco" id="docs-bloco"><h3>📄 Documentos do edital</h3><div class="carregando" style="padding:10px"><span class="spinner"></span>Carregando documentos...</div></div>`;
-  if (portalUrl) html += `<a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--verde);color:#fff;font-weight:700;padding:14px;border-radius:11px;text-decoration:none;margin-bottom:14px">${portalLabel}</a>`;
+  if (portalUrl) html += `<a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--verde);color:#fff;font-weight:700;padding:14px;border-radius:11px;text-decoration:none;margin-bottom:${temLances ? "8px" : "14px"}">${portalLabel}</a>`;
+  // Nota so pra PREGAO: explica onde o lance acontece de verdade. O PNCP e so a
+  // publicidade oficial, nao a sala de disputa. O lance se da na PLATAFORMA que
+  // opera o pregao (Compras.gov.br/Comprasnet, Portal de Compras Publicas, BLL,
+  // Licitanet, BNC etc.), e a empresa precisa estar credenciada e logada la.
+  if (portalUrl && temLances) html += `<div style="background:#EFF6FF;border:1px solid #bfdbfe;border-radius:11px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;color:#1e40af;line-height:1.55">
+    <b>Onde dar o lance:</b> o lance não acontece no PNCP (ele é só a publicação oficial). Você dá o lance na <b>plataforma que opera o pregão</b> ${linkDireto ? "(é pra onde o botão acima te leva)" : "(o PNCP mostra qual é, no campo do sistema de origem)"}, tipo Compras.gov.br, Portal de Compras Públicas, BLL, Licitanet ou BNC. Pra participar, sua empresa precisa estar <b>credenciada e logada nessa plataforma</b>, e enviar a proposta antes do prazo. No horário marcado, você entra na <b>sessão de disputa</b> e dá seus lances ao vivo.
+  </div>`;
   // [removido] Bloco "Precos praticados em contratos similares", saiu porque o
   // PNCP mistura preco unitario com contrato inteiro, deixando a faixa enganosa.
   // Volta quando tivermos como filtrar por categoria/item especifico (nao palavra-chave).
