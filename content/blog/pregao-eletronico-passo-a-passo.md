@@ -1,8 +1,8 @@
 ---
 title: Pregão eletrônico passo a passo: como participar e vencer
-description: Guia completo do pregão eletrônico, como funciona, fases, prazos, etiqueta da disputa de lances, e estratégias práticas pra vencer.
+description: Guia completo do pregão eletrônico em 2026, como funciona, onde você dá o lance (não é no PNCP), fases, prazos, credenciamento nas plataformas, etiqueta da disputa e estratégias pra vencer.
 date: 2026-05-22
-keywords: pregão eletrônico, como participar pregão eletrônico, passo a passo pregão, fases pregão eletrônico, comprasnet
+keywords: pregão eletrônico, como participar pregão eletrônico, passo a passo pregão, fases pregão eletrônico, comprasnet, onde dar lance pregão, plataforma de lances licitação, pregão eletrônico 2026
 ---
 
 O **pregão eletrônico** é a modalidade dominante de licitação no Brasil. Mais de **80% dos editais** publicados no PNCP são pregão eletrônico. Quem aprende a fazer bem, vence licitação consistentemente.
@@ -15,9 +15,11 @@ Pregão eletrônico é uma modalidade de licitação para aquisição de **bens 
 
 Está previsto na **Lei 14.133/2021** e regulado em detalhes pelo **Decreto 10.024/2019** (que continua vigente).
 
-## Plataformas onde acontece
+## Onde você dá o lance (não é no PNCP)
 
-A licitação é **anunciada no PNCP**, mas a disputa acontece em plataformas próprias. As principais:
+Essa é a dúvida número um de quem está começando. O **PNCP (Portal Nacional de Contratações Públicas) é só a publicação oficial** da licitação, é onde todo edital tem que aparecer por lei, mas **você não dá lance ali**. O lance acontece na **plataforma que opera aquele pregão**, um sistema externo onde a sessão de disputa roda ao vivo, e onde sua empresa precisa estar **credenciada e logada** antes.
+
+Ou seja, o fluxo é: você **descobre** o edital no PNCP (ou numa ferramenta de monitoramento que lê o PNCP pra você), e depois vai até a **plataforma de origem** pra enviar proposta e disputar. As principais:
 
 - **Compras.gov.br** (Comprasnet), federal e muitos estados/municípios
 - **BLL Compras**: vários municípios
@@ -176,7 +178,9 @@ Pregão de produto físico exige entrega. Calcule frete, taxa, embalagem antes d
 
 ## Ferramenta que ajuda
 
-Plataformas como o [ContrataX](https://www.contratax.com.br) monitoram todos os editais do seu ramo no PNCP, leem o PDF completo e dizem se você está apto antes mesmo de você abrir. O alerta diário por e-mail garante que nenhum pregão importante passa batido, e o calendário automático de certidões evita o erro #2 da lista acima.
+Plataformas como o [ContrataX](https://www.contratax.com.br) monitoram todos os editais do seu ramo no PNCP, a **ContrataX.IA** lê o PDF completo e diz se você está apto antes mesmo de você abrir. O alerta diário por e-mail garante que nenhum pregão importante passa batido, e o calendário automático de certidões evita o erro #2 da lista acima. O ContrataX não dá o lance por você (isso é na plataforma da disputa, com o seu login), mas te leva pronto pra ela: com o veredito de aptidão e a calculadora que mostra até onde dá pra baixar o preço com margem.
+
+Se ainda ficou dúvida de onde exatamente se dá o lance e como funciona o credenciamento em cada plataforma, veja também a seção [Disputa de lances no pregão](/ajuda) na nossa Central de Ajuda.
 
 ## Resumo
 
