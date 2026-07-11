@@ -389,13 +389,18 @@ export function pesquisarPca({ termo = "", limite = 80 } = {}) {
   const d = abrir();
   const cond = []; const args = [];
   condTokens(termo, "descricao_norm", cond, args);
-  const where = cond.length ? "WHERE " + cond.join(" AND ") : "";
+  // So oportunidades AINDA POR VIR: "antecipada" e a data desejada no futuro. PCA
+  // e o Plano ANUAL, e ~74% dos itens tem data ja passada (o ano corrente e anos
+  // anteriores), o que contradiz a promessa da feature (se prepare ANTES do edital):
+  // data passada = ou a compra ja aconteceu, ou o edital ja saiu. Filtra fora.
+  const hoje = new Date().toISOString().slice(0, 10);
+  cond.push("data_desejada >= ?"); args.push(hoje);
+  const where = "WHERE " + cond.join(" AND ");
   const totalPre = d.prepare(`SELECT COUNT(*) n FROM pca_itens ${where}`).get(...args).n;
   if (!totalPre) return { total: 0, termo, itens: [], valorTotal: 0 };
-  // Futuras primeiro (data desejada >= hoje), depois por valor.
-  const hoje = new Date().toISOString().slice(0, 10);
+  // Todas ja sao futuras: ordena pela mais PROXIMA primeiro (data asc).
   const linhas = confirmaTokens(d.prepare(
-    `SELECT * FROM pca_itens ${where} ORDER BY (data_desejada >= '${hoje}') DESC, data_desejada ASC LIMIT 2000`
+    `SELECT * FROM pca_itens ${where} ORDER BY data_desejada ASC LIMIT 2000`
   ).all(...args), termo);
   if (!linhas.length) return { total: 0, termo, itens: [], valorTotal: 0 };
   const total = totalPre <= 2000 ? linhas.length : totalPre;

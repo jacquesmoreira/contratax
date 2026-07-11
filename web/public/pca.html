@@ -49,7 +49,7 @@ td { padding:9px 8px; border-top:1px solid var(--linha); font-size:13px; vertica
 
 <div class="wrap-main">
   <h1>Oportunidades Antecipadas <span style="font-size:14px;font-weight:700;color:var(--cinza-c)">(PCA)</span></h1>
-  <div class="sub">O que os órgãos <b>já planejaram comprar</b> este ano, com a <b>data desejada</b>. Você se prepara <b>antes</b> do edital sair. Fonte: Plano de Contratação Anual do PNCP.</div>
+  <div class="sub">O que os órgãos <b>ainda vão comprar</b>, com a <b>data desejada daqui pra frente</b>. Você se prepara <b>antes</b> do edital sair. Só mostramos itens com data ainda por vir (o que já passou não é mais oportunidade antecipada). Fonte: Plano de Contratação Anual do PNCP.</div>
   <div class="aviso" id="aviso">📈 <b>Base em construção:</b> a base de planos cresce a cada atualização. Se não encontrar agora, ainda não capturamos, volte em alguns dias.</div>
 
   <div class="busca">
@@ -84,7 +84,7 @@ async function buscar() {
       return;
     }
     const linhas = d.itens.map(i => `<tr>
-      <td>${esc(i.descricao)}${i.dataDesejada && i.dataDesejada >= hoje ? ' <span class="fut">futura</span>' : ""}</td>
+      <td>${esc(i.descricao)}</td>
       <td class="right">${i.quantidade != null ? Number(i.quantidade).toLocaleString("pt-BR") : "-"} ${esc((i.unidade||""))}</td>
       <td class="right" style="font-weight:700;color:var(--verde)">${brl(i.valorTotal)}</td>
       <td class="right">${dataBR(i.dataDesejada)}</td>
