@@ -1126,6 +1126,16 @@ Jacques mandou print de "fralda"/SC onde a página inteira era resultado literal
 
 **Pergunta do Jacques respondida (não é bug, é dado real):** "está certo aparecer a mesma empresa em todas as licitações como vencedora?" Confirmado no banco local que é padrão amplo do mercado público real, não bug nosso: `ALTERMED MATERIAL MEDICO HOSPITALAR LTDA` ganha em 65 municípios de SC (107 contratos), `CIRÚRGICA SANTA CRUZ` em 61, `MEDILAR` em 56, etc. Mecanismo provável: adesão à Ata de Registro de Preços ("carona"), onde um fornecedor vence uma licitação e várias outras prefeituras aderem à mesma ata sem licitar de novo, comum pra produto de nicho com poucos fornecedores regionais (caso de fralda geriátrica). Sistema está refletindo o dado real do PNCP fielmente.
 
+### 2026-07-11 (continuação) — sino de notificações não abria: regressão do próprio fix anterior (commit `90b5dc8`)
+
+Jacques clicou no sino (badge "1") e não aparecia nada. **Causa: regressão que eu mesmo introduzi** no fix "achata o menu Mais" (commit `9b48976`): pra não cortar itens de nav em tela estreita, adicionei `overflow-x:auto` na `.dir` inteira. Pegadinha do CSS que eu não tinha considerado: definir `overflow-x` força o `overflow-y` a virar `auto` também (não dá pra ter overflow-x:auto com overflow-y:visible), então a `.dir` passou a CORTAR o dropdown do sino (`#sino-menu`, position:absolute, "cai" pra baixo da barra), mesmo com `display:block` setado certo pelo JS.
+
+Corrigido isolando o scroll: os 8 links de navegação agora vivem dentro de um wrapper interno `.dir-scroll` (que recebe o `overflow-x:auto`), enquanto sino e "Sair" ficam FORA dessa caixa, direto dentro de `.dir` (que agora fica com `overflow:visible`, sem cortar dropdown nenhum). **Efeito colateral bom**: "Sair" agora fica sempre visível e clicável mesmo em tela estreita, sem precisar rolar (antes precisava).
+
+Validado: menu do sino abre com conteúdo real e fica 100% visível na tela (bounding rect dentro do viewport, cadeia de overflow dos ancestrais toda "visible", testado com fetch mockado simulando notificação real). Telas estreita (600px) e larga (1400px) revalidadas.
+
+**Lição registrada:** ao adicionar `overflow-x`/`overflow-y` num container, sempre checar se algum dropdown/menu `position:absolute` vive dentro dele (ou de qualquer ancestral) antes de assumir que só afeta o eixo pretendido.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
