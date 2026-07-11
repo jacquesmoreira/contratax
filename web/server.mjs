@@ -1276,8 +1276,15 @@ const servidor = createServer(async (req, res) => {
       const termos = customTermo
         ? customTermo.split(",").map(t => t.trim()).filter(Boolean)
         : (perfil?.filtro?.termos ?? []);
+      // Produto especifico? Se o termo digitado casa um gatilho do dicionario
+      // (fralda, seringa...), a busca e EXPANDIDA pra CATEGORIA do ramo, porque o
+      // contrato publico e registrado por categoria ("material hospitalar"), nao
+      // por item. Sinaliza pro front explicar (o produto vive DENTRO da categoria,
+      // o valor mostrado e do contrato inteiro da categoria, nao so do produto).
+      const ramoExpandido = customTermo ? expandirTermos(termos) : [];
+      const produtoEspecifico = ramoExpandido.length > 0;
       const termosIA = customTermo
-        ? [...termosAmplos(termos), ...expandirTermos(termos)]
+        ? [...termosAmplos(termos), ...ramoExpandido]
         : (perfil?.filtro?.termosIA ?? []);
       // Exclui obra/servico quando o termo digitado e produto de ramo (ex: cimento).
       const termosExcluir = customTermo ? excluirTermos(termos) : (perfil?.filtro?.termosExcluir ?? []);
@@ -1339,7 +1346,10 @@ const servidor = createServer(async (req, res) => {
       const totalContratos = lista.reduce((s, g) => s + (g.qtdContratos || 0), 0);
       const paginas = Math.ceil(total / porPag);
       const licitacoes = lista.slice((pag - 1) * porPag, pag * porPag);
-      return json(res, 200, { total, totalContratos, paginas, pagina: pag, termos, licitacoes });
+      // ramoCategorias = as frases de categoria pra onde o produto foi expandido
+      // (sem aspas), pro front citar "material hospitalar" na nota de honestidade.
+      const ramoCategorias = [...new Set(ramoExpandido.map((t) => t.replace(/"/g, "")))].slice(0, 4);
+      return json(res, 200, { total, totalContratos, paginas, pagina: pag, termos, licitacoes, produtoEspecifico, ramoCategorias });
     }
 
     // Declaracoes de habilitacao preenchidas com os dados da empresa.
@@ -1407,6 +1417,55 @@ const servidor = createServer(async (req, res) => {
           usoDisco().catch(() => null),
         ]);
         return json(res, 200, { volume, itensIndexados: totalItensEdital(), ...arquivos });
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
+      }
+    }
+
+    // Diagnostico de COBERTURA de dados (admin): fotografa o quanto cada base
+    // realmente tem em PRODUCAO. Serve pra decidir se o "historico raso" e falta
+    // de backfill (poucos contratos) ou de granularidade (contrato e por
+    // categoria, produto vive nos itens que nao indexamos). GET ?c=ADMIN&uf=SC&cidade=...
+    if (rota === "/api/admin/cobertura") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const { abrir } = await import("../src/db.mjs");
+        const d = abrir();
+        const uf = url.searchParams.get("uf") || null;
+        const cidade = url.searchParams.get("cidade") || null;
+        const um = (sql, ...a) => { try { return d.prepare(sql).get(...a); } catch (e) { return { erro: e.message }; } };
+        const lista = (sql, ...a) => { try { return d.prepare(sql).all(...a); } catch (e) { return [{ erro: e.message }]; } };
+        const contratos = {
+          total: um("SELECT COUNT(*) n FROM contratos").n,
+          datas: um("SELECT MIN(publicacao) minPub, MAX(publicacao) maxPub, MIN(vigencia_inicio) minVig, MAX(vigencia_inicio) maxVig FROM contratos"),
+          topUf: lista("SELECT uf, COUNT(*) n FROM contratos GROUP BY uf ORDER BY n DESC LIMIT 10"),
+          comFralda: um("SELECT COUNT(*) n FROM contratos WHERE objeto LIKE '%ralda%'").n,
+          comHospitalar: um("SELECT COUNT(*) n FROM contratos WHERE objeto LIKE '%ospitalar%' OR objeto LIKE '%nfermagem%'").n,
+        };
+        const precosItens = {
+          total: um("SELECT COUNT(*) n FROM precos_itens").n,
+          datas: um("SELECT MIN(data_resultado) min, MAX(data_resultado) max FROM precos_itens"),
+          topUf: lista("SELECT uf, COUNT(*) n FROM precos_itens GROUP BY uf ORDER BY n DESC LIMIT 10"),
+          comFralda: um("SELECT COUNT(*) n FROM precos_itens WHERE descricao_norm LIKE '%fralda%'").n,
+        };
+        const editais = {
+          total: um("SELECT COUNT(*) n FROM editais").n,
+          abertos: um("SELECT COUNT(*) n FROM editais WHERE encerramento >= ?", new Date().toISOString()).n,
+          itensIndexados: um("SELECT COUNT(*) n FROM itens_edital").n,
+        };
+        // Recorte opcional por UF/cidade, pra checar um municipio especifico (BC).
+        let recorte = null;
+        if (uf) {
+          const cond = cidade ? "uf=? AND municipio LIKE ?" : "uf=?";
+          const args = cidade ? [uf, `%${cidade}%`] : [uf];
+          recorte = {
+            uf, cidade,
+            contratos: um(`SELECT COUNT(*) n FROM contratos WHERE ${cond}`, ...args).n,
+            precosItens: um(`SELECT COUNT(*) n FROM precos_itens WHERE ${cond}`, ...args).n,
+            amostraObjetos: lista(`SELECT DISTINCT substr(objeto,1,70) obj FROM contratos WHERE ${cond} ORDER BY publicacao DESC LIMIT 15`, ...args).map((r) => r.obj),
+          };
+        }
+        return json(res, 200, { contratos, precosItens, editais, recorte, agora: new Date().toISOString() });
       } catch (e) {
         return json(res, 500, { erro: e.message });
       }
