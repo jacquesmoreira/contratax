@@ -3,7 +3,7 @@
 // por isso e instantaneo e serve todos os clientes a partir de um unico acervo.
 
 import { consultar, casarPerfil } from "./db.mjs";
-import { termosAmplos } from "./filtro.mjs";
+import { expandirRamoCurado } from "./sinonimos.mjs";
 import { carregarVistos, marcarVistos, salvarResultados } from "./store.mjs";
 
 // Abaixo deste numero de editais no estado do cliente, o painel ALARGA pro Brasil
@@ -27,10 +27,12 @@ export async function monitorar(perfil, { marcar = true, salvar = true } = {}) {
   const filtro = perfil.filtro ?? {};
 
   // Recorte grosso (UF/modalidade/valor) e recorte fino por palavra-chave.
-  // termosIA = expansao semantica (sinonimos do ramo) + palavras distintivas
-  // derivadas dos termos crus. Isto amplia a ABERTURA do painel pro ramo inteiro
-  // (ex: "material hospitalar" tambem traz "hospitalar"), que e o que o cliente
-  // quer ao logar. A busca manual continua literal.
+  // termosIA = expansao do ramo pro feed: os termos que a IA gerou no cadastro
+  // MAIS a expansao CURADA (frases do ramo entre aspas). Antes usava termosAmplos,
+  // que derrubava a palavra generica e buscava a distintiva SOLTA ("material
+  // hospitalar" -> "hospitalar"), trazendo servico/roupa/equipamento hospitalar.
+  // A curada da recall do ramo (frases-irmas: "insumo hospitalar", "material de
+  // enfermagem") SEM o lixo. A busca manual continua literal (sem essa expansao).
   const recorte = {
     modalidades: perfil.modalidades ?? [],
     valorMin: filtro.valorMin ?? null,
@@ -39,7 +41,7 @@ export async function monitorar(perfil, { marcar = true, salvar = true } = {}) {
   };
   const termosBusca = {
     termos: filtro.termos ?? [],
-    termosIA: [...(filtro.termosIA ?? []), ...termosAmplos(filtro.termos ?? [])],
+    termosIA: [...(filtro.termosIA ?? []), ...expandirRamoCurado(filtro.termos ?? [])],
     termosExcluir: filtro.termosExcluir ?? [],
   };
 

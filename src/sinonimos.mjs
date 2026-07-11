@@ -167,6 +167,54 @@ export function expandirRamo(termo) {
   return [...out].map(aspasSeFrase);
 }
 
+// Raizes de uma frase, em ordem, pra comparar "material hospitalar" com
+// "materiais hospitalares" (tolera plural/genero). Ex: "material hospitalar".
+const raizesFrase = (s) => normalizar(s).split(/[^a-z0-9]+/).filter(Boolean).map(raiz).join(" ");
+
+// Grupos cujo AMPLO casa com o termo do cliente: ele cadastrou a FRASE DE
+// CATEGORIA do ramo ("material hospitalar", "material de limpeza") em vez de um
+// produto especifico. Casa por raiz (plural/genero) pra "materiais hospitalares"
+// achar o grupo de "material hospitalar". So casa frase >= 2 palavras (palavra
+// generica solta, tipo "material", casaria varios grupos = ruido).
+// Casamento: exato (rn===ra), OU o amplo contem o termo do cliente (ra.includes),
+// OU o termo do cliente contem um amplo de 2+ PALAVRAS (rn.includes com ra >= 2
+// palavras). A restricao de 2+ palavras no ultimo caso evita falso positivo:
+// "uniforme escolar" contem "uniforme" (amplo solto do grupo EPI) e cairia no
+// ramo errado. Exigir que o amplo contido seja frase (>= 2 palavras) corta isso.
+function gruposPorAmplo(termo) {
+  const n = normalizar(termo ?? "").trim();
+  if (!n || n.split(/\s+/).length < 2 || /^".*"$/.test((termo ?? "").trim())) return { n, grupos: [] };
+  const rn = raizesFrase(n);
+  const grupos = GRUPOS_PREP.filter((g) =>
+    g.amplos.some((a) => {
+      const ra = raizesFrase(a);
+      return rn === ra || ra.includes(rn) || (ra.split(" ").length >= 2 && rn.includes(ra));
+    }));
+  return { n, grupos };
+}
+
+// Expansao CURADA pro FEED do painel (recall sem lixo). Quando o cliente cadastrou
+// uma FRASE DE CATEGORIA do ramo ("material hospitalar", "material de limpeza"),
+// expande pras frases-IRMAS do mesmo grupo ("insumo hospitalar", "material de
+// enfermagem"...), todas entre aspas (frase exata/contigua). Da recall do ramo SEM
+// o "hospitalar" solto que o antigo termosAmplos gerava (e que trazia servico/
+// roupa/equipamento hospitalar). ESCOPO: so o caminho do AMPLO (frase de
+// categoria). NAO expande PRODUTO->ramo aqui de proposito: fazer isso no feed
+// levaria "atadura" de ~5 pra ~125 editais no painel de todo cliente de produto
+// (mudanca grande de comportamento, fora do que foi reportado). Produto no feed
+// segue casando literal (objeto + itens), como antes.
+export function expandirRamoCurado(termos = []) {
+  const out = new Set();
+  for (const t of termos) {
+    const { grupos } = gruposPorAmplo(t);
+    const rn = raizesFrase(t);
+    for (const g of grupos) for (const a of g.amplos) {
+      if (raizesFrase(a) !== rn) out.add(a); // nao re-adiciona o proprio termo do cliente
+    }
+  }
+  return [...out].map(aspasSeFrase);
+}
+
 // Termos a EXCLUIR quando o produto buscado tem ramo com sinais de obra/servico.
 // Ex: quem busca "cimento" quer COMPRAR cimento, nao ver licitacoes de OBRA que
 // so citam cimento junto com mao de obra. So construcao define `excluir` hoje.
