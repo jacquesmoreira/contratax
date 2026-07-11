@@ -1144,6 +1144,25 @@ Jacques olhou o PCA e estranhou datas de 2025 (ex: 30/12/2025) numa feature de "
 
 Jacques testou upgrade de plano E compra de assento e recebeu na tela o JSON cru: `Asaas 400: invalid_customer / Não é possível criar uma cobrança para um cliente removido`. Causa: o `asaasClienteId` guardado no perfil dele apontava pra um cliente REMOVIDO no Asaas (provável limpeza de testes), e `obterOuCriarCliente` reusava o id cegamente. 3 correções: (1) `obterOuCriarCliente` (asaas.mjs) agora VALIDA o id via GET /customers/{id}; se 404 ou deleted, recria; (2) novo helper `clienteAsaasDoPerfil` (server.mjs) obtém/cria E PERSISTE o id novo (upgrade e assentos chamavam obterOuCriarCliente mas não salvavam, só o avulso salvava); (3) novo `mensagemPagamento` traduz o erro do gateway pra mensagem amigável e loga o cru no servidor, aplicado nos 3 catches. **Nota:** o Asaas real não dá pra testar local (sem credenciais); validado por sintaxe + unit da tradução de erro. Jacques deve retestar o upgrade em produção depois do deploy. Edge-case remanescente (não tratado, específico da conta quebrada dele): a `asaasSubscriptionId` recorrente ainda pode apontar pra assinatura órfã do cliente antigo removido; a cobrança pró-rata (avulsa) do upgrade funciona com o cliente recriado, mas se a atualização de valor da assinatura recorrente falhar depois, é logada, não quebra o pagamento.
 
+### 2026-07-11 (continuação) — AUDITORIA COMPLETA do sistema (commit `03b411c`)
+
+Jacques pediu auditoria completa: integrações, menus, acessos, navegabilidade, código inteiro. Feita por camadas, com varredores automatizados (scripts descartáveis, não commitados):
+
+**O que foi checado e está SAUDÁVEL:**
+1. **Sintaxe**: 100 arquivos .mjs (`node --check`) + 28 páginas HTML (parse de todos os blocos `<script>` + validação dos JSON-LD). Zero erro.
+2. **Links × rotas**: toda URL interna usada nas 28 páginas (href, fetch, location.href) cruzada contra as 181 rotas exatas + 8 prefixos do server.mjs. Zero link quebrado.
+3. **Wiring de IDs**: todo `getElementById` literal cruzado contra `id=` existente (estático ou em template). 1 achado (código morto, corrigido, abaixo).
+4. **Gating de acesso**: `ROTAS_PROTEGIDAS` cobre a rota da página E a variante `.html` (via `startsWith(p + ".")`); o servidor de estáticos só serve imagem/js, NUNCA .html (não dá pra burlar o paywall pedindo o arquivo direto); path traversal bloqueado; guard exige token com acesso + sessão viva; `/admin` serve só a casca (toda API admin valida `LICITA_ADMIN_TOKEN`); webhook Asaas falha-fechado (sem `ASAAS_WEBHOOK_TOKEN` rejeita, com token errado 401).
+5. **Navegação**: as 16 telas do painel leem o token `?c=` e têm volta pro `/painel?c=token`. 100%.
+6. **Rotas duplicadas**: 7 pares, todos GET/POST legítimos com POST checado primeiro. Sem shadowing.
+7. **Copy**: zero travessão em blog/ajuda/páginas (só 2 em comentário de código, invisíveis); marca ContrataX.IA consistente (13 menções no painel, 17 na LP; única "IA" genérica restante é nome de produto de concorrente no comparativo, correto).
+8. **Boot/background**: backfill (60s pós-boot), colheita de itens (90s), digest diário, uncaughtException com triagem FS/SQLite, SIGTERM graceful. Coerentes.
+
+**3 problemas achados e CORRIGIDOS:**
+1. **Bug de resiliência (server.mjs, monitor de memória)**: o ramo crítico (95% do limite → `process.exit(1)` pra Railway reiniciar limpo) era `else-if` DEPOIS do ramo de 80%, logo **inalcançável** (acima de 95% sempre caía no de 80%). O restart protetivo nunca disparava. Ordem invertida (crítico primeiro). Relevante pro histórico de crashes do Railway (tarefa #62).
+2. **Código morto (index.html)**: `verItens()` (~30 linhas) sem chamador nenhum, referenciando `#itens-bloco` que não existe na página. Removida (itens.html tem a versão viva própria).
+3. **Travessões remanescentes em texto visível**: descrição do pró-rata de assentos (`assinatura.mjs`, vai pra cobrança) + 3 no e-mail de backup off-site. Corrigidos.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
