@@ -1030,7 +1030,7 @@ Commits: `7aaea7f` (perfil), `d9eaa4a` (chips), `267d72c` (Kanban). Todos em pro
 3. **Upgrade de plano não cobria a família Assessoria** (`conta.html`): a lista de candidatos a upgrade era fixa (`["starter","basico","pro"]`), então um cliente de Assessoria 10 não via NENHUMA opção de upgrade pra Assessoria 25 (não é que via opção errada, o backend já validava por preço via `calcularProRata` e escondia opções inválidas, mas o problema real era a ausência total da opção certa). Corrigido pra montar a lista dinamicamente a partir do catálogo `/api/planos`, comparando por preço e filtrando pela mesma família (`assessoria: true/false`), então cada plano só sobe dentro da própria família. Testado com 3 cenários mockados (assessoria10→assessoria25, básico→pro, pro→lista vazia). Commit `5126acd`.
 4. **Dois bugs de UX reportados pelo Jacques usando o painel:** (a) a logo dentro do painel logado apontava pra `/` (LP pública), então clicar nela derrubava o cliente numa tela de login, parecendo que ele tinha sido deslogado, corrigido pra sempre voltar pro `/painel?c=token` do próprio cliente; (b) o Kanban de Planejamento (item 3 do benchmark QLicitações acima) tinha ficado escondido demais, o link saiu do dropdown "Mais" e virou item fixo da nav, e o botão "+ Planejamento" no card ganhou tooltip explicando o que é e, depois de clicado, virou link direto pro quadro em vez de só mudar de cor sem levar a lugar nenhum. Commit `b13af08`.
 
-Todos os 4 validados (parse-check dos scripts + teste funcional no navegador com fetch interceptado). **Status de deploy (conferido direto com `git log origin/main..HEAD`, não supor):** os itens 1, 2 e 3 (`00dda40`, `dacd38d`, `5126acd`) já estão em produção. O item 4 (`b13af08`) ainda está só commitado local, esperando confirmação do Jacques pra dar push (dispara deploy automático no Railway pro painel que clientes reais usam agora).
+Todos os 4 validados (parse-check dos scripts + teste funcional no navegador com fetch interceptado) e **em produção** (Jacques confirmou o push logo em seguida, `5126acd..9ebef1f`).
 
 ### 2026-07-10 (continuação) — mais 2 ideias do benchmark com o PainelGov (site parecido que o Jacques mandou prints)
 
@@ -1041,7 +1041,19 @@ Jacques mandou ~20 prints do `painelgov.com.br`, concorrente direto. Achado prin
 
 Validado com parse-check dos 3 arquivos + teste funcional no navegador (fetch interceptado, sem tocar em conta real): transparência aparece/some corretamente conforme os números, concordância gramatical testada nos dois casos, link "Monitorar" gera a URL certa, `conta.html` pré-adiciona e não duplica termo já existente.
 
-Commit `07137dc`. Ainda não está em produção, aguardando push (junto com `b13af08` acima, ver seção anterior).
+Commit `07137dc`. Em produção junto com o restante do lote (`5126acd..9ebef1f`).
+
+### 2026-07-10 (continuação) — Central de Ajuda ganha passo a passo visual do painel
+
+Jacques pediu um manual em PDF pro painel, com prints, setas apontando pra cada botão e legenda explicando embaixo. Sugeri (e ele topou) enriquecer a Central de Ajuda que já existe em vez de criar um PDF avulso: fica web (linkável, indexável), editável direto no código (não é imagem estática que envelhece a cada mudança de UI, e essa sessão sozinha mudou a UI várias vezes) e não duplica canal de conteúdo.
+
+Print de tela de verdade não é confiável neste ambiente (a ferramenta de preview trava ao tentar capturar, problema recorrente já visto antes nesta sessão). Solução: recriações fiéis em HTML/CSS (`passoAPassoHTML()` em `src/ajuda.mjs`), reaproveitando as cores e fontes reais do produto, com tags numeradas coladas diretamente ao lado de cada elemento (em vez de setas com posicionamento absoluto por coordenada, que eu não teria como validar sem conseguir tirar print). Cada seção tem uma legenda numerada logo abaixo, número por número.
+
+6 seções cobrindo o produto inteiro: painel automático (o feed por ramo), leitura de edital pela IA (TL;DR + veredito de aptidão), busca avulsa e o "Monitorar" (a feature nova de hoje), documentos e certidões, Planejamento (Kanban), e ajuste de ramo/UF na Conta. Nav-âncora no topo pra pular direto pra qualquer seção. A Central de Ajuda existente (FAQ em markdown) continua intacta logo abaixo, sem nenhuma pergunta perdida.
+
+Validado sem tocar em conta real: parse-check, contagem de tags numeradas batendo 1:1 com itens da legenda em cada uma das 6 seções (não pode sobrar nem faltar número), `<b>` das legendas renderizando como negrito de verdade (não como texto cru), nav-âncora batendo com os ids das seções, FAQ preservada (10 perguntas intactas), sem overflow horizontal introduzido pela seção nova (o overflow que apareceu no teste mobile já existia antes, no nav do topo e banner de cookie, fora do escopo desta mudança, registrado aqui como pendência menor pra outra hora).
+
+Commit `c15a3db`.
 
 ---
 
