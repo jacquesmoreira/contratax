@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdirSync } from "node:fs";
-import { normalizar, aplicarFiltro, tokenSignificativo, termosAmplos, contemPalavra } from "./filtro.mjs";
+import { normalizar, aplicarFiltro, tokenSignificativo, contemPalavra, palavrasProximas } from "./filtro.mjs";
 import { expandirTermos, excluirTermos } from "./sinonimos.mjs";
 
 // Monta condicoes SQL exigindo TODOS os tokens significativos do termo (mesma
@@ -267,7 +267,12 @@ export function editaisIdsPorItem(termo, { teto = 4000 } = {}) {
   ).all(...args, teto);
   const mapa = new Map();
   for (const l of linhas) {
-    if (!mapa.has(l.edital_id) && tokens.every((t) => contemPalavra(t, l.descricao_norm))) {
+    // Palavra inteira (confirma o prefiltro LIKE) E proximidade: as palavras do
+    // termo tem que aparecer JUNTAS no MESMO item, nao espalhadas em trechos sem
+    // relacao (ex: "material de alta resistencia" + "atendimento pre-hospitalar"
+    // no mesmo item de uma bolsa de resgate nao e "material hospitalar").
+    const casaTudo = tokens.every((t) => contemPalavra(t, l.descricao_norm)) && palavrasProximas(tokens, l.descricao_norm);
+    if (!mapa.has(l.edital_id) && casaTudo) {
       mapa.set(l.edital_id, l.descricao);
     }
   }
@@ -715,10 +720,13 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
   }
   const candidatos = consultar({ ufs: uf ? [uf] : [], apenasAbertos: true });
   const termos = termo && termo.trim() ? [termo.trim()] : [];
-  // Expande produto -> ramo: quem busca "atadura" ve os editais de "material
-  // hospitalar" (o produto mora nos itens, nao no objeto). Sem isso a LP dava
-  // zero e matava cadastro. termosAmplos cobre o caso de termo de 2 palavras.
-  const expandido = [...termosAmplos(termos), ...expandirTermos(termos)];
+  // Expande produto -> ramo APENAS pelo dicionario curado (produto especifico ->
+  // frases do ramo, ex: "atadura" -> "material hospitalar"). NAO usa termosAmplos
+  // (derruba uma palavra generica e busca so a distintiva sozinha): pra um termo
+  // que ja e de 2 palavras ("material hospitalar"), reduzir a "hospitalar" trazia
+  // lixo (roupa hospitalar, manutencao hospitalar, engenharia hospitalar). Na
+  // busca o cliente quer PRECISAO; o recall de produto especifico vem do curado.
+  const expandido = [...expandirTermos(termos)];
   // Exclui obra/servico quando o termo e um produto de ramo que pede isso (ex:
   // "cimento" nao deve trazer licitacao de OBRA, so a compra do material).
   const excluirList = excluirTermos(termos);
@@ -769,10 +777,12 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
     // Perfil/export: usa os termos como vieram (ja sao o ramo do cliente).
     casaram = aplicarFiltro(candidatos, { termos, termosExcluir: excluirList });
   } else {
-    // Busca livre do PAINEL: recall (painel cheio), com os PRECISOS (objeto +
-    // itens) ranqueados no topo. O ramo vem abaixo. Sem o indice de itens nao da
-    // pra ter "cheio" E "sem ramo errado" ao mesmo tempo (so o titulo e visivel).
-    const expandido = [...termosAmplos(termos), ...expandirTermos(termos)];
+    // Busca livre do PAINEL: PRECISOS (objeto + itens, com proximidade) rankeados
+    // no topo. Expansao de ramo APENAS pelo dicionario curado (produto -> frases
+    // do ramo), sem termosAmplos: derrubar uma palavra generica e buscar so a
+    // distintiva sozinha ("material hospitalar" -> "hospitalar") trazia lixo
+    // (servico/equipamento/roupa hospitalar). Na busca vale PRECISAO.
+    const expandido = [...expandirTermos(termos)];
     casaram = casarComExpansao(candidatos, termos, termo, expandido, excluirList);
   }
   // Registro de Precos (SRP): "sim" so atas, "nao" sem ata.

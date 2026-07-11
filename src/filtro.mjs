@@ -55,8 +55,60 @@ export function contemPalavra(w, objetoNorm) {
   return false;
 }
 
+// Folga de proximidade pra termo multi-palavra NOS ITENS (descricao curta de cada
+// item do edital). A janela exigida = nº de palavras do termo + esta folga. Ex:
+// "material hospitalar" (2 palavras) + folga 2 = janela 4: as duas palavras
+// precisam aparecer num trecho de no maximo 4 posicoes uma da outra dentro do
+// MESMO item. Deixa passar "material hospitalar", "material medico hospitalar",
+// "material de consumo hospitalar", mas BARRA "material de alta resistencia (...)
+// atendimento pre-hospitalar" (bolsa de resgate: 15+ palavras entre elas, contextos
+// sem relacao). So se aplica aos itens; no objeto (prosa longa) nao ha proximidade.
+const JANELA_PROX = Number(process.env.LICITA_JANELA_PROX || 2);
+
+// Menor distancia (em posicoes de palavra) de uma janela que contenha TODAS as
+// palavras-alvo no texto, tolerando plural/genero (raiz). Infinity se faltar alguma.
+// Varredura por ponteiros: textos sao curtos (objeto/item ~ dezenas de palavras).
+export function menorJanela(palavras, textoNorm) {
+  const tokens = textoNorm.split(/[^a-z0-9]+/).filter(Boolean);
+  const alvos = palavras.map(raiz);
+  const posicoes = alvos.map(() => []);
+  for (let i = 0; i < tokens.length; i++) {
+    const r = raiz(tokens[i]);
+    for (let k = 0; k < alvos.length; k++) {
+      if (r === alvos[k] || tokens[i] === alvos[k]) posicoes[k].push(i);
+    }
+  }
+  if (posicoes.some((p) => p.length === 0)) return Infinity;
+  const ponteiros = alvos.map(() => 0);
+  let melhor = Infinity;
+  for (;;) {
+    let min = Infinity, max = -Infinity, kMin = 0;
+    for (let k = 0; k < alvos.length; k++) {
+      const p = posicoes[k][ponteiros[k]];
+      if (p < min) { min = p; kMin = k; }
+      if (p > max) max = p;
+    }
+    if (max - min < melhor) melhor = max - min;
+    if (melhor === 0) break;
+    ponteiros[kMin]++;
+    if (ponteiros[kMin] >= posicoes[kMin].length) break;
+  }
+  return melhor;
+}
+
+// Verdadeiro se todas as `palavras` significativas aparecem PROXIMAS no texto.
+export function palavrasProximas(palavras, textoNorm) {
+  if (palavras.length <= 1) return true;
+  return menorJanela(palavras, textoNorm) <= palavras.length + JANELA_PROX;
+}
+
 // Casa um sub-termo: TODAS as suas palavras (>= 3 letras) aparecem no objeto,
 // tolerando plural e genero. Match por PALAVRA INTEIRA (nunca substring).
+// OBS: no OBJETO nao exigimos proximidade de proposito. O objeto e prosa longa
+// ("aquisicao de Orteses, Proteses e Materiais Especiais (...) para as Unidades
+// Hospitalares") onde as palavras de uma compra legitima ficam a 8-10 palavras de
+// distancia. A proximidade so vale nos ITENS (texto curto), onde palavras
+// espalhadas indicam contextos sem relacao de verdade (ver editaisIdsPorItem).
 function subTermoCasa(sub, raizesObjeto, objetoNorm) {
   const palavras = sub.split(/[^a-z0-9]+/).filter(tokenSignificativo);
   if (!palavras.length) return contemPalavra(sub, objetoNorm);
