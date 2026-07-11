@@ -1112,6 +1112,14 @@ Jacques apontou que Documentos, Declarações, Histórico, Equipe e Conta, escon
 
 Removido o dropdown "Mais" (markup + CSS + JS de toggle, morto). Wiring de href por token conferido certo nos 8 links (testado com fetch mockado simulando conta válida).
 
+### 2026-07-11 (continuação) — histórico: separa "exato" de "categoria" (commit `3f14fd1`)
+
+Jacques testou de novo em produção (após o fix do LIMIT) e notou que "fralda" trazia junto, sem aviso, licitações literais de fralda misturadas com licitações genéricas de "MATERIAIS AMBULATORIAIS E INSUMOS HOSPITALARES" (a categoria onde fralda costuma estar, mas o título não confirma). Pediu pra resolver isso pra **qualquer termo buscado**, não só fralda.
+
+Cada grupo de contrato agora ganha um flag `exato` (o objeto casa os termos LITERAIS digitados, sem a expansão `termosIA`, reaproveitando `aplicarFiltro`). Ordenação: exatos primeiro, depois por data dentro de cada grupo. Retorna `totalExato` também. Front separa em 2 seções com cabeçalho ("🎯 Resultados exatos de X (N)" / "📂 Também na mesma categoria... (N)") só quando a página tem os dois tipos misturados; se só tem um tipo, mostra lista simples sem cabeçalho redundante. Funciona genérico: se o termo buscado já É a frase de categoria (ex: "material de limpeza"), ele mesmo cai como exato.
+
+Validado com dado real de produção: "material de limpeza"/SC = 101 exato de 102. "fralda" nacional = 14 exato + 16 categoria numa mesma página, as duas seções renderizando com contagem certa.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
