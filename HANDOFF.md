@@ -1136,6 +1136,10 @@ Validado: menu do sino abre com conteúdo real e fica 100% visível na tela (bou
 
 **Lição registrada:** ao adicionar `overflow-x`/`overflow-y` num container, sempre checar se algum dropdown/menu `position:absolute` vive dentro dele (ou de qualquer ancestral) antes de assumir que só afeta o eixo pretendido.
 
+### 2026-07-11 (continuação) — PCA "Oportunidades Antecipadas" mostrava datas passadas (commit `49de910`)
+
+Jacques olhou o PCA e estranhou datas de 2025 (ex: 30/12/2025) numa feature de "oportunidades **antecipadas**", que deveriam ser futuras. Confirmado no banco: ~74% dos itens do PCA têm `data_desejada` já passada (o ano corrente com placeholders tipo 01/01/2026, e anos anteriores). Data passada = ou a compra já aconteceu ou o edital já saiu, contradiz a promessa (se prepare ANTES). Corrigido: `pesquisarPca` (db.mjs) agora filtra `data_desejada >= hoje` no SQL, ordena por mais próxima primeiro. Front (pca.html): removido o selo "futura" (redundante agora) e intro atualizada. Validado por node: busca vazia = 157 itens, 0 passados, primeiras datas 15/07/2026+. **Tradeoff aceito e explicado ao Jacques:** filtro estrito de futuro reduz o volume (some o placeholder 01/01/2026 que significa "durante 2026"), mas cada resultado passa a ser genuinamente antecipável, o que casa com a promessa da feature. Se depois quiser recuperar os placeholders de ano-corrente, a alternativa seria regra ano-aware (`data >= hoje OR ano_pca >= ano_atual`).
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
