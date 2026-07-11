@@ -146,7 +146,7 @@ async function carregar(pag = 1) {
     notaRamo.style.display = "none";
   }
 
-  $("lista").innerHTML = d.licitacoes.map(l => {
+  const cardHTML = (l) => {
     const vs = l.vencedores.map((v, i) => `
       <div class="venc" style="${i > 0 ? 'margin-top:7px' : ''}">
         <div class="ic">${esc(iniciais(v.fornecedor))}</div>
@@ -167,7 +167,25 @@ async function carregar(pag = 1) {
       <div style="margin-top:10px">${vs}</div>
       ${multis}
     </div>`;
-  }).join("");
+  };
+
+  // Separa EXATO (o objeto casa literalmente o termo buscado) de CATEGORIA (so
+  // casou pela expansao de ramo, ex: buscou "fralda" e o contrato e "MATERIAIS
+  // AMBULATORIAIS E INSUMOS HOSPITALARES"). Vale pra qualquer termo, nao so
+  // produto especifico. So separa em secoes quando os dois tipos aparecem juntos
+  // nesta pagina, senao a divisao e ruido (lista de um so tipo fica igual a antes).
+  const exatos = d.licitacoes.filter((l) => l.exato);
+  const categoria = d.licitacoes.filter((l) => !l.exato);
+  const termoTxt = esc(d.termos.join(", "));
+  if (exatos.length && categoria.length) {
+    $("lista").innerHTML =
+      `<div style="font-size:12.5px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px;margin:4px 0 10px">🎯 Resultados exatos de "${termoTxt}" (${exatos.length})</div>` +
+      exatos.map(cardHTML).join("") +
+      `<div style="font-size:12.5px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px;margin:22px 0 10px">📂 Também na mesma categoria, pode incluir "${termoTxt}" ou itens relacionados (${categoria.length})</div>` +
+      categoria.map(cardHTML).join("");
+  } else {
+    $("lista").innerHTML = d.licitacoes.map(cardHTML).join("");
+  }
 
   // Paginação
   if (totalPag > 1) {

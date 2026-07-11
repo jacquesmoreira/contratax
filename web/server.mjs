@@ -1338,16 +1338,28 @@ const servidor = createServer(async (req, res) => {
           (g.fornecedores.get(c.fornecedor || "Não informado") || 0) + (c.valor || 0));
         grupos.set(chave, g);
       }
-      // Ordena do mais recente ao mais antigo
-      const lista = [...grupos.values()].sort((a, b) => (b.data || "").localeCompare(a.data || "")).map(g => ({
+      // Marca EXATO vs CATEGORIA: exato = o objeto casa os termos LITERAIS (sem a
+      // expansao termosIA). Categoria = so casou via expansao de ramo (ex: buscou
+      // "fralda", o contrato e "MATERIAIS AMBULATORIAIS E INSUMOS HOSPITALARES",
+      // fralda pode estar la dentro mas o titulo nao confirma). Vale pra QUALQUER
+      // termo buscado, nao so produto especifico: se o cliente digitou 2+ palavras
+      // que ja SAO a frase de categoria (ex: "material hospitalar"), o proprio
+      // objeto casa direto nos termos literais e cai como exato tambem.
+      const ehExato = (objeto) => aplicarFiltro([{ objeto }], { termos }).length > 0;
+      // Ordena: EXATOS primeiro, depois por data (mais recente primeiro) dentro de cada grupo.
+      const lista = [...grupos.values()]
+        .map((g) => ({ ...g, exato: ehExato(g.objeto) }))
+        .sort((a, b) => (b.exato - a.exato) || (b.data || "").localeCompare(a.data || ""))
+        .map(g => ({
         objeto: g.objeto, orgao: g.orgao, municipio: g.municipio, uf: g.uf,
-        data: g.data, vigenciaFim: g.vigenciaFim,
+        data: g.data, vigenciaFim: g.vigenciaFim, exato: g.exato,
         valorTotal: g.valorTotal, qtdContratos: g.qtdContratos,
         vencedores: [...g.fornecedores.entries()]
           .sort((a, b) => b[1] - a[1]).slice(0, 3)
           .map(([fornecedor, valor]) => ({ fornecedor, valor })),
       }));
       const total = lista.length;
+      const totalExato = lista.filter((g) => g.exato).length;
       // Soma de contratos de TODOS os grupos (cada "compra"/objeto agrupa N
       // contratos): mostra que "5 compras" pode significar centenas de contratos.
       const totalContratos = lista.reduce((s, g) => s + (g.qtdContratos || 0), 0);
@@ -1356,7 +1368,7 @@ const servidor = createServer(async (req, res) => {
       // ramoCategorias = as frases de categoria pra onde o produto foi expandido
       // (sem aspas), pro front citar "material hospitalar" na nota de honestidade.
       const ramoCategorias = [...new Set(ramoExpandido.map((t) => t.replace(/"/g, "")))].slice(0, 4);
-      return json(res, 200, { total, totalContratos, paginas, pagina: pag, termos, licitacoes, produtoEspecifico, ramoCategorias });
+      return json(res, 200, { total, totalExato, totalContratos, paginas, pagina: pag, termos, licitacoes, produtoEspecifico, ramoCategorias });
     }
 
     // Declaracoes de habilitacao preenchidas com os dados da empresa.
