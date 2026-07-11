@@ -1830,37 +1830,6 @@ function alternarNivel(nivel, btn) {
   aplicarFiltrosCards();
 }
 
-// Carrega e mostra os itens da licitacao (lazy, ao clicar).
-async function verItens(id) {
-  const bloco = document.getElementById("itens-bloco");
-  if (!bloco) return;
-  bloco.innerHTML = `<div class="carregando" style="padding:8px"><span class="spinner"></span>Buscando os itens no PNCP...</div>`;
-  try {
-    const d = await (await fetch("/api/edital-itens?id=" + encodeURIComponent(id))).json();
-    const itens = d.itens || [];
-    if (!itens.length) {
-      bloco.innerHTML = `<p style="font-size:13.5px;color:var(--cinza)">O PNCP não detalhou os itens deste edital. Veja a lista completa no <b>edital em PDF</b> (botão Documentos acima).</p>`;
-      return;
-    }
-    const totalGeral = itens.reduce((s, i) => s + (Number(i.valorTotal) || 0), 0);
-    const linhas = itens.map((i) => `<tr style="border-bottom:1px solid var(--linha)">
-      <td style="padding:7px 6px;font-size:12.5px;color:var(--cinza-c);text-align:center">${i.numero ?? "-"}</td>
-      <td style="padding:7px 6px;font-size:13px">${esc(i.descricao)}${i.beneficioMeEpp && /me|epp/i.test(i.beneficioMeEpp) ? ' <span style="font-size:10px;font-weight:800;color:#166534;background:#dcfce7;padding:1px 6px;border-radius:99px;white-space:nowrap">ME/EPP</span>' : ""}</td>
-      <td style="padding:7px 6px;font-size:12.5px;text-align:right;white-space:nowrap">${i.quantidade != null ? Number(i.quantidade).toLocaleString("pt-BR") : "-"} ${esc((i.unidade || "").replace(/ - .*/, ""))}</td>
-      <td style="padding:7px 6px;font-size:12.5px;text-align:right;white-space:nowrap">${i.valorUnitario != null ? brl(i.valorUnitario) : "-"}</td>
-      <td style="padding:7px 6px;font-size:12.5px;text-align:right;white-space:nowrap;font-weight:600">${i.valorTotal != null ? brl(i.valorTotal) : "-"}</td>
-    </tr>`).join("");
-    bloco.innerHTML = `<div style="font-size:12.5px;color:var(--cinza);margin-bottom:8px">${itens.length} ${itens.length > 1 ? "itens" : "item"} · valor de referência total ${brl(totalGeral)}</div>
-      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
-        <thead><tr style="text-align:left;color:var(--cinza-c);font-size:11px;text-transform:uppercase;letter-spacing:.3px">
-          <th style="padding:0 6px 6px;text-align:center">#</th><th style="padding:0 6px 6px">Descrição</th>
-          <th style="padding:0 6px 6px;text-align:right">Qtd</th><th style="padding:0 6px 6px;text-align:right">Vlr unit.</th><th style="padding:0 6px 6px;text-align:right">Vlr total</th>
-        </tr></thead><tbody>${linhas}</tbody></table></div>`;
-  } catch (e) {
-    bloco.innerHTML = `<p style="font-size:13.5px;color:#dc2626">Não consegui carregar os itens agora. Tente de novo ou veja no edital em PDF.</p>`;
-  }
-}
-
 // Salva a anotacao privada do cliente neste edital.
 async function salvarNotaEdital(id) {
   const txt = document.getElementById("nota-txt");

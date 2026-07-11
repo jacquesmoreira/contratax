@@ -151,7 +151,7 @@ export function calcularProRataAssentos(perfil, qtd) {
   return {
     permitido: true, qtd: n, diasRestantes: dias, valor,
     precoAssento: PRECO_ASSENTO_NUM, mensalAtual, mensalNovo,
-    descricao: `${n} acesso(s) extra(s) — pro-rata ${dias} dia(s)`,
+    descricao: `${n} acesso(s) extra(s), pro-rata ${dias} dia(s)`,
   };
 }
 

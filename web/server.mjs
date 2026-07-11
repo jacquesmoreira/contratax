@@ -3328,7 +3328,14 @@ setInterval(() => {
   const m = process.memoryUsage();
   const rssMb = Math.round(m.rss / 1024 / 1024);
   const heapMb = Math.round(m.heapUsed / 1024 / 1024);
-  if (rssMb > MEM_LIMITE_MB * 0.8) {
+  // ORDEM IMPORTA: o critico (95%) vem PRIMEIRO. Antes estava como else-if
+  // depois do ramo de 80%, o que o tornava inalcancavel (acima de 95% tambem e
+  // acima de 80% e caia sempre no primeiro ramo) - o restart protetivo nunca
+  // disparava e o processo so fazia GC ate o Railway matar do jeito bruto.
+  if (rssMb > MEM_LIMITE_MB * 0.95) {
+    console.error(`[MEM] CRITICO: RSS=${rssMb}MB - reiniciando processo pra Railway.`);
+    process.exit(1);
+  } else if (rssMb > MEM_LIMITE_MB * 0.8) {
     console.warn(`[MEM] alerta: RSS=${rssMb}MB heap=${heapMb}MB (limite ${MEM_LIMITE_MB}MB). Forcando GC e checkpoint.`);
     try { if (global.gc) global.gc(); } catch {}
     // Checkpoint do WAL do SQLite: reduz tamanho do arquivo -wal acumulado.
@@ -3337,9 +3344,6 @@ setInterval(() => {
         try { abrir().exec("PRAGMA wal_checkpoint(TRUNCATE);"); } catch {}
       });
     } catch {}
-  } else if (rssMb > MEM_LIMITE_MB * 0.95) {
-    console.error(`[MEM] CRITICO: RSS=${rssMb}MB - reiniciando processo pra Railway.`);
-    process.exit(1);
   }
 }, 5 * 60 * 1000);
 

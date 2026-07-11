@@ -147,7 +147,7 @@ async function enviarResumo(meta) {
 <div style="font-size:20px;font-weight:800;margin-top:4px">ContrataX, ${meta.data}</div>
 </td></tr>
 <tr><td style="padding:24px 26px;color:#0f172a;font-size:14.5px;line-height:1.6">
-<p><b>O backup do dado de cliente está anexado neste e-mail</b> (${meta.nomeArquivo}). Guarde o e-mail — é a sua cópia off-site, sobrevive a qualquer problema do volume.</p>
+<p><b>O backup do dado de cliente está anexado neste e-mail</b> (${meta.nomeArquivo}). Guarde o e-mail, é a sua cópia off-site, sobrevive a qualquer problema do volume.</p>
 <table cellpadding="0" cellspacing="0" style="width:100%;font-size:13.5px;margin:14px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
 <tr><td style="padding:10px 14px;background:#f8fafc;width:50%;color:#64748b">Anexo</td><td style="padding:10px 14px;font-weight:700">${tamanhoLegivel(meta.tamanho)}</td></tr>
 <tr><td style="padding:10px 14px;background:#f8fafc;color:#64748b">SHA-256 (16 chars)</td><td style="padding:10px 14px;font-family:monospace;font-size:12.5px">${meta.checksum}</td></tr>
@@ -156,7 +156,7 @@ ${tot.editais != null ? `<tr><td style="padding:10px 14px;background:#f8fafc;col
 ${tot.contratos != null ? `<tr><td style="padding:10px 14px;background:#f8fafc;color:#64748b">Contratos (acervo PNCP)</td><td style="padding:10px 14px;font-weight:700">${brl(tot.contratos)}</td></tr>` : ""}
 ${meta.liberadoVolume ? `<tr><td style="padding:10px 14px;background:#f8fafc;color:#64748b">Liberado do volume</td><td style="padding:10px 14px;font-weight:700">${tamanhoLegivel(meta.liberadoVolume)}</td></tr>` : ""}
 </table>
-<p style="font-size:12.5px;color:#64748b">O acervo público do PNCP (editais/contratos) NÃO entra no backup de propósito: é re-coletável a qualquer momento. O que importa — contas, recebíveis e contratos dos clientes — está no anexo.</p>
+<p style="font-size:12.5px;color:#64748b">O acervo público do PNCP (editais/contratos) NÃO entra no backup de propósito: é re-coletável a qualquer momento. O que importa (contas, recebíveis e contratos dos clientes) está no anexo.</p>
 <p style="font-size:12.5px;color:#64748b">Restauração: descompacte o .gz e reimporte o JSON (tabelas perfis/notas_fiscais/contratos_meus + perfisJson).</p>
 </td></tr></table></td></tr></table></body></html>`;
   await enviar({
@@ -323,7 +323,7 @@ export async function verificarDisco({ log = console.log, forcar = false } = {})
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:24px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0">
 <tr><td style="background:#b91c1c;color:#fff;padding:20px 26px">
-<div style="font-size:13px;color:#fecaca;font-weight:700;letter-spacing:.5px">ATENCAO — VOLUME</div>
+<div style="font-size:13px;color:#fecaca;font-weight:700;letter-spacing:.5px">ATENCAO: VOLUME</div>
 <div style="font-size:20px;font-weight:800;margin-top:4px">Disco em ${uso.pctTexto}</div>
 </td></tr>
 <tr><td style="padding:24px 26px;color:#0f172a;font-size:14.5px;line-height:1.6">
