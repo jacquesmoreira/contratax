@@ -221,6 +221,31 @@ async function selarOportunidade(editais) {
   return editais;
 }
 
+// Obtem/cria o cliente Asaas do perfil e PERSISTE o id se mudou. O id pode mudar
+// quando o cliente antigo foi REMOVIDO no Asaas (ex: limpeza de testes): nesse
+// caso obterOuCriarCliente recria um novo, e a gente grava pra nao recriar toda vez.
+async function clienteAsaasDoPerfil(perfil) {
+  const clienteId = await obterOuCriarCliente({
+    nome: perfil.razaoSocial || perfil.nome, email: perfil.email, cnpj: perfil.cnpj, clienteId: perfil.asaasClienteId,
+  });
+  if (clienteId && clienteId !== perfil.asaasClienteId) {
+    const perfis = await lerPerfis();
+    const p = perfis.find((x) => x.token === perfil.token);
+    if (p) { p.asaasClienteId = clienteId; await salvarPerfis(perfis); }
+  }
+  return clienteId;
+}
+
+// Traduz erro de gateway pra mensagem amigavel: NUNCA vazar o JSON cru do Asaas
+// pro cliente (ex: "Asaas 400: {...invalid_customer...}"). Loga o cru no servidor.
+function mensagemPagamento(e) {
+  const m = String((e && e.message) || "");
+  console.error("[pagamento]", m);
+  if (/invalid_customer|cliente removido/i.test(m)) return "Não consegui gerar a cobrança agora (seu cadastro de pagamento precisou ser recriado). Tente de novo em instantes; se persistir, fale com o suporte.";
+  if (/ASAAS_API_KEY|nao configurada/i.test(m)) return "Pagamento automático indisponível no momento. Fale com o suporte.";
+  return "Não consegui gerar a cobrança agora. Tente de novo em instantes ou fale com o suporte.";
+}
+
 // ===== Guard de acesso: bloqueia ferramentas pagas para conta vencida =====
 // Apos o fim do teste ou da carencia da assinatura, o cliente perde o acesso a
 // TODAS as ferramentas (recebiveis, contratos, documentos, historico,
@@ -1680,7 +1705,7 @@ const servidor = createServer(async (req, res) => {
         if (!r.invoiceUrl) return json(res, 502, { erro: "Gateway nao devolveu a URL de pagamento" });
         return json(res, 200, { automatico: true, url: r.invoiceUrl });
       } catch (e) {
-        return json(res, 502, { erro: e.message });
+        return json(res, 502, { erro: mensagemPagamento(e) });
       }
     }
 
@@ -1897,9 +1922,7 @@ const servidor = createServer(async (req, res) => {
       const calc = calcularProRata(perfil, atual, novo);
       if (!calc.permitido) return json(res, 400, { erro: "Upgrade nao aplicavel (downgrade ou mesmo plano)" });
       try {
-        const clienteId = await obterOuCriarCliente({
-          nome: perfil.razaoSocial || perfil.nome, email: perfil.email, cnpj: perfil.cnpj, clienteId: perfil.asaasClienteId,
-        });
+        const clienteId = await clienteAsaasDoPerfil(perfil);
         const BASE_URL = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
         const successUrl = `${BASE_URL}/obrigado?c=${perfil.token}`;
         const r = await criarCobrancaAvulsa({
@@ -1912,7 +1935,7 @@ const servidor = createServer(async (req, res) => {
         if (!r.invoiceUrl) return json(res, 502, { erro: "Gateway nao devolveu URL de pagamento" });
         return json(res, 200, { url: r.invoiceUrl, valor: calc.valor, diasRestantes: calc.diasRestantes });
       } catch (e) {
-        return json(res, 502, { erro: e.message });
+        return json(res, 502, { erro: mensagemPagamento(e) });
       }
     }
 
@@ -1939,9 +1962,7 @@ const servidor = createServer(async (req, res) => {
       if (!asaasConfigurado()) return json(res, 400, { erro: "Pagamento automatico indisponivel no momento. Fale com o suporte.", contato: cobranca.contato });
       const calc = calcularProRataAssentos(perfil, corpo.qtd);
       try {
-        const clienteId = await obterOuCriarCliente({
-          nome: perfil.razaoSocial || perfil.nome, email: perfil.email, cnpj: perfil.cnpj, clienteId: perfil.asaasClienteId,
-        });
+        const clienteId = await clienteAsaasDoPerfil(perfil);
         const BASE_URL = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
         const successUrl = `${BASE_URL}/obrigado?c=${perfil.token}`;
         const r = await criarCobrancaAvulsa({
@@ -1954,7 +1975,7 @@ const servidor = createServer(async (req, res) => {
         if (!r.invoiceUrl) return json(res, 502, { erro: "Gateway nao devolveu URL de pagamento" });
         return json(res, 200, { url: r.invoiceUrl, valor: calc.valor, qtd: calc.qtd, mensalNovo: calc.mensalNovo });
       } catch (e) {
-        return json(res, 502, { erro: e.message });
+        return json(res, 502, { erro: mensagemPagamento(e) });
       }
     }
 

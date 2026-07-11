@@ -32,9 +32,20 @@ async function api(caminho, metodo = "GET", corpo = null) {
   return j;
 }
 
-// Reusa o cliente Asaas se ja existir; senao cria e devolve o id.
+// Reusa o cliente Asaas se ja existir E ainda estiver ativo; senao cria e
+// devolve o id. IMPORTANTE: valida o clienteId guardado antes de reusar. Um
+// cliente REMOVIDO no Asaas (comum em limpeza de testes) rejeita qualquer
+// cobranca nova com "invalid_customer / cliente removido". Aqui, se o id
+// guardado nao existir mais (404) ou estiver deleted, recria um cliente novo.
+// O chamador deve persistir o id retornado (pode ter mudado).
 export async function obterOuCriarCliente({ nome, email, cnpj, clienteId }) {
-  if (clienteId) return clienteId;
+  if (clienteId) {
+    try {
+      const existente = await api(`/customers/${clienteId}`, "GET");
+      if (existente && existente.id && !existente.deleted) return existente.id;
+      // caiu aqui = deleted:true -> recria abaixo
+    } catch { /* 404 ou erro de leitura: recria abaixo */ }
+  }
   const c = await api("/customers", "POST", {
     name: nome || email,
     email,
