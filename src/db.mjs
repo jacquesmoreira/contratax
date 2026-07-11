@@ -580,11 +580,38 @@ function mapearContrato(l) {
 
 // Consulta contratos por UF, categoria e janela de tempo (meses atras). O filtro
 // fino por palavra-chave roda depois (forgiving), igual aos editais.
-export function consultarContratos({ uf = null, categorias = [], mesesAtras = 18 } = {}) {
+// Dobra acentos do portugues numa expressao SQL (SQLite nao tem unaccent), pra
+// casar "balneario" (digitado sem acento) com "Balneário" no banco. lower() +
+// replace encadeado nas vogais acentuadas. Usada no filtro de municipio.
+function foldSql(col) {
+  const map = [["á","a"],["à","a"],["â","a"],["ã","a"],["é","e"],["ê","e"],["í","i"],["ó","o"],["ô","o"],["õ","o"],["ú","u"],["ü","u"],["ç","c"]];
+  let e = `lower(${col})`;
+  for (const [de, para] of map) e = `replace(${e}, '${de}', '${para}')`;
+  return e;
+}
+
+export function consultarContratos({ uf = null, cidade = null, termosLike = [], categorias = [], mesesAtras = 18 } = {}) {
   const d = abrir();
   const cond = [];
   const args = [];
   if (uf) { cond.push("uf = ?"); args.push(uf); }
+  // CIDADE no SQL (nao mais so em JS depois do LIMIT): sem isto, uma UF grande
+  // (SC tem ~750k contratos) enchia o LIMIT 10000 com os mais recentes do estado
+  // INTEIRO, e o municipio do cliente quase nunca sobrava. Agora o LIMIT recai
+  // sobre os contratos DAQUELE municipio. Casa sem acento via foldSql.
+  if (cidade && String(cidade).trim()) {
+    cond.push(`${foldSql("municipio")} LIKE ?`);
+    args.push("%" + normalizar(cidade).trim() + "%");
+  }
+  // PREFILTRO por termo (coarse, objeto_norm LIKE OR): idem, pra o LIMIT cair
+  // sobre contratos do ramo buscado, nao sobre os 10k mais recentes de tudo.
+  // Sao substrings distintivas (ex: "hospitalar", "fralda"); o matching fino
+  // (palavra inteira, proximidade) roda depois em JS via aplicarFiltro.
+  const likes = (termosLike || []).map((t) => normalizar(String(t)).trim()).filter((t) => t.length >= 3);
+  if (likes.length) {
+    cond.push("(" + likes.map(() => "objeto_norm LIKE ?").join(" OR ") + ")");
+    args.push(...likes.map((t) => "%" + t + "%"));
+  }
   if (categorias.length) {
     cond.push(`categoria_id IN (${categorias.map(() => "?").join(",")})`);
     args.push(...categorias);
@@ -596,10 +623,9 @@ export function consultarContratos({ uf = null, categorias = [], mesesAtras = 18
   args.push(desdeISO, desdeISO);
 
   const where = cond.length ? `WHERE ${cond.join(" AND ")}` : "";
-  // LIMIT defensivo: tabela contratos tem 1.2M+ registros em producao. Sem
-  // limite, qualquer consulta sem UF estoura memoria (OOM em Railway).
-  // 10k contratos cobre uso real (matching por ramo + UF). Para volumes
-  // maiores, usar paginacao explicita.
+  // LIMIT defensivo: tabela contratos tem 3M+ registros em producao. Sem limite,
+  // consulta ampla estoura memoria (OOM em Railway). Com cidade/termo empurrados
+  // pro SQL acima, o LIMIT agora recai sobre linhas JA relevantes.
   return d.prepare(`SELECT * FROM contratos ${where} ORDER BY vigencia_inicio DESC LIMIT 10000`).all(...args).map(mapearContrato);
 }
 

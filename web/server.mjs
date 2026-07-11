@@ -1265,7 +1265,6 @@ const servidor = createServer(async (req, res) => {
       const { consultarContratos } = await import("../src/db.mjs");
       const { aplicarFiltro, normalizar, termosAmplos } = await import("../src/filtro.mjs");
       const { expandirTermos, excluirTermos } = await import("../src/sinonimos.mjs");
-      const candidatos = consultarContratos({ uf, mesesAtras: meses });
       // Usa o termo digitado ou os termos do perfil (se logado). Quando usa o
       // ramo do perfil, aproveita tambem os termos relacionados da ContrataX.IA
       // (mesma expansao semantica do painel de editais), pra o historico nao
@@ -1292,12 +1291,20 @@ const servidor = createServer(async (req, res) => {
       if (!termos.length && !termosIA.length) {
         return json(res, 200, { total: 0, paginas: 0, pagina: 1, termos: [], licitacoes: [], aviso: "Digite um produto ou serviço para ver o histórico." });
       }
-      let todos = aplicarFiltro(candidatos, { termos, termosIA, termosExcluir }).filter(c => c.valor > 0);
-      // Filtro por cidade
-      if (cidade.trim()) {
-        const cn = normalizar(cidade.trim());
-        todos = todos.filter(c => normalizar(c.municipio || "").includes(cn));
-      }
+      // Prefiltro coarse pro SQL: palavras DISTINTIVAS de termos+termosIA (sem
+      // genericas nem aspas), pra o LIMIT do consultarContratos recair sobre
+      // contratos do RAMO buscado, nao sobre os 10k mais recentes de tudo (uma UF
+      // grande como SC tem 750k contratos). O matching fino roda depois em JS.
+      const GENERICOS_LIKE = new Set(["material","materiais","produto","produtos","servico","servicos","equipamento","equipamentos","insumo","insumos","aquisicao","fornecimento","contratacao","prestacao","locacao","kit","kits","item","itens","peca","pecas","generos","genero","suprimento","suprimentos","consumo"]);
+      const termosLike = [...new Set(
+        [...termos, ...termosIA]
+          .flatMap((t) => normalizar(String(t).replace(/"/g, "")).split(/[^a-z0-9]+/))
+          .filter((w) => w.length >= 3 && !GENERICOS_LIKE.has(w))
+      )];
+      // cidade + termo empurrados pro SQL: o LIMIT agora recai sobre o municipio
+      // e o ramo certos (antes era so-UF, e o municipio do cliente se perdia).
+      const candidatos = consultarContratos({ uf, cidade, termosLike, mesesAtras: meses });
+      const todos = aplicarFiltro(candidatos, { termos, termosIA, termosExcluir }).filter(c => c.valor > 0);
       // Agrupa por licitacao (mesmo objeto aproximado): colapsa contratos do mesmo
       // Registro de Precos comprado por varias prefeituras. Mostra top 3 vencedores.
       // Usa data de PUBLICACAO no PNCP (fato registrado, nunca futuro). Se nao tiver,
