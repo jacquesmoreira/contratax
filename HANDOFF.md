@@ -1055,6 +1055,22 @@ Validado sem tocar em conta real: parse-check, contagem de tags numeradas batend
 
 Commit `c15a3db`.
 
+### 2026-07-10 (continuação) — busca: precisão em termo de 2 palavras (recorrência do problema de granularidade, outra direção)
+
+Jacques pesquisou "material hospitalar" e veio lixo: "Aquisição de equipamentos", "Contratação de empresa especializada" (serviços de manutenção, lavanderia de roupa hospitalar, engenharia, coleta de resíduos), além de uma bolsa de EPI de resgate. Perguntou como filtrar "de uma vez por todas".
+
+**Causa-raiz (confirmada rodando `buscarEditais` contra o banco real, só leitura, com before/after):** um termo de 2 palavras era casado como "as duas palavras existem em qualquer lugar do texto" = um OU disfarçado. Duas fontes:
+1. `termosAmplos` / `palavraDistintiva` (em `filtro.mjs`): joga fora a palavra genérica ("material") e busca só a distintiva sozinha ("hospitalar"). "hospitalar" é adjetivo que qualifica MUITOS substantivos (roupa, resíduo, equipamento, assistência, manutenção), então casava serviço/obra/equipamento sem relação com material de consumo.
+2. `editaisIdsPorItem` (em `db.mjs`): casava "material" e "hospitalar" em trechos sem relação do MESMO item (bolsa de resgate: "confeccionado em material de alta resistência" + "atendimento pré-hospitalar").
+
+**Correção (commit `c72883e`), 2 partes:**
+1. **`termosAmplos` sai só do caminho de BUSCA** (`buscarEditais` + `buscaPublica`), mantido o dicionário curado `expandirTermos` (produto específico -> frases do ramo). Assim "atadura"/"seringa" (produto de 1 palavra) seguem trazendo o ramo inteiro via curadoria (recall preservada, ver memória `contratax-busca-granularidade`), mas "material hospitalar" (já 2 palavras) não é mais reduzido à distintiva solta. `termosAmplos` era recall no lugar errado: na busca o cliente quer precisão.
+2. **Proximidade nos ITENS** (novo `palavrasProximas`/`menorJanela` em `filtro.mjs`, usado por `editaisIdsPorItem`): num termo multi-palavra, as palavras têm que aparecer próximas (janela = nº palavras + 2) dentro do MESMO item. **No OBJETO NÃO se exige proximidade de propósito**: objeto é prosa longa onde uma compra legítima tem "materiais...hospitalares" a 8-10 palavras de distância (OPME, material de enfermaria); exigir proximidade lá zerou os resultados legítimos no teste (por isso foi revertido do objeto, mantido só nos itens, que são texto curto).
+
+**Números (SC, banco real):** "material hospitalar" 24 → 4 (só precisos legítimos). "atadura"/"seringa" 4 → 4 (recall de produto intacta). "material de limpeza" 47 → 9 (sumiu serviço de limpeza que só tinha a palavra solta). Config nova: `LICITA_JANELA_PROX` (default 2).
+
+**Follow-up conhecido, NÃO feito ainda:** o mesmo `termosAmplos` continua rodando no FEED automático do painel (`monitor.mjs` → `casarPerfil`), onde a recall importa mais (não perder edital do ramo do cliente no painel diário). A proximidade nos itens já melhora o feed também (mata o espalhamento tipo EPI lá também, porque `editaisIdsPorItem` é compartilhado). Mas o lixo de "hospitalar" solto (roupa/serviço) ainda pode aparecer no painel automático de quem cadastrou "material hospitalar" como ramo. Se incomodar, o próximo passo é trocar no feed o `termosAmplos` pela expansão curada de frases-irmã do ramo (ex: "material hospitalar" → "insumo hospitalar", "material de enfermagem"), que dá recall SEM o lixo. Deixei fora deste commit de propósito: mexer no feed muda o painel de todo cliente existente e tem trade-off de recall diferente do da busca.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
