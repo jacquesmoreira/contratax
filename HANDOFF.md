@@ -1163,6 +1163,14 @@ Jacques pediu auditoria completa: integrações, menus, acessos, navegabilidade,
 2. **Código morto (index.html)**: `verItens()` (~30 linhas) sem chamador nenhum, referenciando `#itens-bloco` que não existe na página. Removida (itens.html tem a versão viva própria).
 3. **Travessões remanescentes em texto visível**: descrição do pró-rata de assentos (`assinatura.mjs`, vai pra cobrança) + 3 no e-mail de backup off-site. Corrigidos.
 
+### 2026-07-11 (continuação) — teste do upgrade em PRODUÇÃO passou ✅
+
+Confirmado ao vivo que o deploy da sessão está no ar (nav sem "Mais", `.dir-scroll`, sino ok, "2 certidões vencidas" com plural certo). Testado o fix de pagamento direto em produção com o token real do Jacques: `POST /api/conta/upgrade {novo:"pro"}` retornou **HTTP 200, url de pagamento do Asaas, valor R$150, zero erro**. O "invalid_customer / cliente removido" sumiu, a recriação automática do cliente removido funcionou. O teste **gerou uma cobrança pendente de R$150 no Asaas** do Jacques (parei antes da tela de pagamento, nada foi pago; ele pode cancelar no Asaas ou ignorar, expira sozinha). **Ressalva ainda em aberto:** o teste valida a cobrança pró-rata (o que estava quebrado), mas NÃO o passo pós-pagamento (atualização do valor da assinatura recorrente via webhook) — se a `asaasSubscriptionId` dele estiver órfã do cliente antigo removido, isso só apareceria ao confirmar o pagamento; é caso de borda da conta de teste dele, não afeta cliente novo.
+
+### Auditoria completa do produto entregue
+
+A pedido do Jacques, entregue auditoria estratégica brutalmente honesta como Artifact (não commitada no repo, é documento). Pontos-chave registrados aqui pra continuidade: **não é um SaaS de US$100M** (é micro-SaaS forte com profundidade rara); os 5 tetos de valuation = fator-ônibus 1, infra frágil (processo/SQLite/hobby único), fosso raso, escada de preço quebrada (R$59→R$247 sem meio-termo), retenção sem gancho além do digest. Prioridade recomendada (baixo esforço, alto impacto): **plano anual + herói da LP reescrito no diferencial real + sair do plano hobby + tirar token da URL**. Roadmap 30/90/180/365 no artifact. Achados técnicos concretos que valem virar tarefa: degrau de preço intermediário, upgrade oferecido no momento da cota, ranking personalizado como padrão, índice de itens de contrato (busca de produto de verdade), fluxo de retenção no cancelamento.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
