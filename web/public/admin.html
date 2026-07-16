@@ -108,11 +108,31 @@ async function fbLido(id, btn) {
   if (r.ok) carregar(); else btn.disabled = false;
 }
 
+// Publica o recado pros clientes (aparece no painel deles).
+async function publicarRecado(btn) {
+  const titulo = $("recado-titulo").value.trim();
+  const texto = $("recado-texto").value.trim();
+  if (!texto) { $("recado-status").textContent = "Escreva o texto do recado primeiro."; return; }
+  btn.disabled = true;
+  const r = await post("/api/admin/recado", { acao: "salvar", titulo, texto });
+  if (r.ok) { $("recado-status").textContent = "Recado publicado ✅"; setTimeout(carregar, 700); }
+  else { btn.disabled = false; $("recado-status").textContent = "Erro: " + (r.d.erro || "tente de novo"); }
+}
+// Tira o recado atual do ar (clientes param de ver).
+async function limparRecadoAdmin(btn) {
+  if (!confirm("Tirar o recado do ar? Os clientes param de ver.")) return;
+  btn.disabled = true;
+  const r = await post("/api/admin/recado", { acao: "limpar" });
+  if (r.ok) { $("recado-status").textContent = "Recado retirado."; setTimeout(carregar, 700); }
+  else { btn.disabled = false; $("recado-status").textContent = "Erro ao retirar."; }
+}
+
 async function carregar() {
   const cli = await api("/api/admin/clientes");
   if (!cli.ok) { $("conteudo").innerHTML = `<div class="erro">Acesso negado. Use o link com o token de admin: <code>/admin?c=SEU_TOKEN</code></div>`; return; }
-  const [stats, custos] = await Promise.all([api("/api/admin/stats"), api("/api/custos")]);
+  const [stats, custos, rec] = await Promise.all([api("/api/admin/stats"), api("/api/custos"), api("/api/admin/recado")]);
   const r = cli.d.resumo, s = stats.d, cu = custos.d;
+  const recadoAtual = rec.ok ? rec.d.recado : null;
 
   // Ações globais (rodar digest manual, etc)
   let html = `<div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
@@ -123,6 +143,25 @@ async function carregar() {
     <span id="digest-status" style="font-size:13px;color:var(--cinza);align-self:center"></span>
   </div>
   <div id="disco-saida" style="display:none;background:#0f172a;color:#e2e8f0;font-family:monospace;font-size:12px;padding:14px 16px;border-radius:10px;margin-bottom:18px;white-space:pre-wrap;line-height:1.5;max-height:340px;overflow:auto"></div>`;
+
+  // Recado (broadcast) pros clientes: aparece num pop-up no painel deles.
+  const recAtivo = recadoAtual && recadoAtual.ativo;
+  html += `<div style="background:#fff;border:1px solid var(--linha);border-radius:14px;padding:16px 18px;margin-bottom:22px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="font-size:15px;font-weight:800">📣 Recado pros clientes</span>
+      ${recAtivo
+        ? `<span class="pill ativo">no ar</span><span class="mut">publicado ${dataBR(recadoAtual.criadoEm)}</span>`
+        : `<span class="pill inativo">nenhum no ar</span>`}
+    </div>
+    <div class="mut" style="margin-bottom:12px">Aparece num aviso direto no painel de cada cliente assim que ele entra. Ele vê uma vez por recado (some depois que fecha) e reaparece toda vez que você publica um novo.</div>
+    <input id="recado-titulo" type="text" maxlength="120" placeholder="Título (opcional), ex: Manutenção programada" value="${esc(recadoAtual?.titulo || "")}" style="width:100%;padding:9px 11px;border:1px solid var(--linha);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:8px" />
+    <textarea id="recado-texto" maxlength="2000" rows="4" placeholder="Escreva o recado que os clientes vão ler..." style="width:100%;padding:9px 11px;border:1px solid var(--linha);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical">${esc(recadoAtual?.texto || "")}</textarea>
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center">
+      <button onclick="publicarRecado(this)" style="background:var(--indigo);color:#fff;border:none;padding:9px 16px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">Publicar recado</button>
+      ${recAtivo ? `<button onclick="limparRecadoAdmin(this)" style="background:#fff;color:var(--vermelho);border:1px solid var(--vermelho);padding:9px 16px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">Tirar do ar</button>` : ""}
+      <span id="recado-status" style="font-size:13px;color:var(--cinza)"></span>
+    </div>
+  </div>`;
 
   // Contagem de alerta: clientes ativos com >=80% e >=100% de uso da cota
   const ativos = cli.d.clientes.filter((c) => c.status === "ativo");

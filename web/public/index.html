@@ -883,6 +883,36 @@ async function dispensarOnb() {
   } catch {}
 }
 
+// Pop-up de recado do admin. Aparece uma vez por recado (guarda o id visto no
+// localStorage) e reaparece quando o admin publica um novo (id diferente).
+function mostrarRecadoSePreciso(recado) {
+  if (!recado || !recado.id || !recado.texto) return;
+  const CHAVE = "contratax-recado-visto";
+  let visto = null;
+  try { visto = localStorage.getItem(CHAVE); } catch {}
+  if (String(visto) === String(recado.id)) return;      // ja viu este recado
+  if (document.getElementById("recado-overlay")) return; // ja esta na tela
+  const onEsc = (e) => { if (e.key === "Escape") fechar(); };
+  function fechar() {
+    try { localStorage.setItem(CHAVE, String(recado.id)); } catch {}
+    document.getElementById("recado-overlay")?.remove();
+    document.removeEventListener("keydown", onEsc);
+  }
+  const corpo = esc(recado.texto).replace(/\n/g, "<br>");
+  const ov = document.createElement("div");
+  ov.id = "recado-overlay";
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px";
+  ov.innerHTML = `<div role="dialog" aria-modal="true" style="background:#fff;border-radius:16px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+    <div style="background:linear-gradient(135deg,var(--indigo),#6d28d9);color:#fff;padding:16px 22px;font-weight:800;font-size:16px">📣 ${recado.titulo ? esc(recado.titulo) : "Recado da ContrataX"}</div>
+    <div style="padding:22px;font-size:15px;line-height:1.6;color:var(--tinta);max-height:50vh;overflow:auto">${corpo}</div>
+    <div style="padding:0 22px 22px;text-align:right"><button id="recado-ok" style="background:var(--indigo);color:#fff;border:none;padding:11px 22px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">Entendi</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  document.getElementById("recado-ok").onclick = fechar;
+  ov.addEventListener("click", (e) => { if (e.target === ov) fechar(); }); // clicar fora fecha
+  document.addEventListener("keydown", onEsc);
+}
+
 async function carregar() {
   const c = document.getElementById("conteudo");
   if (!token) {
@@ -943,6 +973,8 @@ async function carregar() {
 
     // Guarda em escopo global para outras telas (busca, drawer) usarem
     window.__acesso = acesso;
+    // Recado do admin: mostra o pop-up se houver um ativo ainda nao visto.
+    mostrarRecadoSePreciso(acesso.recado);
 
     // Chip persistente no nav + popups conforme status
     chipPlano(acesso);
