@@ -1211,6 +1211,10 @@ Descoberta nos dados (banco real): dos 29 mil editais, **71% têm o `linkSistema
 
 **Ideias de evolução (não feitas):** multi-seleção no dropdown (hoje é single-select, atende o "só Comprasnet"); atalho "portais gratuitos" de 1 clique; e talvez o portal como preferência fixa no perfil/alerta, não só na busca.
 
+### 2026-07-16 (continuação) — recado (broadcast) do admin pros clientes
+
+Pedido do Jacques: mandar um recado pros clientes que apareça de forma direta no painel deles. Construído: `src/recado.mjs` guarda 1 recado ativo num JSON no volume (`recado.json`), sem banco. Viaja junto no `/api/acesso` (sem request extra). Admin: card "📣 Recado pros clientes" no topo do `/admin` (título opcional + texto, "Publicar" / "Tirar do ar"), endpoints `GET/POST /api/admin/recado` gated pelo token admin. Cliente: pop-up modal no painel (index.html) ao entrar, uma vez por recado (id guardado no localStorage `contratax-recado-visto`); recado novo = id novo = reaparece pra todos. Validado: CRUD do módulo OK, JS inline das 2 páginas sem erro. Deployed (commit `3b9514d`). Escopo: só o painel principal; estender pras outras telas se o Jacques pedir.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
