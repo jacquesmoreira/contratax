@@ -1,11 +1,14 @@
-// Recado (aviso/broadcast) que o admin publica pra todos os clientes verem no
-// painel. Um recado ativo por vez (o mais recente vence). Guardado num JSON no
-// volume de dados, sem dependencia externa.
+// Recado (aviso/broadcast) do admin pros clientes. Dois tipos:
+//   - GERAL: um recado pra todos os clientes (broadcast).
+//   - INDIVIDUAL: um recado pra um cliente especifico (por token).
+// O cliente ve o INDIVIDUAL com prioridade; se nao tiver, ve o GERAL.
 //
-// O `id` (timestamp da publicacao) e o que faz o cliente ver o recado DE NOVO:
-// o painel guarda no localStorage o id do ultimo recado visto; se o id atual for
-// diferente, o modal reaparece. Assim um recado novo sempre e mostrado, mas o
-// mesmo recado nao fica incomodando depois de lido.
+// Guardado num JSON no volume de dados, sem banco:
+//   { geral: <recado|null>, porCliente: { <token>: <recado> } }
+// onde <recado> = { id, titulo, texto, criadoEm, ativo }.
+//
+// O `id` (timestamp da publicacao) faz o cliente ver o recado DE NOVO: o painel
+// guarda no localStorage o id do ultimo visto; id diferente => modal reaparece.
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -13,29 +16,49 @@ import { DATA_DIR } from "./caminhos.mjs";
 
 const ARQ = resolve(DATA_DIR, "recado.json");
 
-// Le o arquivo cru (ativo ou nao). Uso interno + admin (pra pre-preencher o form).
+// Le o arquivo cru e normaliza pro formato novo. Migra o formato antigo (quando
+// o arquivo era um unico recado no topo) pra { geral, porCliente }.
 async function lerBruto() {
+  let dados;
   try {
-    return JSON.parse(await readFile(ARQ, "utf8"));
+    dados = JSON.parse(await readFile(ARQ, "utf8"));
   } catch {
-    return null;
+    return { geral: null, porCliente: {} };
   }
+  if (dados && (dados.geral !== undefined || dados.porCliente !== undefined)) {
+    return { geral: dados.geral || null, porCliente: dados.porCliente || {} };
+  }
+  // Formato antigo (recado unico) -> vira o geral.
+  if (dados && dados.texto) return { geral: dados, porCliente: {} };
+  return { geral: null, porCliente: {} };
 }
 
-// Recado ATIVO pra entregar ao cliente. null se nao ha nada pra mostrar.
-export async function lerRecado() {
-  const r = await lerBruto();
+async function gravar(estado) {
+  await mkdir(DATA_DIR, { recursive: true });
+  await writeFile(ARQ, JSON.stringify(estado, null, 2), "utf8");
+}
+
+function ativo(r) {
   return r && r.ativo && r.texto ? r : null;
 }
 
-// Versao pro admin: devolve o ultimo recado gravado mesmo que esteja fora do ar,
-// pra ele ver/editar o texto anterior.
-export async function lerRecadoAdmin() {
-  return await lerBruto();
+// Recado que ESTE cliente deve ver. Individual tem prioridade sobre o geral.
+export async function lerRecadoPara(token) {
+  const e = await lerBruto();
+  return ativo(token ? e.porCliente[token] : null) || ativo(e.geral) || null;
 }
 
-// Publica um recado novo (vira o ativo, com id novo => todos veem de novo).
-export async function salvarRecado({ titulo = "", texto = "" } = {}) {
+// Estado completo pro painel admin: o geral + a lista de individuais ativos.
+export async function estadoRecados() {
+  const e = await lerBruto();
+  const individuais = Object.entries(e.porCliente)
+    .filter(([, r]) => r && r.ativo)
+    .map(([token, r]) => ({ token, ...r }));
+  return { geral: e.geral, individuais };
+}
+
+// Publica um recado. destino = "todos" (geral) ou o token de um cliente.
+export async function salvarRecado({ titulo = "", texto = "", destino = "todos" } = {}) {
   const t = String(texto || "").trim();
   if (!t) throw new Error("O texto do recado nao pode ficar vazio.");
   const recado = {
@@ -45,17 +68,21 @@ export async function salvarRecado({ titulo = "", texto = "" } = {}) {
     criadoEm: new Date().toISOString(),
     ativo: true,
   };
-  await mkdir(DATA_DIR, { recursive: true });
-  await writeFile(ARQ, JSON.stringify(recado, null, 2), "utf8");
+  const e = await lerBruto();
+  if (!destino || destino === "todos") e.geral = recado;
+  else e.porCliente[destino] = recado;
+  await gravar(e);
   return recado;
 }
 
-// Tira o recado do ar (mantem o texto no arquivo, so marca ativo=false).
-export async function limparRecado() {
-  const r = await lerBruto();
-  if (r) {
-    r.ativo = false;
-    await writeFile(ARQ, JSON.stringify(r, null, 2), "utf8");
+// Tira um recado do ar. destino = "todos" (geral) ou o token do cliente.
+export async function limparRecado({ destino = "todos" } = {}) {
+  const e = await lerBruto();
+  if (!destino || destino === "todos") {
+    if (e.geral) e.geral.ativo = false;
+  } else if (e.porCliente[destino]) {
+    delete e.porCliente[destino]; // individual some de vez (nao precisa guardar)
   }
-  return { ativo: false };
+  await gravar(e);
+  return { ok: true };
 }

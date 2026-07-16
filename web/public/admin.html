@@ -108,23 +108,24 @@ async function fbLido(id, btn) {
   if (r.ok) carregar(); else btn.disabled = false;
 }
 
-// Publica o recado pros clientes (aparece no painel deles).
+// Publica o recado (pra todos ou pra um cliente especifico, conforme o destino).
 async function publicarRecado(btn) {
+  const destino = $("recado-destino").value;
   const titulo = $("recado-titulo").value.trim();
   const texto = $("recado-texto").value.trim();
   if (!texto) { $("recado-status").textContent = "Escreva o texto do recado primeiro."; return; }
   btn.disabled = true;
-  const r = await post("/api/admin/recado", { acao: "salvar", titulo, texto });
+  const r = await post("/api/admin/recado", { acao: "salvar", titulo, texto, destino });
   if (r.ok) { $("recado-status").textContent = "Recado publicado ✅"; setTimeout(carregar, 700); }
   else { btn.disabled = false; $("recado-status").textContent = "Erro: " + (r.d.erro || "tente de novo"); }
 }
-// Tira o recado atual do ar (clientes param de ver).
-async function limparRecadoAdmin(btn) {
-  if (!confirm("Tirar o recado do ar? Os clientes param de ver.")) return;
-  btn.disabled = true;
-  const r = await post("/api/admin/recado", { acao: "limpar" });
-  if (r.ok) { $("recado-status").textContent = "Recado retirado."; setTimeout(carregar, 700); }
-  else { btn.disabled = false; $("recado-status").textContent = "Erro ao retirar."; }
+// Tira um recado do ar (destino = "todos" ou o token do cliente).
+async function limparRecadoAdmin(destino, btn) {
+  if (!confirm("Tirar este recado do ar? O(s) cliente(s) param de ver.")) return;
+  if (btn) btn.disabled = true;
+  const r = await post("/api/admin/recado", { acao: "limpar", destino });
+  if (r.ok) { carregar(); }
+  else if (btn) { btn.disabled = false; }
 }
 
 async function carregar() {
@@ -132,7 +133,11 @@ async function carregar() {
   if (!cli.ok) { $("conteudo").innerHTML = `<div class="erro">Acesso negado. Use o link com o token de admin: <code>/admin?c=SEU_TOKEN</code></div>`; return; }
   const [stats, custos, rec] = await Promise.all([api("/api/admin/stats"), api("/api/custos"), api("/api/admin/recado")]);
   const r = cli.d.resumo, s = stats.d, cu = custos.d;
-  const recadoAtual = rec.ok ? rec.d.recado : null;
+  const recadoGeral = rec.ok ? rec.d.geral : null;
+  const recadosInd = rec.ok ? (rec.d.individuais || []) : [];
+  // Lookup token -> nome do cliente, pra rotular os recados individuais.
+  const nomeCliente = {};
+  for (const c of cli.d.clientes) nomeCliente[c.token] = c.razaoSocial || c.nome || c.email || c.token;
 
   // Ações globais (rodar digest manual, etc)
   let html = `<div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
@@ -144,22 +149,35 @@ async function carregar() {
   </div>
   <div id="disco-saida" style="display:none;background:#0f172a;color:#e2e8f0;font-family:monospace;font-size:12px;padding:14px 16px;border-radius:10px;margin-bottom:18px;white-space:pre-wrap;line-height:1.5;max-height:340px;overflow:auto"></div>`;
 
-  // Recado (broadcast) pros clientes: aparece num pop-up no painel deles.
-  const recAtivo = recadoAtual && recadoAtual.ativo;
+  // Recado pros clientes: aparece num pop-up no painel deles. Pode ser pra TODOS
+  // (geral) ou pra um cliente especifico.
+  const geralAtivo = recadoGeral && recadoGeral.ativo;
+  const opcoesClientes = cli.d.clientes
+    .slice().sort((a, b) => (nomeCliente[a.token] || "").localeCompare(nomeCliente[b.token] || ""))
+    .map((c) => `<option value="${esc(c.token)}">${esc(nomeCliente[c.token])}${c.email ? " · " + esc(c.email) : ""}</option>`).join("");
   html += `<div style="background:#fff;border:1px solid var(--linha);border-radius:14px;padding:16px 18px;margin-bottom:22px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
       <span style="font-size:15px;font-weight:800">📣 Recado pros clientes</span>
-      ${recAtivo
-        ? `<span class="pill ativo">no ar</span><span class="mut">publicado ${dataBR(recadoAtual.criadoEm)}</span>`
-        : `<span class="pill inativo">nenhum no ar</span>`}
     </div>
-    <div class="mut" style="margin-bottom:12px">Aparece num aviso direto no painel de cada cliente assim que ele entra. Ele vê uma vez por recado (some depois que fecha) e reaparece toda vez que você publica um novo.</div>
-    <input id="recado-titulo" type="text" maxlength="120" placeholder="Título (opcional), ex: Manutenção programada" value="${esc(recadoAtual?.titulo || "")}" style="width:100%;padding:9px 11px;border:1px solid var(--linha);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:8px" />
-    <textarea id="recado-texto" maxlength="2000" rows="4" placeholder="Escreva o recado que os clientes vão ler..." style="width:100%;padding:9px 11px;border:1px solid var(--linha);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical">${esc(recadoAtual?.texto || "")}</textarea>
+    <div class="mut" style="margin-bottom:12px">Aparece num aviso direto no painel do cliente assim que ele entra. Ele vê uma vez por recado (some depois que fecha) e reaparece quando você publica um novo. Um recado pra um cliente específico tem prioridade sobre o geral.</div>
+    <label style="display:block;font-size:12px;font-weight:700;color:var(--cinza-c);margin-bottom:5px">Enviar para</label>
+    <select id="recado-destino" style="width:100%;padding:9px 11px;border:1px solid var(--linha);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:8px">
+      <option value="todos">📢 Todos os clientes (geral)</option>
+      ${opcoesClientes}
+    </select>
+    <input id="recado-titulo" type="text" maxlength="120" placeholder="Título (opcional), ex: Manutenção programada" style="width:100%;padding:9px 11px;border:1px solid var(--linha);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:8px" />
+    <textarea id="recado-texto" maxlength="2000" rows="4" placeholder="Escreva o recado que o cliente vai ler..." style="width:100%;padding:9px 11px;border:1px solid var(--linha);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical"></textarea>
     <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center">
       <button onclick="publicarRecado(this)" style="background:var(--indigo);color:#fff;border:none;padding:9px 16px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">Publicar recado</button>
-      ${recAtivo ? `<button onclick="limparRecadoAdmin(this)" style="background:#fff;color:var(--vermelho);border:1px solid var(--vermelho);padding:9px 16px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">Tirar do ar</button>` : ""}
       <span id="recado-status" style="font-size:13px;color:var(--cinza)"></span>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid var(--linha);padding-top:12px">
+      <div style="font-size:12.5px;font-weight:700;color:var(--cinza-c);margin-bottom:8px">No ar agora</div>
+      ${geralAtivo
+        ? `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span class="pill ativo">geral</span><span class="mut">${esc((recadoGeral.titulo || recadoGeral.texto).slice(0, 60))} · ${dataBR(recadoGeral.criadoEm)}</span><button onclick="limparRecadoAdmin('todos', this)" style="background:#fff;color:var(--vermelho);border:1px solid var(--vermelho);padding:3px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Tirar do ar</button></div>`
+        : ""}
+      ${recadosInd.map((r) => `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span class="pill teste">${esc(nomeCliente[r.token] || "cliente")}</span><span class="mut">${esc((r.titulo || r.texto).slice(0, 60))} · ${dataBR(r.criadoEm)}</span><button onclick="limparRecadoAdmin('${esc(r.token)}', this)" style="background:#fff;color:var(--vermelho);border:1px solid var(--vermelho);padding:3px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Tirar do ar</button></div>`).join("")}
+      ${!geralAtivo && !recadosInd.length ? `<span class="mut">Nenhum recado no ar.</span>` : ""}
     </div>
   </div>`;
 

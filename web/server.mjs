@@ -35,7 +35,7 @@ import { statusAtual, cobranca } from "../src/assinatura.mjs";
 import { precoVencedores, contratosDoFornecedor } from "../src/preco.mjs";
 import { precoReferencia } from "../src/precoReferencia.mjs";
 import { csvEditais, csvHistorico, csvRadar, csvContratos, nomeArquivo } from "../src/exportar.mjs";
-import { lerRecado, lerRecadoAdmin, salvarRecado, limparRecado } from "../src/recado.mjs";
+import { lerRecadoPara, estadoRecados, salvarRecado, limparRecado } from "../src/recado.mjs";
 import { icsEdital, nomeIcs } from "../src/calendario.mjs";
 import { ehAssessoria, limiteEmpresas, listarEmpresasGerenciadas, adicionarEmpresa, removerEmpresa } from "../src/assessoria.mjs";
 import { checklist as onboardingChecklist } from "../src/onboarding.mjs";
@@ -1119,9 +1119,9 @@ const servidor = createServer(async (req, res) => {
         // Conta criada via Google sem CNPJ ainda: front redireciona pra completar.
         precisaCompletarCadastro: !!perfil.precisaCompletarCadastro || !perfil.cnpj,
         cobranca: { preco: cobranca.preco, pix: cobranca.pix, contato: cobranca.contato },
-        // Recado (broadcast) do admin, quando houver um ativo. O painel decide
-        // mostrar o modal comparando o id com o ultimo visto (localStorage).
-        recado: await lerRecado(),
+        // Recado do admin pra este cliente (individual tem prioridade sobre o
+        // geral). O painel decide mostrar comparando o id com o ultimo visto.
+        recado: await lerRecadoPara(token),
       });
     }
 
@@ -1587,18 +1587,19 @@ const servidor = createServer(async (req, res) => {
       const it = await alternarFeedbackLido(corpo.id || "");
       return it ? json(res, 200, { ok: true, lido: it.lido }) : json(res, 404, { erro: "Nao encontrado" });
     }
-    // Admin: le o recado atual (ativo ou nao) pra pre-preencher o formulario.
+    // Admin: estado dos recados (geral + individuais ativos) pra montar o painel.
     if (rota === "/api/admin/recado" && req.method === "GET") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
-      return json(res, 200, { recado: await lerRecadoAdmin() });
+      return json(res, 200, await estadoRecados());
     }
-    // Admin: publica um recado novo (acao "salvar") ou tira o atual do ar ("limpar").
+    // Admin: publica ("salvar") ou tira do ar ("limpar") um recado. destino =
+    // "todos" (geral) ou o token de um cliente especifico.
     if (rota === "/api/admin/recado" && req.method === "POST") {
       const corpo = await lerCorpo(req);
       if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       try {
-        if (corpo.acao === "limpar") return json(res, 200, { ok: true, recado: await limparRecado() });
-        const r = await salvarRecado({ titulo: corpo.titulo, texto: corpo.texto });
+        if (corpo.acao === "limpar") return json(res, 200, { ok: true, ...(await limparRecado({ destino: corpo.destino })) });
+        const r = await salvarRecado({ titulo: corpo.titulo, texto: corpo.texto, destino: corpo.destino });
         return json(res, 200, { ok: true, recado: r });
       } catch (e) { return json(res, 400, { erro: e.message }); }
     }
