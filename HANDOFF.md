@@ -1217,6 +1217,16 @@ Pedido do Jacques: mandar um recado pros clientes que apareça de forma direta n
 
 **Evolução no mesmo dia — recado INDIVIDUAL (por cliente):** o `recado.json` virou `{ geral, porCliente: {token: recado} }` (com migração automática do formato antigo). `lerRecadoPara(token)` devolve o individual do cliente (prioridade) ou o geral. Admin ganhou um seletor "Enviar para: Todos / [cliente]" e uma lista "No ar agora" com botão de tirar cada recado (geral ou individual) do ar. `estadoRecados()` alimenta o painel. Testado: migração, prioridade individual>geral, fallback ao limpar. Deployed.
 
+### 2026-07-16 (continuação) — plano ANUAL (item #1 da auditoria: maior ROI, menor esforço)
+
+Começou a maratona de tarefas da auditoria. Primeira: **plano anual** (paga 10 meses adiantado, usa 12 = "2 meses grátis"). Feito como **ciclo de cobrança**, não como plano novo: mesmo `nivel`, mesma cota (que reseta por mês-calendário em uso.mjs, então o anual NÃO dá o ano todo de cota de uma vez, dá a mensal todo mês). Margem no anual do Básico: R$1.490/ano vs ~R$450 de custo (12 meses de cota) = ~70%, segura.
+
+Implementação: `planos.mjs` `precoAnualNum()` + `MESES_ANUAL=10`; `asaas.mjs criarAssinatura({ciclo})` → `cycle:"YEARLY"`; `/api/checkout` aceita `ciclo:"anual"`, cobra `precoAnual`, externalReference `sub:token:id:anual`; webhook parseia o 4º segmento e ativa 365 dias; `ativarPlano(...,ciclo)` grava `assinatura.plano="anual"`; `/api/planos` devolve `precoAnual`+`mesesAnual`; `assinar.html` ganhou toggle Mensal/Anual (mostra R$/mês equivalente + "cobrado R$X/ano"). Guard: upgrade self-service bloqueado pra assinante anual (evita cobrar valor mensal numa sub YEARLY) — encaminha pro suporte até ter pró-rata anual. Validado: preços, parsing webhook mensal/anual, ativação 365d, sintaxe. Deployed.
+
+Preços anuais: Starter R$590, Básico R$1.490, Pro R$2.470, Expertise R$3.970.
+
+**Fila da auditoria (fazendo em sequência, pedido do Jacques "fazer todas"):** anual ✅ → token fora da URL (cookie) → upgrade oferecido ao bater a cota → 1ª análise automática no 1º login → herói da LP reescrito no diferencial → digest como gancho → ranking personalizado padrão → prova social (3 clientes reais) → retenção no cancelamento → sair do hobby (menos urgente, decidido adiar). Gerador de proposta/documentos (parte 2 da conversa) entra como workstream separado.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.

@@ -1,0 +1,237 @@
+// Gera lista de emails de fornecedores que participaram de licitacoes no PNCP.
+//
+// Fluxo:
+//   1. Busca contratos publicados no PNCP nos ultimos N meses (pagina a pagina)
+//   2. Extrai CNPJs unicos dos fornecedores vencedores
+//   3. Enriquece cada CNPJ via API publica da Receita Federal (publica.cnpj.ws)
+//      - Limite: 3 req/min; o script usa 22s de intervalo para nao ser bloqueado
+//   4. Filtra quem tem email cadastrado e exporta CSV
+//
+// Uso:
+//   node scripts/gerar-lista-emails.mjs
+//   node scripts/gerar-lista-emails.mjs --meses 3
+//   node scripts/gerar-lista-emails.mjs --meses 1 --max-cnpjs 500 --saida leads.csv
+//
+// Parametros:
+//   --meses N        janela de contratos a buscar (padrao: 3)
+//   --limite-pag N   max paginas do PNCP (util para testes rapidos)
+//   --max-cnpjs N    para o enriquecimento depois de N CNPJs (padrao: 1000)
+//   --saida ARQ      arquivo de saida (padrao: leads-AAAAMM.csv)
+//
+// Estimativa de tempo:
+//   500 CNPJs  ~ 3 horas | resultado esperado: ~120-180 emails
+//   1000 CNPJs ~ 6 horas | resultado esperado: ~250-350 emails
+
+import { createWriteStream } from "fs";
+import { paginarContratos } from "../src/pncp.mjs";
+
+// ---------- args ----------
+
+function arg(nome, padrao) {
+  const i = process.argv.indexOf(nome);
+  return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : padrao;
+}
+
+const meses       = Number(arg("--meses", 3));
+const limitePag   = Number(arg("--limite-pag", Infinity));
+const maxCnpjs    = Number(arg("--max-cnpjs", 1000));
+const hoje        = new Date();
+const tag         = `${hoje.getFullYear()}${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+const arquivoSaida = arg("--saida", `leads-${tag}.csv`);
+
+// ---------- util ----------
+
+const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fmtData(d) {
+  return d.toISOString().slice(0, 10).replace(/-/g, "");
+}
+
+function ehCnpj(ni) {
+  return ni && ni.replace(/\D/g, "").length === 14;
+}
+
+function escaparCsv(val) {
+  if (val == null) return "";
+  const s = String(val);
+  return s.includes(",") || s.includes('"') || s.includes("\n")
+    ? `"${s.replace(/"/g, '""')}"`
+    : s;
+}
+
+function linhaCSV(...cols) {
+  return cols.map(escaparCsv).join(",") + "\n";
+}
+
+// ---------- fase 1: coletar CNPJs do PNCP ----------
+
+async function coletarCnpjs() {
+  const cnpjs = new Map(); // cnpj => { razaoSocial, uf, municipio, exemploProduto }
+  let totalContratos = 0;
+  let pag = 0;
+
+  const dataFinal   = fmtData(hoje);
+  const dataInicial = fmtData(new Date(hoje.getFullYear(), hoje.getMonth() - meses, hoje.getDate()));
+
+  console.log(`\nFase 1 — Coletando fornecedores do PNCP (${dataInicial} a ${dataFinal})...`);
+
+  for await (const { contratos, pagina, totalPaginas } of paginarContratos({ dataInicial, dataFinal })) {
+    pag++;
+    process.stdout.write(`\r  pag ${pagina}/${totalPaginas} | CNPJs coletados: ${cnpjs.size}`);
+
+    for (const c of contratos) {
+      if (!ehCnpj(c.fornecedorNi)) continue;
+      // Ignora alienacao de bens e leiloes: esses vencedores nao sao
+      // fornecedores regulares de pregoes e raramente tem email cadastrado
+      if (c.categoriaId === 11) continue; // Alienacao de bens moveis/imoveis
+      const cnpj = c.fornecedorNi.replace(/\D/g, "");
+      if (!cnpjs.has(cnpj)) {
+        cnpjs.set(cnpj, {
+          razaoSocial:    c.fornecedor ?? "",
+          uf:             c.uf ?? "",
+          municipio:      c.municipio ?? "",
+          exemploProduto: (c.objeto ?? "").slice(0, 120),
+        });
+      }
+    }
+
+    totalContratos += contratos.length;
+    if (pag >= limitePag) break;
+    // Para quando tiver CNPJs suficientes para o enriquecimento
+    if (cnpjs.size >= maxCnpjs * 3) break; // coleta 3x mais do que vai usar (filtragem posterior)
+  }
+
+  console.log(`\n  Contratos lidos: ${totalContratos.toLocaleString("pt-BR")} | CNPJs unicos: ${cnpjs.size}`);
+  return cnpjs;
+}
+
+// ---------- fase 2: enriquecer com email via Receita Federal ----------
+
+async function buscarCnpjWs(cnpj) {
+  const resp = await fetch(`https://publica.cnpj.ws/cnpj/${cnpj}`, {
+    headers: { Accept: "application/json", "User-Agent": "ContrataX/1.0" },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (resp.status === 429 || resp.status >= 500) return { bloqueado: true };
+  if (!resp.ok) return { erro: resp.status };
+  const d = await resp.json();
+  const est = d.estabelecimento ?? {};
+  return {
+    email:        est.email?.trim() || null,        // campo correto: estabelecimento.email
+    nomeFantasia: est.nome_fantasia?.trim() || null,
+    razaoSocial:  d.razao_social?.trim() ?? null,
+    uf:           est.estado?.sigla ?? null,
+    municipio:    est.cidade?.nome ?? null,
+    situacao:     est.situacao_cadastral ?? null,
+  };
+}
+
+async function enriquecerCnpj(cnpj) {
+  try {
+    return await buscarCnpjWs(cnpj);
+  } catch {
+    return { erro: "timeout" };
+  }
+}
+
+// ---------- main ----------
+
+async function main() {
+  console.log("=== Gerador de Leads por Email — Fornecedores PNCP + Receita Federal ===");
+  console.log(`Parametros: meses=${meses} | max-cnpjs=${maxCnpjs} | saida=${arquivoSaida}`);
+  console.log(`Tempo estimado: ~${Math.round(maxCnpjs * 22 / 3600 * 10) / 10} horas`);
+
+  // Fase 1
+  const cnpjsTodos = await coletarCnpjs();
+  const cnpjsParaEnriquecer = [...cnpjsTodos.entries()].slice(0, maxCnpjs);
+  const total = cnpjsParaEnriquecer.length;
+
+  // Prepara CSV
+  const stream = createWriteStream(arquivoSaida, { encoding: "utf8" });
+  stream.write("﻿"); // BOM UTF-8 para o Excel abrir corretamente
+  stream.write(linhaCSV(
+    "email",
+    "razao_social",
+    "nome_fantasia",
+    "cnpj",
+    "uf",
+    "municipio",
+    "situacao_cadastral",
+    "exemplo_produto_licitado",
+  ));
+
+  let processados = 0, comEmail = 0, semEmail = 0, erros = 0, bloqueios = 0;
+
+  console.log(`\nFase 2 — Enriquecendo ${total} CNPJs (22s entre cada consulta para respeitar rate limit)...`);
+  console.log(`Iniciado em: ${new Date().toLocaleTimeString("pt-BR")}`);
+  const previsao = new Date(Date.now() + total * 22000);
+  console.log(`Previsao de termino: ${previsao.toLocaleTimeString("pt-BR")} (${previsao.toLocaleDateString("pt-BR")})\n`);
+
+  for (const [cnpj, dadosPncp] of cnpjsParaEnriquecer) {
+    processados++;
+    process.stdout.write(
+      `\r  ${processados}/${total} | emails: ${comEmail} | sem email: ${semEmail} | erros: ${erros} | bloqueios: ${bloqueios}`
+    );
+
+    let rf = await enriquecerCnpj(cnpj);
+
+    // Se bloqueado, aguarda 90s e tenta de novo
+    if (rf.bloqueado) {
+      bloqueios++;
+      process.stdout.write(`\n  [!] Rate limit. Aguardando 90s... (${new Date().toLocaleTimeString("pt-BR")})`);
+      await dormir(90000);
+      rf = await enriquecerCnpj(cnpj);
+    }
+
+    if (rf.erro) {
+      erros++;
+    } else if (rf.email?.includes("@")) {
+      // Aceita empresa ativa ou sem situacao definida
+      const ativa = !rf.situacao || rf.situacao === "Ativa" || rf.situacao === "2";
+      if (ativa) {
+        stream.write(linhaCSV(
+          rf.email,
+          rf.razaoSocial  ?? dadosPncp.razaoSocial,
+          rf.nomeFantasia ?? "",
+          cnpj,
+          rf.uf       ?? dadosPncp.uf,
+          rf.municipio ?? dadosPncp.municipio,
+          rf.situacao ?? "",
+          dadosPncp.exemploProduto,
+        ));
+        comEmail++;
+      } else {
+        semEmail++;
+      }
+    } else {
+      semEmail++;
+    }
+
+    // 22s de intervalo = confortavelmente abaixo do limite de 3 req/min
+    if (processados < total) await dormir(22000);
+  }
+
+  await new Promise((res) => stream.end(res));
+
+  const taxaEmail = total > 0 ? Math.round((comEmail / processados) * 100) : 0;
+
+  console.log(`\n\n================ RESULTADO ================`);
+  console.log(`CNPJs processados  : ${processados.toLocaleString("pt-BR")}`);
+  console.log(`Emails encontrados : ${comEmail.toLocaleString("pt-BR")} (${taxaEmail}% de preenchimento)`);
+  console.log(`Sem email          : ${semEmail.toLocaleString("pt-BR")}`);
+  console.log(`Erros/timeouts     : ${erros.toLocaleString("pt-BR")}`);
+  console.log(`Bloqueios de rate  : ${bloqueios.toLocaleString("pt-BR")}`);
+  console.log(`Arquivo gerado     : ${arquivoSaida}`);
+  console.log(`===========================================`);
+
+  if (comEmail === 0) {
+    console.log(`\nAviso: nenhum email encontrado. Possivel causa: os CNPJs desta amostra`);
+    console.log(`pertencem a leiloes/alienacoes onde os vencedores sao pessoas fisicas.`);
+    console.log(`Tente aumentar o numero de meses com --meses 6.`);
+  }
+}
+
+main().catch((e) => {
+  console.error("\nErro fatal:", e.message);
+  process.exit(1);
+});

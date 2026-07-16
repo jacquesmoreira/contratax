@@ -63,6 +63,11 @@
     <h1>Continue vendo as licitações que você pode ganhar</h1>
     <div class="sub">A leitura completa do edital e a conferência dos seus documentos ficam liberadas na assinatura. Pagou, liberou na hora, sem fidelidade, cancele quando quiser.</div>
 
+    <div id="ciclo-toggle" style="display:inline-flex;background:#eef2ff;border:1px solid #e2e8f0;border-radius:99px;padding:4px;gap:4px;margin:6px 0 22px">
+      <button type="button" id="ct-mensal" onclick="aplicarCiclo('mensal')" style="border:none;background:#fff;color:var(--navy);font-weight:800;padding:8px 18px;border-radius:99px;cursor:pointer;font-family:inherit;font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,.12)">Mensal</button>
+      <button type="button" id="ct-anual" onclick="aplicarCiclo('anual')" style="border:none;background:transparent;color:var(--cinza);font-weight:800;padding:8px 18px;border-radius:99px;cursor:pointer;font-family:inherit;font-size:14px">Anual · 2 meses grátis</button>
+    </div>
+
     <div class="planos" id="planos"></div>
 
     <h2>Precisa de mais análises num mês?</h2>
@@ -88,9 +93,26 @@ const BENEFICIOS = [
 ];
 
 let DADOS = null;
+let cicloAtual = "mensal"; // "mensal" | "anual"
+const moeda = (n) => Number(n).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// Alterna a exibicao de preco mensal <-> anual (o desconto ja vem calculado do
+// backend em precoAnual). So muda o que aparece; o checkout le cicloAtual.
+function aplicarCiclo(ciclo) {
+  cicloAtual = ciclo;
+  const anual = ciclo === "anual";
+  const bm = $("ct-mensal"), ba = $("ct-anual");
+  const on = (b) => { b.style.background = "#fff"; b.style.color = "var(--navy)"; b.style.boxShadow = "0 1px 3px rgba(0,0,0,.12)"; };
+  const off = (b) => { b.style.background = "transparent"; b.style.color = "var(--cinza)"; b.style.boxShadow = "none"; };
+  if (anual) { on(ba); off(bm); } else { on(bm); off(ba); }
+  document.querySelectorAll(".preco-mensal").forEach((e) => e.style.display = anual ? "none" : "flex");
+  document.querySelectorAll(".preco-anual").forEach((e) => e.style.display = anual ? "flex" : "none");
+  document.querySelectorAll(".anual-nota").forEach((e) => e.style.display = anual ? "block" : "none");
+}
 
 async function carregar() {
   DADOS = await (await fetch("/api/planos")).json();
+  const gratisMeses = 12 - (DADOS.mesesAnual || 10);
   // status do teste
   try {
     const a = await (await fetch("/api/acesso?c=" + encodeURIComponent(token))).json();
@@ -115,7 +137,9 @@ async function carregar() {
     <div class="card ${destaque ? "destaque" : ""}">
       ${tag ? `<span class="tag-top">${tag}</span>` : ""}
       <div class="pl-nome">${p.nome}</div>
-      <div class="preco"><b>R$ ${p.preco}</b><span>/mês</span></div>
+      <div class="preco preco-mensal"><b>R$ ${p.preco}</b><span>/mês</span></div>
+      <div class="preco preco-anual" style="display:none"><b>R$ ${moeda(p.precoAnual / 12)}</b><span>/mês</span></div>
+      <div class="anual-nota" style="display:none;font-size:12px;color:#059669;font-weight:700;margin:2px 0">cobrado R$ ${moeda(p.precoAnual)}/ano · ${gratisMeses} ${gratisMeses === 1 ? "mês grátis" : "meses grátis"}</div>
       <div class="pl-cota">${cotaHtml}</div>
       ${p.degustacao
         ? `<div style="font-size:12px;color:var(--cinza-c);margin-top:6px;line-height:1.4">Ideal para começar: além dos alertas diários, você já usa a ContrataX.IA que lê o edital e diz se está apto. Precisa de mais análises por mês? É só subir de plano.</div>`
@@ -154,7 +178,7 @@ async function checkout(btn) {
   const original = btn.textContent;
   btn.disabled = true; btn.textContent = "Abrindo pagamento...";
   try {
-    const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ c: token, tipo: btn.dataset.tipo, id: btn.dataset.id }) });
+    const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ c: token, tipo: btn.dataset.tipo, id: btn.dataset.id, ciclo: cicloAtual }) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.erro || "falha");
     if (d.automatico && d.url) {

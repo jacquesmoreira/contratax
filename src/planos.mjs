@@ -106,3 +106,15 @@ export function planoDe(perfil) {
 export function listarPlanos() {
   return Object.values(PLANOS);
 }
+
+// Ciclo ANUAL: o cliente paga MESES_ANUAL meses adiantado e usa o ano inteiro
+// (com =10, sao "2 meses gratis"). A COTA nao muda: continua mensal e reseta por
+// mes-calendario (uso.mjs), entao o custo de servir e o mesmo que 12 mensalidades
+// e a margem segue >60%. O anual so muda a frequencia e o total da cobranca.
+export const MESES_ANUAL = Number(process.env.LICITA_MESES_ANUAL || 10);
+
+// Preco total do plano no ciclo anual (numero). Ex.: Basico 149 -> 1490,00.
+export function precoAnualNum(plano) {
+  const mensal = Number(String(plano.preco).replace(/\./g, "").replace(",", "."));
+  return Math.round(mensal * MESES_ANUAL * 100) / 100;
+}

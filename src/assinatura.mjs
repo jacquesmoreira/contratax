@@ -73,14 +73,14 @@ export function statusAtual(perfil) {
 // Ativa (ou renova) a assinatura de um cliente num NIVEL (basico/pro) por N dias.
 // Chamado pelo webhook de pagamento (automatico) ou pelo admin. nivel=null mantem
 // o nivel atual (ou basico). Uso retrocompativel: ativarPorToken(token, dias).
-export async function ativarPorToken(token, dias = 30, nivel = null, formaPagamento = null) {
+export async function ativarPorToken(token, dias = 30, nivel = null, formaPagamento = null, ciclo = "mensal") {
   const perfis = await lerPerfis();
   const p = perfis.find((x) => x.token === token);
   if (!p) throw new Error(`Token ${token} nao encontrado`);
   p.assinatura = {
     ...(p.assinatura || {}),
     status: "ativo",
-    plano: "mensal",
+    plano: ciclo === "anual" ? "anual" : "mensal",
     nivel: nivel || p.assinatura?.nivel || "basico",
     formaPagamento: formaPagamento || p.assinatura?.formaPagamento || null,
     ativadoEm: new Date().toISOString(),
@@ -95,8 +95,8 @@ export async function ativarPorToken(token, dias = 30, nivel = null, formaPagame
 
 // Acucar para o webhook: ativa por nivel (mensalidade recorrente = 30 dias).
 // formaPagamento (CREDIT_CARD / PIX / BOLETO) define se avisamos antes do vencimento.
-export async function ativarPlano(token, nivel, dias = 30, formaPagamento = null) {
-  return ativarPorToken(token, dias, nivel, formaPagamento);
+export async function ativarPlano(token, nivel, dias = 30, formaPagamento = null, ciclo = "mensal") {
+  return ativarPorToken(token, dias, nivel, formaPagamento, ciclo);
 }
 
 // Calcula a diferenca pro-rata para upgrade de plano dentro do ciclo atual.

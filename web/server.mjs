@@ -63,7 +63,7 @@ import { parsearXmlContrato, extrairContratoPdf, detectarTipo as detectarTipoArq
 import { googleConfigurado, urlAutorizacao, processarCallback } from "../src/googleOAuth.mjs";
 import { solicitarReset, aplicarReset, verificarToken } from "../src/recuperarSenha.mjs";
 import { checarAuth, registrarTentativa, limparAuth, ipDoRequest as ipAuth } from "../src/rateLimitAuth.mjs";
-import { PLANOS, AVULSOS, planoDe } from "../src/planos.mjs";
+import { PLANOS, AVULSOS, planoDe, precoAnualNum, MESES_ANUAL } from "../src/planos.mjs";
 import { ativarPlano, cancelarPorToken, calcularProRata, aplicarUpgrade, calcularProRataAssentos, aplicarAssentos, valorMensalRecorrente } from "../src/assinatura.mjs";
 import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura, cancelarAssinaturaAsaas, atualizarValorAssinatura } from "../src/asaas.mjs";
 
@@ -1680,8 +1680,10 @@ const servidor = createServer(async (req, res) => {
     // Catalogo de planos e pacotes avulsos (para a pagina de assinar).
     if (rota === "/api/planos") {
       return json(res, 200, {
-        planos: Object.values(PLANOS),
+        // precoAnual = total do ciclo anual (numero); a UI mostra o /mes equivalente.
+        planos: Object.values(PLANOS).map((p) => ({ ...p, precoAnual: precoAnualNum(p) })),
         avulsos: Object.values(AVULSOS),
+        mesesAnual: MESES_ANUAL, // p.ex. 10 = "2 meses gratis"
         automatico: asaasConfigurado(),
         cobranca: { pix: cobranca.pix, contato: cobranca.contato },
       });
@@ -1717,7 +1719,11 @@ const servidor = createServer(async (req, res) => {
         } else {
           const pl = PLANOS[corpo.id];
           if (!pl) return json(res, 400, { erro: "Plano invalido" });
-          r = await criarAssinatura({ clienteId, valor: precoNumero(pl.preco), descricao: `ContrataX: Plano ${pl.nome}`, externalReference: `sub:${perfil.token}:${pl.id}`, successUrl });
+          // Ciclo: "anual" (paga MESES_ANUAL adiantado, 1 cobranca/ano) ou mensal.
+          const anual = corpo.ciclo === "anual";
+          const valor = anual ? precoAnualNum(pl) : precoNumero(pl.preco);
+          const refSub = anual ? `sub:${perfil.token}:${pl.id}:anual` : `sub:${perfil.token}:${pl.id}`;
+          r = await criarAssinatura({ clienteId, valor, descricao: `ContrataX: Plano ${pl.nome}${anual ? " (anual)" : ""}`, externalReference: refSub, successUrl, ciclo: anual ? "anual" : "mensal" });
           // Salva o subscriptionId no perfil pra permitir cancelamento self-service.
           if (r.subscriptionId) {
             const perfis2 = await lerPerfis();
@@ -1752,10 +1758,12 @@ const servidor = createServer(async (req, res) => {
         if (evento === "PAYMENT_RECEIVED" || evento === "PAYMENT_CONFIRMED") {
           let ref = pg.externalReference;
           if (!ref && pg.subscription) ref = await externalReferenceDaAssinatura(pg.subscription);
-          const [tipo, token, id] = String(ref || "").split(":");
+          const [tipo, token, id, ciclo] = String(ref || "").split(":");
           if (tipo === "sub" && token) {
             const nivel = PLANOS[id] ? id : "basico";
-            await ativarPlano(token, nivel, 30, pg.billingType || null);
+            // Anual estende 365 dias (a proxima cobranca do Asaas so vem em 1 ano).
+            const anual = ciclo === "anual";
+            await ativarPlano(token, nivel, anual ? 365 : 30, pg.billingType || null, anual ? "anual" : "mensal");
             // Conversion API GA4 (server-side): registra purchase pra remarketing
             // e medicao precisa de ROAS no Google Ads.
             try {
@@ -1940,6 +1948,12 @@ const servidor = createServer(async (req, res) => {
       if (!asaasConfigurado()) return json(res, 400, { erro: "Gateway nao configurado" });
       const novo = PLANOS[corpo.novo];
       if (!novo) return json(res, 400, { erro: "Plano invalido" });
+      // Assinante ANUAL: o upgrade self-service (pro-rata mensal + atualizar valor
+      // recorrente) assume ciclo mensal e cobraria errado numa assinatura YEARLY.
+      // Ate ter pro-rata anual, encaminha pro suporte em vez de cobrar torto.
+      if (perfil.assinatura?.plano === "anual") {
+        return json(res, 400, { erro: `Você está no plano anual. Pra trocar de plano, fale com a gente em ${cobranca.contato} que ajustamos sem você pagar em dobro.`, anual: true });
+      }
       const atualId = perfil.assinatura?.nivel || "starter";
       const atual = PLANOS[atualId] || PLANOS.starter;
       const calc = calcularProRata(perfil, atual, novo);

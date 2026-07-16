@@ -55,14 +55,14 @@ export async function obterOuCriarCliente({ nome, email, cnpj, clienteId }) {
 }
 
 // Assinatura mensal recorrente. Devolve a URL de pagamento da 1a cobranca.
-export async function criarAssinatura({ clienteId, valor, descricao, externalReference, successUrl }) {
+export async function criarAssinatura({ clienteId, valor, descricao, externalReference, successUrl, ciclo = "mensal" }) {
   const hoje = new Date().toISOString().slice(0, 10);
   const sub = await api("/subscriptions", "POST", {
     customer: clienteId,
     billingType: "UNDEFINED", // o cliente escolhe Pix, cartao ou boleto no checkout
     value: valor,
     nextDueDate: hoje,
-    cycle: "MONTHLY",
+    cycle: ciclo === "anual" ? "YEARLY" : "MONTHLY", // anual = 1 cobranca/ano
     description: descricao,
     externalReference,
     callback: successUrl ? { successUrl, autoRedirect: true } : undefined,
