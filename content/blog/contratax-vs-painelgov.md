@@ -15,7 +15,7 @@ Os dois produtos são relativamente novos no mercado brasileiro, têm IA própri
 |---|---|---|
 | **Plano grátis** | 7 dias de trial completo | Sim, plano grátis permanente (5 buscas/dia) |
 | **Preço inicial (pago)** | **R$ 59/mês** (Starter para MEI) | R$ 49/mês (Essencial) |
-| **Preço com IA mais completa** | **R$ 247/mês** (Básico, 30 análises) | R$ 99/mês (Profissional, IA ilimitada) |
+| **Preço com IA de verdade** | **R$ 149/mês** (Básico, 15 análises) | R$ 99/mês (Profissional, IA ilimitada) |
 | **Fidelidade** | **Nenhuma** | 10% de desconto pra anual |
 | **Pagamento** | Pix, cartão, boleto | Não especificado |
 | **IA** | **ContrataX.IA** (Claude da Anthropic) lê PDF completo | "Checklist IA" personalizado |
@@ -32,7 +32,7 @@ PainelGov é uma plataforma mais nova no mercado brasileiro de monitoramento de 
 
 Pontos onde a abordagem difere do ContrataX:
 
-- **Modelo de cota**: PainelGov foca em **limite de buscas** (5/dia no grátis, ilimitado nos pagos) e **alertas ativos** (1, 3 ou ilimitados). ContrataX foca em **leitura completa do edital com IA** (3, 30 ou 50 análises por mês conforme plano).
+- **Modelo de cota**: PainelGov foca em **limite de buscas** (5/dia no grátis, ilimitado nos pagos) e **alertas ativos** (1, 3 ou ilimitados). ContrataX foca em **leitura completa do edital com IA** (6, 15, 30 ou 50 análises por mês conforme plano).
 - **Profundidade da IA**: PainelGov tem "Checklist IA personalizado" (Profissional R$ 99). ContrataX tem **leitura completa do PDF do edital** + cruzamento com seus documentos + veredito de aptidão + dossiê de impugnação automático.
 - **Cobertura pós-vitória**: PainelGov é forte em busca e alertas. ContrataX **acompanha o ciclo todo**, incluindo minutas de prorrogação, recebíveis e ofício de cobrança quando órgão atrasa.
 
@@ -41,8 +41,8 @@ Pontos onde a abordagem difere do ContrataX:
 | Tipo de uso | ContrataX | PainelGov | Observação |
 |---|---|---|---|
 | **Testar grátis** | 7 dias trial sem cartão | Grátis permanente (5 buscas/dia) | Modelos diferentes |
-| **Entrada pago** | Starter R$ 59 (3 análises IA) | Essencial R$ 49 (sem IA) | Diferença R$ 10/mês com IA |
-| **Com IA** | Básico R$ 247 (30 análises) | Profissional R$ 99 (IA ilimitada) | PainelGov R$ 148 mais barato |
+| **Entrada pago** | Starter R$ 59 (6 análises IA) | Essencial R$ 49 (sem IA) | Diferença R$ 10/mês com IA |
+| **Com IA** | Básico R$ 149 (15 análises) | Profissional R$ 99 (IA ilimitada) | PainelGov R$ 50 mais barato |
 | **Multi-CNPJ** | Assessoria 10 R$ 697 (10 CNPJs) | Não claro | Vantagem ContrataX |
 
 **Resumo honesto**: PainelGov pode ser mais barato pra quem **só usa busca + alertas + checklist simples**. ContrataX é melhor pra quem precisa de **IA profunda lendo o PDF do edital, dossiê de impugnação, recebíveis e multi-CNPJ**.
@@ -67,7 +67,7 @@ Pontos onde a abordagem difere do ContrataX:
 | Cruzamento com documentos da empresa | ✅ Sim | Via Checklist IA |
 | Veredito de aptidão (apto/não apto) | ✅ Em segundos | Via Checklist |
 | Dossiê de impugnação por IA | ✅ **Petição pronta** | Não |
-| Cota de uso da IA | 3, 30 ou 50 análises/mês conforme plano | 10/mês ou ilimitado conforme plano |
+| Cota de uso da IA | 6, 15, 30 ou 50 análises/mês conforme plano | 10/mês ou ilimitado conforme plano |
 
 ### Inteligência de mercado
 
@@ -119,7 +119,7 @@ Se você usa PainelGov hoje e quer testar:
 ## Perguntas frequentes
 
 ### ContrataX é mais caro que PainelGov?
-Em entrada simples, sim (R$ 59 vs R$ 49 do Essencial). Mas o PainelGov **Essencial não tem IA**. Pra ter IA no PainelGov, vai pro Profissional R$ 99 (mais barato que o Básico ContrataX R$ 247). **A diferença é a profundidade**: PainelGov tem checklist IA, ContrataX faz leitura completa do PDF.
+Em entrada simples, sim (R$ 59 vs R$ 49 do Essencial). Mas o PainelGov **Essencial não tem IA**. Pra ter IA no PainelGov, vai pro Profissional R$ 99 (perto do Básico ContrataX R$ 149). **A diferença é a profundidade**: PainelGov tem checklist IA, ContrataX faz leitura completa do PDF.
 
 ### A IA do ContrataX é melhor que a do PainelGov?
 São conceitos diferentes. PainelGov gera **checklist IA personalizado** (você pergunta, ele responde). ContrataX **lê o PDF inteiro automaticamente** e gera veredito apto/não apto sem você perguntar. ContrataX usa Claude da Anthropic (declarado), PainelGov não declara modelo.

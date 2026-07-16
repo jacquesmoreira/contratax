@@ -163,8 +163,10 @@ async function carregar() {
     const venc = c.diasRestantes != null ? `${c.diasRestantes}d` : "";
     const ia = c.custoIA || { total: 0, mes: 0, chamadas: 0 };
     const brlIA = (v) => "R$ " + (Number(v) || 0).toFixed(2).replace(".", ",");
-    // Receita mensal do plano pra calcular margem (Basico 197, Pro 297)
-    const receita = c.nivel === "starter" ? 59 : c.nivel === "pro" ? 397 : c.nivel === "assessoria10" ? 697 : c.nivel === "assessoria25" ? 1297 : 247;
+    // Receita mensal do plano pra calcular margem. Chave = id INTERNO (nao o rotulo
+    // de tela): starter 59, essencial(exibe "Basico") 149, basico(exibe "Pro") 247,
+    // pro(exibe "Expertise") 397, assessorias 697/1297. Fallback 247 = id basico.
+    const receita = c.nivel === "starter" ? 59 : c.nivel === "essencial" ? 149 : c.nivel === "pro" ? 397 : c.nivel === "assessoria10" ? 697 : c.nivel === "assessoria25" ? 1297 : 247;
     const margem = c.status === "ativo" ? Math.round(100 * (1 - ia.mes / receita)) : null;
     html += `<tr>
       <td><b>${esc(c.razaoSocial || c.nome)}</b><br><span class="mut">${esc(c.cnpj || "sem CNPJ")} · ${esc(c.uf || "BR")}</span><br>${ramoCell(c.ramo)}</td>
@@ -189,7 +191,7 @@ async function carregar() {
       <td><b style="color:${ia.mes > receita*0.5 ? '#dc2626' : '#0f172a'}">${brlIA(ia.mes)}</b> <span class="mut">no mês</span><br><span class="mut">${brlIA(ia.total)} total · ${ia.chamadas} cham.${margem != null ? ` · margem ${margem}%` : ""}</span></td>
       <td>${c.equipe.usados}/${c.equipe.assentos}</td>
       <td><div class="acoes" data-token="${c.token}">
-        <select class="sel-nivel"><option value="basico">Básico</option><option value="pro">Pro</option></select>
+        <select class="sel-nivel"><option value="starter">Starter R$59</option><option value="essencial">Básico R$149</option><option value="basico">Pro R$247</option><option value="pro">Expertise R$397</option></select>
         <input class="in-dias" type="number" value="30" title="dias" />
         <button class="btn-ativar">Ativar</button>
         <input class="in-avulso" type="number" placeholder="+50" title="avulsas" />

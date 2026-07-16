@@ -14,7 +14,7 @@ Os dois produtos têm IA própria e foco em ajudar pequenas e médias empresas a
 | Item | **ContrataX** | **Licitei** |
 |---|---|---|
 | **Preço inicial (Starter/Busca)** | **R$ 59/mês** (Starter para MEI) | R$ 101/mês (Plano Busca) |
-| **Preço com IA (Básico/Premium)** | **R$ 247/mês** (Básico, 30 análises) | R$ 393/mês (Premium) |
+| **Preço com IA (Básico/Premium)** | **R$ 149/mês** (Básico, 15 análises) | R$ 393/mês (Premium) |
 | **Multi-CNPJ** | **R$ 697/mês** (10 CNPJs) | R$ 1.179/mês (3 CNPJs, Multiempresas 3) |
 | **Trial gratuito** | **7 dias sem cartão** | 7 dias sem cartão |
 | **Fidelidade** | **Nenhuma** | Mensal (com desconto pra semestral/anual) |
@@ -36,7 +36,7 @@ Licitei é um dos competidores diretos com IA própria no mercado brasileiro. Te
 Mas vale entender onde as abordagens **diferem**:
 
 - **Preço de entrada**: Licitei começa em R$ 101/mês (Plano Busca). ContrataX começa em **R$ 59/mês** (plano Starter pensado pra MEI). Para microempreendedores, esses R$ 42/mês de diferença são significativos.
-- **Preço da IA**: A IA completa do Licitei está no Plano Premium (**R$ 393/mês**). A IA do ContrataX já vem no plano Básico (**R$ 247/mês**, com 30 análises). Quem quer IA paga **R$ 146/mês a menos** com ContrataX.
+- **Preço da IA**: A IA completa do Licitei está no Plano Premium (**R$ 393/mês**). A IA do ContrataX já vem no plano Básico (**R$ 149/mês**, com 15 análises). Quem quer IA paga **R$ 244/mês a menos** com ContrataX.
 - **Multi-CNPJ**: Licitei tem "Multiempresas 3" por **R$ 1.179/mês** (R$ 393 por CNPJ). ContrataX tem Assessoria 10 por **R$ 697/mês** (R$ 69,70 por CNPJ). Para assessorias e consultores, ContrataX é **5x mais barato por empresa gerenciada**.
 - **IA na prática**: Licitei tem "Pergunte ao Edital" (interface chat com IA). ContrataX faz **leitura automática completa do PDF do edital** com cruzamento contra documentos cadastrados, você não precisa perguntar, ele já entrega o veredito.
 
@@ -45,8 +45,9 @@ Mas vale entender onde as abordagens **diferem**:
 | Tipo de uso | ContrataX | Licitei | Economia ContrataX |
 |---|---|---|---|
 | **MEI (entrada)** | Starter R$ 59 | Busca R$ 101 | **R$ 42/mês** |
-| **ME/EPP com IA** | Básico R$ 247 | Premium R$ 393 | **R$ 146/mês** |
-| **ME/EPP escala** | Pro R$ 397 | Premium R$ 393 | + R$ 4 (mesma faixa) |
+| **ME/EPP com IA** | Básico R$ 149 | Premium R$ 393 | **R$ 244/mês** |
+| **ME/EPP em ritmo** | Pro R$ 247 | Premium R$ 393 | **R$ 146/mês** |
+| **ME/EPP escala** | Expertise R$ 397 | Premium R$ 393 | + R$ 4 (mesma faixa) |
 | **3 CNPJs** | Assessoria 10 R$ 697 (até 10) | Multiempresas 3 R$ 1.179 | **R$ 482/mês** |
 | **10 CNPJs** | Assessoria 10 R$ 697 | Sob consulta (custo proporcional) | **Muito menor** |
 
@@ -74,7 +75,7 @@ Mas vale entender onde as abordagens **diferem**:
 | Veredito de aptidão (apto/não apto) | ✅ Gerado automaticamente | Via consulta |
 | Lista do que falta na sua empresa | ✅ Item por item | Via consulta |
 | Dossiê de impugnação por IA | ✅ **Petição pronta** | Não |
-| IA em qual plano | Plano Básico (R$ 247) | Plano Premium (R$ 393) |
+| IA em qual plano | Plano Básico (R$ 149) | Plano Premium (R$ 393) |
 
 ### Inteligência de mercado
 
@@ -99,7 +100,7 @@ Mas vale entender onde as abordagens **diferem**:
 ## Quando escolher ContrataX
 
 - **MEI ou microempresa**: R$ 59 cabe no orçamento (vs R$ 101 do Licitei Busca)
-- **Quer IA mais barato**: Básico R$ 247 (vs Premium Licitei R$ 393)
+- **Quer IA mais barato**: Básico R$ 149 (vs Premium Licitei R$ 393)
 - **Consultoria multi-CNPJ**: R$ 69,70 por empresa (vs R$ 393 do Licitei Multiempresas)
 - **Quer cobrir o ciclo todo** (achar, ganhar, entregar, cobrar)
 - **Valoriza transparência da IA** (Claude da Anthropic vs modelo não declarado)
@@ -133,7 +134,7 @@ Como ContrataX **não tem fidelidade**, você pode cancelar depois sem multa. Va
 ### ContrataX é mais barato que Licitei?
 Sim, em todos os tiers. Comparativo direto:
 - Entrada: **R$ 59 (ContrataX Starter)** vs R$ 101 (Licitei Busca), economia R$ 42/mês
-- Com IA: **R$ 247 (ContrataX Básico)** vs R$ 393 (Licitei Premium), economia R$ 146/mês
+- Com IA: **R$ 149 (ContrataX Básico)** vs R$ 393 (Licitei Premium), economia R$ 244/mês
 - Multi-CNPJ: **R$ 697 por 10 CNPJs (ContrataX Assessoria 10)** vs R$ 1.179 por 3 CNPJs (Licitei Multiempresas), economia R$ 482/mês
 
 ### A IA do ContrataX é melhor que a do Licitei?

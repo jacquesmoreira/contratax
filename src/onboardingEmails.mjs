@@ -26,7 +26,13 @@ import { PLANOS } from "./planos.mjs";
 
 // Precos vindos da fonte unica (planos.mjs). Evita e-mail com preco velho.
 const PRECO_STARTER = PLANOS.starter.preco; // entrada (ex: "59,00")
-const PRECO_BASICO = PLANOS.basico.preco;   // recomendado, com IA completa
+// Plano recomendado pos-Starter = degrau com IA em escala. Hoje e o id "essencial"
+// (exibido como "Basico", R$149/15). Puxa nome/preco/cota do catalogo pra nunca
+// desalinhar do que o cliente ve na tela.
+const PLANO_REC = PLANOS.essencial;
+const PRECO_REC = PLANO_REC.preco;
+const NOME_REC = PLANO_REC.nome;
+const ANALISES_REC = PLANO_REC.analises;
 
 const BASE = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
 
@@ -194,8 +200,8 @@ export function email3(perfil, totalEditais, somaValor) {
         </tr>
         <tr>
           <td style="padding:12px 14px">
-            <b style="color:#4338ca">Básico, R$ ${PRECO_BASICO}/mês</b><br>
-            <span style="font-size:13.5px;color:#475569">Tudo do Starter + a ContrataX.IA lendo o edital completo e dizendo se você está apto (30 análises/mês).</span>
+            <b style="color:#4338ca">${NOME_REC}, R$ ${PRECO_REC}/mês</b><br>
+            <span style="font-size:13.5px;color:#475569">Tudo do Starter + a ContrataX.IA lendo o edital completo e dizendo se você está apto (${ANALISES_REC} análises/mês).</span>
           </td>
         </tr>
       </table>

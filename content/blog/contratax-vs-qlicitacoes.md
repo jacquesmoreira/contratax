@@ -34,7 +34,7 @@ QLicitações é um player moderno do mercado brasileiro de licitações, com ma
 
 Onde a abordagem **difere** do ContrataX:
 
-- **Modelo comercial**: QLicitações trabalha com **planos por segmento** e proposta personalizada. ContrataX tem **5 planos públicos transparentes** (Starter, Básico, Pro, Assessoria 10, Assessoria 25) com preço fixo desde o primeiro clique.
+- **Modelo comercial**: QLicitações trabalha com **planos por segmento** e proposta personalizada. ContrataX tem **6 planos públicos transparentes** (Starter, Básico, Pro, Expertise, Assessoria 10, Assessoria 25) com preço fixo desde o primeiro clique.
 - **IA**: QLicitações tem "QLIA" como IA proprietária. ContrataX usa **Claude da Anthropic** (declarado abertamente). Ambos fazem análise, mas a tecnologia base é diferente.
 - **Pós-vitória**: QLicitações foca em busca de editais + geração de propostas. ContrataX cobre **o ciclo todo**, incluindo minutas, recebíveis e ofício de cobrança quando órgão atrasa.
 
@@ -96,7 +96,7 @@ Onde a abordagem **difere** do ContrataX:
 
 | Item | ContrataX | QLicitações |
 |---|---|---|
-| Preço público | ✅ Todos os 5 planos | Sob consulta por segmento |
+| Preço público | ✅ Todos os 6 planos | Sob consulta por segmento |
 | Trial sem cartão | ✅ 7 dias | Não claro |
 | Cancelamento self-service | ✅ 1 clique | Não claro |
 | Programa de afiliados | Não | ✅ |
@@ -107,7 +107,7 @@ Onde a abordagem **difere** do ContrataX:
 - **MEI ou microempresa**: R$ 59/mês de entrada (público, sem proposta)
 - **Quer testar antes de pagar**: trial 7 dias sem cartão, sem demonstração
 - **Não quer fidelidade**: cancela quando quiser sem multa
-- **Valoriza transparência de preço**: 5 planos públicos, sem "fale com vendas"
+- **Valoriza transparência de preço**: 6 planos públicos, sem "fale com vendas"
 - **Cobre o ciclo todo**: achar, ganhar, entregar, cobrar
 - **Multi-CNPJ pra assessoria**: R$ 697/mês até 10 empresas (transparente)
 - **Reputação CAPAG embutida**: saber se o município paga em dia ANTES de licitar
@@ -139,7 +139,7 @@ Como ContrataX **não tem fidelidade**, você pode cancelar depois sem multa.
 ## Perguntas frequentes
 
 ### ContrataX é mais barato que QLicitações?
-QLicitações não publica preços abertos (modelo por segmento e proposta). ContrataX começa em **R$ 59/mês (Starter, MEI)** e tem 5 planos públicos transparentes. Para comparar valor real, peça proposta no QLicitações e compare lado a lado.
+QLicitações não publica preços abertos (modelo por segmento e proposta). ContrataX começa em **R$ 59/mês (Starter, MEI)** e tem 6 planos públicos transparentes. Para comparar valor real, peça proposta no QLicitações e compare lado a lado.
 
 ### A IA do ContrataX é melhor que a QLIA do QLicitações?
 São modelos diferentes. **QLIA é proprietária** (QLicitações não publica detalhe técnico). **ContrataX usa Claude da Anthropic** (declarado), um dos modelos de IA mais avançados do mundo em 2026. Pra comparar qualidade, **teste os dois com o mesmo edital** e veja o veredito + análise.

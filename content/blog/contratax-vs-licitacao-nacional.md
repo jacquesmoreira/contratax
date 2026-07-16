@@ -31,7 +31,7 @@ Licitação Nacional é uma das plataformas brasileiras que indexa licitações 
 
 Pontos onde a abordagem **difere** do ContrataX:
 
-- **Transparência de preço**: Licitação Nacional não publica preços abertos. ContrataX tem **5 planos públicos** (Starter R$ 59 a Assessoria 25 R$ 1.297) com preço fixo desde o primeiro clique.
+- **Transparência de preço**: Licitação Nacional não publica preços abertos. ContrataX tem **6 planos públicos** (Starter R$ 59 a Assessoria 25 R$ 1.297) com preço fixo desde o primeiro clique.
 - **Modelo de IA**: Licitação Nacional menciona IA mas sem detalhe técnico. ContrataX usa **Claude da Anthropic** (declarado abertamente), com leitura completa do PDF + cruzamento contra documentos cadastrados.
 - **Cobertura pós-vitória**: Licitação Nacional foca em busca e acompanhamento. ContrataX cobre **o ciclo completo**, incluindo minutas, recebíveis e ofício de cobrança quando o órgão atrasa.
 
@@ -40,8 +40,9 @@ Pontos onde a abordagem **difere** do ContrataX:
 | Tipo de uso | ContrataX | Licitação Nacional |
 |---|---|---|
 | **MEI/entrada** | Starter R$ 59 | Sob consulta |
-| **ME/EPP com IA** | Básico R$ 247 (30 análises) | Sob consulta |
-| **Escala** | Pro R$ 397 (50 análises) | Sob consulta |
+| **ME/EPP com IA** | Básico R$ 149 (15 análises) | Sob consulta |
+| **Em ritmo** | Pro R$ 247 (30 análises) | Sob consulta |
+| **Escala** | Expertise R$ 397 (50 análises) | Sob consulta |
 | **Multi-CNPJ** | Assessoria 10 R$ 697 (10 CNPJs) | Sob consulta |
 
 **Vantagem ContrataX**: você sabe o preço **antes** de cadastrar. Sem proposta, sem demonstração, sem ligação. É o tempo de 1 minuto entre **conhecer o produto** e **estar usando**.
@@ -121,7 +122,7 @@ Se você usa Licitação Nacional e quer testar:
 ## Perguntas frequentes
 
 ### ContrataX é mais barato que Licitação Nacional?
-Licitação Nacional não publica preços. ContrataX começa em **R$ 59/mês (Starter)** e tem 5 planos públicos transparentes. Pra comparar, peça proposta no Licitação Nacional e veja se cabe no seu orçamento.
+Licitação Nacional não publica preços. ContrataX começa em **R$ 59/mês (Starter)** e tem 6 planos públicos transparentes. Pra comparar, peça proposta no Licitação Nacional e veja se cabe no seu orçamento.
 
 ### A IA do ContrataX é melhor?
 ContrataX usa **Claude da Anthropic** (declarado), modelo conhecido publicamente. Licitação Nacional menciona "IA" sem detalhar a tecnologia. Para comparar qualidade real, **teste os dois com o mesmo edital**.

@@ -59,9 +59,10 @@ Quando você abre qualquer edital no painel, aparece um botão **Gerar resumo r�
 
 ### Quantas análises de IA posso fazer por mês?
 A cota de leitura completa do edital por IA varia por plano:
-- **Starter**: 3 análises/mês (degustação da IA, ideal pra conhecer)
-- **Básico**: 30 análises/mês
-- **Pro**: 50 análises/mês
+- **Starter** (R$ 59): 6 análises/mês (degustação da IA, ideal pra conhecer)
+- **Básico** (R$ 149): 15 análises/mês
+- **Pro** (R$ 247): 30 análises/mês
+- **Expertise** (R$ 397): 50 análises/mês
 - **Assessoria 10**: 8 análises por empresa cadastrada (80 no total)
 - **Assessoria 25**: 6 análises por empresa cadastrada (150 no total)
 
@@ -159,16 +160,17 @@ Pix, cartão de crédito e boleto. A cobrança é mensal e automática (pelo gat
 Sim. Sem fidelidade, sem multa. Cancele no painel a qualquer momento, você fica com acesso até o fim do mês pago.
 
 ### Quais são os planos disponíveis?
-- **Starter**, R$ 59/mês, plano de entrada, 3 análises de IA/mês (degustação), busca e alertas ilimitados, 1 CNPJ. Ideal pra MEI e pra quem está começando.
-- **Básico**, R$ 247/mês, 30 análises de IA/mês, 5 extrações de PDF, 1 CNPJ
-- **Pro**, R$ 397/mês, 50 análises de IA/mês, 20 extrações de PDF, acessos para a equipe, 1 CNPJ
+- **Starter**, R$ 59/mês, plano de entrada, 6 análises de IA/mês (degustação, já com o veredito de aptidão), busca e alertas ilimitados, 1 CNPJ. Ideal pra MEI e pra quem está começando.
+- **Básico**, R$ 149/mês, 15 análises de IA/mês, 2 extrações de PDF, 1 CNPJ
+- **Pro**, R$ 247/mês, 30 análises de IA/mês, 5 extrações de PDF, 1 CNPJ
+- **Expertise**, R$ 397/mês, 50 análises de IA/mês, 20 extrações de PDF, 1 CNPJ
 - **Assessoria 10**, R$ 697/mês, até 10 empresas (8 análises por empresa), pra consultores
 - **Assessoria 25**, R$ 1.297/mês, até 25 empresas (6 análises por empresa)
 
 Busca de editais e alertas diários por e-mail são **ilimitados em todos os planos**. Veja a comparação completa em [/assinar](/assinar).
 
 ### Qual o plano mais barato pra começar?
-O **Starter, R$ 59/mês**, é o ponto de entrada. Você já recebe busca de editais e alerta diário ilimitados do seu ramo, mais 3 análises de IA por mês pra experimentar a leitura completa do edital. Se MEI ou empresa pequena começando em licitação, é por onde a maioria começa. Quando precisar de mais análises de IA no mês, dá pra subir pro Básico (30 análises) a qualquer momento, sem multa.
+O **Starter, R$ 59/mês**, é o ponto de entrada. Você já recebe busca de editais e alerta diário ilimitados do seu ramo, mais 6 análises de IA por mês (com o veredito de aptidão) pra experimentar a leitura completa do edital. Se MEI ou empresa pequena começando em licitação, é por onde a maioria começa. Quando precisar de mais análises de IA no mês, dá pra subir pro Básico (15 análises) a qualquer momento, sem multa.
 
 ### Como compro um pacote avulso?
 Em [/assinar](/assinar), na seção "Precisa de mais análises num mês?", escolha 50 ou 150 análises. O valor é cobrado uma vez só (não vira mensalidade) e soma à sua cota.
@@ -253,8 +255,9 @@ Não. Em [/contratos](/contratos), além do **Cadastrar manualmente**, tem o bot
 ### A importação de PDF de contrato tem limite?
 Sim, porque ler o PDF tem custo:
 
-- **Plano Básico**: 5 extrações de PDF por mês
-- **Plano Pro**: 20 extrações de PDF por mês
+- **Plano Básico**: 2 extrações de PDF por mês
+- **Plano Pro**: 5 extrações de PDF por mês
+- **Plano Expertise**: 20 extrações de PDF por mês
 - **Planos Assessoria**: 5 extrações por empresa cadastrada
 
 A **importação por XML do PNCP é ilimitada** em qualquer plano (parsing local, sem custo). Se você baixa o XML do contrato no PNCP, não consome cota nenhuma. Use o PDF quando não houver XML disponível.

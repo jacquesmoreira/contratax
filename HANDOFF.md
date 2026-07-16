@@ -2,7 +2,7 @@
 
 > **Para qualquer outra IA ou desenvolvedor que pegue este projeto:** este documento contém TUDO que precisa pra continuar de onde paramos. Leitura: ~10 minutos.
 
-**Última atualização:** 2026-07-08 (quarta-feira, fechamento da noite)
+**Última atualização:** 2026-07-16 (quinta-feira, degrau de preço R$149 + copy de valor)
 **Status:** Em operação, infra 100% saudável. Domínio raiz resolvido e confirmado (Railway, certificado válido). 513 páginas indexadas, revalidação dos 307 erros 5xx disparada no Search Console (causa raiz confirmada e corrigida). Primeiros cliques orgânicos reais aparecendo, inclusive capturando busca por concorrente. Google Ads religado com a conversão `purchase` finalmente configurada certo (achado que estava quebrada desde o início) — rodando 14 dias de aprendizado sem mexer. 3 backlinks confirmados (B2B Stack, Product Hunt, G2). Fase atual: deixar rodar e observar — próximos trials (funil corrigido), validação do Search Console, e resultado do teste pago.
 
 ---
@@ -215,29 +215,39 @@ margem 60% exige: receita >= (2,5 × cota + 3,25) / 0,36
 
 ---
 
-## 6. Planos e modelo de cobrança (Cenário A — 2026-06-07)
+## 6. Planos e modelo de cobrança (escada reordenada — 2026-07-16)
 
 ```
-Starter  R$ 59,00/mês     3 análises completas, busca ilimitada (DEGUSTAÇÃO)
-Básico   R$ 247,00/mês    30 análises completas, 5 extrações PDF
-Pro      R$ 397,00/mês    50 análises completas, 20 extrações PDF
+Nome de tela   Preço/mês       Cota                     id INTERNO (não muda!)
+Starter        R$ 59,00        6 análises (DEGUSTAÇÃO)  starter
+Básico         R$ 149,00       15 análises, 2 PDF       essencial  <- degrau NOVO
+Pro            R$ 247,00       30 análises, 5 PDF       basico     <- era "Básico"
+Expertise      R$ 397,00       50 análises, 20 PDF      pro        <- era "Pro"
 
-Assessoria 10  R$ 697,00/mês   10 CNPJs, 8 análises/CNPJ (80 total)
-Assessoria 25  R$ 1.297,00/mês 25 CNPJs, 6 análises/CNPJ (150 total)
+Assessoria 10  R$ 697,00       10 CNPJs, 8 análises/CNPJ (80 total)   assessoria10
+Assessoria 25  R$ 1.297,00     25 CNPJs, 6 análises/CNPJ (150 total)  assessoria25
 
 Pacote avulso 10    R$ 79,00  (R$ 7,90/análise)
 Pacote avulso 25    R$ 189,00 (R$ 7,56/análise)
 Pacote avulso 50    R$ 369,00 (R$ 7,38/análise)
 ```
 
+**⚠️ ID INTERNO ≠ NOME DE TELA.** Em jul/2026 reordenamos a escada pra fechar o
+abismo Starter(59)→247. Criamos um degrau novo a R$149 e renomeamos os rótulos,
+MAS mantivemos os ids antigos (`basico`=247, `pro`=397) porque o id fica gravado
+na assinatura do cliente e na referência do Asaas — mudar quebraria renovação.
+Detalhes no cabeçalho de `src/planos.mjs`. Preço vem de env (`LICITA_PRECO_*`);
+o id `basico` cai no default 247 (produção confirmada) ou `LICITA_PRECO`.
+
 **Garantia de margem:** todos os planos têm **mínimo 60% de lucro** mesmo se o
 cliente usar 100% da cota mensal. Margens reais com uso médio (60% da cota):
 
-| Plano | Receita | Custo realista | Margem |
+| Plano (tela) | Receita | Custo realista | Margem |
 |---|---|---|---|
 | Starter | R$ 59 | ~R$ 9 | 84% |
-| Básico | R$ 247 | ~R$ 50 | 80% |
-| Pro | R$ 397 | ~R$ 80 | 80% |
+| Básico | R$ 149 | ~R$ 22 | 85% |
+| Pro | R$ 247 | ~R$ 50 | 80% |
+| Expertise | R$ 397 | ~R$ 80 | 80% |
 | Assessoria 10 | R$ 697 | ~R$ 145 | 79% |
 | Assessoria 25 | R$ 1.297 | ~R$ 280 | 78% |
 
@@ -1170,6 +1180,24 @@ Confirmado ao vivo que o deploy da sessão está no ar (nav sem "Mais", `.dir-sc
 ### Auditoria completa do produto entregue
 
 A pedido do Jacques, entregue auditoria estratégica brutalmente honesta como Artifact (não commitada no repo, é documento). Pontos-chave registrados aqui pra continuidade: **não é um SaaS de US$100M** (é micro-SaaS forte com profundidade rara); os 5 tetos de valuation = fator-ônibus 1, infra frágil (processo/SQLite/hobby único), fosso raso, escada de preço quebrada (R$59→R$247 sem meio-termo), retenção sem gancho além do digest. Prioridade recomendada (baixo esforço, alto impacto): **plano anual + herói da LP reescrito no diferencial real + sair do plano hobby + tirar token da URL**. Roadmap 30/90/180/365 no artifact. Achados técnicos concretos que valem virar tarefa: degrau de preço intermediário, upgrade oferecido no momento da cota, ranking personalizado como padrão, índice de itens de contrato (busca de produto de verdade), fluxo de retenção no cancelamento.
+
+### 2026-07-16 — degrau de preço intermediário + copy de valor (parte 1 e 2 da auditoria)
+
+Executado o que a auditoria apontou como topo da lista: a **escada de preço quebrada** (R$59→R$247 sem meio-termo) e a **copy que vendia limite em vez de valor**.
+
+**Parte 2 — degrau novo (o principal).** Reordenei a escada pra:
+`Starter R$59/6 → Básico R$149/15 (NOVO) → Pro R$247/30 → Expertise R$397/50`.
+Feito do jeito seguro: **os ids internos não mudaram**. Criei um id novo (`essencial`, exibido como "Básico", R$149/15) e só **renomeei os rótulos** dos planos existentes (id `basico` agora aparece como "Pro"; id `pro` agora aparece como "Expertise"). Preço e cota deles continuam iguais (247/30 e 397/50). Isso porque o id fica gravado na assinatura do cliente e na referência do Asaas (`sub:token:id`) — mudar o id quebraria renovação de quem já paga. Documentado no cabeçalho de `src/planos.mjs` e na seção 6 aqui. Margem do degrau novo: R$149 com custo pessimista R$37,50 = 74,8% (acima do piso de 60%).
+
+**Parte 1 — copy de valor / sem risco.** Na LP e no comparativo, "6 análises" virou "**IA incluída: 6 editais analisados por mês, já com o veredito de aptidão**"; adicionei o gancho de tempo ("um edital de 80 páginas que levaria 40 minutos, a ContrataX.IA resume em segundos") e uma linha de **garantia** ("teste 7 dias grátis, não gostou é só não continuar, sem cartão, sem multa, sem letra miúda"). Destaque "RECOMENDADO" no Básico R$149.
+
+**Superfícies atualizadas (14 arquivos):** `src/planos.mjs` (catálogo, fonte da verdade), `src/onboardingEmails.mjs` (e-mail de fim de trial agora puxa nome/preço/cota do catálogo em vez de hardcode), `web/public/lp.html` (grid 4 planos + garantia + JSON-LD), `web/public/index.html` (paywall + banner + chip de upgrade → "Expertise"), `web/public/assinar.html` (nota da degustação), `web/public/lp-comparativo.html` (tabela + cards + FAQ), `web/public/admin.html` (cálculo de receita agora contempla o id `essencial`, dropdown de ativação com os 4 níveis), `content/ajuda/central-de-ajuda.md` e os 6 posts `content/blog/contratax-vs-*.md`. As páginas `assinar.html`/`conta.html` são dinâmicas (renderizam de `/api/planos`), então herdaram sozinhas.
+
+**Verificação:** `node --check` nos .mjs OK; `/api/planos` no servidor local (DB de teste isolado) retornou os 6 planos na ordem certa com os nomes/preços novos; JSON-LD da LP valida; **produção conferida ao vivo** (`/api/planos` real) confirma que o id `basico` cobra R$247 — ou seja, a copy "Pro R$247" bate com o que o cliente realmente paga.
+
+**Achado colateral (corrigido no local, não afeta produção):** o `.env` LOCAL tinha `LICITA_PRECO=197,00` sobrando de um cenário de preço antigo (maio), o que fazia o servidor local exibir R$197 no lugar de R$247. Produção não tem essa var (usa o default 247), então nunca afetou cliente. Ajustei o `.env` local pra 247,00 só pra o teste local espelhar produção. `.env` é gitignored, não vai pro deploy.
+
+**Ainda em aberto da auditoria (não feito nesta sessão):** plano anual, sair do plano hobby do Railway, tirar o token da URL, oferecer upgrade no momento em que a cota estoura.
 
 ---
 

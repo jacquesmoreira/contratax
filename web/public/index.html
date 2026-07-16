@@ -633,7 +633,7 @@ function bannerUpgrade(acesso) {
       <div class="ico">📈</div>
       <div class="corpo">
         <div class="tit">Você usou ${u.usados}/${u.limite} análises este mês (${restantes} restantes)</div>
-        <div class="sub" style="color:#cffafe">Faça upgrade para o <b>Pro</b> e tenha 100 pesquisas/mês + acessos para a equipe.</div>
+        <div class="sub" style="color:#cffafe">Precisa de mais? O <b>Expertise</b> tem 50 análises da ContrataX.IA por mês.</div>
       </div>
       <a class="btn-cta" href="/assinar?c=${encodeURIComponent(token)}">Fazer upgrade</a>
     </div>`;
@@ -684,7 +684,7 @@ function chipPlano(acesso) {
       el.title = `Plano ${nome} · renova em ${dataBR}`;
     } else if (pct >= 0.8 && (acesso.nivel || "") === "basico") {
       el.classList.add("chip-upgrade");
-      el.textContent = "Upgrade para Pro";
+      el.textContent = "Upgrade para Expertise";
       if (dataBR) el.title = `Plano ${nome} · renova em ${dataBR}`;
     } else {
       el.classList.add("chip-ativo");
@@ -779,14 +779,14 @@ function paywall(a) {
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;margin:24px 0 16px;max-width:760px;margin-left:auto;margin-right:auto">
       <a href="${link}" style="background:#fff;border:1.5px solid var(--linha);border-radius:14px;padding:18px;text-decoration:none;text-align:left;display:block">
         <div style="font-size:11px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px">Básico</div>
-        <div style="font-size:24px;font-weight:900;color:var(--indigo);margin:4px 0">R$ 247<span style="font-size:13px;color:var(--cinza);font-weight:600">/mês</span></div>
-        <div style="font-size:13px;color:var(--cinza)">30 leituras dos editais/mês<br>1 acesso · 1 CNPJ</div>
+        <div style="font-size:24px;font-weight:900;color:var(--indigo);margin:4px 0">R$ 149<span style="font-size:13px;color:var(--cinza);font-weight:600">/mês</span></div>
+        <div style="font-size:13px;color:var(--cinza)">15 leituras dos editais/mês<br>1 acesso · 1 CNPJ</div>
       </a>
       <a href="${link}" style="background:#fff;border:2px solid var(--indigo);border-radius:14px;padding:18px;text-decoration:none;text-align:left;display:block;position:relative">
         <span style="position:absolute;top:-10px;left:14px;background:var(--indigo);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.4px;text-transform:uppercase">Recomendado</span>
         <div style="font-size:11px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px">Pro</div>
-        <div style="font-size:24px;font-weight:900;color:var(--indigo);margin:4px 0">R$ 397<span style="font-size:13px;color:var(--cinza);font-weight:600">/mês</span></div>
-        <div style="font-size:13px;color:var(--cinza)">50 leituras dos editais/mês<br>Acessos para a equipe</div>
+        <div style="font-size:24px;font-weight:900;color:var(--indigo);margin:4px 0">R$ 247<span style="font-size:13px;color:var(--cinza);font-weight:600">/mês</span></div>
+        <div style="font-size:13px;color:var(--cinza)">30 leituras dos editais/mês<br>1 acesso · 1 CNPJ</div>
       </a>
     </div>
     <div style="font-size:13px;color:var(--cinza);margin-bottom:8px">Consultor com múltiplos clientes? Veja os <a href="${link}" style="color:var(--indigo);font-weight:700">planos Assessoria</a> (multi-CNPJ).</div>

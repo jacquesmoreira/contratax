@@ -43,8 +43,9 @@ Mas vale entender as diferenças de abordagem:
 | Tipo de empresa | Plano ContrataX | Por que faz sentido |
 |---|---|---|
 | **MEI** | Starter R$ 59/mês | Cabe no teto MEI sem peso |
-| **ME/EPP iniciante** | Básico R$ 247/mês | 30 análises com IA |
-| **ME/EPP escala** | Pro R$ 397/mês | 50 análises + acessos pra equipe |
+| **ME/EPP iniciante** | Básico R$ 149/mês | 15 análises com IA |
+| **ME/EPP em ritmo** | Pro R$ 247/mês | 30 análises com IA |
+| **ME/EPP escala** | Expertise R$ 397/mês | 50 análises, pra volume alto |
 | **Consultoria 10 CNPJs** | Assessoria 10 R$ 697/mês | R$ 69,70 por empresa gerenciada |
 | **Consultoria 25 CNPJs** | Assessoria 25 R$ 1.297/mês | R$ 51,88 por empresa gerenciada |
 
