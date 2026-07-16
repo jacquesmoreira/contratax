@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { mkdirSync } from "node:fs";
 import { normalizar, aplicarFiltro, tokenSignificativo, contemPalavra, palavrasProximas } from "./filtro.mjs";
 import { expandirTermos, excluirTermos, expandirRamoCurado } from "./sinonimos.mjs";
+import { portalDeLink } from "./portais.mjs";
 
 // Monta condicoes SQL exigindo TODOS os tokens significativos do termo (mesma
 // regra do painel: "papel A4" pede papel E a4, nao a frase colada). Mantem a
@@ -791,7 +792,7 @@ export function buscaPublica({ uf = null, termo = "", limite = 15 } = {}) {
 
 // Busca livre no acervo (usada pelo painel): por termo, UF e modalidade.
 // Devolve a lista de editais (nao so estatisticas), ranqueada por relevancia.
-export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termosParam = null, modalidades = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, pubDe = null, pubAte = null, numeroEdital = null, valorMin = null, valorMax = null, srp = null, excluir = [], limite = 60, pagina = null, porPag = null } = {}) {
+export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termosParam = null, modalidades = [], portais = [], cidade = "", prazoDias = null, dataDe = null, dataAte = null, pubDe = null, pubAte = null, numeroEdital = null, valorMin = null, valorMax = null, srp = null, excluir = [], limite = 60, pagina = null, porPag = null } = {}) {
   // Aceita ufs (array) ou uf (string simples, retrocompativel).
   const ufsArr = ufs && ufs.length ? ufs : (uf ? [uf] : []);
   const candidatos = consultar({ ufs: ufsArr, modalidades, valorMin, valorMax, apenasAbertos: true });
@@ -820,6 +821,13 @@ export function buscarEditais({ uf = null, ufs = null, termo = "", termos: termo
   // Registro de Precos (SRP): "sim" so atas, "nao" sem ata.
   if (srp === "sim") casaram = casaram.filter((e) => e.srp);
   else if (srp === "nao") casaram = casaram.filter((e) => !e.srp);
+
+  // Filtro por PORTAL de origem (chave vinda de portais.mjs). Multi-valor: aceita
+  // um ou varios portais; o edital fica se cair em qualquer um dos escolhidos.
+  if (portais && portais.length) {
+    const alvo = new Set(portais);
+    casaram = casaram.filter((e) => alvo.has(e.portal));
+  }
 
   // Filtro por cidade (compara sem acento/caixa; aceita parte do nome).
   if (cidade && cidade.trim()) {
@@ -987,6 +995,10 @@ export function consultar({ ufs = [], modalidades = [], valorMin = null, valorMa
     situacao: l.situacao,
     publicacao: l.publicacao,
     link: l.link,
+    // Portal de origem derivado do link (pro filtro e pro selo no card). Sempre
+    // presente: {chave, nome} — inclui "sem" (sem link) e "outros" (nao mapeado).
+    portal: portalDeLink(l.link).chave,
+    portalNome: portalDeLink(l.link).nome,
     srp: Boolean(l.srp),
     ano: l.ano,
     sequencial: l.sequencial,

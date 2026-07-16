@@ -258,6 +258,7 @@
         </div>
       </div>
       <select id="filtro-mod"></select>
+      <select id="filtro-portal" title="Filtra pela plataforma onde o pregão acontece (ex: Compras.gov.br, BLL, Portal de Compras Públicas). As regras e custos de cada portal você confere no próprio portal."></select>
       <select id="filtro-prazo"></select>
       <select id="filtro-pub" title="Filtra por quando o edital foi publicado no PNCP (data de inclusão), não pelo prazo">
         <option value="">Publicado: qualquer data</option>
@@ -433,6 +434,7 @@ function cardHTML(e) {
     <div class="objeto">${esc(e.objeto)}</div>
     ${e._itemCasado ? `<div class="achado-item" style="font-size:12.5px;color:var(--verde);margin-top:5px;display:flex;align-items:flex-start;gap:6px"><span>🔎</span><span>Achado nos itens: <b style="color:var(--tinta)">${esc(e._itemCasado)}</b></span></div>` : ""}
     <div class="card-rodape"><span class="modalidade">${esc(e.modalidade)}</span>
+      ${e.portal && e.portal !== "sem" && e.portal !== "outros" ? `<span class="portal-chip" title="Plataforma onde o pregão acontece. Confira as regras e os custos no próprio portal." style="font-size:11px;font-weight:600;color:var(--cinza);background:#f1f5f9;border:1px solid var(--linha);padding:2px 8px;border-radius:99px;white-space:nowrap">🏛 ${esc(e.portalNome)}</span>` : ""}
       <span class="valor">${brl(e.valorEstimado)}</span>
       ${oportBadge(e.oportunidade, e.reputacao)}
       <button type="button" class="add-planejamento" onclick="event.stopPropagation();adicionarAoPlanejamento('${esc(e.id)}',this)" title="Adicionar ao quadro de Planejamento (acompanhe o andamento desta licitação em etapas, do achado até o resultado)" style="background:none;border:1px solid var(--linha);color:var(--indigo);font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">+ Planejamento</button>
@@ -1542,6 +1544,9 @@ async function impugnar(id) {
 // ---- Busca livre no acervo + filtros ----
 const UFS_P = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const MODS_P = [["6","Pregão eletrônico"],["8","Dispensa"],["9","Inexigibilidade"],["4","Concorrência"],["12","Credenciamento"],["1","Leilão"]];
+// Portais de origem (plataforma do pregão). As CHAVES têm que bater com src/portais.mjs.
+// Não dizemos se é grátis ou pago: mostramos qual é o portal, o cliente confere as regras lá.
+const PORTAIS_P = [["comprasgov","Compras.gov.br (Comprasnet)"],["pcp","Portal de Compras Públicas"],["bll","BLL Compras"],["licitanet","Licitanet"],["bnc","BNC (Bolsa Nacional de Compras)"],["licitardigital","Licitar Digital"],["licitacoese","Licitações-e (Banco do Brasil)"],["amm","AMM Licita"],["comprasbr","ComprasBR"],["licitamais","Licita Mais Brasil"],["mg","Portal de Compras MG"],["rs","Compras RS / Banrisul"],["rj","Compras RJ"],["outros","Outros portais"],["sem","Portal não informado"]];
 const ufsSelBusca = new Set();
 
 // Chips multi-estado na busca
@@ -1567,6 +1572,7 @@ function paramsAtuais() {
     numeroEdital: document.getElementById("filtro-numero").value.trim(),
     ufs: [...ufsSelBusca],
     mod: document.getElementById("filtro-mod").value,
+    portal: document.getElementById("filtro-portal").value,
     prazo: document.getElementById("filtro-prazo").value,
     pub: document.getElementById("filtro-pub").value,
     vmin: document.getElementById("filtro-vmin").value.trim(),
@@ -1607,6 +1613,7 @@ function aplicarBuscaId(id) {
   document.getElementById("filtro-cidade").value = p.cidade || "";
   document.getElementById("filtro-numero").value = p.numeroEdital || "";
   document.getElementById("filtro-mod").value = p.mod || "";
+  document.getElementById("filtro-portal").value = p.portal || "";
   document.getElementById("filtro-prazo").value = p.prazo || "";
   document.getElementById("filtro-pub").value = p.pub || "";
   document.getElementById("filtro-vmin").value = p.vmin || "";
@@ -1921,6 +1928,7 @@ document.addEventListener("click", (e) => {
   if (!e.target.closest("#btn-uf") && !e.target.closest("#uf-drop")) document.getElementById("uf-drop").style.display = "none";
 });
 document.getElementById("filtro-mod").innerHTML = '<option value="">Tipo: todos</option>' + MODS_P.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+document.getElementById("filtro-portal").innerHTML = '<option value="">Portal: todos</option>' + PORTAIS_P.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
 const PRAZOS_P = [["","Prazo: qualquer"],["3","Encerra em 3 dias"],["7","Encerra em 7 dias"],["15","Encerra em 15 dias"],["30","Encerra em 30 dias"]];
 document.getElementById("filtro-prazo").innerHTML = PRAZOS_P.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
 
@@ -1930,13 +1938,14 @@ async function buscarPainel(pagina = 1) {
   const numeroEdital = document.getElementById("filtro-numero").value.trim();
   const ufsArr = [...ufsSelBusca];
   const mod = document.getElementById("filtro-mod").value;
+  const portal = document.getElementById("filtro-portal").value;
   const prazo = document.getElementById("filtro-prazo").value;
   const pub = document.getElementById("filtro-pub").value;
   const vmin = document.getElementById("filtro-vmin").value.trim();
   const vmax = document.getElementById("filtro-vmax").value.trim();
   const srp = document.getElementById("filtro-srp").value;
   const excluir = document.getElementById("filtro-excluir").value.trim();
-  if (!termo && !cidade && !numeroEdital && !ufsArr.length && !mod && !prazo && !pub && !vmin && !vmax && !srp && !excluir) { carregar(); return; }
+  if (!termo && !cidade && !numeroEdital && !ufsArr.length && !mod && !portal && !prazo && !pub && !vmin && !vmax && !srp && !excluir) { carregar(); return; }
   // Converte "publicado nos ultimos N dias" em data de corte (pubDe).
   let pubDe = "";
   if (pub !== "") {
@@ -1947,6 +1956,7 @@ async function buscarPainel(pagina = 1) {
   if (pagina === 1) c.innerHTML = `<div class="carregando"><span class="spinner"></span>Buscando no acervo nacional...</div>`;
   try {
     const params = new URLSearchParams({ termo, modalidade: mod, cidade, prazo, pagina: String(pagina), porPag: "15" });
+    if (portal) params.set("portal", portal);
     if (numeroEdital) params.set("numeroEdital", numeroEdital);
     if (vmin) params.set("valorMin", vmin);
     if (vmax) params.set("valorMax", vmax);
@@ -1981,7 +1991,7 @@ async function buscarPainel(pagina = 1) {
       </div>`;
     }
     c.innerHTML = html;
-    document.getElementById("voltar-painel").onclick = (e) => { e.preventDefault(); document.getElementById("busca").value=""; document.getElementById("filtro-cidade").value=""; limparUfs(); document.getElementById("filtro-mod").value=""; document.getElementById("filtro-prazo").value=""; document.getElementById("filtro-pub").value=""; carregar(); };
+    document.getElementById("voltar-painel").onclick = (e) => { e.preventDefault(); document.getElementById("busca").value=""; document.getElementById("filtro-cidade").value=""; limparUfs(); document.getElementById("filtro-mod").value=""; document.getElementById("filtro-portal").value=""; document.getElementById("filtro-prazo").value=""; document.getElementById("filtro-pub").value=""; carregar(); };
     c.querySelectorAll(".pg-btn").forEach(b => b.onclick = () => { if (!b.disabled) { buscarPainel(Number(b.dataset.pg)); window.scrollTo({ top: 0, behavior: "smooth" }); } });
   } catch (e) { c.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`; }
 }
@@ -2034,6 +2044,8 @@ function exportarBusca() {
     modalidade: document.getElementById("filtro-mod").value,
     prazo: document.getElementById("filtro-prazo").value,
   });
+  const portalEx = document.getElementById("filtro-portal").value;
+  if (portalEx) params.set("portal", portalEx);
   [...ufsSelBusca].forEach(u => params.append("uf", u));
   location.href = "/api/exportar?" + params;
 }
@@ -2042,6 +2054,7 @@ document.getElementById("filtro-cidade").addEventListener("keydown", e => { if (
 document.getElementById("filtro-numero").addEventListener("keydown", e => { if (e.key === "Enter") buscarPainel(1); });
 document.getElementById("filtro-prazo").addEventListener("change", () => buscarPainel(1));
 document.getElementById("filtro-mod").addEventListener("change", () => buscarPainel(1));
+document.getElementById("filtro-portal").addEventListener("change", () => buscarPainel(1));
 
 document.getElementById("conteudo").addEventListener("click", ev => {
   const card = ev.target.closest(".card");

@@ -1199,6 +1199,18 @@ Feito do jeito seguro: **os ids internos não mudaram**. Criei um id novo (`esse
 
 **Ainda em aberto da auditoria (não feito nesta sessão):** plano anual, sair do plano hobby do Railway, tirar o token da URL, oferecer upgrade no momento em que a cota estoura.
 
+### 2026-07-16 (continuação) — filtro por PORTAL de origem na busca
+
+Pedido de cliente em teste: "dá pra filtrar só portais gratuitos tipo Comprasnet?". Decisão do Jacques: **filtra por portal, mas NÃO marca grátis/pago** (política de cobrança é fato de terceiro que muda; o cliente confere no próprio portal). Construído assim.
+
+Descoberta nos dados (banco real): dos 29 mil editais, **71% têm o `linkSistemaOrigem`** (campo `link` que já guardamos); 29% vêm sem link. 399 domínios, mas a cabeça concentra tudo: Compras.gov.br/Comprasnet (serpro) é o maior de longe, seguido de Portal de Compras Públicas, BLL, Licitanet, BNC, Licitações-e/BB, etc.
+
+**Como funciona:** novo `src/portais.mjs` com `portalDeLink(link)` que casa o domínio contra um mapa curado de ~13 portais e devolve sempre `{chave, nome}` (mais os buckets sintéticos `sem` = sem link, `outros` = domínio não mapeado). `consultar()` no db.mjs anexa `portal`+`portalNome` a cada edital. `buscarEditais()` ganhou o parâmetro `portais=[]` (multi-valor) que filtra na etapa JS. Rota `/api/buscar` lê `?portal=` (aceita vários). Front (index.html): novo `<select id="filtro-portal">` na barra de busca (espelha o de modalidade), array `PORTAIS_P` com as chaves batendo o backend, selo "🏛 nome do portal" em cada card, e o portal entra nas buscas salvas e no export Excel (nova coluna Portal). Export `/api/exportar` também respeita `?portal=`.
+
+**Verificação:** `node --check` em portais/db/exportar/server OK; `portalDeLink` testado nos domínios reais; filtro ponta a ponta contra cópia do banco real (comprasgov 2208, bll 477, pcp 548, sem 2475, multi soma certo, zero vazamento); os 131k chars de JS inline da index.html passam no parser. Não deu pra testar visual no navegador (sandbox bloqueia localhost), mas a UI é cópia fiel do filtro de modalidade que já funciona.
+
+**Ideias de evolução (não feitas):** multi-seleção no dropdown (hoje é single-select, atende o "só Comprasnet"); atalho "portais gratuitos" de 1 clique; e talvez o portal como preferência fixa no perfil/alerta, não só na busca.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.

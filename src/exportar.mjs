@@ -35,12 +35,13 @@ export function nomeArquivo(tipo, extensao = "csv") {
 
 // EDITAIS (busca / oportunidades abertas)
 export function csvEditais(editais) {
-  const cab = ["Municipio", "UF", "Orgao", "Modalidade", "Objeto", "Valor estimado (R$)", "Encerra em", "Link PNCP"];
+  const cab = ["Municipio", "UF", "Orgao", "Modalidade", "Portal", "Objeto", "Valor estimado (R$)", "Encerra em", "Link PNCP"];
   const linhas = editais.map((e) => csvLinha([
     e.municipio ?? "",
     e.uf ?? "",
     e.orgao ?? "",
     e.modalidade ?? "",
+    e.portalNome ?? "",
     e.objeto ?? "",
     brl(e.valorEstimado),
     dataHora(e.encerramento),

@@ -815,6 +815,7 @@ const servidor = createServer(async (req, res) => {
         const uf = usarPerfil ? ((perfilEx.ufs ?? [])[0] || null) : (ufsParam[0] || null);
         const termos = usarPerfil ? (perfilEx.filtro?.termos ?? []) : (termoQuery ? [termoQuery] : []);
         const modParam = url.searchParams.get("modalidade") || "";
+        const portaisEx = url.searchParams.getAll("portal").map((s) => s.trim()).filter(Boolean);
         const r = buscarEditais({
           uf, ufs,
           termos,
@@ -822,8 +823,8 @@ const servidor = createServer(async (req, res) => {
           cidade: url.searchParams.get("cidade") || "",
           prazoDias: url.searchParams.get("prazo") || null,
           dataDe: url.searchParams.get("dataDe") || null,
-          dataAte: url.searchParams.get("dataAte") || null,
           modalidades: modParam ? [Number(modParam)] : (usarPerfil ? (perfilEx.modalidades || []) : []),
+          portais: portaisEx,
           limite: 1000,
         });
         csv = csvEditais(r.editais || []);
@@ -923,6 +924,8 @@ const servidor = createServer(async (req, res) => {
       const pubAte = url.searchParams.get("pubAte") || null;
       const modParam = url.searchParams.get("modalidade") || "";
       const modalidades = modParam ? [Number(modParam)] : [];
+      // Portal de origem: aceita 1 ou varios (?portal=comprasgov&portal=bll).
+      const portais = url.searchParams.getAll("portal").map((s) => s.trim()).filter(Boolean);
       const numeroEdital = url.searchParams.get("numeroEdital") || null;
       const valorMin = url.searchParams.get("valorMin") ? Number(url.searchParams.get("valorMin")) : null;
       const valorMax = url.searchParams.get("valorMax") ? Number(url.searchParams.get("valorMax")) : null;
@@ -930,7 +933,7 @@ const servidor = createServer(async (req, res) => {
       const excluir = (url.searchParams.get("excluir") || "").split(",").map((s) => s.trim()).filter(Boolean);
       const pagina = Number(url.searchParams.get("pagina") || 1);
       const porPag = Math.min(50, Math.max(5, Number(url.searchParams.get("porPag") || 15)));
-      const resultado = buscarEditais({ uf, ufs, termo, modalidades, cidade, prazoDias, dataDe, dataAte, pubDe, pubAte, numeroEdital, valorMin, valorMax, srp, excluir, pagina, porPag });
+      const resultado = buscarEditais({ uf, ufs, termo, modalidades, portais, cidade, prazoDias, dataDe, dataAte, pubDe, pubAte, numeroEdital, valorMin, valorMax, srp, excluir, pagina, porPag });
       // Sela o mesmo selo de reputacao/oportunidade do feed, pra a busca mostrar
       // bom/medio/mau pagador igual ao painel (nao so "+ Planejamento").
       await selarOportunidade(resultado.editais || []);
