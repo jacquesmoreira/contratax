@@ -37,6 +37,7 @@ import { precoReferencia } from "../src/precoReferencia.mjs";
 import { csvEditais, csvHistorico, csvRadar, csvContratos, csvPropostaItens, nomeArquivo } from "../src/exportar.mjs";
 import { lerRecadoPara, estadoRecados, salvarRecado, limparRecado } from "../src/recado.mjs";
 import { cartaProposta } from "../src/propostaComercial.mjs";
+import { kitHabilitacao } from "../src/kitHabilitacao.mjs";
 import { icsEdital, nomeIcs } from "../src/calendario.mjs";
 import { ehAssessoria, limiteEmpresas, listarEmpresasGerenciadas, adicionarEmpresa, removerEmpresa } from "../src/assessoria.mjs";
 import { checklist as onboardingChecklist } from "../src/onboarding.mjs";
@@ -2357,6 +2358,21 @@ const servidor = createServer(async (req, res) => {
       let itens = [];
       try { itens = await listarItens(edital); } catch { /* sem itens: a carta cita a planilha anexa */ }
       const html = cartaProposta({ empresa, edital, itens });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(html);
+    }
+
+    // Kit de Habilitacao: todas as declaracoes + checklist de certidoes num PDF.
+    // Precisa de token (usa os dados e as certidoes cadastradas da empresa).
+    if (rota === "/api/kit-habilitacao") {
+      const perfilK = await perfilPorToken(url.searchParams.get("c") || "");
+      if (!perfilK) return res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("Conta nao encontrada");
+      const empresa = {
+        ...empresaDoPerfil(perfilK),
+        cnpj: perfilK.cnpj,
+        razaoSocial: perfilK.empresa?.razaoSocial || perfilK.razaoSocial || perfilK.nome,
+      };
+      const html = kitHabilitacao(empresa);
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return res.end(html);
     }

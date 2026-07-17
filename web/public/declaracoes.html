@@ -44,6 +44,10 @@
     <h1>Declarações de habilitação</h1>
     <div class="sub">As declarações padrão que quase todo edital exige, já preenchidas com os dados da sua empresa. Imprima ou salve em PDF e assine.</div>
     <div id="aviso"></div>
+    <div style="margin:6px 0 18px">
+      <a id="btn-kit" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--indigo);color:#fff;font-weight:700;padding:11px 18px;border-radius:10px;text-decoration:none;font-size:14px">📑 Baixar Kit de Habilitação completo (PDF)</a>
+      <div style="font-size:12.5px;color:var(--cinza-c);margin-top:6px">Todas as declarações num arquivo só, cada uma numa página pronta pra assinar, mais o checklist das suas certidões com a validade.</div>
+    </div>
     <div id="lista"></div>
   </div>
 
@@ -53,6 +57,7 @@ const $ = (id) => document.getElementById(id);
 $("voltar").href = "/painel?c=" + encodeURIComponent(token);
 $("link-painel").href = "/painel?c=" + encodeURIComponent(token);
 $("link-conta").href = "/conta?c=" + encodeURIComponent(token);
+$("btn-kit").href = "/api/kit-habilitacao?c=" + encodeURIComponent(token);
 let DECS = [];
 
 async function carregar() {
