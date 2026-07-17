@@ -1273,6 +1273,12 @@ Fechei o de logs (seguro + testável): novo helper `redigirUrl()` troca `c=`/`t=
 
 **O que NÃO fiz (e por que):** remover o token da barra de endereço de verdade exige o front inteiro parar de depender do `?c=token` e passar a autenticar pelo cookie `cx_sid` (que já existe: `sessoes.mjs`, `validarSessao` já devolve o token do cookie). Isso é refactor cross-cutting em index.html + todas as páginas + todas as chamadas de API, alto risco, e não dá pra testar login no navegador daqui. **Recomendação registrada:** fazer numa branch/worktree que o Jacques valida ao vivo antes de mergear pra main (o deploy sai da main), nunca direto em produção. Base pronta: aceitar o cookie como fonte de auth (fallback pro token) é o primeiro passo seguro dessa branch.
 
+### 2026-07-16 (continuação) — breadcrumbs SEO nos hubs (tarefa #58 fechada)
+
+As páginas de DETALHE já tinham BreadcrumbList (órgão, cnae, ranking, categoria). Faltava nos HUBS/índices. Adicionado em `paginaHubOrgaos` (/orgaos), `paginaHubCnae` (/cnae), `paginaHub` (/licitacoes). JSON-LD validado. Ajuda o Google a mostrar a trilha nos resultados (CTR). Tarefa #58 completa.
+
+**FIM DA SESSÃO 16/07 — fila segura-de-construir esgotada.** O que sobra na lista pendente cai em 3 baldes, nenhum "codável às cegas": (1) **ação do Jacques**: Google Ads keywords, backlinks, GBP, Bing Webmaster, revalidar Search Console, Railway hobby, prova social (clientes reais); (2) **precisa de teste ao vivo numa branch**: token fora da URL, 2FA TOTP, ranking personalizado padrão; (3) **precisa de asset/dado externo**: imagens WebP + OG image, refino de keywords por Clarity. Próxima sessão de código de peso = a branch do token-fora-da-URL com o Jacques testando login ao vivo.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
