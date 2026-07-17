@@ -74,10 +74,17 @@ export async function resumoCustos() {
     }
   }
   // Uma "analise" do ponto de vista do cliente = uma conferencia (cobra cota).
-  // O custo medio por analise inclui a leitura do edital quando ela ocorreu.
   const leituras = porEtapa["leitura_edital"]?.chamadas || 0;
   const conferencias = porEtapa["conferencia"]?.chamadas || 0;
   const analises = conferencias || linhas.length;
+
+  // CUSTO REAL POR ANALISE = so leitura (Camada 3) + conferencia (Camada 4),
+  // dividido pelo nº de analises. NAO empilha TL;DR/impugnacao/extracao (que sao
+  // outras features): sem isso o "R$/analise" inflava pra sempre a cada TL;DR de
+  // quem so navega, dando a impressao falsa de que a analise ficava mais cara.
+  const custoLeitura = porEtapa["leitura_edital"]?.brl || 0;
+  const custoConferencia = porEtapa["conferencia"]?.brl || 0;
+  const custoAnaliseRealBRL = Number(((custoLeitura + custoConferencia) / Math.max(1, analises)).toFixed(4));
 
   return {
     chamadas: linhas.length,
@@ -85,7 +92,12 @@ export async function resumoCustos() {
     usdTotal: Number((brlTotal / USD_BRL).toFixed(2)),
     analises,
     leiturasEdital: leituras,
-    custoMedioPorAnaliseBRL: Number((brlTotal / Math.max(1, analises)).toFixed(4)),
+    // Custo real da analise (leitura+conferencia). O nome antigo aponta pra ele.
+    custoMedioPorAnaliseBRL: custoAnaliseRealBRL,
+    custoAnaliseRealBRL,
+    // Gasto total empilhado / conferencias (a conta ANTIGA, enganosa). Mantido so
+    // pra referencia; NAO usar como "custo por analise".
+    gastoTotalPorConferenciaBRL: Number((brlTotal / Math.max(1, analises)).toFixed(4)),
     cacheHitLeitura: conferencias ? Number(Math.max(0, 1 - leituras / Math.max(1, conferencias)).toFixed(3)) : null,
     porEtapa: Object.fromEntries(Object.entries(porEtapa).map(([k, v]) => [k, {
       chamadas: v.chamadas, brl: Number(v.brl.toFixed(2)),
