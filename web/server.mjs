@@ -136,6 +136,12 @@ function empresaDoPerfil(perfil) {
   return { ...base, id: perfil?.id || "cliente", razaoSocial: perfil?.nome || "Sua empresa" };
 }
 
+// Redige o token de acesso (c=/t=) de uma URL antes de logar. O token vai na URL,
+// entao sem isso ele vazaria pros logs do servidor (Railway) a cada erro 500.
+function redigirUrl(u) {
+  return String(u || "").replace(/([?&](?:c|t)=)[^&#]+/gi, "$1***");
+}
+
 // Salva o perfil documental no perfil do cliente (pelo token).
 async function salvarEmpresaPerfil(token, empresa) {
   const perfis = await lerPerfis();
@@ -3414,7 +3420,7 @@ Contact: contato@contratax.com.br
     // Gera ID curto para rastrear no log. Cliente ve o ID; o detalhe tecnico fica
     // so no servidor (nao vaza stack/mensagem ao usuario).
     const erroId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
-    console.error(`[500 ${erroId}] ${req.method} ${req.url}\n`, err);
+    console.error(`[500 ${erroId}] ${req.method} ${redigirUrl(req.url)}\n`, err);
     // Se a rota e JSON (API), devolve JSON; senao serve a pagina HTML amigavel.
     const rotaErr = req.url || "";
     const querJson = rotaErr.startsWith("/api/") || /application\/json/i.test(req.headers.accept || "");

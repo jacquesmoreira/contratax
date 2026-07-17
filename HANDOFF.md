@@ -1265,6 +1265,14 @@ Jacques: "bora fazer todas as frentes faltantes". Fiz as que dá pra fazer BEM e
 - **Sair do plano Hobby (Railway)**: ação dele, e não urgente no volume atual (já explicado).
 - **Ranking personalizado padrão**: a base já existe (oppCard + "Recomendados Beta"); virar 100% padrão é rework de UX que muda o que todo cliente vê, melhor com teste ao vivo.
 
+### 2026-07-16 (continuação) — token na URL: fecho o que dá com segurança, sem o refactor cego
+
+Jacques deu "bora" pro token-fora-da-URL. Investiguei antes de mexer e a conclusão muda o cálculo: **o maior risco concreto (vazar o token pelo Referer pra sites externos) JÁ ESTÁ FECHADO** pelo `Referrer-Policy: strict-origin-when-cross-origin` (linha ~166). Sobrava o token em **logs de servidor** e no **histórico do navegador**.
+
+Fechei o de logs (seguro + testável): novo helper `redigirUrl()` troca `c=`/`t=` por `***` antes de logar; aplicado no log de erro 500 (linha ~3417), que era o único ponto que registrava a URL com token nos logs do Railway. `node --check` OK; a mudança só roda no caminho de erro (pior caso = não redige = status quo, não quebra nada).
+
+**O que NÃO fiz (e por que):** remover o token da barra de endereço de verdade exige o front inteiro parar de depender do `?c=token` e passar a autenticar pelo cookie `cx_sid` (que já existe: `sessoes.mjs`, `validarSessao` já devolve o token do cookie). Isso é refactor cross-cutting em index.html + todas as páginas + todas as chamadas de API, alto risco, e não dá pra testar login no navegador daqui. **Recomendação registrada:** fazer numa branch/worktree que o Jacques valida ao vivo antes de mergear pra main (o deploy sai da main), nunca direto em produção. Base pronta: aceitar o cookie como fonte de auth (fallback pro token) é o primeiro passo seguro dessa branch.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
