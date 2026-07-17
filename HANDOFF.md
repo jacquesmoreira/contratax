@@ -1227,6 +1227,22 @@ Preços anuais: Starter R$590, Básico R$1.490, Pro R$2.470, Expertise R$3.970.
 
 **Fila da auditoria (fazendo em sequência, pedido do Jacques "fazer todas"):** anual ✅ → token fora da URL (cookie) → upgrade oferecido ao bater a cota → 1ª análise automática no 1º login → herói da LP reescrito no diferencial → digest como gancho → ranking personalizado padrão → prova social (3 clientes reais) → retenção no cancelamento → sair do hobby (menos urgente, decidido adiar). Gerador de proposta/documentos (parte 2 da conversa) entra como workstream separado.
 
+### 2026-07-16 (continuação) — lote "conquista de clientes" (carta branca do Jacques)
+
+Jacques deu carta branca ("faça tudo que agrega e conquista clientes"). Priorizei conversão/receita/retenção. **Não** reescrevi o herói da LP: ele já é forte ("Existe contrato público do seu ramo aberto agora. Você só não está vendo.") e foi feito do mock do Jacques (2026-07-10); mexer seria risco de regredir. Feito:
+
+1. **Planilha de proposta (flagship, aproxima do ConLicitação sem cruzar a linha legal).** `/api/proposta-planilha?id=` gera um CSV com os itens do edital (número, descrição, unidade, quantidade) + valor unitário de REFERÊNCIA (teto do órgão, via `listarItens` do PNCP) e colunas em branco pro cliente preencher o preço. Botão na página de itens E no drawer do edital. `csvPropostaItens` em exportar.mjs. A ContrataX prepara o arquivo; o cliente sobe no portal oficial (não damos lance por ele, decisão de produto).
+
+2. **Retenção no cancelamento (churn save).** Antes de cancelar, oferece cair pro plano mais barato da mesma família (ex: R$247 → Starter R$59) e continuar. Downgrade self-service imediato, sem cobrança (já pagou o ciclo); próximas cobranças no valor menor. `aplicarDowngrade` (assinatura.mjs) + `/api/conta/downgrade` (valida família+preço menor, bloqueia anual) + passo de retenção na conta.html.
+
+3. **Upgrade no momento em que bate a cota.** Quando esgota as análises e tenta ler um edital, em vez de "volta no próximo mês" vê CTA pra subir de plano agora com pró-rata (cards já em /conta) ou avulso. Banner de 80% generalizado pra qualquer nível abaixo do topo.
+
+**BUG FIX junto:** `atualizarValorAssinatura` agora atualiza também a `externalReference` no Asaas. Sem isso, a renovação após um upgrade reativava o nível ANTIGO (o cliente pagava o novo preço mas caía no plano velho). Corrigido no upgrade e usado no downgrade.
+
+Tudo validado (node --check, testes funcionais do downgrade/proposta, sintaxe de todas as páginas) e deployed. Commits: `dd1a9a3` (proposta), `9b2d586` (retenção + fix), `ec3f436` (upgrade na cota), + drawer.
+
+**Fila da auditoria restante:** token fora da URL (cookie, segurança), 1ª análise automática no 1º login, digest como gancho ativo, ranking personalizado padrão, prova social (3 clientes reais), sair do hobby (adiado). Gerador de proposta evoluível: hoje é CSV dos itens; pode virar carta-proposta em PDF + pacote de habilitação zipado.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
