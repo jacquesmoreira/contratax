@@ -630,14 +630,17 @@ function bannerUpgrade(acesso) {
   if (pct < 0.8) return ""; // só aparece a partir de 80%
   const nivel = acesso.nivel || "basico";
   const restantes = Math.max(0, (u.limite || 0) - (u.usados || 0));
-  if (nivel === "basico") {
+  // Quem ja esta no topo da familia (Expertise/Assessoria 25) nao tem pra onde
+  // subir: oferece pacote avulso. Os demais recebem o upgrade com pro-rata (/conta).
+  const noTopo = nivel === "pro" || nivel === "assessoria25";
+  if (!noTopo) {
     return `<div class="banner-cta" style="background:linear-gradient(135deg,#0891b2 0%,#0e7490 100%)">
       <div class="ico">📈</div>
       <div class="corpo">
         <div class="tit">Você usou ${u.usados}/${u.limite} análises este mês (${restantes} restantes)</div>
-        <div class="sub" style="color:#cffafe">Precisa de mais? O <b>Expertise</b> tem 50 análises da ContrataX.IA por mês.</div>
+        <div class="sub" style="color:#cffafe">Precisa de mais? Suba de plano pagando só a diferença proporcional (pró-rata).</div>
       </div>
-      <a class="btn-cta" href="/assinar?c=${encodeURIComponent(token)}">Fazer upgrade</a>
+      <a class="btn-cta" href="/conta?c=${encodeURIComponent(token)}">Fazer upgrade</a>
     </div>`;
   }
   return `<div class="banner-teste" style="background:#EEF0FF;border:1px solid #c7d2fe;color:#3730a3">
@@ -1464,7 +1467,16 @@ async function abrirDrawer(id) {
       <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;text-align:center;background:var(--indigo);color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none">Assinar e liberar a análise →</a>
     </div>`;
   } else if (d.temChave) {
-    html += `<div class="bloco" style="color:var(--cinza)">Você usou as pesquisas do mês. A cota volta no próximo mês.</div>`;
+    // Bateu a cota do mes: momento de maxima intencao (ele QUER ler este edital).
+    // Oferece o upgrade na hora (o pro-rata ja calculado mora em /conta) ou avulso.
+    html += `<div class="bloco" style="border:1px solid #c7d2fe;background:linear-gradient(180deg,#fff,#EEF0FF)">
+      <h3 style="margin:0 0 6px">Você usou todas as análises do mês</h3>
+      <p style="font-size:13.5px;color:var(--cinza);margin:0 0 12px">Não precisa esperar o próximo mês pra ler este edital. Suba de plano e continue agora, pagando só a diferença proporcional (pró-rata), ou pegue um pacote avulso.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a href="/conta?c=${encodeURIComponent(token)}" style="flex:1;min-width:170px;text-align:center;background:var(--indigo);color:#fff;font-weight:700;padding:12px;border-radius:11px;text-decoration:none">📈 Subir de plano agora</a>
+        <a href="/assinar?c=${encodeURIComponent(token)}" style="flex:1;min-width:170px;text-align:center;background:#fff;color:var(--indigo);border:1.5px solid var(--indigo);font-weight:700;padding:12px;border-radius:11px;text-decoration:none">Comprar pacote avulso</a>
+      </div>
+    </div>`;
   } else {
     html += `<div class="bloco" style="color:var(--cinza)">Análise indisponível no momento.</div>`;
   }
