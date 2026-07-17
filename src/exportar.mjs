@@ -50,6 +50,35 @@ export function csvEditais(editais) {
   return BOM + [csvLinha(cab), ...linhas].join("\r\n");
 }
 
+// PLANILHA DE PROPOSTA: os itens do edital ja formatados pra empresa so preencher
+// o preco. Traz o valor unitario de REFERENCIA (teto estimado do orgao, do PNCP) e
+// deixa as colunas "seu preco" em branco. E o arquivo que a empresa sobe no portal.
+export function csvPropostaItens(edital, itens) {
+  const meta = [
+    ["PROPOSTA DE PRECOS"],
+    ["Orgao", edital.orgao ?? ""],
+    ["Objeto", edital.objeto ?? ""],
+    ["Edital (PNCP)", edital.id ?? ""],
+    ["Encerramento", edital.encerramento ? dataHora(edital.encerramento) : ""],
+    ["Empresa (preencha)", ""],
+    ["CNPJ (preencha)", ""],
+    [""],
+    ["Preencha as colunas 'Seu preco unitario' e 'Seu preco total'. O valor de referencia e o teto estimado do orgao (fonte PNCP)."],
+    [""],
+  ].map(csvLinha);
+  const cab = ["Item", "Descricao", "Unidade", "Quantidade", "Valor unit. de referencia (R$)", "Seu preco unitario (R$)", "Seu preco total (R$)"];
+  const linhas = (itens || []).map((i) => csvLinha([
+    i.numero ?? "",
+    i.descricao ?? "",
+    i.unidade ?? "",
+    i.quantidade ?? "",
+    brl(i.valorUnitario),
+    "", // seu preco unitario (cliente preenche)
+    "", // seu preco total (cliente preenche)
+  ]));
+  return BOM + [...meta, csvLinha(cab), ...linhas].join("\r\n");
+}
+
 // HISTORICO (licitacoes ja fechadas, agrupadas por objeto)
 export function csvHistorico(licitacoes) {
   const cab = ["Municipio", "UF", "Orgao", "Objeto", "Data", "Vencedor 1", "Valor 1 (R$)", "Vencedor 2", "Valor 2 (R$)", "Vencedor 3", "Valor 3 (R$)", "Total contratos", "Valor total (R$)"];

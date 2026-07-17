@@ -121,6 +121,10 @@ async function carregar() {
       document.getElementById("resumo").textContent = "";
       return;
     }
+    // Planilha de proposta pronta: os itens em Excel com o valor de referência e
+    // colunas em branco pro cliente preencher o preço e subir no portal.
+    document.getElementById("meta").insertAdjacentHTML("beforeend",
+      `<a href="/api/proposta-planilha?id=${encodeURIComponent(id)}" title="Baixa os itens em Excel, com o valor de referência do órgão, pra você só preencher o seu preço e subir no portal da licitação" style="display:inline-flex;align-items:center;gap:6px;background:#4338CA;color:#fff;font-weight:700;font-size:13px;padding:8px 14px;border-radius:8px;text-decoration:none;margin-top:4px">📊 Baixar planilha de proposta (Excel)</a>`);
     render("");
   } catch (e) {
     document.getElementById("conteudo").innerHTML = '<div class="vazio" style="color:#dc2626">Não consegui carregar os itens agora. Tente de novo.</div>';

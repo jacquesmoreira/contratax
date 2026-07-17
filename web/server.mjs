@@ -34,7 +34,7 @@ import { gerarDigest, enviar, temEmailKey } from "../src/email.mjs";
 import { statusAtual, cobranca } from "../src/assinatura.mjs";
 import { precoVencedores, contratosDoFornecedor } from "../src/preco.mjs";
 import { precoReferencia } from "../src/precoReferencia.mjs";
-import { csvEditais, csvHistorico, csvRadar, csvContratos, nomeArquivo } from "../src/exportar.mjs";
+import { csvEditais, csvHistorico, csvRadar, csvContratos, csvPropostaItens, nomeArquivo } from "../src/exportar.mjs";
 import { lerRecadoPara, estadoRecados, salvarRecado, limparRecado } from "../src/recado.mjs";
 import { icsEdital, nomeIcs } from "../src/calendario.mjs";
 import { ehAssessoria, limiteEmpresas, listarEmpresasGerenciadas, adicionarEmpresa, removerEmpresa } from "../src/assessoria.mjs";
@@ -2274,6 +2274,29 @@ const servidor = createServer(async (req, res) => {
         return json(res, 200, { edital: cab, itens: await listarItens(edital) });
       } catch (e) {
         return json(res, 200, { edital: cab, itens: [], erro: e.message });
+      }
+    }
+
+    // Planilha de proposta: os itens do edital em CSV pra empresa preencher o
+    // preco e subir no portal. Dado publico do PNCP reformatado, sem custo de IA.
+    if (rota === "/api/proposta-planilha") {
+      const edital = buscarPorId(url.searchParams.get("id"));
+      if (!edital) return json(res, 404, { erro: "Edital nao encontrado" });
+      try {
+        const itens = await listarItens(edital);
+        if (!itens.length) return json(res, 200, { erro: "Este edital nao trouxe itens estruturados no PNCP. Abra o edital pra ver a planilha original." });
+        const csv = csvPropostaItens(
+          { id: edital.id, orgao: edital.orgao, objeto: edital.objeto, encerramento: edital.encerramento },
+          itens,
+        );
+        res.writeHead(200, {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${nomeArquivo("proposta")}"`,
+          "Cache-Control": "no-store",
+        });
+        return res.end(csv);
+      } catch (e) {
+        return json(res, 200, { erro: e.message });
       }
     }
 
