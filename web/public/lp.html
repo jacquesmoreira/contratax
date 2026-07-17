@@ -659,11 +659,17 @@
         <p>7 dias grátis, sem cartão. Menos que uma hora de consultor de licitações.</p>
       </div>
 
+      <div class="ciclo-lp reveal" style="display:flex;justify-content:center;align-items:center;gap:6px;margin:0 0 26px">
+        <button type="button" id="lp-ciclo-mensal" style="border:none;background:var(--indigo);color:#fff;font-weight:800;padding:9px 20px;border-radius:99px;cursor:pointer;font-family:inherit;font-size:14px">Mensal</button>
+        <button type="button" id="lp-ciclo-anual" style="border:1px solid var(--linha);background:#fff;color:var(--cinza);font-weight:800;padding:9px 20px;border-radius:99px;cursor:pointer;font-family:inherit;font-size:14px">Anual · 2 meses grátis</button>
+      </div>
+
       <div class="sub-lbl">Para a sua empresa</div>
       <div class="g4" style="margin-bottom:20px">
         <div class="plano reveal">
           <div class="tag">Starter</div>
-          <div class="preco">R$ 59<small>/mês</small></div>
+          <div class="preco"><span class="pv" data-mes="59">R$ 59</span><small>/mês</small></div>
+          <div class="pn" style="display:none;font-size:12.5px;color:var(--verde);font-weight:700;margin:2px 0 0"></div>
           <div class="per">Pra começar a vender pro governo</div>
           <ul>
             <li><span class="ck">✓</span>Todas as licitações do seu ramo, no Brasil todo</li>
@@ -676,7 +682,8 @@
         <div class="plano destaque reveal">
           <div class="selo">RECOMENDADO</div>
           <div class="tag">Básico</div>
-          <div class="preco">R$ 149<small style="color:#8FA3E3">/mês</small></div>
+          <div class="preco"><span class="pv" data-mes="149">R$ 149</span><small style="color:#8FA3E3">/mês</small></div>
+          <div class="pn" style="display:none;font-size:12.5px;color:#a7f3d0;font-weight:700;margin:2px 0 0"></div>
           <div class="per" style="color:#8FA3E3">Pra quem já vende e decide com a IA</div>
           <ul>
             <li><span class="ck">✓</span>Tudo do Starter</li>
@@ -688,7 +695,8 @@
         </div>
         <div class="plano reveal">
           <div class="tag">Pro</div>
-          <div class="preco">R$ 247<small>/mês</small></div>
+          <div class="preco"><span class="pv" data-mes="247">R$ 247</span><small>/mês</small></div>
+          <div class="pn" style="display:none;font-size:12.5px;color:var(--verde);font-weight:700;margin:2px 0 0"></div>
           <div class="per">A operação completa, do edital ao pagamento</div>
           <ul>
             <li><span class="ck">✓</span>Tudo do Básico</li>
@@ -701,7 +709,8 @@
         </div>
         <div class="plano reveal">
           <div class="tag">Expertise</div>
-          <div class="preco">R$ 397<small>/mês</small></div>
+          <div class="preco"><span class="pv" data-mes="397">R$ 397</span><small>/mês</small></div>
+          <div class="pn" style="display:none;font-size:12.5px;color:var(--verde);font-weight:700;margin:2px 0 0"></div>
           <div class="per">Volume alto e inteligência de mercado</div>
           <ul>
             <li><span class="ck">✓</span>Tudo do Pro</li>
@@ -717,11 +726,11 @@
       <div class="sub-lbl">Para consultores e assessorias</div>
       <div class="g2">
         <div class="plano-ass reveal">
-          <div><div class="tag">Assessoria 10</div><div class="preco">R$ 697<small style="font-size:15px;color:var(--cinza-c);font-weight:600">/mês</small></div><div class="desc">10 CNPJs, cada um com painel, alertas e análise próprios.</div></div>
+          <div><div class="tag">Assessoria 10</div><div class="preco"><span class="pv" data-mes="697">R$ 697</span><small style="font-size:15px;color:var(--cinza-c);font-weight:600">/mês</small></div><div class="pn" style="display:none;font-size:12.5px;color:var(--verde);font-weight:700;margin:2px 0 6px"></div><div class="desc">10 CNPJs, cada um com painel, alertas e análise próprios.</div></div>
           <a href="/cadastro" class="cta">Testar grátis</a>
         </div>
         <div class="plano-ass reveal">
-          <div><div class="tag">Assessoria 25</div><div class="preco">R$ 1.297<small style="font-size:15px;color:var(--cinza-c);font-weight:600">/mês</small></div><div class="desc">25 CNPJs em um único login. O plano do escritório que atende vários clientes.</div></div>
+          <div><div class="tag">Assessoria 25</div><div class="preco"><span class="pv" data-mes="1297">R$ 1.297</span><small style="font-size:15px;color:var(--cinza-c);font-weight:600">/mês</small></div><div class="pn" style="display:none;font-size:12.5px;color:var(--verde);font-weight:700;margin:2px 0 6px"></div><div class="desc">25 CNPJs em um único login. O plano do escritório que atende vários clientes.</div></div>
           <a href="/cadastro" class="cta">Testar grátis</a>
         </div>
       </div>
@@ -993,6 +1002,37 @@ document.getElementById("termo").addEventListener("keydown", e => { if (e.key ==
     entradas.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in-view"); obs.unobserve(e.target); } });
   }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
   alvos.forEach(function (el) { obs.observe(el); });
+})();
+
+// ===== Toggle Mensal / Anual nos precos (2 meses gratis) =====
+(function () {
+  var MESES_ANUAL = 10; // paga 10, usa 12 — mesmo criterio do backend
+  var btnM = document.getElementById("lp-ciclo-mensal");
+  var btnA = document.getElementById("lp-ciclo-anual");
+  if (!btnM || !btnA) return;
+  var fmt = function (n) { return n.toLocaleString("pt-BR"); };
+  function aplicar(anual) {
+    document.querySelectorAll(".pv").forEach(function (pv) {
+      var mes = Number(pv.getAttribute("data-mes"));
+      var anoTotal = mes * MESES_ANUAL;
+      pv.textContent = "R$ " + fmt(anual ? Math.round(anoTotal / 12) : mes);
+      var card = pv.closest(".plano, .plano-ass");
+      var nota = card && card.querySelector(".pn");
+      if (nota) {
+        nota.textContent = "cobrado R$ " + fmt(anoTotal) + "/ano · 2 meses grátis";
+        nota.style.display = anual ? "block" : "none";
+      }
+    });
+    if (anual) {
+      btnA.style.background = "var(--indigo)"; btnA.style.color = "#fff"; btnA.style.border = "none";
+      btnM.style.background = "#fff"; btnM.style.color = "var(--cinza)"; btnM.style.border = "1px solid var(--linha)";
+    } else {
+      btnM.style.background = "var(--indigo)"; btnM.style.color = "#fff"; btnM.style.border = "none";
+      btnA.style.background = "#fff"; btnA.style.color = "var(--cinza)"; btnA.style.border = "1px solid var(--linha)";
+    }
+  }
+  btnM.addEventListener("click", function () { aplicar(false); });
+  btnA.addEventListener("click", function () { aplicar(true); });
 })();
 </script>
 
