@@ -246,6 +246,14 @@ export function paginaHub() {
   const canonical = `${BASE}/licitacoes`;
   const title = "Licitações Públicas por Ramo e Estado: editais abertos | ContrataX";
   const description = "Encontre licitações públicas abertas por ramo de atividade e por estado. Editais do PNCP atualizados todo dia, com prazo e valor. Crie sua conta grátis.";
+  const jsonld = `<script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Início", item: BASE + "/" },
+      { "@type": "ListItem", position: 2, name: "Licitações", item: canonical },
+    ],
+  })}</script>`;
   const body = `<header class="hero"><div class="w">
     <div class="bc"><a href="/">Início</a> › Licitações</div>
     <h1>Licitações públicas por ramo</h1>
@@ -255,7 +263,7 @@ export function paginaHub() {
     <div class="cta-box"><h2>Receba os editais do seu ramo todo dia</h2><p>Crie sua conta grátis e o ContrataX garimpa as licitações que combinam com a sua empresa, e ainda diz se você está apto a participar.</p><a href="/cadastro">Criar conta grátis</a></div>
     <div class="sec"><h2>Por estado</h2><div class="chips">${UFS.map((u) => `<a href="/licitacoes/material-hospitalar/${u.sigla.toLowerCase()}">${esc(u.nome)}</a>`).join("")}</div></div>
     </div>`;
-  return layout({ title, description, canonical, body });
+  return layout({ title, description, canonical, jsonld, body });
 }
 
 // URLs para o sitemap (hub + cada ramo nacional + ramo x UF).

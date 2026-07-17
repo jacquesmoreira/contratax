@@ -195,6 +195,15 @@ export function paginaHubCnae() {
     <div class="obj"><a href="/cnae/${c.codigo}" style="color:#4338ca;text-decoration:none;font-weight:700">${esc(c.nome)}</a></div>
   </div>`).join("");
 
+  const jsonld = `<script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Início", item: BASE + "/" },
+      { "@type": "ListItem", position: 2, name: "CNAEs", item: canonical },
+    ],
+  })}</script>`;
+
   const body = `<div class="w">
     <div class="bc"><a href="/">Início</a> › CNAEs</div>
     <h1>Licitações por CNAE</h1>
@@ -206,5 +215,5 @@ export function paginaHubCnae() {
     </div>
   </div>`;
 
-  return layout({ title, description, canonical, body });
+  return layout({ title, description, canonical, jsonld, body });
 }

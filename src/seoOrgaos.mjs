@@ -204,6 +204,15 @@ export function paginaHubOrgaos() {
     <div class="meta"><span>${o.contratos.toLocaleString("pt-BR")} contratos no acervo</span></div>
   </div>`).join("");
 
+  const jsonld = `<script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Início", item: BASE + "/" },
+      { "@type": "ListItem", position: 2, name: "Órgãos públicos", item: canonical },
+    ],
+  })}</script>`;
+
   const body = `<div class="w">
     <div class="bc"><a href="/">Início</a> › Órgãos públicos</div>
     <h1>Órgãos públicos no PNCP</h1>
@@ -215,5 +224,5 @@ export function paginaHubOrgaos() {
     </div>
   </div>`;
 
-  return layout({ title, description, canonical, body });
+  return layout({ title, description, canonical, jsonld, body });
 }
