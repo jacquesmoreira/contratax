@@ -1420,8 +1420,9 @@ async function abrirDrawer(id) {
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <a href="/itens?id=${encodeURIComponent(ed.id)}&c=${encodeURIComponent(token)}" target="_blank" rel="noopener" style="display:inline-block;background:#fff;border:1.5px solid var(--indigo);color:var(--indigo);font-weight:700;padding:10px 16px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13.5px;text-decoration:none">📦 Ver o que está sendo comprado →</a>
       <a href="/api/proposta-planilha?id=${encodeURIComponent(ed.id)}" title="Baixa os itens em Excel, com o valor de referência do órgão, pra você só preencher o seu preço e subir no portal" style="display:inline-block;background:var(--indigo);color:#fff;font-weight:700;padding:10px 16px;border-radius:10px;font-family:inherit;font-size:13.5px;text-decoration:none">📊 Planilha de proposta (Excel)</a>
+      <a href="/api/proposta-carta?id=${encodeURIComponent(ed.id)}&c=${encodeURIComponent(token)}" target="_blank" rel="noopener" title="Gera a carta de proposta comercial com os dados da sua empresa, o edital e os itens, pronta pra imprimir/PDF, assinar e anexar" style="display:inline-block;background:#fff;border:1.5px solid var(--indigo);color:var(--indigo);font-weight:700;padding:10px 16px;border-radius:10px;font-family:inherit;font-size:13.5px;text-decoration:none">📄 Carta de proposta (PDF)</a>
     </div>
-    <p style="font-size:12px;color:var(--cinza);margin:8px 0 0">A planilha já vem com os itens e o valor de referência do órgão. Você só preenche o seu preço e sobe no portal. Dados do PNCP.</p></div>`;
+    <p style="font-size:12px;color:var(--cinza);margin:8px 0 0">A planilha vem com os itens e o valor de referência do órgão, você só preenche o seu preço. A carta já sai com os dados da sua empresa, pronta pra assinar. Dados do PNCP.</p></div>`;
 
   // Anotacoes privadas do cliente neste edital (so quem tem token edita).
   if (token) {

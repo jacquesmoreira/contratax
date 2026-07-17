@@ -36,6 +36,7 @@ import { precoVencedores, contratosDoFornecedor } from "../src/preco.mjs";
 import { precoReferencia } from "../src/precoReferencia.mjs";
 import { csvEditais, csvHistorico, csvRadar, csvContratos, csvPropostaItens, nomeArquivo } from "../src/exportar.mjs";
 import { lerRecadoPara, estadoRecados, salvarRecado, limparRecado } from "../src/recado.mjs";
+import { cartaProposta } from "../src/propostaComercial.mjs";
 import { icsEdital, nomeIcs } from "../src/calendario.mjs";
 import { ehAssessoria, limiteEmpresas, listarEmpresasGerenciadas, adicionarEmpresa, removerEmpresa } from "../src/assessoria.mjs";
 import { checklist as onboardingChecklist } from "../src/onboarding.mjs";
@@ -2339,6 +2340,25 @@ const servidor = createServer(async (req, res) => {
       } catch (e) {
         return json(res, 200, { erro: e.message });
       }
+    }
+
+    // Carta de Proposta Comercial: documento (HTML pra PDF) com os dados da
+    // empresa do cliente + o edital + a tabela de itens + as clausulas padrao.
+    // Precisa de token pra personalizar com a empresa (razao/CNPJ).
+    if (rota === "/api/proposta-carta") {
+      const edital = buscarPorId(url.searchParams.get("id"));
+      if (!edital) return res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("Edital nao encontrado");
+      const perfilP = await perfilPorToken(url.searchParams.get("c") || "");
+      const empresa = perfilP ? {
+        razao: perfilP.empresa?.razaoSocial || perfilP.razaoSocial || perfilP.nome,
+        cnpj: perfilP.cnpj, email: perfilP.email, telefone: perfilP.telefone,
+        cidade: perfilP.empresa?.cidade, uf: perfilP.empresa?.uf || (perfilP.ufs || [])[0],
+      } : {};
+      let itens = [];
+      try { itens = await listarItens(edital); } catch { /* sem itens: a carta cita a planilha anexa */ }
+      const html = cartaProposta({ empresa, edital, itens });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return res.end(html);
     }
 
     // Download de um documento do edital (pelo indice ?doc=).

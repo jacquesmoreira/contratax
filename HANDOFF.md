@@ -1241,7 +1241,13 @@ Jacques deu carta branca ("faça tudo que agrega e conquista clientes"). Prioriz
 
 Tudo validado (node --check, testes funcionais do downgrade/proposta, sintaxe de todas as páginas) e deployed. Commits: `dd1a9a3` (proposta), `9b2d586` (retenção + fix), `ec3f436` (upgrade na cota), + drawer.
 
-**Fila da auditoria restante:** token fora da URL (cookie, segurança), 1ª análise automática no 1º login, digest como gancho ativo, ranking personalizado padrão, prova social (3 clientes reais), sair do hobby (adiado). Gerador de proposta evoluível: hoje é CSV dos itens; pode virar carta-proposta em PDF + pacote de habilitação zipado.
+**Fila da auditoria restante:** token fora da URL (cookie, segurança), 1ª análise automática no 1º login, digest como gancho ativo, ranking personalizado padrão, prova social (3 clientes reais), sair do hobby (adiado).
+
+### 2026-07-16 (continuação) — Carta de Proposta Comercial (kit de proposta completo)
+
+Jacques pediu "o que for melhor pro sistema e clientes". Decidi por NÃO mexer no token-fora-da-URL agora: é troca no coração da auth, blast radius = app inteiro, e não dá pra testar login/sessão no navegador daqui (sandbox bloqueia localhost); subir auth às cegas em produção com cliente pagante é irresponsável. Fica pra uma sessão com teste ao vivo. Em vez disso, completei o **kit de proposta** (aditivo, seguro, testável): `src/propostaComercial.mjs` `cartaProposta()` gera a **Carta de Proposta Comercial** em HTML pra PDF (padrão das minutas), já com os dados da empresa (do perfil) + referência do edital + tabela de itens (valor de referência do PNCP + coluna de valor proposto em branco) + cláusulas padrão (validade 60 dias, tributos inclusos, aceite do edital) + assinatura. Rota `/api/proposta-carta?id=&c=token` (token pra personalizar com a empresa). Botão "📄 Carta de proposta (PDF)" ao lado da planilha, na página de itens e no drawer. Junto com a planilha Excel, o cliente tem o pacote de proposta completo. Rodapé deixa claro que é a proposta DA PRÓPRIA empresa (modelo pra revisar), não peça oficial do órgão. Validado (node --check, geração com/sem itens, sem travessão) e deployed.
+
+Evolução futura do kit: pacote de habilitação zipado (declarações que já existem + certidões do cliente).
 
 ---
 
