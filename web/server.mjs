@@ -64,7 +64,7 @@ import { googleConfigurado, urlAutorizacao, processarCallback } from "../src/goo
 import { solicitarReset, aplicarReset, verificarToken } from "../src/recuperarSenha.mjs";
 import { checarAuth, registrarTentativa, limparAuth, ipDoRequest as ipAuth } from "../src/rateLimitAuth.mjs";
 import { PLANOS, AVULSOS, planoDe, precoAnualNum, MESES_ANUAL } from "../src/planos.mjs";
-import { ativarPlano, cancelarPorToken, calcularProRata, aplicarUpgrade, calcularProRataAssentos, aplicarAssentos, valorMensalRecorrente } from "../src/assinatura.mjs";
+import { ativarPlano, cancelarPorToken, calcularProRata, aplicarUpgrade, aplicarDowngrade, calcularProRataAssentos, aplicarAssentos, valorMensalRecorrente } from "../src/assinatura.mjs";
 import { asaasConfigurado, precoNumero, obterOuCriarCliente, criarAssinatura, criarCobrancaAvulsa, externalReferenceDaAssinatura, cancelarAssinaturaAsaas, atualizarValorAssinatura } from "../src/asaas.mjs";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
@@ -1794,6 +1794,9 @@ const servidor = createServer(async (req, res) => {
                     perfilU.asaasSubscriptionId,
                     novoValor,
                     `ContrataX: Plano ${PLANOS[novoNivel].nome}`,
+                    // Atualiza a referencia pro nivel novo, senao a renovacao
+                    // reativaria o nivel antigo (bug latente do upgrade).
+                    `sub:${token}:${novoNivel}`,
                   );
                 }
                 await enviarConversao(perfilU, {
@@ -1973,6 +1976,44 @@ const servidor = createServer(async (req, res) => {
         return json(res, 200, { url: r.invoiceUrl, valor: calc.valor, diasRestantes: calc.diasRestantes });
       } catch (e) {
         return json(res, 502, { erro: mensagemPagamento(e) });
+      }
+    }
+
+    // Downgrade self-service (usado na retencao no cancelamento): baixa pra um
+    // plano mais barato da mesma familia. Sem cobranca (o cliente ja pagou o
+    // ciclo); so ajusta o valor + referencia recorrente no Asaas pras proximas.
+    if (rota === "/api/conta/downgrade" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      const perfil = await perfilPorToken(corpo.c || url.searchParams.get("c") || "");
+      if (!perfil) return json(res, 404, { erro: "Conta nao encontrada" });
+      // Anual: mesmo problema do upgrade (pro-rata/ciclo). Encaminha pro suporte.
+      if (perfil.assinatura?.plano === "anual") {
+        return json(res, 400, { erro: `Você está no plano anual. Pra mudar de plano, fale com a gente em ${cobranca.contato}.` });
+      }
+      const novo = PLANOS[corpo.novo];
+      if (!novo) return json(res, 400, { erro: "Plano invalido" });
+      const atualId = perfil.assinatura?.nivel || "starter";
+      const atual = PLANOS[atualId] || PLANOS.starter;
+      // So permite descer dentro da MESMA familia (empresa ou assessoria) e pra
+      // um preco MENOR (senao e upgrade, que tem rota propria com cobranca).
+      if (Boolean(novo.assessoria) !== Boolean(atual.assessoria) || precoNumero(novo.preco) >= precoNumero(atual.preco)) {
+        return json(res, 400, { erro: "Escolha um plano mais barato da mesma familia." });
+      }
+      try {
+        const perfilD = await aplicarDowngrade(perfil.token, corpo.novo);
+        // Proximas cobrancas no preco menor + referencia do nivel novo (senao a
+        // renovacao reativaria o nivel antigo).
+        if (perfilD.asaasSubscriptionId) {
+          await atualizarValorAssinatura(
+            perfilD.asaasSubscriptionId,
+            valorMensalRecorrente(perfilD),
+            `ContrataX: Plano ${novo.nome}`,
+            `sub:${perfil.token}:${corpo.novo}`,
+          );
+        }
+        return json(res, 200, { ok: true, nivel: corpo.novo, mensagem: `Pronto, você agora está no plano ${novo.nome} (R$ ${novo.preco}/mês). As próximas cobranças já vêm nesse valor. Seu acesso continua sem interrupção.` });
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
       }
     }
 

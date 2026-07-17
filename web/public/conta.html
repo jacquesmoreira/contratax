@@ -185,6 +185,20 @@
       </p>
       <button class="btn" id="abrir-cancelar" style="background:#fff;color:#991b1b;border:1.5px solid #fca5a5;margin-top:6px">Quero cancelar</button>
 
+      <!-- Retencao: oferece cair pro plano mais barato antes de cancelar de vez -->
+      <div id="retencao" style="display:none;margin-top:18px;border-top:1px solid var(--linha);padding-top:18px">
+        <div style="background:#EEF0FF;border:1px solid #c7d2fe;border-radius:12px;padding:16px 18px">
+          <div style="font-weight:800;font-size:16px;color:var(--tinta);margin-bottom:6px">Antes de ir, que tal pagar menos em vez de sair?</div>
+          <div id="retencao-texto" style="font-size:14px;color:var(--cinza);line-height:1.55;margin-bottom:14px"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn" id="btn-ficar" style="background:var(--indigo);color:#fff">Mudar de plano e continuar</button>
+            <button class="btn" id="btn-cancelar-mesmo" style="background:#fff;color:#991b1b;border:1.5px solid #fca5a5">Não, quero cancelar</button>
+          </div>
+          <div class="ok" id="retencao-ok" style="margin-top:10px"></div>
+          <div class="erro" id="retencao-erro" style="margin-top:6px"></div>
+        </div>
+      </div>
+
       <div id="form-cancelar" style="display:none;margin-top:18px;border-top:1px solid var(--linha);padding-top:18px">
         <label for="motivo-cancelar">Por que está cancelando? (opcional, ajuda a melhorar)</label>
         <input id="motivo-cancelar" type="text" placeholder="Ex: ainda não fechei contratos, ficou caro, vou voltar depois..." />
@@ -528,10 +542,60 @@ async function carregarCardPlano() {
 }
 if (!modoCompletar) carregarCardPlano();
 
-// ===== Cancelamento self-service =====
-const $abrir = $("abrir-cancelar"), $form = $("form-cancelar");
+// ===== Cancelamento self-service (com retencao antes) =====
+const $abrir = $("abrir-cancelar"), $form = $("form-cancelar"), $ret = $("retencao");
+// Plano-alvo do "fique por menos": o mais barato da MESMA familia abaixo do atual.
+let SAVE = null; // { id, nome, preco }
+function mostrarFormCancelar() { if ($ret) $ret.style.display = "none"; $form.style.display = "block"; $abrir.style.display = "none"; }
+async function prepararRetencao() {
+  try {
+    const a = await (await fetch("/api/acesso?c=" + encodeURIComponent(token))).json();
+    if (!a || a.status !== "ativo" || a.plano === "anual") return null; // anual vai direto pro suporte/cancelar
+    const nivel = a.nivel || "";
+    const cat = await (await fetch("/api/planos")).json();
+    const precoNum = (s) => Number(String(s).replace(/\./g, "").replace(",", "."));
+    const atual = (cat.planos || []).find((p) => p.id === nivel);
+    if (!atual) return null;
+    const maisBarato = (cat.planos || [])
+      .filter((p) => Boolean(p.assessoria) === Boolean(atual.assessoria) && precoNum(p.preco) < precoNum(atual.preco))
+      .sort((x, y) => precoNum(x.preco) - precoNum(y.preco))[0];
+    if (!maisBarato) return null; // ja esta no mais barato: sem oferta de retencao
+    return { id: maisBarato.id, nome: maisBarato.nome, preco: maisBarato.preco, cotaNova: maisBarato.analises, nomeAtual: atual.nome };
+  } catch { return null; }
+}
 if ($abrir) {
-  $abrir.onclick = () => { $form.style.display = "block"; $abrir.style.display = "none"; };
+  $abrir.onclick = async () => {
+    $abrir.disabled = true;
+    SAVE = await prepararRetencao();
+    $abrir.disabled = false;
+    if (SAVE && $ret) {
+      $("retencao-texto").innerHTML = `Você está no <b>${SAVE.nomeAtual}</b>. Em vez de cancelar e perder tudo, dá pra cair pro plano <b>${SAVE.nome}</b> por <b>R$ ${SAVE.preco}/mês</b> e continuar recebendo a busca e os alertas do seu ramo, com ${SAVE.cotaNova} análises da ContrataX.IA por mês. Seu histórico e seus documentos ficam do mesmo jeito.`;
+      $("retencao-ok").textContent = ""; $("retencao-erro").textContent = "";
+      $ret.style.display = "block"; $abrir.style.display = "none";
+    } else {
+      mostrarFormCancelar(); // sem oferta possivel: vai direto pro cancelamento
+    }
+  };
+  if ($("btn-cancelar-mesmo")) $("btn-cancelar-mesmo").onclick = () => mostrarFormCancelar();
+  if ($("btn-ficar")) $("btn-ficar").onclick = async () => {
+    if (!SAVE) return;
+    const b = $("btn-ficar"); b.disabled = true; b.textContent = "Mudando...";
+    $("retencao-erro").textContent = "";
+    try {
+      const r = await fetch("/api/conta/downgrade?c=" + encodeURIComponent(token), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ c: token, novo: SAVE.id }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.erro || "falha");
+      $("retencao-ok").textContent = d.mensagem || "Plano alterado. Você continua com a gente.";
+      $("btn-ficar").style.display = "none"; $("btn-cancelar-mesmo").textContent = "Fechar";
+      $("btn-cancelar-mesmo").onclick = () => location.reload();
+    } catch (e) {
+      $("retencao-erro").textContent = e.message;
+      b.disabled = false; b.textContent = "Mudar de plano e continuar";
+    }
+  };
   $("desistir-cancelar").onclick = () => { $form.style.display = "none"; $abrir.style.display = "inline-block"; $("cancelar-erro").textContent = ""; };
   $("confirmar-cancelar").onclick = async () => {
     if (!confirm("Confirmar o cancelamento? A renovação automática vai parar. Seu acesso continua até o fim do período já pago.")) return;

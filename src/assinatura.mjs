@@ -181,6 +181,23 @@ export async function aplicarUpgrade(token, novoNivel) {
   return p;
 }
 
+// Downgrade self-service (usado na retencao no cancelamento): baixa o nivel
+// IMEDIATAMENTE, mantendo o expiraEm (o cliente ja pagou o ciclo). As proximas
+// cobrancas vem no preco menor (a rota atualiza o valor + externalReference no
+// Asaas). Fica de fora do win-back (ja e cliente).
+export async function aplicarDowngrade(token, novoNivel) {
+  const perfis = await lerPerfis();
+  const p = perfis.find((x) => x.token === token);
+  if (!p) throw new Error(`Token ${token} nao encontrado`);
+  if (!p.assinatura) p.assinatura = {};
+  p.assinatura.nivel = novoNivel;
+  p.assinatura.downgradeEm = new Date().toISOString();
+  delete p.assinatura.canceladoEm; // reverteu a intencao de sair
+  delete p.assinatura.canceladoMotivo;
+  await salvarPerfis(perfis);
+  return p;
+}
+
 // Cancelamento self-service: marca o perfil como cancelado, mas mantem o acesso
 // ate o fim do ciclo pago. Quem realmente para a cobranca recorrente e a chamada
 // ao Asaas (cancelarAssinaturaAsaas) feita na rota.

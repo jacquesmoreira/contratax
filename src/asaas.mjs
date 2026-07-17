@@ -97,13 +97,16 @@ export async function externalReferenceDaAssinatura(subscriptionId) {
   catch { return null; }
 }
 
-// Atualiza o valor da assinatura recorrente no Asaas. Usado em upgrade de plano:
-// proximas cobrancas passam a vir no preco novo, sem cancelar/recriar.
-export async function atualizarValorAssinatura(subscriptionId, novoValor, descricao = null) {
+// Atualiza o valor da assinatura recorrente no Asaas. Usado em upgrade/downgrade
+// de plano: proximas cobrancas passam a vir no preco novo, sem cancelar/recriar.
+// externalReference: quando muda de NIVEL, precisa atualizar tambem a referencia
+// (sub:token:nivel), senao a renovacao reativa o nivel ANTIGO no webhook.
+export async function atualizarValorAssinatura(subscriptionId, novoValor, descricao = null, externalReference = null) {
   if (!subscriptionId) return { ok: false, erro: "sem subscriptionId" };
   try {
     const corpo = { value: Number(novoValor) };
     if (descricao) corpo.description = descricao;
+    if (externalReference) corpo.externalReference = externalReference;
     await api(`/subscriptions/${subscriptionId}`, "PUT", corpo);
     return { ok: true };
   } catch (e) {
