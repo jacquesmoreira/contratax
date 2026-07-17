@@ -1249,6 +1249,22 @@ Jacques pediu "o que for melhor pro sistema e clientes". Decidi por NÃO mexer n
 
 Evolução futura do kit: pacote de habilitação zipado (declarações que já existem + certidões do cliente).
 
+### 2026-07-16 (continuação) — "todas as frentes faltantes": kit habilitação + digest + triagem honesta
+
+Jacques: "bora fazer todas as frentes faltantes". Fiz as que dá pra fazer BEM e com segurança daqui, e fui honesto sobre as que exigem teste ao vivo ou ação dele:
+
+**Feitas (deployed):**
+- **Kit de Habilitação** (`src/kitHabilitacao.mjs`, `/api/kit-habilitacao`): 1 PDF com as 5 declarações (cada uma numa página) + checklist das certidões (validade/status). Botão em declaracoes.html. Fecha o kit de proposta (planilha + carta + habilitação). Fix de fuso nas datas (YYYY-MM-DD como local).
+- **Digest com gancho** (email.mjs): assunto lidera com urgência ("1 encerra em 2 dias") quando há prazo <=5 dias, senão mantém o boletim numerado. Assunto é o que mais move abertura.
+
+**Confirmado JÁ FEITO (não dupliquei):** "1ª análise automática no 1º login" já existe como o `ahaCard` ("✨ Comece por aqui") na perfilHTML, que abre a análise do melhor edital num clique e some após a 1ª análise. A escada de ativação (ahaCard → certCard → oppCard) já cobre bem.
+
+**Adiadas com motivo (NÃO fiz de propósito):**
+- **Token fora da URL (cookie)** e **2FA TOTP**: mudanças no coração da auth, blast radius = app inteiro, e não dá pra testar login/sessão no navegador daqui (sandbox bloqueia localhost). Subir auth às cegas em produção com pagante é irresponsável. Precisam de sessão com teste ao vivo (Jacques na máquina, ou branch pra ele validar).
+- **Prova social (3 clientes reais nomeados)**: não dá pra fabricar (regra CDC/CONAR e do próprio Jacques); depende dele conseguir permissão de clientes reais. Ação do Jacques.
+- **Sair do plano Hobby (Railway)**: ação dele, e não urgente no volume atual (já explicado).
+- **Ranking personalizado padrão**: a base já existe (oppCard + "Recomendados Beta"); virar 100% padrão é rework de UX que muda o que todo cliente vê, melhor com teste ao vivo.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.

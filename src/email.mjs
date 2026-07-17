@@ -144,7 +144,15 @@ export function boletimLayout({ perfil, vigenciaTexto = "", intro = "", corpoHtm
 export function gerarDigest(perfil, editais, { semUf = false, vigenciaTexto = "" } = {}) {
   const link = `${BASE}/painel?c=${perfil.token}`;
   const n = editais.length;
-  const assunto = `Boletim ${edicaoNumero()}: ${n} ${n === 1 ? "licitação" : "licitações"} do seu ramo`;
+  // Assunto lidera com URGENCIA quando ha prazo curto (o que mais move abertura).
+  // Sem urgencia, mantem o boletim numerado. So conta prazos reais e futuros.
+  const diasAteEnc = (iso) => { if (!iso) return null; const d = Math.ceil((new Date(iso) - Date.now()) / 864e5); return d; };
+  let urg = null;
+  for (const e of editais) { const d = diasAteEnc(e.encerramento); if (d != null && d >= 0 && (urg == null || d < urg)) urg = d; }
+  const rotuloN = `${n} ${n === 1 ? "licitação" : "licitações"} do seu ramo`;
+  const assunto = (urg != null && urg <= 5)
+    ? `${rotuloN} · 1 encerra ${urg === 0 ? "hoje" : urg === 1 ? "amanhã" : "em " + urg + " dias"}`
+    : `Boletim ${edicaoNumero()}: ${rotuloN}`;
   // Cliente sem estado cadastrado: aviso pra completar (senao ve editais nacionais).
   const avisoUf = semUf ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;"><tr><td style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;">
           <div style="font-size:13.5px;color:#92400e;line-height:1.5;">Você ainda não cadastrou seu <b>estado</b>, então mostramos editais do <b>Brasil todo</b>. <a href="${BASE}/conta?c=${perfil.token}" style="color:#b45309;font-weight:700;">Cadastre seu estado</a> pra receber só a sua região.</div>
