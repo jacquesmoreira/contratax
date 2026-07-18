@@ -6,6 +6,8 @@ data/
 # Dados de clientes e de execucao (nunca versionar — contem PII)
 perfis.json
 leads.json
+leads-*.csv
+data/campanha-envios.json
 
 # Lixo de recuperacao / temporarios
 *.corrompido
