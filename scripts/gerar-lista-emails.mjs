@@ -30,7 +30,7 @@
 //     --saida) que ele retoma dali, sem perder o que ja foi feito
 //   - Ctrl+C tambem salva antes de sair
 
-import { createWriteStream, readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "fs";
+import { createWriteStream, readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { paginarContratos } from "../src/pncp.mjs";
@@ -208,7 +208,16 @@ async function main() {
 
   const conhecidos = carregarCnpjsConhecidos();
   const tentados = carregarCheckpoint();
-  if (tentados.size) console.log(`Checkpoint encontrado: ${tentados.size} CNPJs ja tentados nesta coleta — serao pulados (retomando run anterior).`);
+  // Rede de seguranca: o checkpoint so salva a cada 5 tentativas, entao um
+  // processo morto antes disso (crash, taskkill, etc.) pode deixar leads no
+  // CSV que o checkpoint ainda nao sabe. Completa com o que ja esta gravado
+  // no proprio arquivo de saida, senao a proxima execucao reprocessaria
+  // (e duplicaria) esses CNPJs.
+  if (existsSync(arquivoSaida)) {
+    const doCsv = readFileSync(arquivoSaida, "utf8").match(/\b\d{14}\b/g) || [];
+    for (const cnpj of doCsv) tentados.add(cnpj);
+  }
+  if (tentados.size) console.log(`Checkpoint (+ CSV existente): ${tentados.size} CNPJs ja tentados nesta coleta — serao pulados (retomando run anterior).`);
 
   // Fase 1
   const cnpjsTodos = await coletarCnpjs(conhecidos);
@@ -216,9 +225,12 @@ async function main() {
   const total = cnpjsParaEnriquecer.length;
   console.log(`Tempo estimado desta execucao: ~${Math.round(total * 22 / 3600 * 10) / 10} horas`);
 
-  // Prepara CSV — se ja existe (retomando um checkpoint), continua no mesmo
-  // arquivo em vez de sobrescrever o que ja foi coletado.
-  const retomando = existsSync(arquivoSaida) && tentados.size > 0;
+  // Prepara CSV — se o arquivo de saida ja existe (com conteudo), continua
+  // nele em vez de sobrescrever. Importante: NAO depender so do checkpoint
+  // ter entradas — se o processo morreu antes do primeiro save periodico
+  // (a cada 5 tentativas), o checkpoint pode estar vazio mesmo com leads
+  // ja gravados no CSV, e sobrescrever perderia esses leads.
+  const retomando = existsSync(arquivoSaida) && statSync(arquivoSaida).size > 0;
   const stream = createWriteStream(arquivoSaida, { encoding: "utf8", flags: retomando ? "a" : "w" });
   if (!retomando) {
     stream.write("﻿"); // BOM UTF-8 para o Excel abrir corretamente
