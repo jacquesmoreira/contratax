@@ -127,31 +127,44 @@ async function coletarCnpjs(conhecidos) {
 
   console.log(`\nFase 1 — Coletando fornecedores do PNCP (${dataInicial} a ${dataFinal})...`);
 
-  for await (const { contratos, pagina, totalPaginas } of paginarContratos({ dataInicial, dataFinal })) {
-    pag++;
-    process.stdout.write(`\r  pag ${pagina}/${totalPaginas} | CNPJs novos coletados: ${cnpjs.size}`);
+  // O PNCP as vezes devolve um 500 transitorio; paginarContratos ja tenta 3x
+  // por pagina, mas se mesmo assim falhar nao pode derrubar o processo
+  // inteiro (rodando sem supervisao por horas). Melhor seguir pra fase 2
+  // com o que ja foi coletado do que perder tudo por causa de uma pagina.
+  try {
+    for await (const { contratos, pagina, totalPaginas } of paginarContratos({ dataInicial, dataFinal })) {
+      pag++;
+      process.stdout.write(`\r  pag ${pagina}/${totalPaginas} | CNPJs novos coletados: ${cnpjs.size}`);
 
-    for (const c of contratos) {
-      if (!ehCnpj(c.fornecedorNi)) continue;
-      // Ignora alienacao de bens e leiloes: esses vencedores nao sao
-      // fornecedores regulares de pregoes e raramente tem email cadastrado
-      if (c.categoriaId === 11) continue; // Alienacao de bens moveis/imoveis
-      const cnpj = c.fornecedorNi.replace(/\D/g, "");
-      if (conhecidos.has(cnpj)) continue; // ja temos esse fornecedor num leads-*.csv
-      if (!cnpjs.has(cnpj)) {
-        cnpjs.set(cnpj, {
-          razaoSocial:    c.fornecedor ?? "",
-          uf:             c.uf ?? "",
-          municipio:      c.municipio ?? "",
-          exemploProduto: (c.objeto ?? "").slice(0, 120),
-        });
+      for (const c of contratos) {
+        if (!ehCnpj(c.fornecedorNi)) continue;
+        // Ignora alienacao de bens e leiloes: esses vencedores nao sao
+        // fornecedores regulares de pregoes e raramente tem email cadastrado
+        if (c.categoriaId === 11) continue; // Alienacao de bens moveis/imoveis
+        const cnpj = c.fornecedorNi.replace(/\D/g, "");
+        if (conhecidos.has(cnpj)) continue; // ja temos esse fornecedor num leads-*.csv
+        if (!cnpjs.has(cnpj)) {
+          cnpjs.set(cnpj, {
+            razaoSocial:    c.fornecedor ?? "",
+            uf:             c.uf ?? "",
+            municipio:      c.municipio ?? "",
+            exemploProduto: (c.objeto ?? "").slice(0, 120),
+          });
+        }
       }
-    }
 
-    totalContratos += contratos.length;
-    if (pag >= limitePag) break;
-    // Para quando tiver CNPJs suficientes para o enriquecimento
-    if (cnpjs.size >= maxCnpjs * 3) break; // coleta 3x mais do que vai usar (filtragem posterior)
+      totalContratos += contratos.length;
+      if (pag >= limitePag) break;
+      // Para quando tiver CNPJs novos suficientes para o enriquecimento. O
+      // dedup contra leads-*.csv ja garante que cnpjs so tem CNPJs que ainda
+      // nao processamos, entao uma margem pequena (1.3x) basta pra cobrir
+      // quem ja foi tentado num checkpoint de retomada; nao precisa de 3x —
+      // isso so gastava tempo de paginacao (fase 1) que podia ir pro rate
+      // limit da Receita (fase 2, que e o gargalo real).
+      if (cnpjs.size >= maxCnpjs * 1.3) break;
+    }
+  } catch (e) {
+    console.log(`\n  [!] Fase 1 interrompida por erro (${e.message}). Seguindo pra fase 2 com os ${cnpjs.size} CNPJs ja coletados.`);
   }
 
   console.log(`\n  Contratos lidos: ${totalContratos.toLocaleString("pt-BR")} | CNPJs unicos: ${cnpjs.size}`);
@@ -224,6 +237,8 @@ async function main() {
   let processados = 0, comEmail = 0, semEmail = 0, erros = 0, bloqueios = 0;
   let encerrando = false;
 
+  // Evita empilhar um listener novo a cada retomada do supervisor
+  process.removeAllListeners("SIGINT");
   process.on("SIGINT", () => {
     if (encerrando) process.exit(1); // segundo Ctrl+C forca saida
     encerrando = true;
@@ -309,7 +324,24 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error("\nErro fatal:", e.message);
-  process.exit(1);
-});
+// Supervisor: roda main() e, se ela cair por qualquer motivo nao previsto
+// (rede, API fora do ar, etc.), espera um pouco e chama de novo em vez de
+// derrubar o processo — essencial rodando sem supervisao por muitas horas.
+// O checkpoint + dedup ja garantem que reprocessar nao duplica nem
+// desperdica consultas com quem ja foi tentado.
+async function rodarComSupervisor() {
+  let tentativa = 0;
+  while (true) {
+    tentativa++;
+    try {
+      await main();
+      break; // terminou normalmente
+    } catch (e) {
+      console.error(`\n[!] Erro nao tratado (tentativa ${tentativa}): ${e.message}`);
+      console.error(`    Aguardando 2 min e retomando (checkpoint preserva o progresso)...`);
+      await dormir(120000);
+    }
+  }
+}
+
+rodarComSupervisor();
