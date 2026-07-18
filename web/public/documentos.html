@@ -128,7 +128,7 @@
   </div>
 
 <script>
-const token = new URLSearchParams(location.search).get("c") || "";
+const token = new URLSearchParams(location.search).get("c") || window.__CX_TOKEN__ || "";
 document.getElementById("voltar").href = "/painel?c=" + encodeURIComponent(token);
 const CERTS = ["federalConjunta","fgts","trabalhistaCNDT","estadual","municipal"];
 

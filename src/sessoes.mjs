@@ -84,6 +84,17 @@ export function cookieSessao(sid, host = "") {
   return partes.join("; ");
 }
 
+// Cookie do TOKEN de acesso (cx_tok), HttpOnly. E o primeiro passo pra tirar o
+// token da URL: o servidor grava aqui e o front passa a ler daqui em vez do ?c=.
+// Separado do cx_sid (sessao/single-login) de proposito: mexer no cx_sid quebra
+// a troca de empresa da assessoria e a sessao unica.
+export function cookieToken(token, host = "") {
+  const ehLocal = /^(localhost|127\.0\.0\.1)/.test(String(host));
+  const partes = [`cx_tok=${token}`, "HttpOnly", "SameSite=Lax", "Path=/", `Max-Age=${DIAS_VALIDADE * 86400}`];
+  if (!ehLocal) partes.push("Secure");
+  return partes.join("; ");
+}
+
 // Cookie que apaga a sessao no navegador (logout).
 export function cookieLimpar(host = "") {
   const ehLocal = /^(localhost|127\.0\.0\.1)/.test(String(host));

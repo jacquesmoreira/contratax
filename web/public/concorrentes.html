@@ -61,7 +61,7 @@ td { padding:9px 8px; border-top:1px solid var(--linha); font-size:13.5px; verti
 </div>
 
 <script>
-const token = new URLSearchParams(location.search).get("c") || "";
+const token = new URLSearchParams(location.search).get("c") || window.__CX_TOKEN__ || "";
 document.getElementById("link-painel").href = "/painel?c=" + encodeURIComponent(token);
 document.getElementById("voltar").href = "/painel?c=" + encodeURIComponent(token);
 const esc = s => (s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));

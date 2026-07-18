@@ -46,7 +46,7 @@ import { listarDocumentos, baixarArquivo, listarItens } from "../src/documentos.
 import { verificarSenha } from "../src/senha.mjs";
 import { consultarCNPJ } from "../src/cnpj.mjs";
 import { autenticarUsuario, convidarMembro, removerMembro, listarMembros, definirAssentos } from "../src/equipe.mjs";
-import { criarSessao, validarSessao, revogarSessao, cookieSessao, cookieLimpar, lerCookie } from "../src/sessoes.mjs";
+import { criarSessao, validarSessao, revogarSessao, cookieSessao, cookieToken, cookieLimpar, lerCookie } from "../src/sessoes.mjs";
 import { lerPerfis, salvarPerfis, atualizarPerfil, PERFIS, garantirUsuarios } from "../src/perfis.mjs";
 import { monitorar } from "../src/monitor.mjs";
 import { usoDe, registrarAnalise, checarAnalise, adicionarAvulsas, usoExtracoesDe, podeExtrairPdf, registrarExtracaoPdf, registrarResumo, resumosDe } from "../src/uso.mjs";
@@ -140,6 +140,33 @@ function empresaDoPerfil(perfil) {
 // entao sem isso ele vazaria pros logs do servidor (Railway) a cada erro 500.
 function redigirUrl(u) {
   return String(u || "").replace(/([?&](?:c|t)=)[^&#]+/gi, "$1***");
+}
+
+// [token-fora-da-URL] Serve qualquer pagina CLIENTE (painel, conta, documentos,
+// etc.) tirando o token da URL:
+//  - Se veio ?c=token na URL: grava no cookie cx_tok e REDIRECIONA pra URL limpa
+//    (sem o token, preservando outros query params se houver). Assim o token
+//    some da barra de endereco / historico / links compartilhados. A troca de
+//    empresa da assessoria continua indo por ?c= (que atualiza o cookie e
+//    redireciona limpo tambem), entao nao quebra.
+//  - Sem ?c=: usa o token do cookie e injeta window.__CX_TOKEN__ pro front usar.
+function servirPaginaCliente(req, res, url, html) {
+  const host = req.headers.host || "";
+  const urlTok = url.searchParams.get("c") || "";
+  if (urlTok) {
+    const params = new URLSearchParams(url.search);
+    params.delete("c");
+    const q = params.toString();
+    const destino = url.pathname + (q ? "?" + q : "");
+    res.writeHead(302, { "Set-Cookie": cookieToken(urlTok, host), Location: destino, "Cache-Control": "no-store" });
+    return res.end();
+  }
+  const token = lerCookie(req, "cx_tok") || "";
+  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+  let out = injetarAnalytics(html);
+  const inj = token ? `<script>window.__CX_TOKEN__=${JSON.stringify(token)};</script>` : "";
+  if (inj) out = /<\/head>/i.test(out) ? out.replace(/<\/head>/i, inj + "</head>") : inj + out;
+  return res.end(out);
 }
 
 // Salva o perfil documental no perfil do cliente (pelo token).
@@ -351,7 +378,11 @@ const servidor = createServer(async (req, res) => {
     // (teste expirado ou apos a carencia) e barrada aqui, antes de chegar na
     // rota. Admin e contas com acesso passam direto.
     if (rotaProtegida(rota)) {
-      const tkGuard = url.searchParams.get("c") || "";
+      // [token-fora-da-URL] tkGuard tambem cai pro cookie cx_tok quando a URL
+      // ja esta limpa (sem ?c=). SEM isso, o guard de assinatura vencida e o
+      // de sessao unica (login em outro aparelho) parariam de disparar assim
+      // que a pagina deixasse de carregar o token na URL — regressao grave.
+      const tkGuard = url.searchParams.get("c") || lerCookie(req, "cx_tok") || "";
       if (tkGuard && tkGuard !== ADMIN) {
         const pGuard = await perfilPorToken(tkGuard);
         if (pGuard && !statusAtual(pGuard).temAcesso) {
@@ -3047,48 +3078,39 @@ Contact: contato@contratax.com.br
     }
     if (rota === "/documentos" || rota === "/documentos.html") {
       const html = await readFile(DOCUMENTOS, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/equipe" || rota === "/equipe.html") {
       const html = await readFile(EQUIPE, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/planejamento" || rota === "/planejamento.html") {
       const html = await readFile(PLANEJAMENTO, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/conta" || rota === "/conta.html") {
       const html = await readFile(CONTA, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/historico" || rota === "/historico.html") {
       const html = await readFile(HISTORICO, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/assinar" || rota === "/assinar.html") {
       const html = await readFile(ASSINAR, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/declaracoes" || rota === "/declaracoes.html") {
       const html = await readFile(DECLARACOES, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/obrigado" || rota === "/obrigado.html") {
       const html = await readFile(resolve(AQUI, "public", "obrigado.html"), "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/empresas" || rota === "/empresas.html") {
       const html = await readFile(EMPRESAS, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/admin" || rota === "/admin.html") {
       const html = await readFile(ADMIN_PAGE, "utf8");
@@ -3097,8 +3119,7 @@ Contact: contato@contratax.com.br
     }
     if (rota === "/painel" || rota === "/index.html") {
       const html = await readFile(INDEX, "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html); // grava cx_tok + injeta __CX_TOKEN__
     }
 
     // ===== Modulo Recebiveis (gestao de NFs emitidas pra orgaos publicos) =====
@@ -3264,33 +3285,27 @@ Contact: contato@contratax.com.br
     // Pagina /recebiveis
     if (rota === "/recebiveis" || rota === "/recebiveis.html") {
       const html = await readFile(resolve(AQUI, "public", "recebiveis.html"), "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/concorrentes" || rota === "/concorrentes.html") {
       const html = await readFile(resolve(AQUI, "public", "concorrentes.html"), "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/precos" || rota === "/precos.html") {
       const html = await readFile(resolve(AQUI, "public", "precos.html"), "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/itens" || rota === "/itens.html") {
       const html = await readFile(resolve(AQUI, "public", "itens.html"), "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/pca" || rota === "/pca.html") {
       const html = await readFile(resolve(AQUI, "public", "pca.html"), "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
     if (rota === "/juridico" || rota === "/juridico.html") {
       const html = await readFile(resolve(AQUI, "public", "juridico.html"), "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
 
     // ===== Modulo Contratos Meus (gestao de vigencia + aditivos + reequilibrio) =====
@@ -3410,8 +3425,7 @@ Contact: contato@contratax.com.br
     // Pagina /contratos
     if (rota === "/contratos" || rota === "/contratos.html") {
       const html = await readFile(resolve(AQUI, "public", "contratos.html"), "utf8");
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      return res.end(injetarAnalytics(html));
+      return servirPaginaCliente(req, res, url, html);
     }
 
     res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });

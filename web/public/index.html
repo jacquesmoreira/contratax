@@ -372,7 +372,7 @@ const dataBR = iso => { if (!iso) return "?"; const d = new Date(iso); return is
 function prazoHTML(iso) { const d = diasAte(iso); if (d == null) return ""; const c = d <= 2 ? "urgente" : d <= 7 ? "medio" : "tranquilo"; const t = d < 0 ? "encerrado" : d === 0 ? "encerra hoje" : d === 1 ? "encerra amanhã" : `encerra em ${d} dias`; return `<span class="prazo ${c}">${t}</span>`; }
 
 const store = {};
-const token = new URLSearchParams(location.search).get("c") || "";
+const token = new URLSearchParams(location.search).get("c") || window.__CX_TOKEN__ || "";
 // Logo tem que voltar pro painel do proprio cliente, nunca pra home publica
 // (senao parece que ele "deslogou" e precisa entrar de novo).
 document.getElementById("nav-logo").href = "/painel?c=" + encodeURIComponent(token);
@@ -1368,7 +1368,7 @@ async function abrirDrawer(id) {
   const corpo = document.getElementById("drawer-corpo");
   corpo.innerHTML = `<div class="carregando"><span class="spinner"></span>Carregando...</div>`;
   abrir();
-  const token = new URLSearchParams(location.search).get("c") || "";
+  const token = new URLSearchParams(location.search).get("c") || window.__CX_TOKEN__ || "";
   const d = await (await fetch(`/api/edital?id=${encodeURIComponent(id)}&c=${encodeURIComponent(token)}`)).json();
 
   // Link do portal: usa o do sistema de origem quando o PNCP fornece; senão, cai

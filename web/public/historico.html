@@ -90,7 +90,7 @@
   </div>
 
 <script>
-const token = new URLSearchParams(location.search).get("c") || "";
+const token = new URLSearchParams(location.search).get("c") || window.__CX_TOKEN__ || "";
 const $ = id => document.getElementById(id);
 $("logo").href = $("link-painel").href = "/painel?c=" + encodeURIComponent(token);
 $("link-docs").href = "/documentos?c=" + encodeURIComponent(token);

@@ -183,7 +183,7 @@ textarea { resize:vertical; min-height:80px; }
 
 <script>
 const params = new URLSearchParams(location.search);
-const token = params.get("c") || "";
+const token = params.get("c") || window.__CX_TOKEN__ || "";
 if (!token) location.href = "/entrar";
 
 const $ = (i) => document.getElementById(i);

@@ -1279,6 +1279,20 @@ As páginas de DETALHE já tinham BreadcrumbList (órgão, cnae, ranking, catego
 
 **FIM DA SESSÃO 16/07 — fila segura-de-construir esgotada.** O que sobra na lista pendente cai em 3 baldes, nenhum "codável às cegas": (1) **ação do Jacques**: Google Ads keywords, backlinks, GBP, Bing Webmaster, revalidar Search Console, Railway hobby, prova social (clientes reais); (2) **precisa de teste ao vivo numa branch**: token fora da URL, 2FA TOTP, ranking personalizado padrão; (3) **precisa de asset/dado externo**: imagens WebP + OG image, refino de keywords por Clarity. Próxima sessão de código de peso = a branch do token-fora-da-URL com o Jacques testando login ao vivo.
 
+### 2026-07-17 — TOKEN FORA DA URL (feito, testado ao vivo com o Jacques)
+
+Fechado o item de segurança da auditoria. O token de acesso (`?c=token`) SAIU da barra de endereço de todas as páginas cliente.
+
+**Como funciona:** novo cookie `cx_tok` (HttpOnly, Secure em prod), SEPARADO do `cx_sid` (sessão/single-login) de propósito. Helper `servirPaginaCliente(req,res,url,html)` em server.mjs: se veio `?c=` na URL, grava `cx_tok` e REDIRECIONA (302) pra URL limpa (preservando outros params); sem `?c=`, injeta `window.__CX_TOKEN__` do cookie. Aplicado nas 16 páginas cliente (painel, conta, documentos, equipe, planejamento, historico, assinar, declaracoes, obrigado, empresas, recebiveis, concorrentes, precos, itens, pca, juridico, contratos). `/admin` NÃO tocado (token admin). Cada página lê `token = ?c= || window.__CX_TOKEN__`.
+
+**Assessoria:** a troca de empresa continua indo por `?c=tokenDaEmpresa` (que atualiza o cookie e redireciona limpo). O `cx_tok` = empresa atual. Não quebrou.
+
+**BUG CRÍTICO corrigido junto:** o guard de assinatura vencida E o de sessão única só liam `?c=` da URL. Ao limpar a URL, parariam de disparar (cliente vencido acessaria página paga). Corrigido: `tkGuard = url ?c= || lerCookie(cx_tok)`.
+
+**Testado:** bateria automatizada (curl numa 2ª instância porta 3001) + validação visual do Jacques ao vivo (URL limpa + F5 mantém login). Cenários provados: redirect+cookie, F5 persiste, cliente vencido barrado via cookie E via URL, cliente ativo logado acessa página paga só com cookie, outros query params preservados. Deployed.
+
+**Nota:** links internos ainda montam `href="/x?c=${token}"`; ao clicar, o servidor redireciona pra URL limpa (um hop extra, token pisca por ~50ms). O ganho principal (URL do bookmark/histórico/compartilhamento limpa) está feito. Deixar links 100% limpos (sem o hop) seria um refactor de todos os hrefs — fica pra depois se incomodar.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
