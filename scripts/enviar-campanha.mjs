@@ -209,6 +209,11 @@ function extrairCategoria(bruto) {
 
 const CTA_URL = "https://www.contratax.com.br/cadastro";
 
+// Nome de quem assina os emails de prospeccao. Troque aqui se quiser usar
+// outro nome (precisa ser alguem que de fato acompanha as respostas em
+// contato@contratax.com.br, pra nao ficar estranho quando o lead responder).
+const NOME_REMETENTE = "Marina";
+
 // Converte o corpo em texto simples (paragrafos separados por linha em
 // branco) num HTML minimo, com o link do CTA virando botao clicavel.
 function htmlSimples(texto) {
@@ -246,55 +251,62 @@ function montarEmail(etapa, lead) {
     const abertura = categoria
       ? `Vocês já vendem ${categoria} para o governo, então já conhecem a parte difícil.`
       : `Vocês já vendem para o governo, então já conhecem a parte difícil.`;
-    texto = `Olá, pessoal da ${empresa},
+    texto = `Oi, pessoal da ${empresa},
+
+Meu nome é ${NOME_REMETENTE}, trabalho na ContrataX.
 
 ${abertura}
 
 A pergunta que quase ninguém consegue responder é essa: por quanto os concorrentes de vocês venderam nos últimos editais do segmento? E quais órgãos costumam recomprar isso ao longo do ano?
 
-A ContrataX cruza mais de 3 milhões de contratos públicos e responde exatamente isso, do jeito mais simples possível.
+Aqui na ContrataX a gente cruza mais de 3 milhões de contratos públicos pra responder exatamente isso, do jeito mais simples possível.
 
-Fizemos um acesso de 7 dias grátis, sem cartão. Já no primeiro login você vê os dados do seu próprio segmento.
+Separei um acesso de 7 dias grátis pra vocês testarem, sem cartão. Já no primeiro login dá pra ver os dados do próprio segmento.
 
 Ver os dados do meu segmento: ${CTA_URL}
 
-Se não fizer sentido, é só responder "sair" que não escrevemos de novo.
+Se não fizer sentido pra vocês agora, é só responder "sair" que eu não escrevo de novo.
 
 Um abraço,
-Equipe ContrataX`;
+${NOME_REMETENTE}
+ContrataX`;
   } else if (etapa === 2) {
     assunto = "O robô que lê os editais no lugar de vocês";
     const linhaEditais = categoria
       ? `Ler tudo e achar os editais de ${categoria} que a ${empresa} pode atender é trabalho de horas.`
       : `Ler tudo e achar o que combina com o que a ${empresa} fornece é trabalho de horas.`;
-    texto = `Olá de novo,
+    texto = `Oi de novo,
 
-Deixa eu mostrar a parte que economiza mais tempo.
+Deixa eu te mostrar a parte que economiza mais tempo.
 
 Todo dia saem centenas de editais novos no PNCP. ${linhaEditais}
 
-A ContrataX.IA faz essa leitura por vocês. Ela entende o que vocês vendem e separa só os editais que valem a pena, com prazo, valor estimado e link direto pra participar. Chega pronto no seu email.
+A ContrataX.IA faz essa leitura pra vocês. Ela entende o que vocês vendem e separa só os editais que valem a pena, com prazo, valor estimado e link direto pra participar. Chega pronto no seu email.
 
 Vocês continuam ganhando as mesmas licitações, gastando menos tempo procurando.
 
 Testar 7 dias grátis: ${CTA_URL}
 
-Equipe ContrataX`;
+Um abraço,
+${NOME_REMETENTE}
+ContrataX`;
   } else {
     assunto = "Não precisa cancelar a que você já usa";
-    texto = `Olá, pessoal da ${empresa},
+    texto = `Oi, pessoal da ${empresa},
 
-Se vocês já usam alguma ferramenta de licitação, esse email não é pra pedir pra trocar. É pra propor um teste sem risco.
+Se vocês já usam alguma ferramenta de licitação, esse email não é pra pedir pra trocar.
 
-Rode a ContrataX em paralelo por 7 dias, sem cancelar nada. No fim, compare.
+Eu só queria pedir uma coisa: testem a nossa por 7 dias, em paralelo, sem tirar a que vocês já usam de lado. No fim, comparem.
 
-A diferença que quase todo mundo nota: além dos alertas de edital, a gente mostra por quanto os concorrentes venderam e o histórico de preços do órgão. É a informação que faz vocês precificarem melhor e ganharem mais, e que a maioria das plataformas não entrega.
+A diferença que quase todo mundo nota: além dos alertas de edital, a gente mostra por quanto os concorrentes venderam e o histórico de preços do órgão. É a informação que ajuda a precificar melhor e ganhar mais, e que a maioria das plataformas não entrega.
 
-A partir de R$59 por mês, sem fidelidade. Se no teste não superar o que você já tem, é só seguir com a sua ferramenta atual, sem custo nenhum.
+A partir de R$59 por mês, sem fidelidade. Se no teste não superar o que vocês já têm, é só seguir com a ferramenta atual, sem custo nenhum.
 
 Rodar o teste em paralelo: ${CTA_URL}
 
-Equipe ContrataX`;
+Um abraço,
+${NOME_REMETENTE}
+ContrataX`;
   }
 
   return { assunto, texto, html: htmlSimples(texto) };
