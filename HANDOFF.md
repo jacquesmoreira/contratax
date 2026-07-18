@@ -2,8 +2,8 @@
 
 > **Para qualquer outra IA ou desenvolvedor que pegue este projeto:** este documento contém TUDO que precisa pra continuar de onde paramos. Leitura: ~10 minutos.
 
-**Última atualização:** 2026-07-16 (quinta-feira, degrau de preço R$149 + copy de valor)
-**Status:** Em operação, infra 100% saudável. Domínio raiz resolvido e confirmado (Railway, certificado válido). 513 páginas indexadas, revalidação dos 307 erros 5xx disparada no Search Console (causa raiz confirmada e corrigida). Primeiros cliques orgânicos reais aparecendo, inclusive capturando busca por concorrente. Google Ads religado com a conversão `purchase` finalmente configurada certo (achado que estava quebrada desde o início) — rodando 14 dias de aprendizado sem mexer. 3 backlinks confirmados (B2B Stack, Product Hunt, G2). Fase atual: deixar rodar e observar — próximos trials (funil corrigido), validação do Search Console, e resultado do teste pago.
+**Última atualização:** 2026-07-18 (sábado, campanha fria + coleta de leads escalada + robustez de infra)
+**Status:** Em operação, infra 100% saudável. Domínio raiz resolvido e confirmado (Railway, certificado válido). 513 páginas indexadas, revalidação dos 307 erros 5xx disparada no Search Console (causa raiz confirmada e corrigida). Primeiros cliques orgânicos reais aparecendo, inclusive capturando busca por concorrente. Google Ads religado com a conversão `purchase` finalmente configurada certo (achado que estava quebrada desde o início) — rodando 14 dias de aprendizado sem mexer. 3 backlinks confirmados (B2B Stack, Product Hunt, G2). **Coleta de leads rodando na máquina do Jacques até madrugada de segunda** — próxima sessão precisa fundir `leads-coleta-fds.csv` em `leads-202607.csv` antes do disparo da campanha. Loops de background agora auto-recuperam de crash + healthcheck detecta banco travado (deploy pendente pro Railway pegar essas mudanças).
 
 ---
 
@@ -1292,6 +1292,37 @@ Fechado o item de segurança da auditoria. O token de acesso (`?c=token`) SAIU d
 **Testado:** bateria automatizada (curl numa 2ª instância porta 3001) + validação visual do Jacques ao vivo (URL limpa + F5 mantém login). Cenários provados: redirect+cookie, F5 persiste, cliente vencido barrado via cookie E via URL, cliente ativo logado acessa página paga só com cookie, outros query params preservados. Deployed.
 
 **Nota:** links internos ainda montam `href="/x?c=${token}"`; ao clicar, o servidor redireciona pra URL limpa (um hop extra, token pisca por ~50ms). O ganho principal (URL do bookmark/histórico/compartilhamento limpa) está feito. Deixar links 100% limpos (sem o hop) seria um refactor de todos os hrefs — fica pra depois se incomodar.
+
+---
+
+### 2026-07-18 (sábado) — campanha de e-mail fria: preço, personalização, tom pessoal + expansão da base de leads
+
+**Campanha (`scripts/enviar-campanha.mjs`):**
+- Corrigido preço desatualizado no e-mail 3 (dizia "R$197/mês", plano que não existe mais desde a reestruturação) → "a partir de R$59/mês".
+- Personalização por categoria: e-mails 1 e 2 citam o ramo do fornecedor ("vocês já vendem materiais esportivos...") quando o dado vem limpo na planilha. Extrator conservador (`extrairCategoria`) rejeita texto de edital cortado, código de processo/lote, número solto — cai no genérico quando em dúvida. Cobre ~22% da base atual (1.109 leads).
+- Tom pessoal: os 3 e-mails passaram de "Equipe ContrataX" institucional para assinatura em 1ª pessoa (`NOME_REMETENTE`, hoje "Marina"). Pedido explícito do Jacques; registrei a exceção pontual em memória (não é mudança da regra geral de voz institucional do produto).
+- Base de leads: mesclados 192 contatos extraídos de `D:\Downloads\CONTROLE DE EMPENHOS 2025.xlsx` (planilha de empenho de prefeitura) → 1.109 leads totais em `leads-202607.csv` (backup em `.bak.csv`).
+
+**Coleta de leads (`scripts/gerar-lista-emails.mjs`) — ficou pronta pra rodar sem supervisão por dias:**
+- Dedup: pula qualquer CNPJ que já apareça em algum `leads-*.csv` existente, antes de gastar consulta na Receita Federal (rate limit de 3/min é o gargalo real).
+- Checkpoint + retomada: salva progresso em `data/coleta-tentados-*.json` a cada 5 tentativas; rodar o mesmo comando de novo continua de onde parou (append no CSV, não sobrescreve). Corrigido ao vivo: se o processo morre ANTES do primeiro checkpoint periódico, a retomada agora também lê os CNPJs já gravados no próprio CSV de saída (rede de segurança dupla).
+- Supervisor: um 500 transitório do PNCP derrubava o processo inteiro (visto ao vivo, quase 1h de coleta perdida). Agora fase 1 captura erro do gerador e segue com o que já tem; um supervisor no topo relança `main()` se cair por qualquer motivo (espera 2min entre tentativas).
+- Buffer de coleta da fase 1 reduzido de 3x pra 1.3x do `--max-cnpjs` (o dedup já filtra na fonte, 3x só desperdiçava tempo de paginação).
+- **Rodando agora** (sábado à tarde) na própria máquina do Jacques via PowerShell (independente do Claude Code, o PC fica 24h ligado): `node scripts/gerar-lista-emails.mjs --meses 12 --max-cnpjs 6000 --saida leads-coleta-fds.csv`. Taxa de acerto observada ~89% (bem acima do esperado 25-35%). Previsão de término: madrugada de segunda (~04h). **Próxima sessão: revisar qualidade + fundir `leads-coleta-fds.csv` em `leads-202607.csv`** (mesmo processo usado com o Excel).
+
+---
+
+### 2026-07-18 (sábado, continuação) — robustez de infra: loops de background param de morrer em silêncio + healthcheck de verdade
+
+Contexto: avaliação estratégica (advisory-board style) apontou infra frágil como um dos 5 tetos estruturais do negócio. Item escolhido pelo Jacques pra atacar primeiro: resiliência de processo (código, sem custo/risco de migração).
+
+**Achado:** os 5 loops de background do servidor (`backfill`, `atualizador`, `digest`, `backup`, `índice de itens`) já tinham try/catch por ciclo internamente (erro pontual não mata o loop — trabalho de sessão anterior, pós-incidente "Railway reiniciando aleatoriamente"). O ponto cego era o que ficava FORA desse try: se o `import()` do módulo falhasse (bug num deploy, por exemplo), o loop morria pra sempre e em silêncio até o próximo deploy — servidor de pé, healthcheck verde, ninguém percebia que aquele dado parou de atualizar.
+
+**Fix:** `src/supervisorLoop.mjs` (novo) — `supervisionar(nome, iniciar)` reinicia o loop automaticamente (espera 5min) e avisa o admin por e-mail na 1ª falha e depois a cada 5 (evita spam em crash-loop). Aplicado aos 5 pontos em `web/server.mjs` (linha ~3524 em diante), trocando o padrão antigo `.then().catch(console.error)` (falha silenciosa permanente) pelo supervisor. Testado isolado (mock de 2 falhas seguidas + sucesso na 3ª, confirma retry e não-crash).
+
+**Healthcheck aprofundado:** `/health` antes só confirmava o event loop vivo (nunca tocava o banco) — o cenário real de crash já visto (SQLite travado/corrompido) passaria "ok" no healthcheck enquanto servia erro 500 pros clientes, e o Railway nunca reiniciaria sozinho. Agora faz `SELECT 1` no SQLite; se falhar, responde 503 (Railway detecta e reinicia).
+
+**Não fechado nesta sessão (decisão do Jacques, não código):** upgrade de plano Railway (precisa ver logs do último crash no dashboard — item #62 do backlog) e migração SQLite→Postgres (mexe em dado real de cliente pagante, precisa de janela).
 
 ---
 

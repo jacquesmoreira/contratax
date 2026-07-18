@@ -26,7 +26,8 @@ import { renderizarAjuda, renderizarContato, processarContato } from "../src/aju
 import { tentarUsoVisitante, ipDoRequest } from "../src/rateLimitVisitante.mjs";
 import { paginaCasos, paginaStatus, paginaSeguranca } from "../src/paginasInstitucionais.mjs";
 import { injetarAnalytics, enviarConversao } from "../src/analytics.mjs";
-import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos, analiseConcorrente, pesquisarPrecos, totalPrecos, pesquisarPca, totalPca } from "../src/db.mjs";
+import { buscarPorId, buscaPublica, buscarEditais, estatisticas, estatisticasContratos, analiseConcorrente, pesquisarPrecos, totalPrecos, pesquisarPca, totalPca, abrir } from "../src/db.mjs";
+import { supervisionar } from "../src/supervisorLoop.mjs";
 import { conferir, saudeDocumental } from "../src/aptidao.mjs";
 import { temChave } from "../src/ia.mjs";
 import { criarPerfil, MAX_TERMOS, parseRamos } from "../src/cadastro.mjs";
@@ -2746,13 +2747,22 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
-    // Healthcheck: Railway pode pingar /health pra confirmar que o processo
-    // esta vivo. Resposta rapida (sem tocar banco/cache), so confirma loop event.
+    // Healthcheck: Railway pinga /health pra decidir se reinicia o processo.
+    // Alem do event loop (que so confirma que o processo aceita conexao),
+    // faz um SELECT trivial no SQLite: se o banco estiver travado/corrompido
+    // (o cenario real de crash que ja aconteceu — ver comentario mais abaixo),
+    // o processo continuava "vivo" e o healthcheck antigo dava ok mesmo assim,
+    // servindo erro 500 pros clientes sem o Railway nunca reiniciar sozinho.
     if (rota === "/health" || rota === "/healthz" || rota === "/_health") {
       const m = process.memoryUsage();
-      res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      let dbOk = true, dbErro = null;
+      try { abrir().prepare("SELECT 1 AS ok").get(); }
+      catch (e) { dbOk = false; dbErro = e.message; }
+
+      res.writeHead(dbOk ? 200 : 503, { "Content-Type": "application/json", "Cache-Control": "no-store" });
       return res.end(JSON.stringify({
-        ok: true,
+        ok: dbOk,
+        db: dbOk ? "ok" : dbErro,
         uptime_s: Math.round(process.uptime()),
         memory_mb: { rss: Math.round(m.rss / 1024 / 1024), heap: Math.round(m.heapUsed / 1024 / 1024) },
         node: process.version,
@@ -3511,9 +3521,18 @@ process.on("SIGTERM", () => {
   setTimeout(() => process.exit(0), 5000); // timeout forcado
 });
 
-// 5) Healthcheck endpoint pro Railway saber que esta vivo
-// (Railway pode pingar /health pra detectar travamento e reiniciar antes do timeout)
-// Ja existe rota /api no codigo, vou expor /health no proximo deploy via novo handler.
+// 5) Healthcheck endpoint pro Railway saber que esta vivo (rota /health,
+// implementada mais acima no roteador — ver linha ~2751).
+
+// Os 4 loops de background abaixo (backfill, atualizador, digest, backup,
+// indice de itens) ja tem try/catch por ciclo internamente — um erro
+// pontual (PNCP fora do ar, etc.) nao mata o loop. O que faltava era
+// blindagem contra o que fica FORA desse try (ex: import() falhar por um
+// bug introduzido num deploy): sem isso, o loop morria pra sempre e em
+// silencio ate o proximo deploy, com o servidor continuando de pe e o
+// healthcheck verde — ninguem percebia que aquele dado parou de atualizar.
+// supervisionar() reinicia sozinho e avisa o admin por email. Ver
+// src/supervisorLoop.mjs.
 
 // Opcional (Railway): roda o backfill continuo de contratos NO MESMO processo,
 // para compartilhar o mesmo volume/banco do servidor (volumes nao sao compartilhados
@@ -3523,14 +3542,13 @@ process.on("SIGTERM", () => {
 // memoria com atualizador, digest e backup no startup (causa de OOM em Hobby).
 if (process.env.LICITA_BACKFILL) {
   setTimeout(() => {
-    import("../src/backfillContratos.mjs")
-      .then(({ backfillLoop }) => {
-        const meses = Number(process.env.LICITA_BACKFILL_MESES || 18);
-        const horas = Number(process.env.LICITA_BACKFILL_HORAS || 6);
-        console.log(`[backfill] ativado em background (${meses} meses, a cada ${horas}h)`);
-        return backfillLoop({ meses, intervaloHoras: horas });
-      })
-      .catch((e) => console.error("[backfill] erro:", e.message));
+    supervisionar("backfill", async () => {
+      const { backfillLoop } = await import("../src/backfillContratos.mjs");
+      const meses = Number(process.env.LICITA_BACKFILL_MESES || 18);
+      const horas = Number(process.env.LICITA_BACKFILL_HORAS || 6);
+      console.log(`[backfill] ativado em background (${meses} meses, a cada ${horas}h)`);
+      await backfillLoop({ meses, intervaloHoras: horas });
+    });
   }, 60 * 1000);
 }
 
@@ -3539,38 +3557,35 @@ if (process.env.LICITA_BACKFILL) {
 // Tambem escalonado: inicia 30s apos subida.
 if (process.env.LICITA_ATUALIZAR) {
   setTimeout(() => {
-    import("../src/atualizador.mjs")
-      .then(({ atualizarLoop }) => {
-        const horas = Number(process.env.LICITA_ATUALIZAR_HORAS || 6);
-        console.log(`[atualizar] ativado em background (a cada ${horas}h)`);
-        return atualizarLoop({ intervaloHoras: horas });
-      })
-      .catch((e) => console.error("[atualizar] erro:", e.message));
+    supervisionar("atualizar", async () => {
+      const { atualizarLoop } = await import("../src/atualizador.mjs");
+      const horas = Number(process.env.LICITA_ATUALIZAR_HORAS || 6);
+      console.log(`[atualizar] ativado em background (a cada ${horas}h)`);
+      await atualizarLoop({ intervaloHoras: horas });
+    });
   }, 30 * 1000);
 }
 
 // Opcional (Railway): digest diario por e-mail. Envia 1x ao dia para cada cliente
 // ativo um resumo dos editais NOVOS do ramo dele. Ative com LICITA_DIGEST=1.
 if (process.env.LICITA_DIGEST) {
-  import("../src/digestDiario.mjs")
-    .then(({ digestLoop }) => {
-      const horaBR = Number(process.env.LICITA_DIGEST_HORA || 8);
-      console.log(`[digest] ativado em background (alvo: ${horaBR}h Brasilia)`);
-      return digestLoop({ horaBR });
-    })
-    .catch((e) => console.error("[digest] erro:", e.message));
+  supervisionar("digest", async () => {
+    const { digestLoop } = await import("../src/digestDiario.mjs");
+    const horaBR = Number(process.env.LICITA_DIGEST_HORA || 8);
+    console.log(`[digest] ativado em background (alvo: ${horaBR}h Brasilia)`);
+    await digestLoop({ horaBR });
+  });
 }
 
 // Opcional (Railway): backup off-site automatico. 1x ao dia, gera snapshot do
 // banco, gzipa, salva em /data/backups e manda resumo por email com link de
 // download (token admin). Ative com LICITA_BACKUP=1.
 if (process.env.LICITA_BACKUP) {
-  import("../src/backup.mjs")
-    .then(({ backupLoop }) => {
-      console.log(`[backup] ativado em background (clientes off-site por e-mail)`);
-      return backupLoop();
-    })
-    .catch((e) => console.error("[backup] erro:", e.message));
+  supervisionar("backup", async () => {
+    const { backupLoop } = await import("../src/backup.mjs");
+    console.log(`[backup] ativado em background (clientes off-site por e-mail)`);
+    await backupLoop();
+  });
 }
 
 // Indice de ITENS dos editais abertos (busca universal por produto). Loop
@@ -3578,9 +3593,10 @@ if (process.env.LICITA_BACKUP) {
 // Inicia 90s apos subir (depois do backfill/atualizador) pra nao competir no boot.
 if (process.env.LICITA_ITENS_INDEX) {
   setTimeout(() => {
-    import("../src/colheitaItens.mjs")
-      .then(({ colheitaItensLoop }) => colheitaItensLoop())
-      .catch((e) => console.error("[itens] loop erro:", e.message));
+    supervisionar("itens", async () => {
+      const { colheitaItensLoop } = await import("../src/colheitaItens.mjs");
+      await colheitaItensLoop();
+    });
   }, 90 * 1000);
 }
 
