@@ -21,9 +21,22 @@
 // Estimativa de tempo:
 //   500 CNPJs  ~ 3 horas | resultado esperado: ~120-180 emails
 //   1000 CNPJs ~ 6 horas | resultado esperado: ~250-350 emails
+//
+// Roda por muitas horas sem supervisao (ex: fim de semana inteiro)? O script:
+//   - pula CNPJs que ja aparecem em qualquer leads-*.csv existente na pasta
+//     (nao desperdica consulta com quem voce ja tem)
+//   - salva um checkpoint em data/ a cada poucas consultas; se cair a conexao,
+//     travar ou o PC dormir no meio, rode o MESMO comando de novo (mesmo
+//     --saida) que ele retoma dali, sem perder o que ja foi feito
+//   - Ctrl+C tambem salva antes de sair
 
-import { createWriteStream } from "fs";
+import { createWriteStream, readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import { paginarContratos } from "../src/pncp.mjs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const RAIZ = join(__dirname, "..");
 
 // ---------- args ----------
 
@@ -37,7 +50,46 @@ const limitePag   = Number(arg("--limite-pag", Infinity));
 const maxCnpjs    = Number(arg("--max-cnpjs", 1000));
 const hoje        = new Date();
 const tag         = `${hoje.getFullYear()}${String(hoje.getMonth() + 1).padStart(2, "0")}`;
-const arquivoSaida = arg("--saida", `leads-${tag}.csv`);
+const arquivoSaida = join(RAIZ, arg("--saida", `leads-${tag}.csv`));
+
+// ---------- dedup contra leads ja coletados + checkpoint de retomada ----------
+
+// Le todo leads-*.csv da pasta (exceto o proprio arquivo de saida) e extrai os
+// CNPJs ja conhecidos via regex de 14 digitos (mais simples e robusto que um
+// parser de CSV completo, e nenhum outro campo da planilha tem 14 digitos seguidos).
+function carregarCnpjsConhecidos() {
+  const conhecidos = new Set();
+  let arquivos = [];
+  try {
+    arquivos = readdirSync(RAIZ).filter(
+      (f) => /^leads-.*\.csv$/i.test(f) && join(RAIZ, f) !== arquivoSaida && !f.includes(".bak.")
+    );
+  } catch {}
+  for (const arq of arquivos) {
+    try {
+      const matches = readFileSync(join(RAIZ, arq), "utf8").match(/\b\d{14}\b/g) || [];
+      for (const cnpj of matches) conhecidos.add(cnpj);
+    } catch {}
+  }
+  if (conhecidos.size) console.log(`Ja conhecidos (de ${arquivos.length} arquivo(s) leads-*.csv): ${conhecidos.size} CNPJs — serao pulados.`);
+  return conhecidos;
+}
+
+const DIR_DADOS = join(RAIZ, "data");
+if (!existsSync(DIR_DADOS)) mkdirSync(DIR_DADOS, { recursive: true });
+const ARQ_CHECKPOINT = join(DIR_DADOS, `coleta-tentados-${arg("--saida", `leads-${tag}.csv`).replace(/[^a-z0-9]/gi, "_")}.json`);
+
+function carregarCheckpoint() {
+  if (!existsSync(ARQ_CHECKPOINT)) return new Set();
+  try {
+    return new Set(JSON.parse(readFileSync(ARQ_CHECKPOINT, "utf8")));
+  } catch {
+    return new Set();
+  }
+}
+function salvarCheckpoint(set) {
+  writeFileSync(ARQ_CHECKPOINT, JSON.stringify([...set]), "utf8");
+}
 
 // ---------- util ----------
 
@@ -65,7 +117,7 @@ function linhaCSV(...cols) {
 
 // ---------- fase 1: coletar CNPJs do PNCP ----------
 
-async function coletarCnpjs() {
+async function coletarCnpjs(conhecidos) {
   const cnpjs = new Map(); // cnpj => { razaoSocial, uf, municipio, exemploProduto }
   let totalContratos = 0;
   let pag = 0;
@@ -77,7 +129,7 @@ async function coletarCnpjs() {
 
   for await (const { contratos, pagina, totalPaginas } of paginarContratos({ dataInicial, dataFinal })) {
     pag++;
-    process.stdout.write(`\r  pag ${pagina}/${totalPaginas} | CNPJs coletados: ${cnpjs.size}`);
+    process.stdout.write(`\r  pag ${pagina}/${totalPaginas} | CNPJs novos coletados: ${cnpjs.size}`);
 
     for (const c of contratos) {
       if (!ehCnpj(c.fornecedorNi)) continue;
@@ -85,6 +137,7 @@ async function coletarCnpjs() {
       // fornecedores regulares de pregoes e raramente tem email cadastrado
       if (c.categoriaId === 11) continue; // Alienacao de bens moveis/imoveis
       const cnpj = c.fornecedorNi.replace(/\D/g, "");
+      if (conhecidos.has(cnpj)) continue; // ja temos esse fornecedor num leads-*.csv
       if (!cnpjs.has(cnpj)) {
         cnpjs.set(cnpj, {
           razaoSocial:    c.fornecedor ?? "",
@@ -139,35 +192,52 @@ async function enriquecerCnpj(cnpj) {
 async function main() {
   console.log("=== Gerador de Leads por Email — Fornecedores PNCP + Receita Federal ===");
   console.log(`Parametros: meses=${meses} | max-cnpjs=${maxCnpjs} | saida=${arquivoSaida}`);
-  console.log(`Tempo estimado: ~${Math.round(maxCnpjs * 22 / 3600 * 10) / 10} horas`);
+
+  const conhecidos = carregarCnpjsConhecidos();
+  const tentados = carregarCheckpoint();
+  if (tentados.size) console.log(`Checkpoint encontrado: ${tentados.size} CNPJs ja tentados nesta coleta — serao pulados (retomando run anterior).`);
 
   // Fase 1
-  const cnpjsTodos = await coletarCnpjs();
-  const cnpjsParaEnriquecer = [...cnpjsTodos.entries()].slice(0, maxCnpjs);
+  const cnpjsTodos = await coletarCnpjs(conhecidos);
+  const cnpjsParaEnriquecer = [...cnpjsTodos.entries()].filter(([cnpj]) => !tentados.has(cnpj)).slice(0, maxCnpjs);
   const total = cnpjsParaEnriquecer.length;
+  console.log(`Tempo estimado desta execucao: ~${Math.round(total * 22 / 3600 * 10) / 10} horas`);
 
-  // Prepara CSV
-  const stream = createWriteStream(arquivoSaida, { encoding: "utf8" });
-  stream.write("﻿"); // BOM UTF-8 para o Excel abrir corretamente
-  stream.write(linhaCSV(
-    "email",
-    "razao_social",
-    "nome_fantasia",
-    "cnpj",
-    "uf",
-    "municipio",
-    "situacao_cadastral",
-    "exemplo_produto_licitado",
-  ));
+  // Prepara CSV — se ja existe (retomando um checkpoint), continua no mesmo
+  // arquivo em vez de sobrescrever o que ja foi coletado.
+  const retomando = existsSync(arquivoSaida) && tentados.size > 0;
+  const stream = createWriteStream(arquivoSaida, { encoding: "utf8", flags: retomando ? "a" : "w" });
+  if (!retomando) {
+    stream.write("﻿"); // BOM UTF-8 para o Excel abrir corretamente
+    stream.write(linhaCSV(
+      "email",
+      "razao_social",
+      "nome_fantasia",
+      "cnpj",
+      "uf",
+      "municipio",
+      "situacao_cadastral",
+      "exemplo_produto_licitado",
+    ));
+  }
 
   let processados = 0, comEmail = 0, semEmail = 0, erros = 0, bloqueios = 0;
+  let encerrando = false;
+
+  process.on("SIGINT", () => {
+    if (encerrando) process.exit(1); // segundo Ctrl+C forca saida
+    encerrando = true;
+    console.log("\n\n[!] Interrompido. Salvando checkpoint e fechando o arquivo (aguarde)...");
+  });
 
   console.log(`\nFase 2 — Enriquecendo ${total} CNPJs (22s entre cada consulta para respeitar rate limit)...`);
   console.log(`Iniciado em: ${new Date().toLocaleTimeString("pt-BR")}`);
   const previsao = new Date(Date.now() + total * 22000);
-  console.log(`Previsao de termino: ${previsao.toLocaleTimeString("pt-BR")} (${previsao.toLocaleDateString("pt-BR")})\n`);
+  console.log(`Previsao de termino: ${previsao.toLocaleTimeString("pt-BR")} (${previsao.toLocaleDateString("pt-BR")})`);
+  console.log(`Se precisar parar, Ctrl+C salva o progresso. Rode o mesmo comando de novo depois para retomar.\n`);
 
   for (const [cnpj, dadosPncp] of cnpjsParaEnriquecer) {
+    if (encerrando) break;
     processados++;
     process.stdout.write(
       `\r  ${processados}/${total} | emails: ${comEmail} | sem email: ${semEmail} | erros: ${erros} | bloqueios: ${bloqueios}`
@@ -176,7 +246,7 @@ async function main() {
     let rf = await enriquecerCnpj(cnpj);
 
     // Se bloqueado, aguarda 90s e tenta de novo
-    if (rf.bloqueado) {
+    if (rf.bloqueado && !encerrando) {
       bloqueios++;
       process.stdout.write(`\n  [!] Rate limit. Aguardando 90s... (${new Date().toLocaleTimeString("pt-BR")})`);
       await dormir(90000);
@@ -207,16 +277,20 @@ async function main() {
       semEmail++;
     }
 
+    tentados.add(cnpj);
+    if (processados % 5 === 0) salvarCheckpoint(tentados);
+
     // 22s de intervalo = confortavelmente abaixo do limite de 3 req/min
-    if (processados < total) await dormir(22000);
+    if (processados < total && !encerrando) await dormir(22000);
   }
 
+  salvarCheckpoint(tentados);
   await new Promise((res) => stream.end(res));
 
-  const taxaEmail = total > 0 ? Math.round((comEmail / processados) * 100) : 0;
+  const taxaEmail = processados > 0 ? Math.round((comEmail / processados) * 100) : 0;
 
   console.log(`\n\n================ RESULTADO ================`);
-  console.log(`CNPJs processados  : ${processados.toLocaleString("pt-BR")}`);
+  console.log(`CNPJs processados  : ${processados.toLocaleString("pt-BR")}${encerrando ? " (interrompido)" : ""}`);
   console.log(`Emails encontrados : ${comEmail.toLocaleString("pt-BR")} (${taxaEmail}% de preenchimento)`);
   console.log(`Sem email          : ${semEmail.toLocaleString("pt-BR")}`);
   console.log(`Erros/timeouts     : ${erros.toLocaleString("pt-BR")}`);
@@ -224,7 +298,11 @@ async function main() {
   console.log(`Arquivo gerado     : ${arquivoSaida}`);
   console.log(`===========================================`);
 
-  if (comEmail === 0) {
+  if (encerrando) {
+    console.log(`\nProgresso salvo. Rode o mesmo comando de novo pra continuar de onde parou.`);
+  }
+
+  if (comEmail === 0 && !encerrando) {
     console.log(`\nAviso: nenhum email encontrado. Possivel causa: os CNPJs desta amostra`);
     console.log(`pertencem a leiloes/alienacoes onde os vencedores sao pessoas fisicas.`);
     console.log(`Tente aumentar o numero de meses com --meses 6.`);
