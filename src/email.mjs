@@ -1,8 +1,97 @@
 // E-mail diario: gera o resumo dos editais do cliente e (opcionalmente) envia.
 // Envio plugavel via Resend (RESEND_API_KEY). Sem chave, so gera o HTML (preview).
 
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { resolve } from "node:path";
+import { DATA_DIR } from "./caminhos.mjs";
+
 const BASE = process.env.LICITA_BASE_URL || "http://localhost:3000";
 const FROM = process.env.LICITA_EMAIL_FROM || "ContrataX <onboarding@resend.dev>";
+
+// ---------- contador global de envios (protege o teto do plano Resend) ----------
+//
+// Todo e-mail do sistema passa por enviar() abaixo, seja campanha fria ou
+// transacional pro cliente pagante (recibo, digest, renovacao). Os dois
+// competem pela MESMA cota do Resend. No plano gratuito: 100/dia, 3.000/mes
+// (ajuste TETO_DIARIO/TETO_MENSAL aqui se fizer upgrade de plano). Decisao do
+// Jacques (19/07/2026): campanha usa ate 90/dia (limite proprio dela em
+// scripts/enviar-campanha.mjs), deixando ~10/dia de folga pros e-mails de
+// cliente. Este contador observa o TOTAL combinado e avisa o admin por email
+// ANTES de bater no teto, pra dar tempo de agir (upgrade de plano) antes que
+// um e-mail de cliente pagante falhe silenciosamente por falta de cota.
+const TETO_DIARIO = Number(process.env.LICITA_TETO_EMAIL_DIA || 100);
+const TETO_MENSAL = Number(process.env.LICITA_TETO_EMAIL_MES || 3000);
+const ARQ_CONTADOR_GLOBAL = resolve(DATA_DIR, "envios-contador.json");
+
+function lerContadorGlobal() {
+  try { return JSON.parse(readFileSync(ARQ_CONTADOR_GLOBAL, "utf8")); } catch { return {}; }
+}
+function salvarContadorGlobal(c) {
+  try {
+    if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
+    writeFileSync(ARQ_CONTADOR_GLOBAL, JSON.stringify(c, null, 2), "utf8");
+  } catch (e) { console.error("[contador email] falha ao salvar:", e.message); }
+}
+
+// Best-effort: manda direto pela API (nao reusa enviar() pra nao contar o
+// proprio aviso e nao entrar em recursao caso o aviso tambem falhe).
+async function avisarAdminQuota(assunto, mensagem) {
+  try {
+    const key = process.env.RESEND_API_KEY;
+    if (!key) return;
+    const adminEmail = process.env.LICITA_BACKUP_EMAIL || "licitacontratax@gmail.com";
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: FROM, to: adminEmail, subject: assunto, html: `<p>${mensagem}</p>` }),
+    });
+  } catch (e) { console.error("[quota email] falha ao avisar admin:", e.message); }
+}
+
+// Chamado apos CADA envio bem-sucedido. Nunca lanca erro (o envio original ja
+// aconteceu; um problema aqui nao pode derrubar quem chamou enviar()).
+async function contabilizarEnvio() {
+  try {
+    const hoje = new Date().toISOString().slice(0, 10);
+    const mes = hoje.slice(0, 7);
+    const c = lerContadorGlobal();
+    if (c.dia !== hoje) { c.dia = hoje; c.diaCount = 0; c.diaAvisado90 = false; c.diaAvisadoCritico = false; }
+    if (c.mes !== mes) { c.mes = mes; c.mesCount = 0; c.mesAvisado90 = false; c.mesAvisadoCritico = false; }
+    c.diaCount = (c.diaCount || 0) + 1;
+    c.mesCount = (c.mesCount || 0) + 1;
+    salvarContadorGlobal(c);
+
+    if (c.diaCount >= TETO_DIARIO && !c.diaAvisadoCritico) {
+      c.diaAvisadoCritico = true; salvarContadorGlobal(c);
+      await avisarAdminQuota(
+        `[ContrataX] 🔴 Teto diario de e-mail atingido (${c.diaCount}/${TETO_DIARIO})`,
+        `O envio de hoje bateu no teto diario do plano Resend (${TETO_DIARIO}/dia). A partir de agora, novos e-mails (campanha OU de cliente, recibo, digest, renovacao) podem comecar a falhar ate amanha. Considere pausar a campanha fria hoje ou fazer upgrade de plano.`
+      );
+    } else if (c.diaCount >= TETO_DIARIO * 0.9 && !c.diaAvisado90) {
+      c.diaAvisado90 = true; salvarContadorGlobal(c);
+      await avisarAdminQuota(
+        `[ContrataX] ⚠ ${c.diaCount}/${TETO_DIARIO} e-mails hoje (perto do teto diario)`,
+        `Ja foram ${c.diaCount} e-mails enviados hoje, contando campanha e clientes juntos (mesma cota do Resend). Teto do dia: ${TETO_DIARIO}.`
+      );
+    }
+
+    if (c.mesCount >= TETO_MENSAL && !c.mesAvisadoCritico) {
+      c.mesAvisadoCritico = true; salvarContadorGlobal(c);
+      await avisarAdminQuota(
+        `[ContrataX] 🔴 Teto mensal de e-mail atingido (${c.mesCount}/${TETO_MENSAL})`,
+        `O envio deste mes bateu no teto mensal do plano Resend gratuito (${TETO_MENSAL}/mes). Novos e-mails podem comecar a falhar, incluindo recibos e alertas de clientes pagantes. Upgrade de plano recomendado com urgencia.`
+      );
+    } else if (c.mesCount >= TETO_MENSAL * 0.9 && !c.mesAvisado90) {
+      c.mesAvisado90 = true; salvarContadorGlobal(c);
+      await avisarAdminQuota(
+        `[ContrataX] ⚠ ${c.mesCount}/${TETO_MENSAL} e-mails este mes (perto do teto mensal)`,
+        `Ja foram ${c.mesCount} e-mails enviados este mes, contando campanha e clientes juntos. Teto do plano gratuito Resend: ${TETO_MENSAL}/mes. Vale planejar o upgrade antes que a cota acabe.`
+      );
+    }
+  } catch (e) {
+    console.error("[contador email] erro:", e.message);
+  }
+}
 
 export function temEmailKey() {
   return Boolean(process.env.RESEND_API_KEY);
@@ -191,5 +280,6 @@ export async function enviar({ para, assunto, html, anexos = null, listaDescadas
     body: JSON.stringify(corpo),
   });
   if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  await contabilizarEnvio(); // conta contra o teto do plano e avisa o admin se estiver perto
   return await r.json();
 }

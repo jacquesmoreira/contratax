@@ -1347,4 +1347,16 @@ Copy toda revisada pra tom institucional, sem travessão, humanizada (pedido exp
 
 ---
 
+### 2026-07-19 (domingo) — teto de e-mail do Resend: plano gratuito confirmado + contador global com aviso automático
+
+Jacques confirmou (print do dashboard): plano Resend é o **gratuito** — **100 e-mails/dia, 3.000/mês**. O `90/dia` já configurado em `enviar-campanha.mjs` já era a margem de segurança certa pro teto diário (não mudou). Decisão: **90/dia pra campanha fria, ~10/dia de folga reservada pros e-mails de cliente** (recibo, digest, renovação etc. — mesma cota Resend, mesmo domínio).
+
+**Risco real não coberto até então:** campanha e e-mails de cliente competem pela MESMA cota mensal (3.000). Rodando a campanha todo dia a 90, são até 2.700/mês só nela — pouca folga pro resto, e essa folga encolhe conforme a base de clientes pagantes cresce.
+
+**Fix:** contador global em `src/email.mjs`, direto dentro de `enviar()` (o único ponto por onde passa todo e-mail do sistema, campanha ou transacional). Persiste em `data/envios-contador.json` (dia + mês, reseta sozinho na virada). Avisa o admin por e-mail (direto via fetch, fora do `enviar()` pra não entrar em recursão) em 2 momentos por período: **90% do teto** (aviso) e **100% atingido** (crítico). Tetos configuráveis via `LICITA_TETO_EMAIL_DIA`/`LICITA_TETO_EMAIL_MES` (mudar aqui se fizer upgrade de plano). Nunca bloqueia o envio, só avisa — best-effort, não pode derrubar um envio que já aconteceu.
+
+Testado com fetch mockado (teto baixo artificial pra forçar o cenário): confirma contagem certa, aviso disparado 1x aos 90%, alerta crítico 1x ao bater o teto, sem repetir em envios seguintes.
+
+---
+
 **Fim do handoff.** Boa sorte na próxima sessão.
