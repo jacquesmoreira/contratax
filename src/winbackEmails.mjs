@@ -5,7 +5,8 @@
 //
 //   Dias 1-14 apos expirar:  DIARIO   (intencao mais quente)
 //   Dias 15-60:              SEMANAL
-//   Dias 60+:                MENSAL   (heartbeat, pra sempre)
+//   Dias 60+:                campanha encerrada pra este perfil (~2 meses no total,
+//                             decisao do Jacques 19/07/2026; antes era mensal pra sempre)
 //
 // Cada e-mail sai no formato "Boletim" (mesmo chassi institucional do digest),
 // lidera com os editais REAIS do ramo (FOMO concreto) e traz um muro "reative pra
@@ -95,10 +96,14 @@ export function gerarReengajamento(perfil, dados) {
 }
 
 // Fase da regua a partir dos dias apos expirar. Define o gap minimo entre envios.
+// Campanha de 2 meses (decisao do Jacques, 19/07/2026): diario nas 2 primeiras
+// semanas (intencao mais quente), semanal ate completar ~2 meses, depois PARA
+// (retorna null). Antes disso continuava mensal pra sempre; a regua agora tem
+// fim definido, sem heartbeat indefinido pra quem nao demonstrou interesse.
 function faseGap(diasAposExpirar) {
   if (diasAposExpirar <= 14) return { nome: "quente", gap: 1 };   // diario
   if (diasAposExpirar <= 60) return { nome: "semanal", gap: 7 };  // semanal
-  return { nome: "mensal", gap: 28 };                             // mensal, pra sempre
+  return null;                                                     // campanha encerrada
 }
 
 export async function disparosReengajamento({ log = console.log } = {}) {
@@ -121,8 +126,11 @@ export async function disparosReengajamento({ log = console.log } = {}) {
       const diasAposExpirar = diasDesde(p.assinatura?.expiraEm);
       if (diasAposExpirar < 1) continue;
 
-      // Afunilamento: respeita o gap minimo da fase (diario/semanal/mensal).
-      const { nome: fase, gap } = faseGap(diasAposExpirar);
+      // Afunilamento: respeita o gap minimo da fase (diario/semanal). Depois
+      // de ~2 meses (faseGap devolve null), a campanha para pra este perfil.
+      const faseInfo = faseGap(diasAposExpirar);
+      if (!faseInfo) continue;
+      const { nome: fase, gap } = faseInfo;
       const desdeUltimo = p._ultimoReengajamentoEm ? diasDesde(p._ultimoReengajamentoEm) : 9999;
       if (desdeUltimo < gap) continue;
 
