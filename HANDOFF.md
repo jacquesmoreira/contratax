@@ -1326,4 +1326,25 @@ Contexto: avaliação estratégica (advisory-board style) apontou infra frágil 
 
 ---
 
+### 2026-07-18 (sábado, continuação) — auditoria completa da comunicação por e-mail + 3 gaps fechados
+
+Jacques pediu a frequência exata de todo e-mail que o cliente recebe do cadastro em diante (assinando ou não). Mapeei lendo o código de cada gatilho (não é suposição):
+
+**Onboarding (teste de 7 dias), fixo, 1x cada:** dia 0 boas-vindas, dia 2 ativação, dia 4 educação do veredito, dia 6 oferta de planos, dia 7 últimas horas (só se ainda não assinou).
+
+**Contínuo (teste ou pago):** digest diário (só se tiver edital novo do ramo), alertas de certidão (30/15/7/3/0 dias antes de vencer, se cadastrou), aviso de login (**era a cada login, sem limite** — 1º gap).
+
+**Só pago:** aviso de renovação 7d + 1d antes, alertas de contrato próprio (90/60/30d) e de NF/recebível (25/30/45/60d) se cadastrou, aviso de cobrança falha via webhook Asaas (**sem proteção contra repetir** — 2º gap), e **nenhum e-mail quando o pagamento é confirmado** (3º gap — cliente pagava e não recebia nada, só via o painel destravar sozinho).
+
+**Se não assina:** régua de reengajamento (só se tiver edital do ramo pra mostrar) — diária dias 1-14 após expirar, semanal 15-60, **mensal pra sempre** depois disso.
+
+**Os 3 gaps, fechados:**
+1. `src/reciboEmails.mjs` (novo): recibo por e-mail pra TODO pagamento confirmado (assinatura nova com tom de boas-vindas, renovação com tom mais enxuto, upgrade, pacote avulso, acessos extras). Cada um mostra o que foi cobrado, forma de pagamento e a próxima data. Ligado nos 4 branches do webhook Asaas em `web/server.mjs`.
+2. Aviso de cobrança falha (`PAYMENT_OVERDUE`): agora só reenvia se for uma fatura DIFERENTE da última avisada (`_ultimoAvisoOverduePagId`), não mais toda vez que o Asaas reenvia o mesmo evento.
+3. Aviso de login: limitado a 1x/dia (`_ultimoAvisoLoginDia`) em vez de a cada login. Copy do e-mail ajustada pra não prometer mais "a cada login".
+
+Copy toda revisada pra tom institucional, sem travessão, humanizada (pedido explícito do Jacques: "cuidado na hora de criar pois tem que ser bem escrito e humanizado"). Testado renderizando os 5 templates de recibo com dados reais antes de subir.
+
+---
+
 **Fim do handoff.** Boa sorte na próxima sessão.

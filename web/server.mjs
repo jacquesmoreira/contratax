@@ -32,6 +32,7 @@ import { conferir, saudeDocumental } from "../src/aptidao.mjs";
 import { temChave } from "../src/ia.mjs";
 import { criarPerfil, MAX_TERMOS, parseRamos } from "../src/cadastro.mjs";
 import { gerarDigest, enviar, temEmailKey } from "../src/email.mjs";
+import { reciboAtivacao, reciboUpgrade, reciboAvulso, reciboAssentos } from "../src/reciboEmails.mjs";
 import { statusAtual, cobranca } from "../src/assinatura.mjs";
 import { precoVencedores, contratosDoFornecedor } from "../src/preco.mjs";
 import { precoReferencia } from "../src/precoReferencia.mjs";
@@ -575,9 +576,14 @@ const servidor = createServer(async (req, res) => {
       limparAuth("login", ip); // sucesso zera o contador
       // Aviso de login bem-sucedido por email (anti-invasao). Best-effort:
       // se Resend nao estiver configurado ou cliente sem email, pula silencioso.
+      // Limite de 1 por dia: sem isso, quem entra varias vezes ao dia (varios
+      // dispositivos, sessao que expira) recebia um email a cada entrada — o
+      // sinal de seguranca vira ruido e o cliente aprende a ignorar.
       try {
         const { temEmailKey, enviar } = await import("../src/email.mjs");
-        if (r.perfil?.email && temEmailKey()) {
+        const hojeLogin = new Date().toDateString();
+        if (r.perfil?.email && temEmailKey() && r.perfil._ultimoAvisoLoginDia !== hojeLogin) {
+          await atualizarPerfil(r.perfil.token, (p) => { p._ultimoAvisoLoginDia = hojeLogin; });
           const ua = (req.headers["user-agent"] || "navegador desconhecido").slice(0, 100);
           const agora = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
           const ipMasc = ip.replace(/\.(\d{1,3})\.(\d{1,3})$/, ".x.x"); // mascara nao mostra IP completo no email
@@ -596,7 +602,7 @@ const servidor = createServer(async (req, res) => {
 <tr><td style="padding:6px 0;color:#64748b">Regiao do IP</td><td style="padding:6px 0;font-family:monospace">${ipMasc}</td></tr>
 <tr><td style="padding:6px 0;color:#64748b;vertical-align:top">Dispositivo</td><td style="padding:6px 0;font-size:12.5px;color:#475569">${ua.replace(/[<>&]/g, "")}</td></tr>
 </table>
-<p style="font-size:13.5px;color:#475569;margin:18px 0 0"><b>Foi voce?</b> Se sim, pode ignorar este email. Ele e enviado por padrao a cada login pra sua seguranca.</p>
+<p style="font-size:13.5px;color:#475569;margin:18px 0 0"><b>Foi voce?</b> Se sim, pode ignorar este email. Mandamos um aviso como este no seu primeiro acesso do dia, por seguranca.</p>
 <p style="font-size:13.5px;color:#475569;margin:8px 0 0"><b>Nao foi voce?</b> Troque a sua senha imediatamente.</p>
 <table cellpadding="0" cellspacing="0" border="0" style="margin:16px 0"><tr><td>
 <a href="${BASE}/esqueci-senha" style="display:inline-block;background:#dc2626;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 22px;border-radius:10px">Trocar minha senha</a>
@@ -1803,6 +1809,12 @@ const servidor = createServer(async (req, res) => {
             const nivel = PLANOS[id] ? id : "basico";
             // Anual estende 365 dias (a proxima cobranca do Asaas so vem em 1 ano).
             const anual = ciclo === "anual";
+            // Le ANTES de ativar: e o unico jeito de saber se e a 1a cobranca
+            // (trial -> pago) ou uma renovacao recorrente (ativarPlano marca
+            // _jaFoiPago=true toda vez, entao depois de chamado ja e tarde
+            // pra essa distincao).
+            const perfilAntes = await perfilPorToken(token);
+            const primeiraVez = !perfilAntes?._jaFoiPago;
             await ativarPlano(token, nivel, anual ? 365 : 30, pg.billingType || null, anual ? "anual" : "mensal");
             // Conversion API GA4 (server-side): registra purchase pra remarketing
             // e medicao precisa de ROAS no Google Ads.
@@ -1818,6 +1830,19 @@ const servidor = createServer(async (req, res) => {
                 });
               }
             } catch (e) { console.error("[ga4]", e.message); }
+            // Recibo por e-mail: antes o cliente pagava e nao recebia nada,
+            // so via o painel destravar sozinho. Best-effort, nao bloqueia o
+            // webhook se o envio falhar.
+            try {
+              const perfil = await perfilPorToken(token);
+              if (perfil?.email && temEmailKey()) {
+                const { assunto, html } = reciboAtivacao({
+                  perfil, plano: PLANOS[nivel], valor: pg.value || precoNumero(PLANOS[nivel]?.preco || "0"),
+                  formaPagamento: pg.billingType, expiraEm: perfil.assinatura?.expiraEm, primeiraVez,
+                });
+                await enviar({ para: perfil.email, assunto, html });
+              }
+            } catch (e) { console.error("[recibo sub]", e.message); }
           } else if (tipo === "upgrade" && token) {
             // Upgrade pro-rata pago. Sobe nivel imediatamente e atualiza o valor
             // da assinatura recorrente no Asaas pras proximas cobrancas.
@@ -1846,6 +1871,14 @@ const servidor = createServer(async (req, res) => {
                   planoNome: "Upgrade " + (PLANOS[novoNivel].nome || novoNivel),
                   formaPagamento: pg.billingType || null,
                 });
+                if (perfilU?.email && temEmailKey()) {
+                  const { assunto, html } = reciboUpgrade({
+                    perfil: perfilU, plano: PLANOS[novoNivel], valorCobrado: pg.value || 0,
+                    valorMensalNovo: novoValor, formaPagamento: pg.billingType,
+                    proximaCobranca: perfilU.assinatura?.expiraEm,
+                  });
+                  await enviar({ para: perfilU.email, assunto, html });
+                }
               } catch (e) { console.error("[upgrade]", e.message); }
             }
           } else if (tipo === "avulso" && token) {
@@ -1862,6 +1895,13 @@ const servidor = createServer(async (req, res) => {
                   planoNome: AVULSOS[id]?.nome || id,
                   formaPagamento: pg.billingType || null,
                 });
+                if (perfil?.email && temEmailKey() && qtd) {
+                  const { assunto, html } = reciboAvulso({
+                    perfil, nomePacote: AVULSOS[id]?.nome || "Pacote de análises", analises: qtd,
+                    valor: pg.value || precoNumero(AVULSOS[id]?.preco || "0"), formaPagamento: pg.billingType,
+                  });
+                  await enviar({ para: perfil.email, assunto, html });
+                }
               }
             } catch (e) { console.error("[ga4]", e.message); }
           } else if (tipo === "assentos" && token) {
@@ -1870,10 +1910,12 @@ const servidor = createServer(async (req, res) => {
             const n = Math.max(1, Math.min(50, Number(id) || 1));
             const perfilA = await aplicarAssentos(token, n);
             try {
+              let novoValorAss = null;
               if (perfilA?.asaasSubscriptionId) {
+                novoValorAss = valorMensalRecorrente(perfilA);
                 await atualizarValorAssinatura(
                   perfilA.asaasSubscriptionId,
-                  valorMensalRecorrente(perfilA),
+                  novoValorAss,
                   `ContrataX: Plano ${planoDe(perfilA).nome} + ${perfilA.assentosPagos} acesso(s) extra(s)`,
                 );
               } else {
@@ -1886,6 +1928,13 @@ const servidor = createServer(async (req, res) => {
                 planoNome: `${n} acesso(s) extra(s)`,
                 formaPagamento: pg.billingType || null,
               });
+              if (perfilA?.email && temEmailKey()) {
+                const { assunto, html } = reciboAssentos({
+                  perfil: perfilA, quantidade: n, totalAssentos: perfilA.assentosPagos || n,
+                  valorMensalNovo: novoValorAss ?? valorMensalRecorrente(perfilA), formaPagamento: pg.billingType,
+                });
+                await enviar({ para: perfilA.email, assunto, html });
+              }
             } catch (e) { console.error("[assentos]", e.message); }
           }
         } else if (evento === "PAYMENT_OVERDUE") {
@@ -1898,7 +1947,16 @@ const servidor = createServer(async (req, res) => {
             try {
               const perfil = await perfilPorToken(token);
               const { temEmailKey, enviar } = await import("../src/email.mjs");
-              if (perfil?.email && temEmailKey()) {
+              // Dedup: o Asaas pode reenviar o mesmo evento OVERDUE varias vezes
+              // pra uma unica fatura em atraso (retry de webhook, novas tentativas
+              // de cobranca automatica antes do corte). Sem isso, o cliente recebia
+              // um "voce nao pagou" a cada nova tentativa, o que e alarmante e
+              // repetitivo. So reenvia se for uma fatura DIFERENTE da ultima avisada.
+              const idPagamento = pg.id || null;
+              if (idPagamento && perfil?._ultimoAvisoOverduePagId === idPagamento) {
+                // ja avisamos sobre esta fatura; nao repete
+              } else if (perfil?.email && temEmailKey()) {
+                if (idPagamento) await atualizarPerfil(token, (p) => { p._ultimoAvisoOverduePagId = idPagamento; });
                 const BASE = process.env.LICITA_BASE_URL || "https://www.contratax.com.br";
                 const valor = (Number(pg.value) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
                 const linkPg = pg.invoiceUrl || `${BASE}/assinar?c=${perfil.token}`;
