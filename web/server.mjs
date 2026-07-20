@@ -1668,6 +1668,42 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // Diagnostico de ativacao: pra cada conta em teste/teste_expirado, checa se
+    // ELA ALGUMA VEZ FEZ LOGIN de verdade (tabela sessoes, so populada pelo
+    // fluxo de senha em entrar.html) -- diferente de "vistos" em store.mjs, que
+    // e escrito tambem pelo atualizador em BACKGROUND pra todo mundo, entao nao
+    // serve como prova de visita real. Sem sessao nenhuma = nunca voltou depois
+    // do cadastro. Ajuda a saber se o problema e ATIVACAO (nunca abriu) ou
+    // ENGAJAMENTO (abriu mas nao usou a IA).
+    if (rota === "/api/admin/diagnostico-ativacao") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const perfis = await lerPerfis();
+        const alvo = perfis.filter((p) => ["teste", "teste_expirado"].includes(statusAtual(p).status));
+        const d = abrir();
+        const linhas = alvo.map((p) => {
+          const n = d.prepare("SELECT COUNT(*) AS n FROM sessoes WHERE token = ?").get(p.token)?.n || 0;
+          return {
+            nome: p.razaoSocial || p.nome || null,
+            email: p.email || null,
+            criadoEm: p.assinatura?.criadoEm || null,
+            status: statusAtual(p).status,
+            fezLoginAlgumaVez: n > 0,
+            totalLogins: n,
+          };
+        });
+        const nuncaLogou = linhas.filter((l) => !l.fezLoginAlgumaVez).length;
+        return json(res, 200, {
+          totalContas: linhas.length,
+          nuncaFizeramLogin: nuncaLogou,
+          pctNuncaLogou: linhas.length ? nuncaLogou / linhas.length : 0,
+          contas: linhas,
+        });
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
+      }
+    }
+
     // ===== Painel admin (tudo gated por LICITA_ADMIN_TOKEN) =====
     if (rota === "/api/admin/clientes") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
