@@ -1416,6 +1416,10 @@ Jacques vai viajar 26/07 e não vai conseguir deixar o PC ligado. Confirmado ant
 
 **Só depois disso confirmado funcionando**, desligar as 7 tarefas do Agendador de Tarefas local (`Unregister-ScheduledTask`), pra nunca rodar em duplicidade (2 sistemas mandando pro mesmo lead no mesmo dia).
 
+**CONCLUÍDO ainda na madrugada de 20/07:** Jacques passou o token (`LICITA_ADMIN_TOKEN=ctx-admin-6911`) e confirmou `LICITA_CAMPANHA=1` criado no Railway. Testado em produção com CSV mínimo (só o e-mail do próprio Jacques) via `/rodar-agora` — e-mail chegou de verdade, gravou em `/data/campanha-envios.json` no volume, confirma que o deploy pegou o código novo. Depois subida a lista real: `leads-202607.csv` (5.018 leads, 1.046.047 bytes) via `/api/admin/campanha/upload-leads`, confirmado `{"ok":true,...}`. **Não chamei `/rodar-agora` com a lista real** (isso dispararia o lote de hoje às 3h da manhã em vez de 14h) — deixado pro loop agendado do próprio servidor cuidar sozinho. As **7 tarefas do Agendador de Tarefas do Windows foram removidas** (`Unregister-ScheduledTask`) logo em seguida, confirmado que não sobrou nenhuma — Railway agora é a ÚNICA fonte de envio da campanha, sem risco de duplicidade.
+
+**Nota de custo (Railway):** fatura de junho→julho foi **$31,15**, quase tudo (**$30,37, 97,5%**) é memória (GB-minuto). Conferido com o Jacques: migrar da Hobby pra Pro ($20/mês mínimo) **não reduziria a fatura** (ele já usa acima dos dois créditos incluídos, então o Pro sairia uns $5/mês MAIS caro) — o valor do Pro seria só o teto de RAM maior (evita os OOM que já causaram crash no passado, mesmo item do #62 pendente), não economia. Ficou em aberto pro Jacques decidir: investigar por que o consumo de memória está tão alto (pode ser ineficiência de código, reduziria custo nos dois planos) antes de decidir sobre o upgrade.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
