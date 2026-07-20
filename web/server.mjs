@@ -1637,7 +1637,11 @@ const servidor = createServer(async (req, res) => {
           if (e) porEmail.set(e, p);
         }
 
-        const contactados = Object.keys(estado);
+        // Exclui o proprio e-mail do Jacques: e a conta admin/teste dele (existe
+        // desde antes da campanha) e tambem recebeu o e-mail de teste do deploy
+        // de hoje -- sem isso, sempre aparece como "1 convertido" falso-positivo.
+        const EXCLUIR = new Set(["jacques.moreira@gmail.com"]);
+        const contactados = Object.keys(estado).filter((e) => !EXCLUIR.has(e));
         const convertidos = [];
         for (const email of contactados) {
           const perfil = porEmail.get(email);
