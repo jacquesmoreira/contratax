@@ -17,11 +17,24 @@ export { PERFIS };
 // circular com cadastro.mjs). Auto-cura perfis cujos termos foram salvos como
 // 1 string gigante com bullets (cliente colou lista com • em vez de virgula).
 const SEP_RAMOS = /[,;•·|\n\r]+/;
+// Mesmo teto do cadastro (MAX_TERMOS em cadastro.mjs), repetido aqui pelo mesmo
+// motivo do separador: evitar import circular.
+const MAX_TERMOS_LEITURA = Number(process.env.LICITA_MAX_TERMOS || 50);
 function normalizarTermos(perfis) {
   for (const p of perfis) {
     const t = p?.filtro?.termos;
     if (Array.isArray(t) && t.some((x) => SEP_RAMOS.test(x))) {
       p.filtro.termos = t.flatMap((x) => String(x).split(SEP_RAMOS)).map((s) => s.trim()).filter(Boolean);
+    }
+    // Teto tambem na LEITURA. O cadastro e a edicao ja barram acima de
+    // MAX_TERMOS, mas perfis legados escaparam: quando o separador so quebrava
+    // em virgula, uma lista colada com bullets virava 1 termo gigante (passava
+    // na trava contando como 1) e so era quebrada aqui, DEPOIS, sem teto nenhum.
+    // Resultado real visto em producao: perfil com 200+ ramos casando ~2.900
+    // editais, ou seja, "tudo", que e o mesmo que filtro nenhum. Sem esse corte,
+    // esses perfis nunca voltam pro limite a menos que o cliente reedite.
+    if (Array.isArray(p?.filtro?.termos) && p.filtro.termos.length > MAX_TERMOS_LEITURA) {
+      p.filtro.termos = p.filtro.termos.slice(0, MAX_TERMOS_LEITURA);
     }
   }
   return perfis;
