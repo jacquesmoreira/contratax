@@ -29,7 +29,8 @@ async function salvarProgresso(p) {
 // ja completos. O mes corrente nunca e marcado como completo (ainda entram contratos).
 // `sinal.parar` permite encerrar com elegancia entre paginas.
 export async function backfillContratos({
-  meses = 18, pausaPagina = 2000, pausaMes = 4000, limitePaginasPorMes = Infinity, log = console.log, sinal = null,
+  meses = 18, pausaPagina = 2000, pausaMes = 4000, limitePaginasPorMes = Infinity,
+  margemDiasMesCorrente = 3, log = console.log, sinal = null,
 } = {}) {
   const prog = await lerProgresso();
   const completos = new Set(prog.mesesCompletos);
@@ -44,7 +45,21 @@ export async function backfillContratos({
 
     if (completos.has(chave) && !mesCorrente) { log(`[backfill] ${chave} ja completo, pulando`); continue; }
 
-    const ini = ref;
+    // Mes corrente: dataInicial/dataFinal do PNCP filtram por DATA DE PUBLICACAO
+    // (confirmado no OpenAPI oficial), que e imutavel uma vez publicada - nao existe
+    // "contrato atrasado" reaparecendo com data anterior. Por isso, em vez de sempre
+    // revarrer do dia 1 do mes (redundante: por volta do dia 20, revarria ~20 dias
+    // de novo a cada passada de 6h so pra pegar as ultimas horas), comeca so
+    // `margemDiasMesCorrente` dias atras (com folga de seguranca). Quando o mes vira,
+    // o fechamento (bloco abaixo, ramo !mesCorrente) ainda faz UMA varredura completa
+    // do mes inteiro antes de marca-lo como completo, entao qualquer lacuna dessa
+    // janela estreita e coberta ali.
+    let ini = ref;
+    if (mesCorrente) {
+      const limiteMargem = new Date(hoje);
+      limiteMargem.setDate(limiteMargem.getDate() - margemDiasMesCorrente);
+      if (limiteMargem > ref) ini = limiteMargem;
+    }
     const fim = mesCorrente ? hoje : new Date(ref.getFullYear(), ref.getMonth() + 1, 0);
     log(`[backfill] == ${chave} (${fmt(ini)}..${fmt(fim)}) ==`);
 
