@@ -1382,4 +1382,18 @@ Testado renderizando os 3 e-mails com lead real antes de commitar.
 
 ---
 
+### 2026-07-19 (domingo, continuação) — campanha agendada pra rodar sozinha (Agendador de Tarefas do Windows)
+
+Decisão do Jacques: ficar no Resend gratuito por enquanto (sem upgrade), testar se a campanha converte alguém em ~15 dias (~240 contatos, ~600 e-mails nessa janela — calculado e conferido, não é 240×3=720 porque nem todo mundo completa as 3 etapas dentro da janela) e só assinar o Resend se aparecer sinal real de conversão.
+
+Agenda pedida: segunda a quinta ~14h, sexta de manhã, sem envio no fim de semana. **7 tarefas criadas no Agendador de Tarefas do Windows** (`ContrataX Campanha ...`), rodando `D:\node.js\node.exe D:\Licita\scripts\enviar-campanha.mjs` com saída em `D:\Licita\campanha-log.txt`:
+- 5 tarefas pontuais pra rampa desta semana (seg 20/07 a sex 24/07), com `--novos-por-dia` subindo 15→20→25→30→30.
+- 2 tarefas recorrentes semanais a partir da semana seguinte (seg-qui 14h desde 27/07, sex 09h desde 31/07), usando o padrão (30/dia).
+
+Todas com `StartWhenAvailable=$true` (se o PC estiver desligado/reiniciando bem na hora, roda assim que voltar, em vez de pular o dia). Rodam no login do Jacques (`LogonType=Interactive`) — dependem do PC ligado e ele logado, já é a rotina dele.
+
+**Pra gerenciar depois:** `Get-ScheduledTask | Where-Object { $_.TaskName -like "ContrataX Campanha*" }` lista todas; `Unregister-ScheduledTask -TaskName "..." -Confirm:$false` remove uma. Log de cada execução acumula em `campanha-log.txt` (não versionado).
+
+---
+
 **Fim do handoff.** Boa sorte na próxima sessão.
