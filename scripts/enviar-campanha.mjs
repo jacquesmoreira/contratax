@@ -59,6 +59,17 @@ const arquivoCsv = arg("--csv", null);
 const testeCom = Number(arg("--teste-com", Infinity));
 const dryRun = temFlag("--dry-run");
 const limiteDiario = Number(arg("--limite-diario", 90)); // margem de seguranca; ajuste conforme seu plano Resend
+// Teto de gente NOVA (etapa 1) por dia. Sem isso, o script manda etapa 1 pra
+// quem puder ate encher o limiteDiario, cria uma leva enorme de uma vez, e
+// 3 dias depois essa leva inteira "trava" o dia so com reenvios de etapa 2,
+// sem sobrar espaco pra ninguem novo — e de novo na etapa 3, 3 dias depois.
+// Resultado observado numa simulacao: dias inteiros sem tocar em lead novo
+// nenhum, em blocos de 3 dias. Cada lead passa por 3 etapas ao longo de
+// 6 dias, entao o teto sustentavel pra sempre e limiteDiario/3 (com 90/dia,
+// 30 novos/dia -> em regime permanente: 30 na etapa 1 + 30 na etapa 2 (dos
+// que entraram 3 dias atras) + 30 na etapa 3 (dos que entraram 6 dias atras)
+// = 90/dia, constante, sem picos nem vales.
+const novosPorDia = Number(arg("--novos-por-dia", Math.floor(limiteDiario / 3)));
 const testeEmail = arg("--teste-email", null);
 const testeEtapa = Number(arg("--teste-etapa", 1));
 
@@ -365,8 +376,11 @@ async function main() {
 
   const estado = lerJson(ARQ_ESTADO, {});
   const hoje = new Date().toISOString().slice(0, 10);
-  const contador = lerJson(ARQ_CONTADOR, { data: hoje, enviados: 0 });
-  if (contador.data !== hoje) { contador.data = hoje; contador.enviados = 0; }
+  const contador = lerJson(ARQ_CONTADOR, { data: hoje, enviados: 0, novos: 0 });
+  if (contador.data !== hoje) { contador.data = hoje; contador.enviados = 0; contador.novos = 0; }
+  contador.novos = contador.novos || 0; // retrocompativel com contador antigo sem esse campo
+
+  console.log(`Novos por dia (etapa 1): ${novosPorDia} | ja enviados hoje: ${contador.novos}/${novosPorDia}`);
 
   let enviadosNestaExecucao = 0;
   let pulados = 0;
@@ -387,6 +401,11 @@ async function main() {
     const registro = estado[email];
     const etapa = proximaEtapaDevida(registro);
     if (etapa === null) { pulados++; continue; }
+    // Reenvios (etapa 2/3) tem prioridade e nao entram nesse teto -- sao
+    // sempre gente que ja esta na conversa, ja sabe que vamos escrever nos
+    // proximos dias. So a ENTRADA de gente nova (etapa 1) e racionada, pra
+    // nao criar uma leva grande demais que trava os proximos dias sozinha.
+    if (etapa === 1 && contador.novos >= novosPorDia) { pulados++; continue; }
 
     const { assunto, html } = montarEmail(etapa, lead);
 
@@ -406,6 +425,7 @@ async function main() {
     estado[email] = { ultimaEtapa: etapa, dataUltimoEnvio: new Date().toISOString(), razaoSocial: lead.razao_social };
     enviadosNestaExecucao++;
     contador.enviados++;
+    if (etapa === 1) contador.novos++;
 
     if (!dryRun) await new Promise((r) => setTimeout(r, 600)); // ritmo educado com a API
   }
@@ -417,9 +437,10 @@ async function main() {
 
   console.log(`\n================ RESULTADO ================`);
   console.log(`Enviados nesta execucao : ${enviadosNestaExecucao}`);
-  console.log(`Pulados (fora do prazo/suprimidos) : ${pulados}`);
+  console.log(`Pulados (fora do prazo/suprimidos/teto de novos) : ${pulados}`);
   console.log(`Erros : ${erros}`);
   console.log(`Total enviado hoje (${hoje}) : ${contador.enviados}/${limiteDiario}`);
+  console.log(`  dos quais novos (etapa 1) : ${contador.novos}/${novosPorDia}`);
   console.log(`=============================================`);
 }
 
