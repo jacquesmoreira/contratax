@@ -515,7 +515,7 @@ function perfilHTML(p) {
         <div style="font-size:14.5px;margin-top:4px">${esc((topo.objeto || "").slice(0, 110))}</div>
       </div>
       <button type="button" data-id="${esc(topo.id)}" onclick="abrirDrawer(this.dataset.id)" style="background:#fff;color:var(--indigo);border:none;border-radius:11px;padding:13px 26px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Ver a análise deste edital →</button>
-      <div style="font-size:12.5px;opacity:.9;margin-top:13px">Depois, <a href="/documentos?c=${encodeURIComponent(token)}" style="color:#fff;text-decoration:underline;font-weight:700">suba suas certidões</a> pra o veredito dizer se <b>VOCÊ</b> está apto, não só o resumo.</div>
+      <div style="font-size:12.5px;opacity:.9;margin-top:13px">Não precisa cadastrar nada antes: a leitura do edital sai na hora. Depois, <a href="/documentos?c=${encodeURIComponent(token)}" style="color:#fff;text-decoration:underline;font-weight:700">informe suas certidões</a> pra ficar ainda mais completo, com o veredito dizendo se <b>VOCÊ</b> está apto.</div>
     </div>` : "";
   // Card de VEREDITO (passo 2 da ativacao): aparece DEPOIS que ja analisou, se
   // ainda nao tem certidao. Captura as datas ali (merge via /api/certidoes) pra a
@@ -524,7 +524,7 @@ function perfilHTML(p) {
   const certCard = (p.analisou && !p.temCertidao) ? `
     <div style="background:#fff;border:2px solid #c7d2fe;border-radius:16px;padding:20px 22px;margin-bottom:20px">
       <div style="font-size:16px;font-weight:800;color:#0B1E3A;margin-bottom:4px">🔓 Destrave o seu veredito personalizado</div>
-      <div style="font-size:13.5px;color:var(--cinza);margin-bottom:14px;line-height:1.5">Com as datas das suas certidões, a ContrataX.IA passa a dizer se <b>VOCÊ</b> está apto em cada edital, ou exatamente o que falta. Sem elas, é só o resumo. Leva 1 minuto.</div>
+      <div style="font-size:13.5px;color:var(--cinza);margin-bottom:14px;line-height:1.5">Você já tem a leitura completa dos editais. Informando as datas das suas certidões, a ContrataX.IA passa a cruzar cada edital com a <b>sua</b> empresa e dizer se <b>VOCÊ</b> está apto, ou exatamente o que resolver antes. Leva 1 minuto.</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
         <label style="font-size:11.5px;font-weight:700;color:var(--cinza-c)">Federal (Receita/PGFN)<input type="date" id="cq-federalConjunta" style="${inpCq}"></label>
         <label style="font-size:11.5px;font-weight:700;color:var(--cinza-c)">FGTS (Caixa)<input type="date" id="cq-fgts" style="${inpCq}"></label>
@@ -1351,11 +1351,32 @@ function analiseHTML(a) {
 function veredictoHTML(conf) {
   if (!conf || !conf.aptidao) return "";
   const a = conf.aptidao;
-  const rotulo = { apto: "APTO", apto_com_pendencias: "APTO COM PENDÊNCIAS", nao_apto: "NÃO APTO", aguardando_documentos: "AGUARDANDO SEUS DOCUMENTOS" }[a.veredito] ?? a.veredito;
-  return `<div class="veredito ${esc(a.veredito)}"><h3>Veredito de aptidão</h3><div class="selo">${rotulo}</div><p>${esc(a.resumo)}</p></div>
-    <div class="bloco"><h3>Item a item</h3><ul class="itens">${(a.itens||[]).map(it=>`<li>${iconHTML(it.situacao)}<span><b>${esc(it.exigencia)}</b><br><span style="color:var(--cinza)">${esc(it.observacao)}</span></span></li>`).join("")}</ul></div>
-    ${a.pendencias && a.pendencias.length ? `<div class="bloco"><h3>Pendências</h3><ul class="itens">${a.pendencias.map(p=>`<li class="pendencia"><span class="ic no">✕</span><span>${esc(p)}</span></li>`).join("")}</ul></div>` : ""}
-    ${a.proximosPassos && a.proximosPassos.length ? `<div class="bloco"><h3>Próximos passos</h3><ul class="itens">${a.proximosPassos.map(p=>`<li><span class="ic">→</span><span>${esc(p)}</span></li>`).join("")}</ul></div>` : ""}`;
+  // "aguardando_documentos" NAO e um estado de erro/bloqueio: a analise do edital
+  // ja veio inteira acima (resumo, exigencias, prazos, alertas). Por isso ele tem
+  // render PROPRIO: convite acionavel com botao, em vez do selo gigante de
+  // veredito, que ali soaria como "faltou alguma coisa". Ver comentario em
+  // src/aptidao.mjs sobre o diagnostico de ativacao de 20/07/2026 (nenhuma das 16
+  // contas em teste tinha subido certidao).
+  const cabeca = a.veredito === "aguardando_documentos"
+    ? `<div class="veredito aguardando_documentos">
+        <h3>Quer o veredito da SUA empresa neste edital?</h3>
+        <div style="font-size:16px;font-weight:800;margin:2px 0 6px">🔓 Falta só 1 minuto</div>
+        <p>${esc(a.resumo)}</p>
+        <a href="/documentos?c=${encodeURIComponent(token)}" style="display:inline-block;margin-top:12px;background:var(--indigo);color:#fff;font-weight:800;font-size:14px;padding:11px 22px;border-radius:10px;text-decoration:none">Informar minhas certidões →</a>
+      </div>`
+    : `<div class="veredito ${esc(a.veredito)}"><h3>Veredito de aptidão</h3><div class="selo">${{ apto: "APTO", apto_com_pendencias: "APTO COM PENDÊNCIAS", nao_apto: "NÃO APTO" }[a.veredito] ?? esc(a.veredito)}</div><p>${esc(a.resumo)}</p></div>`;
+  // Sem certidao cadastrada, TODO item volta como "ausente" (✕ vermelho) e as
+  // pendencias listam tudo. Isso e enganoso: nao sabemos que a empresa NAO tem o
+  // documento, so nao perguntamos ainda. Nesse estado a lista vira um checklist
+  // NEUTRO do que o edital exige (util por si so) e o bloco de pendencias sai.
+  const semDados = a.veredito === "aguardando_documentos";
+  const listaItens = (a.itens || []).map((it) => semDados
+    ? `<li><span class="ic dd">·</span><span><b>${esc(it.exigencia)}</b></span></li>`
+    : `<li>${iconHTML(it.situacao)}<span><b>${esc(it.exigencia)}</b><br><span style="color:var(--cinza)">${esc(it.observacao)}</span></span></li>`).join("");
+  return cabeca + `
+    <div class="bloco"><h3>${semDados ? "O que este edital exige de você" : "Item a item"}</h3><ul class="itens">${listaItens}</ul></div>
+    ${!semDados && a.pendencias && a.pendencias.length ? `<div class="bloco"><h3>Pendências</h3><ul class="itens">${a.pendencias.map(p=>`<li class="pendencia"><span class="ic no">✕</span><span>${esc(p)}</span></li>`).join("")}</ul></div>` : ""}
+    ${!semDados && a.proximosPassos && a.proximosPassos.length ? `<div class="bloco"><h3>Próximos passos</h3><ul class="itens">${a.proximosPassos.map(p=>`<li><span class="ic">→</span><span>${esc(p)}</span></li>`).join("")}</ul></div>` : ""}`;
 }
 
 let editalAtual = null;

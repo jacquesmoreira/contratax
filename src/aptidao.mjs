@@ -86,6 +86,12 @@ export async function conferir(edital, empresa, { forcar = false, perfilToken = 
   // "aguardando_documentos" — neutro e acionavel, empurrando pro cadastro. O resto
   // da analise (item a item, exigencias, alertas) continua util. Deterministico:
   // nao depende da IA. Cache guarda a verdade da IA; o ajuste e aplicado na saida.
+  //
+  // TOM (importante): o texto lidera pelo que a analise JA entregou e trata a
+  // certidao como o passo que deixa MAIS completo, nunca como "sem isso nao
+  // serve". Diagnostico de 20/07/2026: nenhuma das 16 contas em teste tinha
+  // subido certidao, e a copy anterior ("Sem elas, e so o resumo") desvalorizava
+  // justamente a entrega que a pessoa acabou de receber.
   const semDocs = saude.itens.every((i) => i.situacao === "ausente");
   const ajustar = (dados) => {
     if (!semDocs || !dados?.aptidao) return dados;
@@ -94,7 +100,7 @@ export async function conferir(edital, empresa, { forcar = false, perfilToken = 
       aptidao: {
         ...dados.aptidao,
         veredito: "aguardando_documentos",
-        resumo: "Cadastre suas certidões e documentos para o veredito confirmar se VOCÊ está apto neste edital. Abaixo, tudo o que o edital exige.",
+        resumo: "A leitura completa do edital está aqui embaixo: o que ele exige, item a item, os prazos e as armadilhas. Para a ContrataX.IA também cruzar com a SUA empresa e dizer se você está apto, informe as datas das suas certidões (leva 1 minuto).",
       },
     };
   };
