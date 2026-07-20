@@ -1374,6 +1374,8 @@ Testado com fetch mockado (teto baixo artificial pra forçar o cenário): confir
 
 Testado renderizando os 3 e-mails com lead real antes de commitar.
 
+**Correção posterior (mesmo domingo):** o Jacques pediu pra conferir se cada claim do e-mail 2 batia com o produto de verdade. Achado: a frase "a ContrataX.IA lê o edital inteiro... com prazo, valor estimado e link direto pra participar. Chega pronto no seu email" misturava dois recursos DIFERENTES como se fossem um só. Conferido em `src/email.mjs` (`cardEmail`, linha ~116): o boletim diário mostra objeto/valor/prazo automaticamente pra TODOS os editais do ramo (matching por palavra-chave, ilimitado, sem gastar cota) — isso é real. Mas a LEITURA da IA (veredito de aptidão, exigências) só acontece quando o cliente abre um edital específico no painel, e aí sim consome a cota mensal de análises (`aptidao.mjs`/`tldr.mjs`). O e-mail dava a entender que todo edital já vinha com a leitura da IA feita. Reescrito pra separar as duas coisas corretamente. E-mails 1 e 3 também auditados nesta passada: "pesquisar qualquer concorrente" (`/concorrentes`, busca por CNPJ) e "histórico de preços do órgão" (`/precos`, busca por produto) confirmados como páginas reais e funcionais — sem problema, mantidos como estavam.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
