@@ -1681,8 +1681,23 @@ const servidor = createServer(async (req, res) => {
         const perfis = await lerPerfis();
         const alvo = perfis.filter((p) => ["teste", "teste_expirado"].includes(statusAtual(p).status));
         const d = abrir();
+        const { consultar: consultarEd } = await import("../src/db.mjs");
+        const { aplicarFiltro } = await import("../src/filtro.mjs");
+        // Conta editais abertos do ramo do perfil (mesma logica leve do onboarding):
+        // revela se o painel da pessoa estava VAZIO (nada pra analisar, problema de
+        // cobertura de ramo) ou CHEIO (viu editais e mesmo assim nao clicou).
+        const editaisDoRamo = (p) => {
+          const termos = p.filtro?.termos ?? [];
+          if (!termos.length) return null;
+          try {
+            const cand = consultarEd({ ufs: p.ufs ?? [], apenasAbertos: true });
+            return aplicarFiltro(cand, { termos }).length;
+          } catch { return null; }
+        };
         const linhas = alvo.map((p) => {
           const n = d.prepare("SELECT COUNT(*) AS n FROM sessoes WHERE token = ?").get(p.token)?.n || 0;
+          const temCertidao = Boolean(p.documentos && Object.keys(p.documentos).length) ||
+            Boolean(p.certidoes && Object.keys(p.certidoes).length);
           return {
             nome: p.razaoSocial || p.nome || null,
             email: p.email || null,
@@ -1690,13 +1705,19 @@ const servidor = createServer(async (req, res) => {
             status: statusAtual(p).status,
             fezLoginAlgumaVez: n > 0,
             totalLogins: n,
+            ramo: (p.filtro?.termos ?? []).join(", ") || null,
+            editaisNoRamoAgora: editaisDoRamo(p),
+            subiuCertidao: temCertidao,
           };
         });
         const nuncaLogou = linhas.filter((l) => !l.fezLoginAlgumaVez).length;
+        const logaramMasPainelVazio = linhas.filter((l) => l.fezLoginAlgumaVez && l.editaisNoRamoAgora === 0).length;
+        const logaramComEditais = linhas.filter((l) => l.fezLoginAlgumaVez && l.editaisNoRamoAgora > 0).length;
         return json(res, 200, {
           totalContas: linhas.length,
           nuncaFizeramLogin: nuncaLogou,
-          pctNuncaLogou: linhas.length ? nuncaLogou / linhas.length : 0,
+          logaramMasPainelVazio,
+          logaramComEditaisMasNaoAnalisaram: logaramComEditais,
           contas: linhas,
         });
       } catch (e) {
