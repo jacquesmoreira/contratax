@@ -1396,4 +1396,26 @@ Todas com `StartWhenAvailable=$true` (se o PC estiver desligado/reiniciando bem 
 
 ---
 
+### 2026-07-20 (segunda, madrugada) — campanha migrada pro Railway (independe do PC do Jacques)
+
+Jacques vai viajar 26/07 e não vai conseguir deixar o PC ligado. Confirmado antes com print de billing do Railway que a mudança não pesa na fatura (custo é quase todo RAM do processo já rodando 24h, campanha não move esse ponteiro).
+
+**Refactor pra evitar duplicar logica:** extraído `src/campanhaFria.mjs` (parseCsv, extrairCategoria, montarEmail, proximaEtapaDevida, `processarLote`) como modulo compartilhado, sem I/O de arquivo. `scripts/enviar-campanha.mjs` (CLI local) virou wrapper fino em cima dele — continua funcionando igual, testado com o mesmo smoke test de sempre (`--dry-run --teste-com 3`) pra confirmar que o refactor não mudou comportamento.
+
+**Novo `src/campanhaLoop.mjs`**: roda dentro do `web/server.mjs` (mesmo padrão dos outros loops, com `supervisionar()`), lendo `data/leads-campanha.csv` do volume do Railway (nunca do git — dado de contato). Agenda calculada no proprio loop (testada isolada com 7 cenários: segunda de madrugada, 1min antes/depois de cada horário-alvo, sexta, sábado, domingo — todos batendo): segunda-quinta 14h Brasília, sexta 9h, sem envio fim de semana. Rampa da semana 1 hardcoded por data (`RAMPA` no arquivo: 20/07→15, 21/07→20, 22/07→25, 23/07→30, 24/07→30), depois sempre 30/dia. Ativa com `LICITA_CAMPANHA=1`.
+
+**2 endpoints admin novos** (gated por `LICITA_ADMIN_TOKEN`, mesmo padrão dos outros):
+- `POST /api/admin/campanha/upload-leads` — body `{c, csv}`, grava o CSV no volume.
+- `POST /api/admin/campanha/rodar-agora` — dispara uma passada na hora, sem esperar o horário agendado (útil pra testar depois do deploy).
+
+**Testado antes de subir:** `enviarCampanhaDoDia()` isolado (pasta de dados temporária, e-mail de teste real enviado pro Jacques, estado gravado certo) + os 2 endpoints via HTTP local (upload + rodar-agora, incluindo teste de token errado → 403 corretamente). Limpo depois, sem sobra na pasta `data/` local.
+
+**Pendente do Jacques (só 2 passos no painel do Railway) antes de desligar as tarefas locais:**
+1. Setar `LICITA_CAMPANHA=1` nas variáveis do serviço Contratax.
+2. Passar pra mim o `LICITA_ADMIN_TOKEN` de produção (Railway → Variables), pra eu subir o `leads-202607.csv` de verdade via `/api/admin/campanha/upload-leads` e confirmar com `/rodar-agora` antes das 14h de hoje.
+
+**Só depois disso confirmado funcionando**, desligar as 7 tarefas do Agendador de Tarefas local (`Unregister-ScheduledTask`), pra nunca rodar em duplicidade (2 sistemas mandando pro mesmo lead no mesmo dia).
+
+---
+
 **Fim do handoff.** Boa sorte na próxima sessão.

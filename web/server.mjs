@@ -1581,6 +1581,42 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // Sobe a lista de leads da campanha fria pro volume persistente. Nunca
+    // via git (dado de contato). body: { c: ADMIN, csv: "conteudo do arquivo..." }
+    if (rota === "/api/admin/campanha/upload-leads" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      if (!corpo.csv || typeof corpo.csv !== "string") {
+        return json(res, 400, { erro: "Envie o campo 'csv' com o conteudo do arquivo" });
+      }
+      try {
+        const { DATA_DIR } = await import("../src/caminhos.mjs");
+        const { mkdir, writeFile: writeFileP } = await import("node:fs/promises");
+        await mkdir(DATA_DIR, { recursive: true });
+        const caminho = resolve(DATA_DIR, "leads-campanha.csv");
+        await writeFileP(caminho, corpo.csv, "utf8");
+        const linhas = corpo.csv.split("\n").filter(Boolean).length;
+        return json(res, 200, { ok: true, bytes: corpo.csv.length, linhas: linhas - 1, caminho });
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
+      }
+    }
+
+    // Dispara uma passada da campanha AGORA, sem esperar o horario agendado
+    // (util pra testar apos deploy). body: { c: ADMIN }
+    if (rota === "/api/admin/campanha/rodar-agora" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const { enviarCampanhaDoDia } = await import("../src/campanhaLoop.mjs");
+        const logs = [];
+        const resultado = await enviarCampanhaDoDia({ log: (m) => logs.push(m) });
+        return json(res, 200, { resultado, logs });
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
+      }
+    }
+
     // ===== Painel admin (tudo gated por LICITA_ADMIN_TOKEN) =====
     if (rota === "/api/admin/clientes") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
@@ -3656,6 +3692,22 @@ if (process.env.LICITA_ITENS_INDEX) {
       await colheitaItensLoop();
     });
   }, 90 * 1000);
+}
+
+// Campanha fria de prospeccao (3 e-mails: dia 0, +3, +6). Roda 24h no
+// servidor em vez de depender do PC do Jacques ligado (era Task Scheduler
+// local antes; migrado 20/07/2026). Segunda-quinta 14h, sexta 9h (Brasilia),
+// sem envio no fim de semana — agenda calculada dentro do proprio loop.
+// Le a lista de leads de data/leads-campanha.csv no volume (subida via
+// POST /api/admin/campanha/upload-leads), NUNCA do git (dado de contato).
+// Ative com LICITA_CAMPANHA=1. Inicia 45s apos subir.
+if (process.env.LICITA_CAMPANHA) {
+  setTimeout(() => {
+    supervisionar("campanha", async () => {
+      const { campanhaFriaLoop } = await import("../src/campanhaLoop.mjs");
+      await campanhaFriaLoop();
+    });
+  }, 45 * 1000);
 }
 
 // Limpeza de disco NO BOOT (self-healing): a cada deploy, esvazia a pasta de
