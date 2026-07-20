@@ -107,7 +107,15 @@ export function extrairCategoria(bruto) {
   return categoria;
 }
 
+// UTM por etapa: permite ver no GA4 (Aquisicao > Origem/Midia) quanto trafego
+// e cadastro vieram da campanha fria, e qual dos 3 e-mails converteu mais.
+// utm_source=email, utm_medium=cold-email (nao confundir com o digest de
+// cliente, que nao usa UTM), utm_campaign fixo pra essa leva, utm_content
+// varia por etapa (email1/email2/email3).
 export const CTA_URL = "https://www.contratax.com.br/cadastro";
+export function ctaUrl(etapa) {
+  return `${CTA_URL}?utm_source=email&utm_medium=cold-email&utm_campaign=campanha-fria-jul2026&utm_content=email${etapa}`;
+}
 
 // Nome de quem assina os emails de prospeccao. Troque aqui se quiser usar
 // outro nome (precisa ser alguem que de fato acompanha as respostas em
@@ -163,7 +171,7 @@ A ContrataX organiza tudo isso pra vocês. Em segundos, dá pra pesquisar qualqu
 
 Separei um acesso de 7 dias grátis pra vocês testarem, sem cartão.
 
-Ver quanto meus concorrentes venderam: ${CTA_URL}
+Ver quanto meus concorrentes venderam: ${ctaUrl(1)}
 
 Se não fizer sentido pra vocês agora, é só responder "sair" que eu não escrevo de novo.
 
@@ -187,7 +195,7 @@ Quando um edital chamar atenção, é só abrir no painel: aí a ContrataX.IA l�
 
 Vocês continuam ganhando as mesmas licitações, gastando menos tempo procurando.
 
-Ver os editais do meu ramo: ${CTA_URL}
+Ver os editais do meu ramo: ${ctaUrl(2)}
 
 Um abraço,
 ${NOME_REMETENTE}
@@ -206,7 +214,7 @@ A diferença que quase todo mundo nota: além dos alertas de edital, a gente mos
 
 A partir de R$59 por mês, sem fidelidade. Se no teste não superar o que vocês já têm, é só seguir com a ferramenta atual, sem custo nenhum.
 
-Rodar o teste em paralelo: ${CTA_URL}
+Rodar o teste em paralelo: ${ctaUrl(3)}
 
 Um abraço,
 ${NOME_REMETENTE}

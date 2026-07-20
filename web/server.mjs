@@ -1617,6 +1617,53 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // Cruza quem recebeu e-mail da campanha (data/campanha-envios.json, chave =
+    // email) com quem virou cliente (perfis, campo email) -- match exato de
+    // e-mail, mais preciso que UTM/sessao pra saber quantos leads da campanha
+    // fria converteram de verdade. Nao depende de cookie nem de o lead ter
+    // clicado o link com UTM intacto.
+    if (rota === "/api/admin/campanha/conversoes") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const { DATA_DIR } = await import("../src/caminhos.mjs");
+        const { readFile: readFileP } = await import("node:fs/promises");
+        let estado = {};
+        try { estado = JSON.parse(await readFileP(resolve(DATA_DIR, "campanha-envios.json"), "utf8")); } catch {}
+
+        const perfis = await lerPerfis();
+        const porEmail = new Map();
+        for (const p of perfis) {
+          const e = (p.email || "").trim().toLowerCase();
+          if (e) porEmail.set(e, p);
+        }
+
+        const contactados = Object.keys(estado);
+        const convertidos = [];
+        for (const email of contactados) {
+          const perfil = porEmail.get(email);
+          if (!perfil) continue;
+          const reg = estado[email];
+          convertidos.push({
+            email,
+            ultimaEtapaRecebida: reg.ultimaEtapa ?? null,
+            dataUltimoEnvio: reg.dataUltimoEnvio ?? null,
+            perfilNome: perfil.razaoSocial || perfil.nome || null,
+            perfilCriadoEm: perfil.assinatura?.criadoEm || null,
+            perfilPlano: perfil.assinatura?.nivel || perfil.plano || null,
+          });
+        }
+
+        return json(res, 200, {
+          totalContactados: contactados.length,
+          totalConvertidos: convertidos.length,
+          taxaConversao: contactados.length ? (convertidos.length / contactados.length) : 0,
+          convertidos,
+        });
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
+      }
+    }
+
     // ===== Painel admin (tudo gated por LICITA_ADMIN_TOKEN) =====
     if (rota === "/api/admin/clientes") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
