@@ -648,8 +648,14 @@ export function contratosVencendo({ uf = null, categorias = [], dentroMeses = 12
     cond.push(`categoria_id IN (${categorias.map(() => "?").join(",")})`);
     args.push(...categorias);
   }
+  // LIMIT defensivo (mesmo motivo da linha 635): sem UF cadastrada (cliente
+  // que ainda nao completou o cadastro), essa consulta virava nacional sem
+  // filtro nenhum de estado, varrendo boa parte dos 3M+ contratos da tabela
+  // a cada carregamento do painel/radar. ORDER BY ja e por vigencia_fim ASC,
+  // entao o LIMIT so corta quem vence mais tarde (o radar so mostra os mais
+  // urgentes mesmo, radarRenovacao() ainda filtra e corta pra `limite` no fim).
   return d
-    .prepare(`SELECT * FROM contratos WHERE ${cond.join(" AND ")} ORDER BY vigencia_fim ASC`)
+    .prepare(`SELECT * FROM contratos WHERE ${cond.join(" AND ")} ORDER BY vigencia_fim ASC LIMIT 5000`)
     .all(...args)
     .map(mapearContrato);
 }
