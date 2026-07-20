@@ -7,7 +7,7 @@
     "node": ">=22.5"
   },
   "scripts": {
-    "start": "node web/server.mjs",
+    "start": "node --expose-gc web/server.mjs",
     "backfill": "node scripts/backfill-contratos.mjs --loop",
     "atualizar": "node scripts/atualizar.mjs",
     "ingest": "node scripts/ingest.mjs",
