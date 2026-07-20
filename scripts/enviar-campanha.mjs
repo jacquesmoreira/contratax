@@ -257,13 +257,13 @@ Meu nome é ${NOME_REMETENTE}, trabalho na ContrataX.
 
 ${abertura}
 
-A pergunta que quase ninguém consegue responder é essa: por quanto os concorrentes de vocês venderam nos últimos editais do segmento? E quais órgãos costumam recomprar isso ao longo do ano?
+Sempre que uma empresa vende pro governo, um dado importante fica público: quanto ela vendeu, e pra qual órgão. Quase ninguém chega a olhar isso, porque juntar essa informação manualmente, edital por edital, leva horas.
 
-Aqui na ContrataX a gente cruza mais de 3 milhões de contratos públicos pra responder exatamente isso, do jeito mais simples possível.
+A ContrataX organiza tudo isso pra vocês. Em segundos, dá pra pesquisar qualquer concorrente ou qualquer órgão comprador e ver o histórico completo de contratos.
 
-Separei um acesso de 7 dias grátis pra vocês testarem, sem cartão. Já no primeiro login dá pra ver os dados do próprio segmento.
+Separei um acesso de 7 dias grátis pra vocês testarem, sem cartão.
 
-Ver os dados do meu segmento: ${CTA_URL}
+Ver quanto meus concorrentes venderam: ${CTA_URL}
 
 Se não fizer sentido pra vocês agora, é só responder "sair" que eu não escrevo de novo.
 
@@ -281,11 +281,11 @@ Deixa eu te mostrar a parte que economiza mais tempo.
 
 Todo dia saem centenas de editais novos no PNCP. ${linhaEditais}
 
-A ContrataX.IA faz essa leitura pra vocês. Ela entende o que vocês vendem e separa só os editais que valem a pena, com prazo, valor estimado e link direto pra participar. Chega pronto no seu email.
+A ContrataX.IA faz essa leitura pra vocês: lê o edital inteiro, entende o que vocês vendem e separa só o que vale a pena, com prazo, valor estimado e link direto pra participar. Chega pronto no seu email, sem vocês abrirem um PDF sequer.
 
 Vocês continuam ganhando as mesmas licitações, gastando menos tempo procurando.
 
-Testar 7 dias grátis: ${CTA_URL}
+Ver os editais do meu ramo: ${CTA_URL}
 
 Um abraço,
 ${NOME_REMETENTE}
@@ -296,9 +296,11 @@ ContrataX`;
 
 Se vocês já usam alguma ferramenta de licitação, esse email não é pra pedir pra trocar.
 
+Muita empresa perde dinheiro de dois jeitos: vende barato demais porque não sabe o preço que o mercado está pagando, ou nem participa de uma licitação que poderia ganhar.
+
 Eu só queria pedir uma coisa: testem a nossa por 7 dias, em paralelo, sem tirar a que vocês já usam de lado. No fim, comparem.
 
-A diferença que quase todo mundo nota: além dos alertas de edital, a gente mostra por quanto os concorrentes venderam e o histórico de preços do órgão. É a informação que ajuda a precificar melhor e ganhar mais, e que a maioria das plataformas não entrega.
+A diferença que quase todo mundo nota: além dos alertas de edital, a gente mostra por quanto os concorrentes venderam e o histórico de preços do órgão. É a informação que ajuda a precificar melhor, e que a maioria das plataformas não entrega.
 
 A partir de R$59 por mês, sem fidelidade. Se no teste não superar o que vocês já têm, é só seguir com a ferramenta atual, sem custo nenhum.
 

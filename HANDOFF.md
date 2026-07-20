@@ -1359,4 +1359,21 @@ Testado com fetch mockado (teto baixo artificial pra forçar o cenário): confir
 
 ---
 
+### 2026-07-19 (domingo, continuação) — coleta do fim de semana finalizada + fusão + copy consolidada da campanha
+
+**Coleta:** terminou (rodou na máquina do Jacques, independente do Claude Code). Resultado final: 3.936 CNPJs processados, 3.528 e-mails encontrados (90% de preenchimento, mesma taxa alta do fim de semana todo). No meio da execução, a proteção contra crash (commit `52f20b8`, mais cedo neste mesmo dia) foi validada AO VIVO: um 500 do PNCP interrompeu a fase 1, o script logou e seguiu pra fase 2 com o que já tinha coletado, sem derrubar o processo.
+
+**Fusão em `leads-202607.csv`:** script one-off (não versionado, rodado direto) deduplicou por CNPJ **e por e-mail** (achado do dia: 35 e-mails da coleta nova já batiam com a base atual sob CNPJ diferente, mais 53 duplicados dentro da própria coleta nova, provavelmente contadores/despachantes que atendem várias empresas com o mesmo e-mail). Na verificação pós-fusão, achado bônus: **9 e-mails já vinham duplicados na base original** (antes até desta sessão) — limpos também (11 linhas removidas, mantida a 1ª ocorrência de cada). Backups em `leads-202607.bak2.csv` (antes da fusão) e `leads-202607.bak3-prededup.csv` (antes da limpeza de duplicata pré-existente), nenhum versionado (`.gitignore`).
+
+**Resultado: 1.109 → 5.018 leads únicos**, zero duplicata de e-mail, zero linha malformada.
+
+**Copy da campanha consolidada** (pedido do Jacques, que trouxe 8 variações de outra IA pra revisão): reescrevi os 3 e-mails misturando os melhores ganchos, com duas correções importantes que a outra IA não pegou:
+- **Removida uma promessa falsa** que apareceria na Versão A dela ("quantas empresas participaram e quanto cada uma ofertou") — conferi em `src/preco.mjs` e o produto só tem o VENCEDOR e o preço vencedor de cada contrato, não a lista de todos os concorrentes/ofertas. Nunca prometer isso.
+- **Recusada a sugestão de "Leonardo — Fundador da ContrataX"** como remetente alternativo — contraria direto a regra de nunca expor fundador solo (ver [[contratax-marca-empresa-nao-pessoa]]). Também recusada a ideia de trocar remetente e-mail a e-mail pra o mesmo lead (Marina → Rafael → Juliana na mesma sequência) por ficar artificial; se algum dia quiser variar remetente, o certo é 1 persona fixa por lead, variando entre leads diferentes, não dentro da mesma conversa.
+- Adotado: CTAs específicos ("Ver quanto meus concorrentes venderam" em vez de "Testar grátis"), gancho de "dado público" no e-mail 1, framing de perda financeira no e-mail 3. Mantida a assinatura única da Marina.
+
+Testado renderizando os 3 e-mails com lead real antes de commitar.
+
+---
+
 **Fim do handoff.** Boa sorte na próxima sessão.
