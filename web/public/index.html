@@ -1403,9 +1403,19 @@ async function abrirDrawer(id) {
   // etc. sao contratacao direta/proposta unica — chamar de "disputa" prometeria
   // algo que a modalidade nao tem. O texto se adapta pra nao mentir.
   const temLances = /preg[aã]o/i.test(ed.modalidade || "");
-  const portalLabel = linkDireto
-    ? (temLances ? "Ir para o portal de lances onde acontece a disputa →" : "Ir para o portal oficial e acompanhar esta contratação →")
-    : (temLances ? "Abrir no PNCP, de lá você acessa o sistema oficial da disputa →" : "Abrir no PNCP, de lá você acompanha esta contratação →");
+  // O link que o PNCP entrega pro Comprasnet aponta pra pagina PUBLICA de
+  // acompanhamento (".../public/landing?destino=acompanhamento-compra"), que e
+  // tela de CONSULTA: nao pede login e nao envia proposta. Prometer "portal de
+  // lances" ali era promessa quebrada — cliente pagante abriu chamado em
+  // 20/07/2026 dizendo que "nao conseguia logar" justamente por isso. Quando
+  // reconhecemos o portal como Compras.gov.br, o texto passa a dizer o que a
+  // pagina e de verdade, e um segundo link leva pra area de login (abaixo).
+  const ehComprasGov = ed.portal === "comprasgov" || /cnetmobile|comprasnet|compras\.gov\.br/i.test(linkDireto);
+  const portalLabel = !linkDireto
+    ? (temLances ? "Abrir no PNCP, de lá você acessa o sistema oficial da disputa →" : "Abrir no PNCP, de lá você acompanha esta contratação →")
+    : ehComprasGov
+      ? "Ver esta compra no Compras.gov.br (página de acompanhamento) →"
+      : (temLances ? "Ir para o portal de lances onde acontece a disputa →" : "Ir para o portal oficial e acompanhar esta contratação →");
 
   let html = "";
   // TL;DR no topo (gancho rapido): se ja tem cache, renderiza; senao mostra
@@ -1463,13 +1473,25 @@ async function abrirDrawer(id) {
     html += `<a href="/api/calendario?id=${encodeURIComponent(ed.id)}" download style="display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;border:1.5px solid var(--indigo);color:var(--indigo);font-weight:700;padding:11px 14px;border-radius:11px;text-decoration:none;margin-bottom:10px;font-size:14px" title="Baixa um arquivo .ics que abre no Google Calendar, Outlook ou Apple Calendar com lembretes 3 dias antes e 1 hora antes">📅 Adicionar ao meu calendário</a>`;
   }
   html += `<div class="bloco" id="docs-bloco"><h3>📄 Documentos do edital</h3><div class="carregando" style="padding:10px"><span class="spinner"></span>Carregando documentos...</div></div>`;
-  if (portalUrl) html += `<a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--verde);color:#fff;font-weight:700;padding:14px;border-radius:11px;text-decoration:none;margin-bottom:${temLances ? "8px" : "14px"}">${portalLabel}</a>`;
+  if (portalUrl) html += `<a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--verde);color:#fff;font-weight:700;padding:14px;border-radius:11px;text-decoration:none;margin-bottom:${(temLances || ehComprasGov) ? "8px" : "14px"}">${portalLabel}</a>`;
+  // Compras.gov.br: o link acima e so consulta publica. Quem ja e credenciado
+  // precisa da AREA LOGADA pra enviar proposta e entrar na disputa, que fica em
+  // outro endereco. Segundo botao leva direto pra la, junto do aviso de que a
+  // pagina publica do governo costuma travar em "Aguarde..." (verificado em
+  // 20/07/2026 em dois editais, um encerrado e um aberto: a tela fica carregando
+  // e ainda descarta os parametros da URL). Sem isso, o cliente conclui que o
+  // problema e a conta dele.
+  if (portalUrl && ehComprasGov) html += `
+    <a href="https://www.gov.br/compras/pt-br" target="_blank" rel="noopener" style="display:block;text-align:center;background:#fff;border:1.5px solid var(--indigo);color:var(--indigo);font-weight:700;padding:12px 14px;border-radius:11px;text-decoration:none;margin-bottom:10px;font-size:14px">🔑 Entrar no Compras.gov.br para enviar proposta →</a>
+    <div style="background:#FFFBEB;border:1px solid #fde68a;border-radius:11px;padding:11px 13px;margin-bottom:14px;font-size:12.5px;color:#92400e;line-height:1.55">
+      <b>Se a página do governo ficar em "Aguarde...":</b> não é a sua conta nem o seu acesso. Essa tela do Compras.gov.br costuma travar. Nesse caso, entre pelo botão acima e busque a compra pelo número dentro do portal.
+    </div>`;
   // Nota so pra PREGAO: explica onde o lance acontece de verdade. O PNCP e so a
   // publicidade oficial, nao a sala de disputa. O lance se da na PLATAFORMA que
   // opera o pregao (Compras.gov.br/Comprasnet, Portal de Compras Publicas, BLL,
   // Licitanet, BNC etc.), e a empresa precisa estar credenciada e logada la.
   if (portalUrl && temLances) html += `<div style="background:#EFF6FF;border:1px solid #bfdbfe;border-radius:11px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;color:#1e40af;line-height:1.55">
-    <b>Onde dar o lance:</b> o lance não acontece no PNCP (ele é só a publicação oficial). Você dá o lance na <b>plataforma que opera o pregão</b> ${linkDireto ? "(é pra onde o botão acima te leva)" : "(o PNCP mostra qual é, no campo do sistema de origem)"}, tipo Compras.gov.br, Portal de Compras Públicas, BLL, Licitanet ou BNC. Pra participar, sua empresa precisa estar <b>credenciada e logada nessa plataforma</b>, e enviar a proposta antes do prazo. No horário marcado, você entra na <b>sessão de disputa</b> e dá seus lances ao vivo.
+    <b>Onde dar o lance:</b> o lance não acontece no PNCP (ele é só a publicação oficial). Você dá o lance na <b>plataforma que opera o pregão</b> ${ehComprasGov ? "(o Compras.gov.br, no botão de entrar acima; o primeiro botão é só a consulta pública da compra)" : linkDireto ? "(é pra onde o botão acima te leva)" : "(o PNCP mostra qual é, no campo do sistema de origem)"}, tipo Compras.gov.br, Portal de Compras Públicas, BLL, Licitanet ou BNC. Pra participar, sua empresa precisa estar <b>credenciada e logada nessa plataforma</b>, e enviar a proposta antes do prazo. No horário marcado, você entra na <b>sessão de disputa</b> e dá seus lances ao vivo.
   </div>`;
   // [removido] Bloco "Precos praticados em contratos similares", saiu porque o
   // PNCP mistura preco unitario com contrato inteiro, deixando a faixa enganosa.
