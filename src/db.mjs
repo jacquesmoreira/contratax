@@ -506,6 +506,11 @@ export function buscarPorId(id) {
     encerramento: l.encerramento, situacao: l.situacao, publicacao: l.publicacao,
     link: l.link, srp: Boolean(l.srp), ano: l.ano, sequencial: l.sequencial,
     numeroCompra: l.numero_compra,
+    // Portal de origem tambem no DETALHE (a listagem ja devolvia, ver ~linha
+    // 1006). O drawer usa pra NOMEAR o portal em vez de repetir um link "abrir"
+    // generico que apontava pra mesma URL do botao principal.
+    portal: portalDeLink(l.link).chave,
+    portalNome: portalDeLink(l.link).nome,
   };
 }
 
