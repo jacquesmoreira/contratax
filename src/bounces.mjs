@@ -63,9 +63,49 @@ function htmlAviso({ email, tipo, subtipo, perfil, pagante, assunto }) {
   </div>`;
 }
 
+// Evento email.delivered: se o e-mail do cliente VOLTOU a ser entregue, o aviso
+// no painel dele nao faz mais sentido e some sozinho.
+//
+// CUIDADO COM A ORDEM: o bounce real observado em 20/07/2026 foi
+// "Sent -> Delivered -> Bounced" (o Gmail aceitou e devolveu depois). Ou seja,
+// UM EVENTO DE ENTREGA PODE SER MAIS VELHO QUE O BOUNCE. Se limpassemos em
+// qualquer entrega, esse delivered (ou um evento reentregue fora de ordem pelo
+// Resend) apagaria um aviso que ainda vale. Por isso so limpa quando a entrega
+// e comprovadamente MAIS NOVA que o bounce registrado.
+export async function registrarEntrega({ email, em, log = console.log } = {}) {
+  const alvo = (email || "").trim().toLowerCase();
+  if (!alvo) return { ok: false, motivo: "sem-email" };
+
+  let perfil = null;
+  try {
+    const perfis = await lerPerfis();
+    perfil = perfis.find((p) => (p.email || "").trim().toLowerCase() === alvo) || null;
+  } catch (e) {
+    log(`[bounce] entrega: falha ao ler perfis: ${e.message}`);
+    return { ok: false };
+  }
+  if (!perfil?._emailBounce) return { ok: true, semAviso: true };
+
+  const entregueEm = em ? new Date(em).getTime() : Date.now();
+  const bounceEm = new Date(perfil._emailBounce.em).getTime();
+  if (!(entregueEm > bounceEm)) {
+    log(`[bounce] entrega de ${alvo} e anterior ao bounce; mantendo o aviso.`);
+    return { ok: true, ignorado: true };
+  }
+
+  try {
+    await atualizarPerfil(perfil.token, (p) => { delete p._emailBounce; });
+    _ultimoAviso.delete(alvo); // libera o throttle: se voltar a falhar, avisa de novo
+    log(`[bounce] ${alvo} voltou a receber; aviso do painel removido.`);
+  } catch (e) {
+    log(`[bounce] falha ao limpar aviso: ${e.message}`);
+  }
+  return { ok: true, limpo: true };
+}
+
 // Processa UM evento de bounce. Best-effort: nunca lanca (quem chama e um
 // webhook; falhar ali so faria o Resend reenviar o evento sem necessidade).
-export async function registrarBounce({ email, tipo, subtipo, assunto, log = console.log } = {}) {
+export async function registrarBounce({ email, tipo, subtipo, assunto, em, log = console.log } = {}) {
   const alvo = (email || "").trim().toLowerCase();
   if (!alvo) return { ok: false, motivo: "sem-email" };
 
@@ -84,7 +124,9 @@ export async function registrarBounce({ email, tipo, subtipo, assunto, log = con
     try {
       await atualizarPerfil(perfil.token, (p) => {
         p._emailBounce = {
-          em: new Date().toISOString(),
+          // Data do EVENTO (nao do processamento): e o que a comparacao em
+          // registrarEntrega usa pra decidir se a entrega e mais nova.
+          em: em ? new Date(em).toISOString() : new Date().toISOString(),
           tipo: tipo || null,
           subtipo: subtipo || null,
           total: ((p._emailBounce?.total) || 0) + 1,

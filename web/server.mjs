@@ -1978,17 +1978,26 @@ const servidor = createServer(async (req, res) => {
       // Responde 200 ANTES de processar: o Resend so precisa saber que
       // recebemos, e processar em linha atrasaria a resposta (ele reenviaria).
       json(res, 200, { ok: true });
+      const d = evento.data || {};
+      const para = Array.isArray(d.to) ? d.to[0] : d.to;
+      // created_at do evento: usado pra ordenar bounce x entrega (ver comentario
+      // em src/bounces.mjs sobre o caso "Delivered -> Bounced").
+      const quando = d.created_at || evento.created_at || null;
       if (evento.type === "email.bounced") {
-        const d = evento.data || {};
-        const para = Array.isArray(d.to) ? d.to[0] : d.to;
         import("../src/bounces.mjs")
           .then(({ registrarBounce }) => registrarBounce({
             email: para,
             tipo: d.bounce?.type || null,
             subtipo: d.bounce?.subType || d.bounce?.subtype || null,
             assunto: d.subject || null,
+            em: quando,
           }))
           .catch((e) => console.error("[webhook resend] registrarBounce:", e.message));
+      } else if (evento.type === "email.delivered") {
+        // Voltou a entregar: some com o aviso do painel do cliente.
+        import("../src/bounces.mjs")
+          .then(({ registrarEntrega }) => registrarEntrega({ email: para, em: quando }))
+          .catch((e) => console.error("[webhook resend] registrarEntrega:", e.message));
       }
       return;
     }
