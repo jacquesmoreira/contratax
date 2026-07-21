@@ -1466,7 +1466,11 @@ O mesmo erro também aparecia no `[atualizar]`, perfil por perfil. **Zero alerta
 
 **Nota:** o painel dele "alarga" pro Brasil todo (só 27 editais em SC contra 472 nacional), comportamento esperado do `LIMIAR_ALARGAR` em `monitor.mjs`.
 
-**Segunda questão do mesmo chamado (não é bug nosso):** ele não consegue logar no Comprasnet pra cadastrar proposta. O Comprasnet é portal do governo, com credencial própria (gov.br + certificado digital), fora do ContrataX. O sistema já explica isso no painel (bloco "Onde dar o lance"), mas vale reforçar na resposta.
+**Segunda questão do mesmo chamado (era PARCIALMENTE nosso, corrigido no commit `8fcee1c`):** ele não conseguia logar no Comprasnet pra cadastrar proposta. Investigando o link que a gente entrega, achei uma promessa quebrada nossa: o `linkSistemaOrigem` que o PNCP fornece pro Comprasnet (**8.309 editais, o maior grupo do acervo**) aponta pra `.../comprasnet-web/public/landing?destino=acompanhamento-compra`, que é a página **pública de acompanhamento**. Ela não pede login e não envia proposta, mas o nosso botão prometia "Ir para o portal de lances onde acontece a disputa". Pior: abrindo os dois links de teste no navegador (um encerrado e um aberto no dia), a página do governo fica presa em "Aguarde... Estamos processando a sua solicitação" e ainda descarta os parâmetros da URL. O cliente conclui que o problema é a conta dele.
+
+Corrigido, só quando o portal é Compras.gov.br: (1) rótulo honesto ("Ver esta compra no Compras.gov.br, página de acompanhamento"), (2) segundo botão levando pra área de login em gov.br/compras, que é onde o credenciado de fato envia proposta, (3) aviso de que a tela pública do governo costuma travar, deixando claro que não é a conta dele. A nota de "onde dar o lance" também parou de dizer que o primeiro botão leva pra disputa nesse caso. Testado nos 6 cenários (Comprasnet pregão/dispensa, BLL, Portal de Compras Públicas, sem link com e sem pregão): os outros portais mantêm o texto antigo e não ganham o botão do Compras.gov.
+
+**Dado útil pro futuro:** 27,9% dos editais não têm link de origem nenhum e caem no fallback da página do PNCP.
 
 **Pendente de revisão futura:** outros pontos com `writeFile` não-atômico e mesmo risco, de impacto menor: `backfillContratos.mjs` (progresso), `ingestPca.mjs` (cursor), `recado.mjs`, e `campanhaLoop.mjs` (usa `writeFileSync` pro estado da campanha). Nenhum derruba cliente, mas vale padronizar.
 
