@@ -1485,15 +1485,23 @@ async function abrirDrawer(id) {
   if (portalUrl) html += `<a href="${esc(portalUrl)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--verde);color:#fff;font-weight:700;padding:14px;border-radius:11px;text-decoration:none;margin-bottom:${(temLances || ehComprasGov) ? "8px" : "14px"}">${portalLabel}</a>`;
   // Compras.gov.br: o link acima e so consulta publica. Quem ja e credenciado
   // precisa da AREA LOGADA pra enviar proposta e entrar na disputa, que fica em
-  // outro endereco. Segundo botao leva direto pra la, junto do aviso de que a
-  // pagina publica do governo costuma travar em "Aguarde..." (verificado em
-  // 20/07/2026 em dois editais, um encerrado e um aberto: a tela fica carregando
-  // e ainda descarta os parametros da URL). Sem isso, o cliente conclui que o
-  // problema e a conta dele.
+  // outro endereco. O portal NAO expoe link direto pra uma compra especifica
+  // dentro da area logada, entao o botao leva pra entrada e o numero da compra
+  // fica visivel aqui pra ele buscar la dentro.
+  //
+  // CORRECAO 21/07/2026: a versao anterior avisava que "essa tela costuma
+  // travar". ERRADO, e o engano foi meu: no teste automatizado a pagina ficava
+  // em "Aguarde..." porque e protegida por hCAPTCHA (confirmado: iframe
+  // newassets.hcaptcha.com no DOM, chamada a
+  // /comprasnet-fase-externa/v1/captcha/configuracao, e as 14 requisicoes da
+  // pagina TODAS com status 200, nenhuma falha). Navegador automatizado nao
+  // passa no captcha; pessoa real ve o desafio e resolve. Nao da pra afirmar
+  // instabilidade do portal a partir disso. O aviso agora explica o captcha,
+  // que e o que o cliente de fato encontra.
   if (portalUrl && ehComprasGov) html += `
     <a href="https://www.gov.br/compras/pt-br" target="_blank" rel="noopener" style="display:block;text-align:center;background:#fff;border:1.5px solid var(--indigo);color:var(--indigo);font-weight:700;padding:12px 14px;border-radius:11px;text-decoration:none;margin-bottom:10px;font-size:14px">🔑 Entrar no Compras.gov.br para enviar proposta →</a>
-    <div style="background:#FFFBEB;border:1px solid #fde68a;border-radius:11px;padding:11px 13px;margin-bottom:14px;font-size:12.5px;color:#92400e;line-height:1.55">
-      <b>Se a página do governo ficar em "Aguarde...":</b> não é a sua conta nem o seu acesso. Essa tela do Compras.gov.br costuma travar. Nesse caso, entre pelo botão acima e busque a compra pelo número dentro do portal.
+    <div style="background:#EFF6FF;border:1px solid #bfdbfe;border-radius:11px;padding:11px 13px;margin-bottom:14px;font-size:12.5px;color:#1e40af;line-height:1.55">
+      A consulta pública do Compras.gov.br pede uma <b>verificação de segurança (captcha)</b> antes de abrir a compra, então pode levar alguns segundos.${ed.numeroCompra ? ` Para buscar a compra já logado no portal, o número dela é <b>${esc(ed.numeroCompra)}</b>.` : ""}
     </div>`;
   // Nota so pra PREGAO: explica onde o lance acontece de verdade. O PNCP e so a
   // publicidade oficial, nao a sala de disputa. O lance se da na PLATAFORMA que
