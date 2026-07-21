@@ -1444,4 +1444,32 @@ Busquei também evidência direta de crash/OOM nos logs (`railway logs --filter 
 
 ---
 
+### 2026-07-20 (segunda, tarde) — INCIDENTE: alertas parados pra TODOS os clientes
+
+**Como apareceu:** chamado de suporte do Marcelo (fsemporiosc@gmail.com, **cliente pagante ativo**, Starter/PIX, cadastrado 16/07): "não estou recebendo os alertas por e-mail". Parecia caso isolado, era falha geral.
+
+**Diagnóstico:** os logs do Railway mostravam o mesmo erro pra CADA cliente, em todo ciclo:
+```
+[digest] Marcelo  Sebastião Alves: ERRO Unterminated string in JSON at position 8836532
+[digest] concluido: 0 e-mail(s) enviado(s).
+```
+O mesmo erro também aparecia no `[atualizar]`, perfil por perfil. **Zero alertas saíam, pra ninguém.**
+
+**Causa raiz:** `resultados.json` (8,5 MB no volume) estava TRUNCADO. `gravarJSON` em `src/store.mjs` fazia `writeFile` direto, sem atomicidade: se o processo morre no meio da escrita (restart de deploy, OOM kill do Railway, e o dia teve vários dos dois), o arquivo fica pela metade. **Agravante:** `lerJSON` deixava o erro subir, e como esses arquivos são lidos no laço que percorre TODOS os clientes, um único arquivo ruim derrubava o serviço inteiro pra todo mundo, não só pra quem tinha o dado corrompido.
+
+**Correção (commit `c221732`):**
+- `gravarJSON` virou ATÔMICO: escreve em `.tmp` e renomeia por cima. `rename` é atômico, então o leitor sempre vê o arquivo antigo completo ou o novo completo, nunca truncado.
+- `lerJSON` virou TOLERANTE: JSON inválido é isolado como `.corrompido` (preservado pra diagnóstico) e segue com o padrão. Esses dados são cache regenerável, então perder um ciclo é infinitamente melhor que travar todos os clientes.
+- Testado em `DATA_DIR` temporário com 5 casos, incluindo reprodução do erro exato e verificação de auto-recuperação.
+
+**Verificado em produção depois do deploy:** o código novo detectou e isolou o arquivo (`[store] resultados.json corrompido ... Isolando`), o volume passou a mostrar `resultados.json.corrompido`, e o arquivo se **regenerou sozinho** no ciclo seguinte. Confirmado pro cliente que reclamou: **472 editais** casando com o ramo dele, **15 publicados nas últimas 36h**, ou seja, ele recebe alerta no próximo disparo (8h BR).
+
+**Nota:** o painel dele "alarga" pro Brasil todo (só 27 editais em SC contra 472 nacional), comportamento esperado do `LIMIAR_ALARGAR` em `monitor.mjs`.
+
+**Segunda questão do mesmo chamado (não é bug nosso):** ele não consegue logar no Comprasnet pra cadastrar proposta. O Comprasnet é portal do governo, com credencial própria (gov.br + certificado digital), fora do ContrataX. O sistema já explica isso no painel (bloco "Onde dar o lance"), mas vale reforçar na resposta.
+
+**Pendente de revisão futura:** outros pontos com `writeFile` não-atômico e mesmo risco, de impacto menor: `backfillContratos.mjs` (progresso), `ingestPca.mjs` (cursor), `recado.mjs`, e `campanhaLoop.mjs` (usa `writeFileSync` pro estado da campanha). Nenhum derruba cliente, mas vale padronizar.
+
+---
+
 **Fim do handoff.** Boa sorte na próxima sessão.
