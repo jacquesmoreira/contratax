@@ -108,11 +108,16 @@ async function fbLido(id, btn) {
   if (r.ok) carregar(); else btn.disabled = false;
 }
 
+// Rascunho do recado, preservado entre re-renders do painel (ver comentario no
+// fim de carregar()). Zerado so quando o recado e publicado de verdade.
+let rascunhoRecado = "";
 // Contador do recado: confirma na tela que o texto inteiro entrou (o campo
 // aceita 2000; a duvida de 21/07/2026 era so o texto rolado, nao cortado).
 function contarRecado() {
   const el = $("recado-texto"), c = $("recado-contador");
-  if (!el || !c) return;
+  if (!el) return;
+  rascunhoRecado = el.value;
+  if (!c) return;
   const n = el.value.length;
   c.textContent = `${n} / 2000 caracteres`;
   c.style.color = n > 1900 ? "#b45309" : "var(--cinza)";
@@ -125,7 +130,7 @@ async function publicarRecado(btn) {
   if (!texto) { $("recado-status").textContent = "Escreva o texto do recado primeiro."; return; }
   btn.disabled = true;
   const r = await post("/api/admin/recado", { acao: "salvar", titulo, texto, destino });
-  if (r.ok) { $("recado-status").textContent = "Recado publicado ✅"; setTimeout(carregar, 700); }
+  if (r.ok) { rascunhoRecado = ""; $("recado-status").textContent = "Recado publicado ✅"; setTimeout(carregar, 700); }
   else { btn.disabled = false; $("recado-status").textContent = "Erro: " + (r.d.erro || "tente de novo"); }
 }
 // Tira um recado do ar (destino = "todos" ou o token do cliente).
@@ -308,6 +313,15 @@ async function carregar() {
   }</div>`;
 
   $("conteudo").innerHTML = html;
+  // O painel inteiro (inclusive o campo de recado) e reconstruido por innerHTML
+  // a cada carregar(). Sem isso, um recado meio digitado SUMIA quando qualquer
+  // outra acao da tela recarregava os dados (ativar plano, filtrar, etc). Como
+  // recado costuma ser texto longo, perder no meio e irritante. Restaura o
+  // rascunho e o contador logo apos o render.
+  if (rascunhoRecado) {
+    const el = $("recado-texto");
+    if (el) { el.value = rascunhoRecado; contarRecado(); }
+  }
   $("cab-resumo").textContent = `${r.total} clientes · ${r.ativos} pagantes${filtroStatus !== "todos" ? ` · mostrando ${clientesView.length}` : ""}`;
   ligarAcoes();
 }
