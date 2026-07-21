@@ -111,16 +111,17 @@ async function fbLido(id, btn) {
 // Rascunho do recado, preservado entre re-renders do painel (ver comentario no
 // fim de carregar()). Zerado so quando o recado e publicado de verdade.
 let rascunhoRecado = "";
-// Contador do recado: confirma na tela que o texto inteiro entrou (o campo
-// aceita 2000; a duvida de 21/07/2026 era so o texto rolado, nao cortado).
+// Contador do recado: mostra na tela quanto do limite ja foi usado. Foi ele que
+// revelou o corte REAL de 21/07/2026 (um recado de 2.535 caracteres batendo no
+// teto de 2000, que por isso subiu pra 6000).
 function contarRecado() {
   const el = $("recado-texto"), c = $("recado-contador");
   if (!el) return;
   rascunhoRecado = el.value;
   if (!c) return;
   const n = el.value.length;
-  c.textContent = `${n} / 2000 caracteres`;
-  c.style.color = n > 1900 ? "#b45309" : "var(--cinza)";
+  c.textContent = `${n} / 6000 caracteres`;
+  c.style.color = n > 5700 ? "#b45309" : "var(--cinza)";
 }
 // Publica o recado (pra todos ou pra um cliente especifico, conforme o destino).
 async function publicarRecado(btn) {
@@ -180,12 +181,13 @@ async function carregar() {
       ${opcoesClientes}
     </select>
     <input id="recado-titulo" type="text" maxlength="120" placeholder="Título (opcional), ex: Manutenção programada" style="width:100%;padding:9px 11px;border:1px solid var(--linha);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:8px" />
-    <!-- rows=12: com 4 linhas, um recado de poucos paragrafos ficava rolado e
-         parecia CORTADO (aconteceu de verdade em 21/07/2026, com um texto de
-         626 caracteres num campo que aceita 2000). O contador abaixo mostra
-         quanto ainda cabe, pra nunca mais restar duvida. -->
-    <textarea id="recado-texto" maxlength="2000" rows="12" oninput="contarRecado()" placeholder="Escreva o recado que o cliente vai ler..." style="width:100%;padding:9px 11px;border:1px solid var(--linha);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.5"></textarea>
-    <div id="recado-contador" style="font-size:12px;color:var(--cinza);margin-top:4px">0 / 2000 caracteres</div>
+    <!-- rows=12 + contador (21/07/2026). Com 4 linhas e sem contador, um recado
+         longo ficava rolado e parecia cortado quando nao estava, e quando
+         passou a cortar de verdade (2.535 caracteres num teto de 2000) nao
+         havia como perceber. O contador resolve os dois casos: mostra sempre
+         quanto entrou de quanto cabe. -->
+    <textarea id="recado-texto" maxlength="6000" rows="12" oninput="contarRecado()" placeholder="Escreva o recado que o cliente vai ler..." style="width:100%;padding:9px 11px;border:1px solid var(--linha);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.5"></textarea>
+    <div id="recado-contador" style="font-size:12px;color:var(--cinza);margin-top:4px">0 / 6000 caracteres</div>
     <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center">
       <button onclick="publicarRecado(this)" style="background:var(--indigo);color:#fff;border:none;padding:9px 16px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit">Publicar recado</button>
       <span id="recado-status" style="font-size:13px;color:var(--cinza)"></span>

@@ -64,7 +64,11 @@ export async function salvarRecado({ titulo = "", texto = "", destino = "todos" 
   const recado = {
     id: Date.now(),
     titulo: String(titulo || "").trim().slice(0, 120),
-    texto: t.slice(0, 2000),
+    // 6000: o teto anterior (2000) cortou de verdade um recado de 2.535
+    // caracteres em 21/07/2026. Recado de suporte, explicando um problema com
+    // passo a passo, passa dos 2000 com facilidade. O limite existe so pra
+    // evitar abuso/arquivo gigante, entao pode ser folgado.
+    texto: t.slice(0, 6000),
     criadoEm: new Date().toISOString(),
     ativo: true,
   };
