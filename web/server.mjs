@@ -1034,6 +1034,10 @@ const servidor = createServer(async (req, res) => {
           // Estados do cliente: o painel prefere editais destes UFs nos cards de
           // aha/melhor oportunidade (so cai no nacional se nao houver no estado).
           ufs: perfil.ufs ?? (perfil.uf ? [perfil.uf] : []),
+          // E-mail voltando: o painel avisa DENTRO do produto, unico canal que
+          // ainda chega nesse cliente (o e-mail, por definicao, nao chega).
+          // Preenchido pelo webhook do Resend (ver src/bounces.mjs).
+          emailBounce: perfil._emailBounce || null,
         },
       });
     }
@@ -1926,6 +1930,67 @@ const servidor = createServer(async (req, res) => {
       } catch (e) {
         return json(res, 502, { erro: mensagemPagamento(e) });
       }
+    }
+
+    // Webhook do Resend: avisa quando um e-mail VOLTA (bounce). Isso nao da pra
+    // saber na hora do envio (a API responde 200 e o provedor de destino devolve
+    // depois), entao o webhook e o unico caminho. Configure em Resend > Webhooks
+    // apontando pra https://www.contratax.com.br/api/webhook/resend, evento
+    // email.bounced, e guarde o "Signing Secret" em RESEND_WEBHOOK_SECRET.
+    if (rota === "/api/webhook/resend" && req.method === "POST") {
+      const segredo = process.env.RESEND_WEBHOOK_SECRET;
+      // FALHA FECHADA, mesmo criterio do webhook do Asaas: sem segredo, rejeita.
+      if (!segredo) {
+        console.error("[webhook resend] RESEND_WEBHOOK_SECRET nao configurado: rejeitando por seguranca. Pegue o Signing Secret em Resend > Webhooks e defina no Railway.");
+        return json(res, 503, { erro: "webhook nao configurado" });
+      }
+      // Precisa do corpo CRU (a assinatura e calculada sobre os bytes exatos,
+      // entao nao da pra usar lerCorpo, que ja faz JSON.parse).
+      const bruto = await new Promise((resolve) => {
+        let d = ""; req.on("data", (c) => (d += c)); req.on("end", () => resolve(d));
+      });
+      // Assinatura Svix (padrao que o Resend usa): HMAC-SHA256 de
+      // "<id>.<timestamp>.<corpo>" com o segredo (base64 apos o prefixo whsec_).
+      try {
+        const svixId = req.headers["svix-id"];
+        const svixTs = req.headers["svix-timestamp"];
+        const svixSig = String(req.headers["svix-signature"] || "");
+        if (!svixId || !svixTs || !svixSig) return json(res, 401, { erro: "sem assinatura" });
+        // Rejeita evento velho (proteje contra replay).
+        if (Math.abs(Date.now() / 1000 - Number(svixTs)) > 300) return json(res, 401, { erro: "timestamp fora da janela" });
+        const { createHmac, timingSafeEqual } = await import("node:crypto");
+        const chave = Buffer.from(segredo.replace(/^whsec_/, ""), "base64");
+        const esperado = createHmac("sha256", chave).update(`${svixId}.${svixTs}.${bruto}`).digest("base64");
+        // O header traz uma ou mais assinaturas no formato "v1,<base64> v1,<base64>".
+        const confere = svixSig.split(" ").some((parte) => {
+          const val = parte.split(",")[1] || "";
+          const a = Buffer.from(val); const b = Buffer.from(esperado);
+          return a.length === b.length && timingSafeEqual(a, b);
+        });
+        if (!confere) return json(res, 401, { erro: "assinatura invalida" });
+      } catch (e) {
+        console.error("[webhook resend] falha na verificacao:", e.message);
+        return json(res, 401, { erro: "assinatura invalida" });
+      }
+
+      let evento = {};
+      try { evento = JSON.parse(bruto || "{}"); } catch {}
+      // Responde 200 ANTES de processar: o Resend so precisa saber que
+      // recebemos, e processar em linha atrasaria a resposta (ele reenviaria).
+      json(res, 200, { ok: true });
+      if (evento.type === "email.bounced") {
+        const d = evento.data || {};
+        const para = Array.isArray(d.to) ? d.to[0] : d.to;
+        import("../src/bounces.mjs")
+          .then(({ registrarBounce }) => registrarBounce({
+            email: para,
+            tipo: d.bounce?.type || null,
+            subtipo: d.bounce?.subType || d.bounce?.subtype || null,
+            assunto: d.subject || null,
+          }))
+          .catch((e) => console.error("[webhook resend] registrarBounce:", e.message));
+      }
+      return;
     }
 
     // Webhook do Asaas: ativa a conta automaticamente quando o pagamento confirma.

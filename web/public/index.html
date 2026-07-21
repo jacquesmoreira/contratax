@@ -487,6 +487,15 @@ function perfilHTML(p) {
     </div>`;
   // Aviso de painel alargado: o estado do cliente tinha poucos editais do ramo,
   // entao o backend caiu no fallback nacional. Sinaliza pra nao confundir.
+  // E-mail do cliente esta VOLTANDO: avisa aqui dentro, porque o e-mail (o canal
+  // normal de aviso) por definicao nao chega nele. Sem isso o cliente conclui que
+  // o produto parou de funcionar, que foi o chamado aberto em 20/07/2026.
+  const bounce = p.emailBounce
+    ? `<div style="background:#FEF2F2;border:1px solid #fecaca;border-radius:12px;padding:13px 16px;margin-bottom:14px;font-size:13.5px;color:#991b1b;line-height:1.55">
+        <b>⚠ Não conseguimos entregar e-mails para você.</b> Nossos alertas estão voltando desde ${new Date(p.emailBounce.em).toLocaleDateString("pt-BR")}${p.emailBounce.total > 1 ? ` (${p.emailBounce.total} tentativas)` : ""}. As licitações abaixo continuam atualizadas normalmente, o que falha é só o envio.
+        <div style="margin-top:7px">A causa mais comum é a caixa de entrada sem espaço. Libere espaço ou <a href="/conta?c=${encodeURIComponent(token)}" style="color:#b91c1c;font-weight:800">cadastre outro e-mail</a> para voltar a receber.</div>
+      </div>`
+    : "";
   const banner = p.alargado
     ? `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:11px 16px;margin-bottom:14px;font-size:13.5px;color:#1e40af;line-height:1.5">📍 Poucos editais do seu ramo abertos ${p.uf ? `em <b>${esc(p.uf)}</b>` : "no seu estado"} agora, então ampliamos para o <b>Brasil todo</b>. Você ajusta os estados nas configurações do seu ramo.</div>`
     : "";
@@ -551,7 +560,7 @@ function perfilHTML(p) {
   const corpo = editais.length
     ? `<div class="cards-grid">${editais.map(cardHTML).join("")}</div>`
     : `<div class="vazio"><span class="emoji">🔭</span>Nenhum edital do seu ramo está aberto agora.<br>Assim que surgir, aparece aqui e você recebe por e-mail.<br><br><b>Dica:</b> termos mais amplos pegam mais oportunidades (ex: <b>"hospitalar"</b> em vez de "material hospitalar").</div>`;
-  return `<section class="perfil">${cabecalho}${transparencia}${banner}${ahaCard}${certCard}${oppCard}${corpo}</section>`;
+  return `<section class="perfil">${cabecalho}${bounce}${transparencia}${banner}${ahaCard}${certCard}${oppCard}${corpo}</section>`;
 }
 
 function radarHTML(lista) {
