@@ -2,25 +2,57 @@
 // Guarda os IDs de editais ja entregues para nao alertar a mesma coisa duas vezes.
 // Persistencia simples em arquivo JSON (suficiente para o MVP; trocavel por banco depois).
 
-import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { resolve, dirname } from "node:path";
+import { readFile, writeFile, mkdir, rename, unlink } from "node:fs/promises";
+import { resolve, dirname, basename } from "node:path";
 import { DATA_DIR } from "./caminhos.mjs";
 
 const ARQUIVO = resolve(DATA_DIR, "vistos.json");
 const ARQUIVO_RESULTADOS = resolve(DATA_DIR, "resultados.json");
 
+// Leitura TOLERANTE a arquivo corrompido. Antes, um JSON truncado fazia o
+// JSON.parse lancar e o erro subia, derrubando quem chamou. Como esses arquivos
+// sao lidos no laco que percorre TODOS os clientes (digest, atualizador), um
+// unico arquivo corrompido parava o servico inteiro pra todo mundo — foi
+// exatamente o que aconteceu em 20/07/2026 (resultados.json de 8,5MB truncado,
+// "[digest] concluido: 0 e-mail(s) enviado(s)" por dias, cliente pagante
+// reclamando que nao recebia alerta).
+//
+// Agora: JSON invalido cai no padrao (como se o arquivo nao existisse) e o
+// arquivo ruim e movido pra .corrompido, preservado pra diagnostico. Os dados
+// desses arquivos sao CACHE regeneravel (o proximo ciclo do atualizador
+// reescreve), entao seguir com o padrao e melhor que travar todo mundo.
 async function lerJSON(caminho, padrao) {
+  let bruto;
   try {
-    return JSON.parse(await readFile(caminho, "utf8"));
+    bruto = await readFile(caminho, "utf8");
   } catch (e) {
     if (e.code === "ENOENT") return padrao;
     throw e;
   }
+  try {
+    return JSON.parse(bruto);
+  } catch (e) {
+    console.error(`[store] ${basename(caminho)} corrompido (${e.message}). Isolando e seguindo com valor padrao.`);
+    try { await rename(caminho, `${caminho}.corrompido`); } catch {}
+    return padrao;
+  }
 }
 
+// Escrita ATOMICA: grava num temporario e so entao renomeia por cima. rename e
+// atomico no mesmo sistema de arquivos, entao um leitor sempre ve o arquivo
+// ANTIGO completo ou o NOVO completo, nunca um pela metade. Antes era writeFile
+// direto: se o processo morresse no meio (restart de deploy, OOM kill do
+// Railway), o arquivo ficava truncado — a causa raiz do incidente de 20/07/2026.
 async function gravarJSON(caminho, obj) {
   await mkdir(dirname(caminho), { recursive: true });
-  await writeFile(caminho, JSON.stringify(obj, null, 2), "utf8");
+  const tmp = `${caminho}.tmp`;
+  try {
+    await writeFile(tmp, JSON.stringify(obj, null, 2), "utf8");
+    await rename(tmp, caminho);
+  } catch (e) {
+    try { await unlink(tmp); } catch {}
+    throw e;
+  }
 }
 
 async function lerArquivo() {
