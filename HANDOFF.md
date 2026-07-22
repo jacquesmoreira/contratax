@@ -1488,4 +1488,16 @@ Corrigido, só quando o portal é Compras.gov.br: (1) rótulo honesto ("Ver esta
 
 ---
 
+### 2026-07-21 (terça) — opt-out da campanha + ajustes do recado
+
+**Opt-out da campanha fria:** `fsoares.frio@gmail.com` respondeu pedindo pra sair. Não havia caminho pra suprimir no volume do Railway (só o arquivo do antigo fluxo local). Criado `POST /api/admin/campanha/suprimir {c, email}` (commit `ac32c2a`) com dupla garantia: grava em `suprimir-campanha.txt` (checado antes de cada envio) E marca `pausado` no `campanha-envios.json` (`proximaEtapaDevida` devolve null). **Executado em produção: `{"ok":true, "jaEstava":false, "pausadoNoEstado":true}`** — ele não recebe mais nada. Pra próximos pedidos de saída, é só chamar o mesmo endpoint trocando o e-mail.
+
+**Recado pros clientes (2 correções da mesma tarde):** o Jacques reportou "corte" 2x, com causas DIFERENTES: (1ª) texto de 626 chars só ROLADO no campo de 4 linhas, sem corte real — campo aumentado pra 12 linhas + contador ao vivo (`daab8c8` e anteriores); o rascunho agora sobrevive a re-render do painel (antes qualquer ação que recarregasse a tela apagava recado meio digitado). (2ª) texto de 2.535 chars cortado DE VERDADE no teto de 2000 — foi o contador recém-criado que revelou (2000/2000). Teto subiu pra 6000 nos dois lados (maxlength + slice do backend).
+
+**Botão do Comprasnet:** URL de login real confirmada com print do Jacques logando: `comprasnet.gov.br/seguro/loginPortal.asp?perfil=1` (perfil=1 = Fornecedor Brasileiro), no ar (`5cddadc`). O `gov.br/compras/pt-br` anterior era página institucional. Link direto pra compra específica DENTRO da área logada não existe publicamente; seguimos mostrando o número da compra. **Correção importante de registro:** o aviso "essa tela costuma travar" publicado antes era FALSO — a página pública tem hCaptcha (iframe confirmado no DOM + 14 requisições todas 200) e o navegador automatizado do teste é que não passava. Corrigido pra explicar o captcha (`5862d8a`).
+
+**Bônus do print do Jacques:** o login dele no Comprasnet acusou "Usuário inativo por problema no SICAF (422)" — pendência no cadastro SICAF da empresa DELE, não bug. É provavelmente a mesma causa do "não consigo logar" do Marcelo; a resposta de suporte já orienta a verificar o SICAF.
+
+---
+
 **Fim do handoff.** Boa sorte na próxima sessão.
