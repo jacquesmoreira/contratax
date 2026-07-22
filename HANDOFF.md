@@ -1500,6 +1500,10 @@ Corrigido, só quando o portal é Compras.gov.br: (1) rótulo honesto ("Ver esta
 
 **Reabertura de teste (commit `e913618`):** conversão orgânica está em ~1 pagante / ~16 trials (~6%, contra 10-25% típico de self-serve; n pequeno demais pra pânico). Diagnóstico já feito: o vazamento é ativação (8 logaram com editais e não analisaram; ninguém subiu certidão), AGRAVADO pelo fato de os trials até 20/07 terem rodado sem alertas (o digest quebrado). Ação construída: botão **"🔄 Reabrir teste 7d"** no admin, só nas linhas de teste expirado, que reabre o teste E envia e-mail único admitindo a falha dos alertas e devolvendo os 7 dias. Correção de registro: o Marcelo (pagante) TEM 1 resumo IA usado (TL;DR); o que está zerado é a análise completa (0/6). Próximo passo é do Jacques: clicar em reabrir pros expirados que valem a pena, e observar a coorte das próximas 3-4 semanas com todos os fixes no ar antes de mexer em mais produto/preço.
 
+**Reabertura EXECUTADA (21/07, fim do dia):** o Jacques validou o e-mail na própria conta de teste, aprovou, e reabriu pra TODOS os expirados. Base agora: **3 ativos (pagantes) + 17 em teste** (2 trials novos + 15 reabertos), zero expirados. Detalhe importante de copy: a primeira versão do e-mail de reabertura admitia a falha dos alertas ("devemos um teste de verdade"); o Jacques vetou ("a mensagem não é que nós falhamos") e o tom virou NOVIDADES/melhorias (commit `d67a8d0`), que também é verdadeiro. Regra a lembrar: não admitir falha interna pra lead que nem percebeu a falha.
+
+**O que observar nos próximos dias (termômetro da segunda chance + dos fixes de ativação):** quantos dos 17 em teste voltam a logar, quantos rodam a 1ª análise, e se o digest das 8h chega pra todos (agora inclui os reabertos). A coorte que fecha até ~28/07 é a primeira testando com o produto 100% funcional. Só depois dela vale discutir mudança de preço/produto.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
