@@ -284,7 +284,7 @@ async function carregar() {
         <input class="in-assentos" type="number" value="${c.equipe.assentos}" title="assentos" />
         <button class="btn-assentos sec">Assentos</button>
         <a href="/painel?c=${encodeURIComponent(c.token)}" target="_blank">Painel ↗</a>
-        ${c.status === "teste_expirado" ? `<button class="btn-reabrir sec" title="Reabre o teste gratis por 7 dias e envia e-mail avisando (honesto sobre a falha dos alertas durante o teste original)" style="color:var(--verde);border-color:var(--verde)">🔄 Reabrir teste 7d</button>` : ""}
+        ${c.status === "teste_expirado" ? `<button class="btn-reabrir sec" title="Reabre o teste gratis por 7 dias e envia e-mail convidando a voltar (tom de novidades/melhorias)" style="color:var(--verde);border-color:var(--verde)">🔄 Reabrir teste 7d</button>` : ""}
         ${c.status === "inativo" ? `<button class="btn-suspender sec" data-congelar="false" style="color:var(--verde);border-color:var(--verde)">Reativar</button>` : `<button class="btn-suspender sec" data-congelar="true" style="color:var(--ambar);border-color:var(--ambar)">Congelar</button>`}
         <button class="btn-excluir" style="background:var(--vermelho)">Excluir</button>
       </div></td>
@@ -350,7 +350,7 @@ function ligarAcoes() {
     };
     const btnReabrir = box.querySelector(".btn-reabrir");
     if (btnReabrir) btnReabrir.onclick = async () => {
-      if (!confirm("Reabrir o teste desta empresa por 7 dias? Ela recebe um e-mail avisando (com o motivo: a falha dos alertas durante o teste original).")) return;
+      if (!confirm("Reabrir o teste desta empresa por 7 dias? Ela recebe um e-mail convidando a voltar, com as novidades da plataforma.")) return;
       btnReabrir.disabled = true;
       const r = await post("/api/admin/reabrir-teste", { token: tk, dias: 7 });
       alert(r.ok ? `Teste reaberto por 7 dias.${r.d.emailEnviado ? " E-mail de aviso enviado." : " (e-mail nao enviado, verifique)"}` : "Erro: " + r.d.erro);

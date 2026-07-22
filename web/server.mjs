@@ -1886,16 +1886,26 @@ const servidor = createServer(async (req, res) => {
         if (temEmailKey() && p.email) {
           const nome = (p.nome || "").split(" ")[0] || "olá";
           const linkPainel = `${process.env.LICITA_BASE_URL || "https://www.contratax.com.br"}/painel?c=${p.token}`;
+          // TOM (decisao do Jacques, 21/07/2026): NAO admitir falha pra quem nem
+          // percebeu que ela existiu. O enquadramento e MELHORIAS + acesso
+          // reaberto, que tambem e verdade (os ajustes de alertas, leitura de
+          // editais e botoes do portal existem). Voz institucional, sem
+          // travessao, marca ContrataX.IA.
           try {
             await enviar({
               para: p.email,
-              assunto: `${nome}, reabrimos seu teste do ContrataX por mais ${dias} dias`,
+              assunto: `${nome}, seu teste no ContrataX foi reaberto por mais ${dias} dias`,
               html: `<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:560px;margin:0 auto;padding:28px 22px;color:#0f172a;font-size:15px;line-height:1.65">
-                <h2 style="font-size:20px;font-weight:800;margin:0 0 14px">Devemos um teste de verdade a você</h2>
-                <p>Olá, ${nome}. Durante o seu período de teste no ContrataX, identificamos uma falha no envio dos alertas diários por e-mail. Na prática, você avaliou a plataforma sem receber os avisos das licitações do seu ramo, que são uma parte importante do serviço.</p>
-                <p>A falha já foi corrigida. Como ela comprometeu a sua avaliação, <b>reabrimos o seu acesso por mais ${dias} dias</b>, sem precisar fazer nada: é só entrar.</p>
+                <h2 style="font-size:20px;font-weight:800;margin:0 0 14px">Reabrimos o seu acesso, com novidades</h2>
+                <p>Olá, ${nome}. A plataforma recebeu melhorias desde o seu período de teste, e reabrimos o seu acesso por <b>mais ${dias} dias</b> para você conhecer. Não precisa cadastrar nada de novo: suas configurações continuam como você deixou, é só entrar.</p>
+                <p>O que mudou:</p>
+                <ul style="margin:0 0 16px 20px;color:#1e293b">
+                  <li style="margin-bottom:7px"><b>Alertas diários mais completos</b> das licitações do seu ramo, direto no seu e-mail</li>
+                  <li style="margin-bottom:7px"><b>Leitura de edital mais direta:</b> a ContrataX.IA mostra o resumo, as exigências e as armadilhas em segundos, sem depender de nenhum cadastro prévio</li>
+                  <li style="margin-bottom:7px"><b>Caminho mais claro pra disputa:</b> em cada licitação, botões separados pra consultar a compra e pra entrar no portal oficial e enviar proposta</li>
+                </ul>
                 <p style="margin:20px 0"><a href="${linkPainel}" style="background:#4338ca;color:#fff;text-decoration:none;font-weight:800;padding:13px 26px;border-radius:11px;display:inline-block">Entrar no meu painel →</a></p>
-                <p style="font-size:13.5px;color:#475569">Seu cadastro e configurações continuam como você deixou. Os alertas diários voltam a chegar neste e-mail a partir de amanhã.</p>
+                <p style="font-size:13.5px;color:#475569">O acesso reaberto vale por ${dias} dias. Sem cartão e sem compromisso: se não fizer sentido, é só deixar expirar.</p>
                 <p style="font-size:12px;color:#94a3b8;margin-top:24px">ContrataX · dados oficiais do PNCP · <a href="mailto:contato@contratax.com.br" style="color:#94a3b8">contato@contratax.com.br</a></p>
               </div>`,
               listaDescadastroUrl: `${process.env.LICITA_BASE_URL || "https://www.contratax.com.br"}/descadastrar?c=${p.token}`,
