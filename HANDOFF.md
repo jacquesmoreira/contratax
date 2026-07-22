@@ -1498,6 +1498,8 @@ Corrigido, só quando o portal é Compras.gov.br: (1) rótulo honesto ("Ver esta
 
 **Bônus do print do Jacques:** o login dele no Comprasnet acusou "Usuário inativo por problema no SICAF (422)" — pendência no cadastro SICAF da empresa DELE, não bug. É provavelmente a mesma causa do "não consigo logar" do Marcelo; a resposta de suporte já orienta a verificar o SICAF.
 
+**Reabertura de teste (commit `e913618`):** conversão orgânica está em ~1 pagante / ~16 trials (~6%, contra 10-25% típico de self-serve; n pequeno demais pra pânico). Diagnóstico já feito: o vazamento é ativação (8 logaram com editais e não analisaram; ninguém subiu certidão), AGRAVADO pelo fato de os trials até 20/07 terem rodado sem alertas (o digest quebrado). Ação construída: botão **"🔄 Reabrir teste 7d"** no admin, só nas linhas de teste expirado, que reabre o teste E envia e-mail único admitindo a falha dos alertas e devolvendo os 7 dias. Correção de registro: o Marcelo (pagante) TEM 1 resumo IA usado (TL;DR); o que está zerado é a análise completa (0/6). Próximo passo é do Jacques: clicar em reabrir pros expirados que valem a pena, e observar a coorte das próximas 3-4 semanas com todos os fixes no ar antes de mexer em mais produto/preço.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
