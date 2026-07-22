@@ -1606,6 +1606,48 @@ const servidor = createServer(async (req, res) => {
       }
     }
 
+    // Opt-out da campanha fria: adiciona o e-mail a lista de supressao no
+    // volume ("respondeu 'sair'" e afins, prometido no proprio texto do e-mail;
+    // e obrigacao LGPD, entao o caminho precisa ser rapido e confiavel).
+    // Dupla garantia: (1) entra em suprimir-campanha.txt, checado ANTES de cada
+    // envio; (2) marca pausado no estado, entao mesmo que a lista de supressao
+    // se perca, proximaEtapaDevida devolve null pra ele. body: { c, email }
+    if (rota === "/api/admin/campanha/suprimir" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      const email = String(corpo.email || "").trim().toLowerCase();
+      if (!email.includes("@")) return json(res, 400, { erro: "E-mail invalido" });
+      try {
+        const { DATA_DIR } = await import("../src/caminhos.mjs");
+        const { appendFile, readFile: rf, writeFile: wf } = await import("node:fs/promises");
+        const arqSup = resolve(DATA_DIR, "suprimir-campanha.txt");
+        // Nao duplica se ja estiver la (reprocessar opt-out e comum).
+        let jaEstava = false;
+        try {
+          const atual = await rf(arqSup, "utf8");
+          jaEstava = atual.split("\n").map((l) => l.trim().toLowerCase()).includes(email);
+        } catch {}
+        if (!jaEstava) await appendFile(arqSup, `${email}\n`, "utf8");
+        // Cinto e suspensorio: pausa tambem no estado de envios. Arquivo ausente
+        // (instalacao nova) nao e erro: comeca de {} e cria com o pausado.
+        let pausadoNoEstado = false;
+        try {
+          const arqEstado = resolve(DATA_DIR, "campanha-envios.json");
+          let estado = {};
+          try { estado = JSON.parse(await rf(arqEstado, "utf8")); } catch {}
+          if (estado[email]) estado[email].pausado = true;
+          else estado[email] = { pausado: true, ultimaEtapa: 0, dataUltimoEnvio: new Date().toISOString() };
+          await wf(arqEstado, JSON.stringify(estado, null, 2), "utf8");
+          pausadoNoEstado = true;
+        } catch (e) {
+          console.error("[campanha suprimir] estado:", e.message);
+        }
+        return json(res, 200, { ok: true, email, jaEstava, pausadoNoEstado });
+      } catch (e) {
+        return json(res, 500, { erro: e.message });
+      }
+    }
+
     // Dispara uma passada da campanha AGORA, sem esperar o horario agendado
     // (util pra testar apos deploy). body: { c: ADMIN }
     if (rota === "/api/admin/campanha/rodar-agora" && req.method === "POST") {
