@@ -1857,6 +1857,55 @@ const servidor = createServer(async (req, res) => {
         return json(res, 200, { ok: true, status: statusAtual(p) });
       } catch (e) { return json(res, 400, { erro: e.message }); }
     }
+    // Admin: REABRE o teste gratis de uma conta expirada por N dias (default 7)
+    // e avisa o cliente por e-mail com o motivo honesto: durante o periodo de
+    // teste dele os alertas diarios estavam quebrados pra todo mundo (incidente
+    // de 20/07/2026, resultados.json truncado, "[digest] 0 e-mail(s)"), entao a
+    // avaliacao foi feita com o produto degradado. Reabrir e a segunda chance
+    // justa, e melhor argumento de reengajamento que "sentimos sua falta".
+    // So age em teste_expirado (nao mexe em pagante, vencido ou ativo).
+    if (rota === "/api/admin/reabrir-teste" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      const dias = Math.max(1, Math.min(30, Number(corpo.dias) || 7));
+      try {
+        const alvo = await perfilPorToken(corpo.token || "");
+        if (!alvo) return json(res, 404, { erro: "Conta nao encontrada" });
+        const st = statusAtual(alvo);
+        if (st.status !== "teste_expirado") {
+          return json(res, 400, { erro: `So reabre teste de conta com teste expirado (esta: ${st.status}).` });
+        }
+        const p = await atualizarPerfil(alvo.token, (x) => {
+          x.assinatura = x.assinatura || {};
+          x.assinatura.status = "teste";
+          x.assinatura.expiraEm = new Date(Date.now() + dias * 864e5).toISOString();
+          x._testeReabertoEm = new Date().toISOString();
+        });
+        // E-mail de aviso (best-effort: reabrir ja valeu mesmo se o email falhar).
+        let emailEnviado = false;
+        if (temEmailKey() && p.email) {
+          const nome = (p.nome || "").split(" ")[0] || "olá";
+          const linkPainel = `${process.env.LICITA_BASE_URL || "https://www.contratax.com.br"}/painel?c=${p.token}`;
+          try {
+            await enviar({
+              para: p.email,
+              assunto: `${nome}, reabrimos seu teste do ContrataX por mais ${dias} dias`,
+              html: `<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:560px;margin:0 auto;padding:28px 22px;color:#0f172a;font-size:15px;line-height:1.65">
+                <h2 style="font-size:20px;font-weight:800;margin:0 0 14px">Devemos um teste de verdade a você</h2>
+                <p>Olá, ${nome}. Durante o seu período de teste no ContrataX, identificamos uma falha no envio dos alertas diários por e-mail. Na prática, você avaliou a plataforma sem receber os avisos das licitações do seu ramo, que são uma parte importante do serviço.</p>
+                <p>A falha já foi corrigida. Como ela comprometeu a sua avaliação, <b>reabrimos o seu acesso por mais ${dias} dias</b>, sem precisar fazer nada: é só entrar.</p>
+                <p style="margin:20px 0"><a href="${linkPainel}" style="background:#4338ca;color:#fff;text-decoration:none;font-weight:800;padding:13px 26px;border-radius:11px;display:inline-block">Entrar no meu painel →</a></p>
+                <p style="font-size:13.5px;color:#475569">Seu cadastro e configurações continuam como você deixou. Os alertas diários voltam a chegar neste e-mail a partir de amanhã.</p>
+                <p style="font-size:12px;color:#94a3b8;margin-top:24px">ContrataX · dados oficiais do PNCP · <a href="mailto:contato@contratax.com.br" style="color:#94a3b8">contato@contratax.com.br</a></p>
+              </div>`,
+              listaDescadastroUrl: `${process.env.LICITA_BASE_URL || "https://www.contratax.com.br"}/descadastrar?c=${p.token}`,
+            });
+            emailEnviado = true;
+          } catch (e) { console.error("[reabrir-teste email]", e.message); }
+        }
+        return json(res, 200, { ok: true, status: statusAtual(p), emailEnviado });
+      } catch (e) { return json(res, 400, { erro: e.message }); }
+    }
     if (rota === "/api/admin/avulso" && req.method === "POST") {
       const corpo = await lerCorpo(req);
       if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
