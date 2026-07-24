@@ -1504,6 +1504,8 @@ Corrigido, só quando o portal é Compras.gov.br: (1) rótulo honesto ("Ver esta
 
 **O que observar nos próximos dias (termômetro da segunda chance + dos fixes de ativação):** quantos dos 17 em teste voltam a logar, quantos rodam a 1ª análise, e se o digest das 8h chega pra todos (agora inclui os reabertos). A coorte que fecha até ~28/07 é a primeira testando com o produto 100% funcional. Só depois dela vale discutir mudança de preço/produto.
 
+**Heartbeat diário de saúde (commit `540cd32`):** Jacques pediu monitoramento 24h. Das 3 camadas oferecidas (vigia externo / e-mail diário / análise Claude agendada) ele escolheu só o **e-mail diário**, construído dentro do app. `src/heartbeat.mjs` manda 1 e-mail/dia às 7h BR (antes do digest das 8h) com uptime, memória vs limite, volume %, cota de e-mail dia/mês, clientes por status e bounces do dia, MESMO quando tudo verde. Resolve a ambiguidade que causou o incidente do digest (silêncio ≠ "tudo bem"). Assunto vira ⚠ quando algum sinal passa do limiar. Endpoint `/api/admin/heartbeat` testa na hora. Gated por `LICITA_HEARTBEAT=1`. **PENDENTE do Jacques: setar `LICITA_HEARTBEAT=1` no Railway.** Camada que NÃO foi feita e continua sendo o furo real: vigia EXTERNO (UptimeRobot etc) pingando `/health` — é a única coisa que pega queda total do processo, que nada interno consegue avisar (processo morto não manda e-mail). Vale sugerir de novo numa próxima.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
