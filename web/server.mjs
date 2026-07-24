@@ -1849,6 +1849,22 @@ const servidor = createServer(async (req, res) => {
         return json(res, 200, { ok: true, ...r });
       } catch (e) { return json(res, 500, { erro: e.message }); }
     }
+    // Dispara o heartbeat de saude AGORA (pra testar sem esperar as 7h). Usa os
+    // stats reais deste processo. body: { c: ADMIN }
+    if (rota === "/api/admin/heartbeat" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const { enviarHeartbeat } = await import("../src/heartbeat.mjs");
+        const mem = process.memoryUsage();
+        const r = await enviarHeartbeat({
+          uptimeS: process.uptime(),
+          rssMb: Math.round(mem.rss / 1024 / 1024),
+          heapMb: Math.round(mem.heapUsed / 1024 / 1024),
+        });
+        return json(res, 200, { ok: true, ...r });
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
     if (rota === "/api/admin/ativar" && req.method === "POST") {
       const corpo = await lerCorpo(req);
       if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
@@ -3951,6 +3967,29 @@ if (process.env.LICITA_DIGEST) {
     const horaBR = Number(process.env.LICITA_DIGEST_HORA || 8);
     console.log(`[digest] ativado em background (alvo: ${horaBR}h Brasilia)`);
     await digestLoop({ horaBR });
+  });
+}
+
+// Opcional (Railway): heartbeat diario de saude. 1x ao dia manda um resumo dos
+// sinais vitais pro admin MESMO quando esta tudo ok, pra "nao recebi alerta"
+// deixar de ser ambiguo (ver src/heartbeat.mjs). Ative com LICITA_HEARTBEAT=1.
+if (process.env.LICITA_HEARTBEAT) {
+  supervisionar("heartbeat", async () => {
+    const { heartbeatLoop } = await import("../src/heartbeat.mjs");
+    const horaBR = Number(process.env.LICITA_HEARTBEAT_HORA || 7);
+    const m = process.memoryUsage();
+    console.log(`[heartbeat] ativado em background (alvo: ${horaBR}h Brasilia)`);
+    await heartbeatLoop({
+      horaBR,
+      getStats: () => {
+        const mem = process.memoryUsage();
+        return {
+          uptimeS: process.uptime(),
+          rssMb: Math.round(mem.rss / 1024 / 1024),
+          heapMb: Math.round(mem.heapUsed / 1024 / 1024),
+        };
+      },
+    });
   });
 }
 
