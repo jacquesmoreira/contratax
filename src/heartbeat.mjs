@@ -67,8 +67,22 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
     if (disco.pct >= 0.8) alertas.push(`Volume em ${disco.pctTexto} (perto de encher).`);
   } catch (e) { alertas.push(`Nao consegui medir o disco: ${e.message}`); }
 
-  // Memoria: alerta se passou de 80% do limite configurado.
-  if (rssMb >= MEM_LIMITE_MB * 0.8) alertas.push(`Memoria alta: ${rssMb}MB de ${MEM_LIMITE_MB}MB.`);
+  // Memoria: so alerta se estiver alta de forma SUSTENTADA, nao num pico. O
+  // backfill (varre milhoes de contratos) infla o RSS por alguns minutos e
+  // depois libera; medir num instante unico caia bem no meio disso e gerava
+  // alarme falso (visto ao vivo em 24/07: 598MB durante o backfill, 307MB
+  // estavel segundos depois). Amostra 3x com intervalo e usa a MENOR: se ate a
+  // menor estiver alta, ai sim e sustentado. rssMb (o valor recebido) entra
+  // como uma das amostras; as outras 2 sao lidas aqui.
+  const amostras = [rssMb];
+  for (let i = 0; i < 2; i++) {
+    await new Promise((r) => setTimeout(r, 4000));
+    try { amostras.push(Math.round(process.memoryUsage().rss / 1024 / 1024)); } catch {}
+  }
+  const rssMin = Math.min(...amostras);
+  if (rssMin >= MEM_LIMITE_MB * 0.8) {
+    alertas.push(`Memoria alta sustentada: ${rssMin}MB (menor de 3 amostras) de ${MEM_LIMITE_MB}MB.`);
+  }
 
   if (bouncesHoje > 0) alertas.push(`${bouncesHoje} e-mail(s) de cliente voltaram (bounce) hoje.`);
 
@@ -89,7 +103,7 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
     <div style="border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:6px 0 4px">
       <table style="width:100%;border-collapse:collapse">
         ${linha("No ar ha", `${upH} horas`)}
-        ${linha("Memoria", `${rssMb} MB (limite ${MEM_LIMITE_MB})`)}
+        ${linha("Memoria", `${rssMin} MB (estavel, limite ${MEM_LIMITE_MB})`)}
         ${disco ? linha("Volume", `${disco.usado} / ${disco.total} (${disco.pctTexto})`) : ""}
         ${linha("E-mails hoje", `${cota.dia} / ${TETO_DIARIO}`)}
         ${linha("E-mails no mes", `${cota.mes} / ${TETO_MENSAL}`)}
@@ -104,7 +118,7 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
     <p style="font-size:11px;color:#94a3b8;margin-top:22px">ContrataX, monitoramento interno. Os alertas de problema (cota, disco, memoria, bounce) continuam chegando na hora, independente deste resumo.</p>
   </div>`;
 
-  return { assunto, html, tudoVerde, alertas, dados: { upH, rssMb, disco, cota, ativos, teste, expirados, bouncesHoje } };
+  return { assunto, html, tudoVerde, alertas, dados: { upH, rssMb, rssMin, disco, cota, ativos, teste, expirados, bouncesHoje } };
 }
 
 // Envia o heartbeat agora. Best-effort: nunca lanca (nao pode derrubar o loop).
