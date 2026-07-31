@@ -1019,6 +1019,25 @@ async function carregar() {
     const idsRender = [...c.querySelectorAll(".card[data-id]")].map((x) => x.dataset.id);
     marcarAnalisadosDaLista(idsRender);
     aplicarFiltrosCards();
+
+    // PRIMEIRA SESSAO (cliente com 0 analises): sobe o "Comece por aqui" + a
+    // lista de editais pro TOPO, acima do menu de 13 ferramentas e do checklist,
+    // que competiam pela atencao e enterravam o momento "uau". Diagnostico de
+    // 31/07/2026: 18 de 27 trials logavam, viam a lista e nunca rodavam uma
+    // analise, o unico pagante idem. A tela mostrava demais e provava de menos.
+    // Menos escolha, o valor (a melhor oportunidade + a IA) na frente. Assim que
+    // roda a 1a analise, volta ao layout normal (ferramentas em cima).
+    const primeiraSessao = perfis.length > 0 && perfis.every((p) => !p.analisou);
+    const main = document.querySelector("main.wrap");
+    const conteudoEl = document.getElementById("conteudo");
+    const gridFerr = document.getElementById("ferr-grid");
+    const tgFerr = document.getElementById("ferr-toggle");
+    if (primeiraSessao && main && conteudoEl) {
+      if (main.firstElementChild !== conteudoEl) main.prepend(conteudoEl);
+      // Colapsa o menu de ferramentas (continua acessivel por 1 clique).
+      if (gridFerr) gridFerr.style.display = "none";
+      if (tgFerr) tgFerr.textContent = "Mostrar ▾";
+    }
   } catch (e) { c.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`; }
 }
 
