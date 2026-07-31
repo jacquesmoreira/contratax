@@ -1506,6 +1506,16 @@ Corrigido, só quando o portal é Compras.gov.br: (1) rótulo honesto ("Ver esta
 
 **Heartbeat diário de saúde (commit `540cd32`):** Jacques pediu monitoramento 24h. Das 3 camadas oferecidas (vigia externo / e-mail diário / análise Claude agendada) ele escolheu só o **e-mail diário**, construído dentro do app. `src/heartbeat.mjs` manda 1 e-mail/dia às 7h BR (antes do digest das 8h) com uptime, memória vs limite, volume %, cota de e-mail dia/mês, clientes por status e bounces do dia, MESMO quando tudo verde. Resolve a ambiguidade que causou o incidente do digest (silêncio ≠ "tudo bem"). Assunto vira ⚠ quando algum sinal passa do limiar. Endpoint `/api/admin/heartbeat` testa na hora. Gated por `LICITA_HEARTBEAT=1`. **PENDENTE do Jacques: setar `LICITA_HEARTBEAT=1` no Railway.** Camada que NÃO foi feita e continua sendo o furo real: vigia EXTERNO (UptimeRobot etc) pingando `/health` — é a única coisa que pega queda total do processo, que nada interno consegue avisar (processo morto não manda e-mail). Vale sugerir de novo numa próxima.
 
+### 2026-07-31 (final do mês) — ativação: primeira sessão lidera com o valor
+
+**Diagnóstico:** topo de funil orgânico saudável (Jacques: 1 trial a cada 1-2 dias, 29 contas), mas conversão travada em **1 pagante real** (Marcelo; o painel mostra 2 "ativos" mas 1 é conta de teste do próprio Jacques). Dado duro via `/api/admin/diagnostico-ativacao`: das 27 contas em teste/expirado, **22 logaram** (ativação de login OK), mas **18 logaram, tinham editais e NUNCA rodaram análise**, e a maioria logou UMA vez só. O único pagante idem (usou só 1 TL;DR, nunca a análise completa). Reabertura de trials (21/07) trouxe pouco retorno; o crescimento vem de cadastros novos. Conclusão: o funil não vaza no topo nem no login, vaza na **primeira sessão** — ninguém chega no momento "uau" (a IA lendo o edital).
+
+**Causa raiz (visto abrindo o painel de um trial ao vivo):** a primeira sessão mostra, nesta ordem, checklist de boas-vindas + menu de **13 ferramentas** + banner de venda, e SÓ ENTÃO o card "Comece por aqui". Excesso de escolha + valor enterrado. Um match excelente (ex: gêneros alimentícios R$6,5M pra fornecedor de pão de queijo) fica soterrado.
+
+**Fix #1 aplicado (commit `78e98c5`):** pra cliente com 0 análises, o `#conteudo` (melhor oportunidade + editais) sobe pro topo via `main.prepend`, acima do checklist e do menu, e o menu de ferramentas colapsa. Volta ao normal após a 1ª análise. Testado com harness DOM.
+
+**Fixes #2 e #3 combinados, AINDA NÃO FEITOS (continuar aqui):** (#2) matar a espera de até 1min no momento mágico, pré-gerando a análise completa do melhor edital (já pré-aquecemos o TL;DR; estender pro veredito do topo). (#3) liderar com o número grande ("R$X, encerra em N dias, você casa nos itens") como primeira coisa dentro do conteúdo. **Régua de sucesso:** observar se a taxa de "logou → rodou 1ª análise" sobe nas próximas semanas (o `/api/admin/diagnostico-ativacao` mede isso direto). Só depois pensar em preço.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
