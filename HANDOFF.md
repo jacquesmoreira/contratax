@@ -1516,6 +1516,10 @@ Corrigido, só quando o portal é Compras.gov.br: (1) rótulo honesto ("Ver esta
 
 **Fixes #2 e #3 combinados, AINDA NÃO FEITOS (continuar aqui):** (#2) matar a espera de até 1min no momento mágico, pré-gerando a análise completa do melhor edital (já pré-aquecemos o TL;DR; estender pro veredito do topo). (#3) liderar com o número grande ("R$X, encerra em N dias, você casa nos itens") como primeira coisa dentro do conteúdo. **Régua de sucesso:** observar se a taxa de "logou → rodou 1ª análise" sobe nas próximas semanas (o `/api/admin/diagnostico-ativacao` mede isso direto). Só depois pensar em preço.
 
+### Ideias na fila (não urgentes)
+
+**Sentry (monitoramento de erros) — considerar DEPOIS da coorte de ativação.** Jacques mostrou um post viral com um "stack de SaaS" (Supabase, Vercel, Stripe, Clerk, Upstash, Pinecone, PostHog, Sentry...). Avaliado item a item (31/07): quase tudo ou já existe equivalente (Railway/GitHub/Resend/Asaas/auth próprio/GA4+Clarity) ou não serve (Vercel é serverless e não roda o processo 24h + SQLite em volume; Stripe/Hotmart são piores que Asaas no Brasil por causa do PIX; Supabase seria migrar dado de pagante à toa). **O único que vale**: Sentry, porque hoje há um ponto cego REAL — erro de JavaScript no navegador do cliente (ex: botão de análise falhando pra alguém) não é visto por ninguém. Dado o gargalo de ativação, pode estar acontecendo. Ligar depois de medir a coorte do fix #1, porque pode inclusive explicar parte dos trials que não rodam análise. Implementação leve: script no front + captura no servidor, sem virar dependência pesada. Princípio reforçado ao Jacques: infra não é o gargalo (conversão é); não trocar peça que funciona por moda.
+
 ---
 
 **Fim do handoff.** Boa sorte na próxima sessão.
