@@ -1530,4 +1530,12 @@ Uma semana depois do fix #1, ainda ~1 trial/dia e 0 conversão nova (só 1 pagan
 
 ---
 
+### 2026-08-08 (continuação) — feedback de churn + custo de IA + Marcelo
+
+**Feedback de saída (churn) construído (`2ce35c9`):** e-mail de 1 clique "o que faltou?" pra todo teste que expira (5 razões), captura em `/feedback-saida`, agregado no admin com barra por motivo. Hook no digestLoop. Backlog dispara via `POST /api/admin/feedback-saida/enviar {c}`. **PENDENTE Jacques: rodar o backlog dos 28 expirados** (é o que vai transformar "não sei por que não fecham" em dado).
+
+**Custo de IA "não funcionava" = FALSO (`04bd452`):** o rastreamento sempre funcionou (R$209 logados ≈ US$38, bate com o saldo Anthropic). O PAINEL é que mostrava métricas estreitas (0,00/0,39/0,91) que excluíam o maior custo. Breakdown real: **TL;DR = R$179,95 (86%)**, resto pouco. Causa: `preaquecerTldrs` gerava 8 TL;DRs/abertura pra QUALQUER visita (trial que nunca abre, bot). Fix: pagante mantém top-N, trial/expirado só o TOP 1. Corta a maior parte dos ~R$180. **PENDENTE (opcional): mostrar o custo REAL total (brlTotal) no painel admin, hoje ele exibe só as métricas estreitas.**
+
+**Marcelo (único pagante) NÃO largou:** Jacques temia que tivesse abandonado. Dado real (novo campo `ultimoAcesso` em /api/admin/clientes): **último acesso 06/08, 2 dias atrás.** Ele continua entrando sozinho MESMO com o e-mail voltando (bounce). Não está perdido, só não é alcançável por e-mail. Sinal de retenção melhor do que parecia.
+
 **Fim do handoff.** Boa sorte na próxima sessão.
