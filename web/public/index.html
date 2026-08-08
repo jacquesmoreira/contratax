@@ -1150,9 +1150,17 @@ async function preencherAhaTldr() {
   const box = document.getElementById("aha-tldr");
   if (!box) return;
   const id = box.dataset.id;
-  const falhou = () => { box.innerHTML = `<div style="font-size:13.5px;color:#475569">Abra o edital abaixo pra ver a leitura completa da ContrataX.IA.</div>`; };
+  // Mensagem de queda: fala como gente, sem jargao e sem "erro na requisicao".
+  const falhou = (msg) => {
+    box.innerHTML = `<div style="font-size:13.5px;color:#475569;line-height:1.5">${msg || "Este edital é extenso demais para o resumo automático. Abra o edital abaixo para ver a análise completa."}</div>`;
+  };
+  // TIMEOUT: edital gigante fazia a API demorar ~1min26s pra devolver erro, e o
+  // card ficava preso em "Lendo o edital..." (pior que nao ter). 25s e o teto:
+  // acima disso a pessoa ja desistiu de esperar de qualquer jeito.
+  const ctrl = new AbortController();
+  const alarme = setTimeout(() => ctrl.abort(), 25000);
   try {
-    const r = await fetch("/api/tldr?id=" + encodeURIComponent(id) + "&c=" + encodeURIComponent(token), { method: "POST" });
+    const r = await fetch("/api/tldr?id=" + encodeURIComponent(id) + "&c=" + encodeURIComponent(token), { method: "POST", signal: ctrl.signal });
     const d = await r.json();
     const t = d.tldr;
     if (!t || typeof t !== "object") return falhou();
@@ -1168,7 +1176,11 @@ async function preencherAhaTldr() {
         ${t.prazo ? `<div>📅 <b style="color:#0f172a">${esc(t.prazo)}</b></div>` : ""}
       </div>
       ${exi ? `<div style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">Exigências-chave</div><ul style="list-style:none;padding:0;margin:0">${exi}</ul>` : ""}`;
-  } catch { falhou(); }
+  } catch (e) {
+    falhou(e?.name === "AbortError"
+      ? "Este edital é longo e a leitura está demorando. Abra o edital abaixo para acompanhar a análise completa."
+      : null);
+  } finally { clearTimeout(alarme); }
 }
 
 function iniciarTldr(id) {

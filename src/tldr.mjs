@@ -63,6 +63,22 @@ export async function gerarTldr(edital, { perfilToken = null } = {}) {
   if (!pdfs.length) throw new Error("Nenhum PDF disponivel para este edital");
   const principal = pdfs[0];
 
+  // GUARDA DE TAMANHO. Sem isto, edital gigante (ata de registro de precos com
+  // centenas de itens) era enviado inteiro, a Anthropic recusava com "prompt is
+  // too long: 228917 tokens > 200000" e o cliente esperava ~1min26s pra receber
+  // erro (visto em producao 08/08/2026, edital de pneus de Cascavel/PR). Pior:
+  // gastava banda e tempo toda vez, porque erro nao entra em cache.
+  // ~4 chars de base64 por byte e ~1 token por 3 bytes de PDF: 8 MB ja passa do
+  // limite com folga. Corta ANTES de chamar a IA, com erro identificavel pra
+  // quem chama tratar (marcado com codigo, nao so string).
+  const MAX_PDF_MB = Number(process.env.LICITA_TLDR_MAX_PDF_MB || 8);
+  const tamMb = principal.buffer.length / (1024 * 1024);
+  if (tamMb > MAX_PDF_MB) {
+    const e = new Error(`Edital muito extenso (${tamMb.toFixed(1)} MB) para leitura automatica.`);
+    e.codigo = "pdf_grande";
+    throw e;
+  }
+
   const corpo = {
     model: MODELO,
     max_tokens: 800,
