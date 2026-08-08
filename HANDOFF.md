@@ -1514,7 +1514,15 @@ Corrigido, só quando o portal é Compras.gov.br: (1) rótulo honesto ("Ver esta
 
 **Fix #1 aplicado (commit `78e98c5`):** pra cliente com 0 análises, o `#conteudo` (melhor oportunidade + editais) sobe pro topo via `main.prepend`, acima do checklist e do menu, e o menu de ferramentas colapsa. Volta ao normal após a 1ª análise. Testado com harness DOM.
 
-**Fixes #2 e #3 combinados, AINDA NÃO FEITOS (continuar aqui):** (#2) matar a espera de até 1min no momento mágico, pré-gerando a análise completa do melhor edital (já pré-aquecemos o TL;DR; estender pro veredito do topo). (#3) liderar com o número grande ("R$X, encerra em N dias, você casa nos itens") como primeira coisa dentro do conteúdo. **Régua de sucesso:** observar se a taxa de "logou → rodou 1ª análise" sobe nas próximas semanas (o `/api/admin/diagnostico-ativacao` mede isso direto). Só depois pensar em preço.
+**Fixes #2 e #3 combinados, AINDA NÃO FEITOS:** (#2) matar a espera de até 1min no momento mágico, pré-gerando a análise completa do melhor edital. (#3) liderar com o número grande dentro do conteúdo. **Régua de sucesso:** taxa de "logou → rodou 1ª análise" (via `/api/admin/diagnostico-ativacao`).
+
+### 2026-08-08 — descoberta da RELEVÂNCIA como assassino da conversão
+
+Uma semana depois do fix #1, ainda ~1 trial/dia e 0 conversão nova (só 1 pagante real). Puxei o funil: **login OK (24/29 logaram)**, mas **18 logaram, tinham editais e nunca analisaram**. E os 3 cadastros novos pós-fix tinham 0-2 editais. Abrindo os painéis reais, o assassino ficou claro e NÃO era layout: é **RELEVÂNCIA no 1º olhar**. Caso concreto: PAULO (ramo "pneu militar/blindado/tático", nicho raríssimo) recebeu, via fallback nacional, um pregão de **pneu de carro municipal** (item "PNEU 165/70R13") marcado **"🟢 forte"**, e o card "Comece por aqui" dizia "escolhemos o mais urgente do SEU ramo". Pra um nicho isso grita "não entende meu negócio" → fecha a aba. Padrão nos dois lados: ramo amplo = centenas de editais (ruído), ramo nicho = pouco/filler irrelevante. Nos dois, o usuário não sente "achou a MINHA oportunidade", que é o que converte.
+
+**Fix da relevância aplicado (commit `0e959df`):** o card de ativação virou FIT-AWARE. Quando o ramo tem <=3 editais OU o painel alargou pro Brasil, troca pra versão honesta ("🎯 Seu ramo é específico, poucos agora e tudo bem, a gente vigia e avisa por e-mail", + link "Ajuste as palavras do seu ramo"). Match forte mantém a versão confiante. Verificado ao vivo no painel do PAULO.
+
+**A VERDADE ESTRATÉGICA que o Jacques precisa ouvir (não escondi):** fix de produto tem TETO aqui. Nenhum ajuste faz um vendedor de pneu militar pagar se não há pregão de pneu militar. O que a gente NÃO tem é a VOZ do cliente: por que os que testaram não pagaram? Estou inferindo, não perguntando. **Próximo passo de maior valor: captura de feedback no churn** (e-mail async de 1 clique quando o teste expira: "o que faltou?" com opções: não achei editais do meu ramo / achei mas não vi valor / preço / ainda avaliando). Respeita o no-outbound (async, sem ligação/demo) e transforma cada expirado em dado sobre a objeção real. Também: reavaliar se o SEO orgânico devia focar verticais com volume+fit real (merenda, limpeza, hospitalar, informática) em vez de tentar servir pneu-militar e "consultoria".
 
 ### Ideias na fila (não urgentes)
 
