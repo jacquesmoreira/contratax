@@ -514,18 +514,36 @@ function perfilHTML(p) {
   // urgente do estado do cliente e leva pro resumo da IA num clique (reusa
   // abrirDrawer). Some sozinho apos a 1a analise.
   const topo = noEstado[0] || editais[0];
-  const ahaCard = (!p.analisou && topo && topo.id) ? `
+  // MATCH FRACO: ramo com pouquissimos editais OU painel que teve que alargar pro
+  // Brasil (poucos no estado). Diagnostico de 08/08/2026: vendedor de pneu MILITAR
+  // recebeu um pregao de pneu de carro municipal marcado "oportunidade forte", e o
+  // card dizia "escolhemos o mais urgente do SEU ramo". Isso quebra a confianca no
+  // 1o olhar (o momento que decide a conversao). Aqui o card admite o nicho, mostra
+  // que o monitoramento cobre (nao perde nada), ainda leva pra ver a IA funcionando,
+  // e da o link pra AJUSTAR as palavras do ramo (resolve tambem o "consultoria" vago).
+  const matchFraco = p.alargado || editais.length <= 3;
+  const ahaBloco = (mi, uf, org, obj) => `<div style="background:rgba(255,255,255,.12);border-radius:11px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:12px;opacity:.85;font-weight:700">${esc(mi ?? "")}/${esc(uf ?? "")} · ${esc(org ?? "Órgão público")}</div>
+        <div style="font-size:14.5px;margin-top:4px">${esc((obj || "").slice(0, 110))}</div>
+      </div>`;
+  const ahaCard = (!p.analisou && topo && topo.id)
+    ? (matchFraco ? `
+    <div style="background:linear-gradient(135deg,#334155,#475569);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:20px;box-shadow:0 12px 30px rgba(15,23,42,.22)">
+      <div style="font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.85;margin-bottom:8px">🎯 Seu ramo é específico</div>
+      <div style="font-size:19px;font-weight:800;margin-bottom:6px;line-height:1.3">Poucos editais bem no seu ramo agora, e tudo bem</div>
+      <div style="font-size:14px;opacity:.92;line-height:1.5;margin-bottom:12px">Nichos específicos têm menos licitações abertas a cada momento. A gente vigia o Brasil todo por você e <b>avisa por e-mail assim que aparecer</b> algo aderente, você não perde nada. Enquanto isso, veja a ContrataX.IA lendo o mais próximo:</div>
+      ${ahaBloco(topo.municipio, topo.uf, topo.orgao, topo.objeto)}
+      <button type="button" data-id="${esc(topo.id)}" onclick="abrirDrawer(this.dataset.id)" style="background:#fff;color:#334155;border:none;border-radius:11px;padding:13px 26px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Ver a leitura da IA deste edital →</button>
+      <div style="font-size:12.5px;opacity:.9;margin-top:13px">Ficou restrito demais? <a href="/conta?c=${encodeURIComponent(token)}" style="color:#fff;text-decoration:underline;font-weight:700">Ajuste as palavras do seu ramo</a> pra ampliar o que a gente encontra pra você.</div>
+    </div>` : `
     <div style="background:linear-gradient(135deg,#4338ca,#6d28d9);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:20px;box-shadow:0 12px 30px rgba(67,56,202,.28)">
       <div style="font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.85;margin-bottom:8px">✨ Comece por aqui</div>
       <div style="font-size:19px;font-weight:800;margin-bottom:6px;line-height:1.3">Veja a ContrataX.IA ler um edital do seu ramo em segundos</div>
       <div style="font-size:14px;opacity:.92;line-height:1.5;margin-bottom:12px">Escolhemos o mais urgente pra você. A IA resume o objeto, o prazo e as armadilhas, e diz se vale entrar. Grátis no teste.</div>
-      <div style="background:rgba(255,255,255,.12);border-radius:11px;padding:12px 14px;margin-bottom:16px">
-        <div style="font-size:12px;opacity:.85;font-weight:700">${esc(topo.municipio ?? "")}/${esc(topo.uf ?? "")} · ${esc(topo.orgao ?? "Órgão público")}</div>
-        <div style="font-size:14.5px;margin-top:4px">${esc((topo.objeto || "").slice(0, 110))}</div>
-      </div>
+      ${ahaBloco(topo.municipio, topo.uf, topo.orgao, topo.objeto)}
       <button type="button" data-id="${esc(topo.id)}" onclick="abrirDrawer(this.dataset.id)" style="background:#fff;color:var(--indigo);border:none;border-radius:11px;padding:13px 26px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Ver a análise deste edital →</button>
       <div style="font-size:12.5px;opacity:.9;margin-top:13px">Não precisa cadastrar nada antes: a leitura do edital sai na hora. Depois, <a href="/documentos?c=${encodeURIComponent(token)}" style="color:#fff;text-decoration:underline;font-weight:700">informe suas certidões</a> pra ficar ainda mais completo, com o veredito dizendo se <b>VOCÊ</b> está apto.</div>
-    </div>` : "";
+    </div>`) : "";
   // Card de VEREDITO (passo 2 da ativacao): aparece DEPOIS que ja analisou, se
   // ainda nao tem certidao. Captura as datas ali (merge via /api/certidoes) pra a
   // analise virar "VOCE esta apto", nao so resumo.
