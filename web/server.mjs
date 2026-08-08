@@ -80,12 +80,12 @@ const RAIZ = resolve(AQUI, "..");
 // Teto configuravel; 0 desliga. Guard contra geracao concorrente do mesmo edital.
 const PREWARM_N = Number(process.env.LICITA_PREWARM_TLDR ?? 8);
 const _prewarmAtivos = new Set();
-async function preaquecerTldrs(editais) {
-  if (!PREWARM_N || !temChave() || !editais?.length) return;
+async function preaquecerTldrs(editais, n = PREWARM_N) {
+  if (!n || !temChave() || !editais?.length) return;
   // Mais urgentes primeiro (mais provaveis de o cliente abrir).
   const top = [...editais]
     .sort((a, b) => (a.encerramento || "9999").localeCompare(b.encerramento || "9999"))
-    .slice(0, PREWARM_N);
+    .slice(0, n);
   for (const ed of top) {
     if (_prewarmAtivos.has(ed.id)) continue;
     try {
@@ -1052,11 +1052,17 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
       // Marca os favoritados do cliente (estrela no card).
       const favSet = new Set(perfil._favoritos || []);
       for (const ed of editais) ed.favorito = favSet.has(ed.id);
-      // Pre-aquece o resumo (TL;DR) dos editais mais urgentes em segundo plano,
-      // pra abrir instantaneo (como o concorrente faz pre-gerando tudo). Diferenca:
-      // so os top-N do painel, nao os 426k -> custo controlado. NAO bloqueia a
-      // resposta. Cache global: o 1o cliente aquece pra todos.
-      preaquecerTldrs(editais).catch(() => {});
+      // Pre-aquece o resumo (TL;DR) dos editais mais urgentes em 2o plano, pra
+      // abrir instantaneo. CUSTO (achado 08/08/2026): o pre-aquecimento de 8/painel
+      // pra QUALQUER visita era 86% do gasto de IA (R$180), gerando TL;DR
+      // especulativo pra trial que nunca abre, bot, navegacao casual. Agora:
+      // PAGANTE ganha os top-N (sao poucos e merecem rapidez); trial/expirado
+      // pre-aquece so o TOP 1 (o edital do card "Comece por aqui", pra o "uau" da
+      // 1a sessao continuar instantaneo). O resto vira sob demanda no 1o clique.
+      // Cache global: quando alguem abre, fica pronto pra todos mesmo assim.
+      const stPrewarm = statusAtual(perfil).status;
+      const pagante = stPrewarm === "ativo" || stPrewarm === "atrasado";
+      preaquecerTldrs(editais, pagante ? PREWARM_N : 1).catch(() => {});
       return json(res, 200, {
         [perfil.id]: {
           nome: perfil.nome,
@@ -1818,6 +1824,14 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
       // Custo de IA agregado por cliente (perfilToken).
       let custoPorCliente = {};
       try { custoPorCliente = (await resumoCustos())?.porCliente || {}; } catch {}
+      // Ultimo acesso REAL (login) por token: MAX(visto_em) na tabela de sessoes.
+      // Responde "ha quanto tempo o cliente nao entra" (ex: pagante sumido).
+      let ultimoAcessoPor = {};
+      try {
+        for (const r of abrir().prepare("SELECT token, MAX(visto_em) AS ultimo FROM sessoes GROUP BY token").all()) {
+          ultimoAcessoPor[r.token] = r.ultimo;
+        }
+      } catch {}
       const clientes = perfis.map((p) => {
         garantirUsuarios(p); // so em memoria, para contar a equipe
         const st = statusAtual(p);
@@ -1830,6 +1844,7 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
           nivel: p.assinatura?.nivel ?? null, planoNome: planoDe(p).nome,
           uso: usoDe(p), equipe: { usados: p.usuarios.length, assentos: p.assentos || 1 },
           custoIA: { total: custo.brl, mes: custo.brlMes, chamadas: custo.chamadas },
+          ultimoAcesso: ultimoAcessoPor[p.token] || null,
           resumos: resumosDe(p),
           // Regua de e-mails: quantos do onboarding (3) e do win-back (3) ja sairam.
           regua: {
