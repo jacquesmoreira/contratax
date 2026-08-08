@@ -1538,4 +1538,14 @@ Uma semana depois do fix #1, ainda ~1 trial/dia e 0 conversão nova (só 1 pagan
 
 **Marcelo (único pagante) NÃO largou:** Jacques temia que tivesse abandonado. Dado real (novo campo `ultimoAcesso` em /api/admin/clientes): **último acesso 06/08, 2 dias atrás.** Ele continua entrando sozinho MESMO com o e-mail voltando (bounce). Não está perdido, só não é alcançável por e-mail. Sinal de retenção melhor do que parecia.
 
+### 2026-08-08 (noite) — 1ª sessão MOSTRA a IA + achado do edital gigante
+
+**Contexto/meta do Jacques:** fechar **pelo menos 3 clientes em agosto** (nem que no Starter) e chegar a 10+ fixos até dezembro. Princípio dele, correto: não colocar dinheiro em tráfego pago enquanto "a pessoa entra, olha e sai".
+
+**O que mudou (commits `b1fa1dc`, `d988895`):** o card da 1ª sessão parou de PEDIR clique e passou a MOSTRAR a leitura da ContrataX.IA já pronta (selo, objeto, valor, prazo, 3 exigências-chave), nos DOIS caminhos (match forte e match fraco/nicho). O botão virou o passo seguinte ("análise completa + se VOCÊ está apto"). Casa com o corte de custo: o TL;DR do topo é o único pré-aquecido pra trial, então costuma vir do cache (R$0).
+
+**Achado sério no teste ao vivo (`47f083a`):** o edital do PAULO travava em "Lendo o edital..." indefinidamente. Chamando a API direto: **Anthropic recusa com "prompt is too long: 228917 tokens > 200000" após 1min26s**. Ou seja, editais gigantes (ata de registro de preços) NUNCA puderam ser lidos, nem pelo botão antigo, e ninguém sabia. Consertado: guarda de tamanho em `src/tldr.mjs` (PDF > 8MB, erro `pdf_grande` antes de gastar a chamada) + `AbortController` de 25s na tela com mensagem humana. Verificado em produção.
+
+**Regra de copy reforçada pelo Jacques:** nada com "cara de IA" em NENHUM texto do sistema (site, descrições, mensagens de erro). Tudo humanizado e bem estruturado. Aplicado nas mensagens novas.
+
 **Fim do handoff.** Boa sorte na próxima sessão.
