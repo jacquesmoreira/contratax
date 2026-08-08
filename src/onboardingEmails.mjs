@@ -1,13 +1,16 @@
-// Sequencia de onboarding + ativacao: e-mails nos primeiros 7 dias do cadastro
-// para AUMENTAR ATIVACAO (metrica core de SaaS) e empurrar a conversao antes do
-// fim do teste. Cadencia densa, porem sempre com valor real (editais do ramo da
-// pessoa), no espirito ContrataX: presente e insistente, sem spam vazio.
+// Sequencia de onboarding + ativacao: e-mails ao longo do teste gratis para
+// AUMENTAR ATIVACAO (metrica core de SaaS) e empurrar a conversao antes do fim.
+// Cadencia densa, porem sempre com valor real (editais do ramo da pessoa), no
+// espirito ContrataX: presente e insistente, sem spam vazio.
 //
 //   Dia 0 (imediato, no cadastro): boas-vindas + cadastrar certidoes
 //   Dia 2: ATIVACAO - "N editais do seu ramo estao abertos, rode o 1o resumo"
 //   Dia 4: como funciona o veredito (educacao do recurso principal)
-//   Dia 6: teste termina em 24h + planos
-//   Dia 7: ultimas horas (so enquanto ainda em teste)
+//   Faltando 2 dias pro fim: planos ("termina em 24h")
+//   Faltando 1 dia:          ultimas horas (so enquanto ainda em teste)
+//
+// Os dois ultimos sao RELATIVOS ao fim do teste (nao dias corridos), pra
+// funcionarem com qualquer LICITA_TRIAL_DIAS e com testes reabertos no admin.
 //
 // Cada perfil recebe cada e-mail UMA VEZ (marcadores _onboardEmail1Em,
 // _onboardAtivacaoEm, _onboardEmail2Em, _onboardEmail3Em, _onboardUltimasHorasEm).
@@ -253,6 +256,14 @@ export async function disparosOnboarding({ log = console.log } = {}) {
       if (!["teste", "teste_expirado"].includes(st.status)) continue;
       const emTeste = st.status === "teste";
 
+      // Os 3 primeiros contam DESDE O CADASTRO (educacao inicial, independe da
+      // duracao do teste). Os 2 ultimos sao avisos de FIM, entao contam pelo que
+      // FALTA, nao por dias corridos: com o trial de 7 dias, "dias >= 6" e "dias
+      // >= 7" batiam certo por coincidencia; ao mudar pra 14 (08/08/2026) eles
+      // passariam a mandar "seu teste termina em 24h" com 8 dias ainda pela
+      // frente, uma mentira na cara do cliente. Relativo funciona pra qualquer
+      // duracao (e pros testes reabertos pelo admin, que tem prazo proprio).
+      const faltam = st.diasRestantes; // null quando nao ha expiraEm
       let msg = null;
       if (dias >= 1 && !p._onboardEmail1Em) {
         msg = { marca: "_onboardEmail1Em", tag: "1-boasvindas", ...email1(p) };
@@ -260,10 +271,10 @@ export async function disparosOnboarding({ log = console.log } = {}) {
         msg = { marca: "_onboardAtivacaoEm", tag: "ativacao", ...emailAtivacao(p, editaisDoRamo(p)) };
       } else if (dias >= 4 && !p._onboardEmail2Em) {
         msg = { marca: "_onboardEmail2Em", tag: "2-veredito", ...email2(p) };
-      } else if (dias >= 6 && !p._onboardEmail3Em) {
+      } else if (faltam != null && faltam <= 2 && !p._onboardEmail3Em) {
         const d = editaisDoRamo(p);
         msg = { marca: "_onboardEmail3Em", tag: "3-planos", ...email3(p, d.total, d.soma) };
-      } else if (dias >= 7 && emTeste && !p._onboardUltimasHorasEm) {
+      } else if (faltam != null && faltam <= 1 && emTeste && !p._onboardUltimasHorasEm) {
         msg = { marca: "_onboardUltimasHorasEm", tag: "ultimas-horas", ...emailUltimasHoras(p) };
       }
       if (!msg) continue;

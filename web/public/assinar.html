@@ -68,7 +68,20 @@
       <button type="button" id="ct-anual" onclick="aplicarCiclo('anual')" style="border:none;background:transparent;color:var(--cinza);font-weight:800;padding:8px 18px;border-radius:99px;cursor:pointer;font-family:inherit;font-size:14px">Anual · 2 meses grátis</button>
     </div>
 
+    <!-- GARANTIA: maior redutor de atrito pra quem não conhece a marca. Antes a
+         página pedia R$59 recorrente sem nenhuma reversão de risco. -->
+    <div style="display:flex;gap:13px;align-items:flex-start;background:#fff;border:1.5px solid var(--verde);border-radius:14px;padding:16px 18px;margin:4px 0 22px">
+      <span style="font-size:26px;line-height:1">🛡️</span>
+      <div>
+        <div style="font-weight:800;font-size:15px;color:var(--navy);margin-bottom:3px">Se não fizer sentido, a gente devolve</div>
+        <div style="font-size:13.5px;color:var(--cinza);line-height:1.55">Você tem 7 dias depois de assinar para pedir o dinheiro de volta, sem precisar explicar nada. É só responder o e-mail da cobrança. Sem fidelidade e sem multa: cancela quando quiser, na própria conta.</div>
+      </div>
+    </div>
+
     <div class="planos" id="planos"></div>
+    <div id="ver-todos-wrap" style="text-align:center;margin-top:16px;display:none">
+      <button type="button" id="btn-ver-todos" style="background:none;border:none;color:var(--indigo);font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;text-decoration:underline">Ver os planos com mais análises por mês</button>
+    </div>
 
     <h2>Precisa de mais análises num mês?</h2>
     <div class="sub">Pacotes avulsos somam aos do seu plano e não expiram.</div>
@@ -85,11 +98,14 @@ const token = new URLSearchParams(location.search).get("c") || window.__CX_TOKEN
 const $ = (id) => document.getElementById(id);
 ["voltar-logo","link-painel","link-painel2"].forEach((i) => $(i).href = "/painel?c=" + encodeURIComponent(token));
 
+// Copy dos planos: fala do RESULTADO que o cliente leva, não da feature. A versão
+// anterior listava "analise dos editais: le o edital..." (sem acento, truncado,
+// igual em todos os planos), o que parecia amador justo na tela do dinheiro.
 const BENEFICIOS = [
-  "analise dos editais: le o edital e diz se você está apto e o que falta",
-  "Conferência dos seus documentos contra cada edital",
-  "Radar de renovação e ranking de quem ganha em cada órgão",
-  "Busca nacional por produto, cidade e prazo + acessos para a equipe",
+  "Descobre as licitações do seu ramo antes de perder o prazo",
+  "Lê o edital por você e diz se a sua empresa está apta a participar",
+  "Aponta a papelada que falta antes de a proposta ser desclassificada",
+  "Mostra por quanto seus concorrentes venderam, pra você precificar melhor",
 ];
 
 let DADOS = null;
@@ -149,14 +165,32 @@ async function carregar() {
     </div>`;
   };
 
-  $("planos").innerHTML = planosEmpresa.map((p, i) => cardPlano(p, i === planosEmpresa.length - 1, i === planosEmpresa.length - 1 ? "Mais análises" : null)).join("");
+  // MENOS ESCOLHA. Antes a pagina abria com 4 planos de empresa + 2 de assessoria
+  // (7 opcoes com o toggle anual), e o DESTAQUE ia pro mais CARO (Expertise R$397,
+  // tag "Mais analises"). Excesso de escolha paralisa e o destaque no topo da
+  // tabela empurra pra longe de quem so quer comecar. Agora abre com os 2 degraus
+  // de entrada (Starter e Basico), Basico marcado como "Recomendado", e os planos
+  // de volume ficam atras de um link pra quem realmente precisa.
+  const entrada = planosEmpresa.slice(0, 2);
+  const volume = planosEmpresa.slice(2);
+  const idxRecomendado = entrada.length - 1; // o 2o degrau (Basico) e o recomendado
+  $("planos").innerHTML = entrada.map((p, i) => cardPlano(p, i === idxRecomendado, i === idxRecomendado ? "Recomendado" : null)).join("");
+  if (volume.length) {
+    $("ver-todos-wrap").style.display = "block";
+    $("btn-ver-todos").onclick = () => {
+      $("planos").innerHTML = planosEmpresa.map((p, i) => cardPlano(p, i === idxRecomendado, i === idxRecomendado ? "Recomendado" : null)).join("");
+      $("ver-todos-wrap").style.display = "none";
+      aplicarCiclo(cicloAtual); // re-render precisa respeitar mensal/anual escolhido
+      ligarBotoes();            // e re-ligar os cliques dos cards novos
+    };
+  }
 
   // Bloco de assessoria (so renderiza se ha planos de assessoria definidos)
   if (planosAssessoria.length) {
     const blocoAss = document.createElement("div");
     blocoAss.innerHTML = `
       <h2 style="margin-top:42px">Para consultores e assessorias de licitação</h2>
-      <div class="sub" style="margin-bottom:18px">Gerencie vários clientes em um único login. Cada CNPJ tem painel próprio com editais, alertas e analise dos editais.</div>
+      <div class="sub" style="margin-bottom:18px">Gerencie vários clientes em um único login. Cada CNPJ tem painel próprio, com os editais, os alertas e a leitura dos editais pela ContrataX.IA.</div>
       <div class="planos" id="planos-ass"></div>
     `;
     $("planos").parentNode.insertBefore(blocoAss, $("planos").nextSibling);
@@ -170,6 +204,12 @@ async function carregar() {
       <button class="btn sec" data-tipo="avulso" data-id="${a.id}">Comprar</button>
     </div>`).join("");
 
+  ligarBotoes();
+}
+
+// Liga o clique de todo botao de compra. Vive fora do carregar() porque o
+// "ver todos os planos" re-renderiza os cards e precisa religar os novos.
+function ligarBotoes() {
   document.querySelectorAll("button[data-tipo]").forEach(b => b.onclick = () => checkout(b));
 }
 

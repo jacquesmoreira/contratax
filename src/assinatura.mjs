@@ -5,7 +5,12 @@
 import { lerPerfis, salvarPerfis } from "./perfis.mjs";
 import { planoDe } from "./planos.mjs";
 
-const TRIAL_DIAS = Number(process.env.LICITA_TRIAL_DIAS || 7);
+// 14 dias (era 7, mudado em 08/08/2026). Motivo: ganhar uma licitacao leva
+// SEMANAS (achar edital -> preparar papel -> disputar -> resultado). Em 7 dias o
+// cliente nao consegue viver o "ganhei por causa disso", entao decide sem nunca
+// ter sentido o valor. Diagnostico: 1 pagante em 31 cadastros. Reversivel por env
+// (LICITA_TRIAL_DIAS) e so afeta cadastros NOVOS; ninguem existente muda.
+const TRIAL_DIAS = Number(process.env.LICITA_TRIAL_DIAS || 14);
 
 // Preco de cada acesso (assento) extra, em numero. String "49,00" -> 49.
 const _precoNum = (s) => Number(String(s).replace(/\./g, "").replace(",", "."));

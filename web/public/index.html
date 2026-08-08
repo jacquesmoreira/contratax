@@ -634,7 +634,7 @@ function bannerTeste(a) {
       <div class="ico">⏰</div>
       <div class="corpo">
         <div class="tit">Seu teste grátis termina ${d <= 0 ? "hoje" : d === 1 ? "amanhã" : `em ${d} dias`}!</div>
-        <div class="sub" style="color:#fecaca">Sem assinatura, você perde o acesso aos editais, analise dos editais e alertas. Garante agora.</div>
+        <div class="sub" style="color:#fecaca">Sem assinatura, você perde os alertas das licitações do seu ramo e a leitura dos editais pela ContrataX.IA.</div>
       </div>
       <a class="btn-cta" href="/assinar?c=${encodeURIComponent(token)}">Escolher plano</a>
     </div>`;
@@ -790,7 +790,7 @@ function popupVencimento(a) {
   ov.innerHTML = `<div style="background:#fff;border-radius:18px;max-width:400px;width:100%;padding:30px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.3)">
     <div style="font-size:40px">🔔</div>
     <h2 style="font-size:20px;font-weight:800;margin:8px 0 6px">Sua assinatura ${quando}</h2>
-    <p style="color:#475569;font-size:14.5px;margin-bottom:20px">Renove o pagamento para continuar com a analise dos editais e o monitoramento sem interrupção.</p>
+    <p style="color:#475569;font-size:14.5px;margin-bottom:20px">Renove o pagamento para continuar recebendo os alertas e a leitura dos editais sem interrupção.</p>
     <a href="/assinar?c=${encodeURIComponent(token)}" style="display:block;background:#4338ca;color:#fff;font-weight:700;padding:13px;border-radius:11px;text-decoration:none;margin-bottom:10px">Renovar agora</a>
     <button id="fechar-venc" style="background:none;border:none;color:#64748b;font-weight:600;font-size:14px;cursor:pointer">Agora não</button>
   </div>`;
@@ -804,24 +804,32 @@ function paywall(a) {
     : "Acesso suspenso";
   const desc = a.status === "vencido"
     ? "Não identificamos o pagamento da sua mensalidade. Assim que o pagamento for confirmado, o acesso é reativado <b>na hora</b>."
-    : "Para continuar recebendo as licitações do seu ramo, analise dos editais e alertas de certidões, escolha o plano que cabe na sua operação.";
+    : "Para continuar recebendo os alertas das licitações do seu ramo e a leitura dos editais pela ContrataX.IA, escolha o plano que cabe na sua operação.";
   const link = "/assinar?c=" + encodeURIComponent(token);
-  // Cards inline pra cliente escolher direto (so quando teste expirou)
+  // Cards inline pra cliente escolher direto (so quando teste expirou).
+  // CORRECAO 08/08/2026: o paywall mostrava Basico (R$149) e Pro (R$247) e OMITIA
+  // o Starter (R$59). No momento exato da decisao, quem talvez pagasse R$59 via
+  // R$149 como porta de entrada e ia embora. O degrau mais convertivel estava
+  // escondido. Agora o Starter aparece primeiro e marcado como o comeco.
   const cards = a.status === "teste_expirado" ? `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;margin:24px 0 16px;max-width:760px;margin-left:auto;margin-right:auto">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;margin:24px 0 16px;max-width:760px;margin-left:auto;margin-right:auto">
+      <a href="${link}" style="background:#fff;border:2px solid var(--indigo);border-radius:14px;padding:18px;text-decoration:none;text-align:left;display:block;position:relative">
+        <span style="position:absolute;top:-10px;left:14px;background:var(--indigo);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.4px;text-transform:uppercase">Pra começar</span>
+        <div style="font-size:11px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px">Starter</div>
+        <div style="font-size:24px;font-weight:900;color:var(--indigo);margin:4px 0">R$ 59<span style="font-size:13px;color:var(--cinza);font-weight:600">/mês</span></div>
+        <div style="font-size:13px;color:var(--cinza)">Alertas ilimitados do seu ramo<br>6 editais lidos pela IA/mês</div>
+      </a>
       <a href="${link}" style="background:#fff;border:1.5px solid var(--linha);border-radius:14px;padding:18px;text-decoration:none;text-align:left;display:block">
         <div style="font-size:11px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px">Básico</div>
         <div style="font-size:24px;font-weight:900;color:var(--indigo);margin:4px 0">R$ 149<span style="font-size:13px;color:var(--cinza);font-weight:600">/mês</span></div>
-        <div style="font-size:13px;color:var(--cinza)">15 leituras dos editais/mês<br>1 acesso · 1 CNPJ</div>
-      </a>
-      <a href="${link}" style="background:#fff;border:2px solid var(--indigo);border-radius:14px;padding:18px;text-decoration:none;text-align:left;display:block;position:relative">
-        <span style="position:absolute;top:-10px;left:14px;background:var(--indigo);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.4px;text-transform:uppercase">Recomendado</span>
-        <div style="font-size:11px;font-weight:800;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px">Pro</div>
-        <div style="font-size:24px;font-weight:900;color:var(--indigo);margin:4px 0">R$ 247<span style="font-size:13px;color:var(--cinza);font-weight:600">/mês</span></div>
-        <div style="font-size:13px;color:var(--cinza)">30 leituras dos editais/mês<br>1 acesso · 1 CNPJ</div>
+        <div style="font-size:13px;color:var(--cinza)">15 editais lidos pela IA/mês<br>1 acesso · 1 CNPJ</div>
       </a>
     </div>
-    <div style="font-size:13px;color:var(--cinza);margin-bottom:8px">Consultor com múltiplos clientes? Veja os <a href="${link}" style="color:var(--indigo);font-weight:700">planos Assessoria</a> (multi-CNPJ).</div>
+    <div style="background:#fff;border:1.5px solid #16A34A;border-radius:12px;padding:13px 16px;max-width:760px;margin:0 auto 12px;text-align:left;display:flex;gap:11px;align-items:flex-start">
+      <span style="font-size:21px;line-height:1">🛡️</span>
+      <div style="font-size:13px;color:var(--cinza);line-height:1.5"><b style="color:var(--tinta)">Se não fizer sentido, a gente devolve.</b> Você tem 7 dias depois de assinar pra pedir o dinheiro de volta, sem precisar explicar nada. Sem fidelidade, cancela quando quiser.</div>
+    </div>
+    <div style="font-size:13px;color:var(--cinza);margin-bottom:8px">Precisa de mais análises ou atende vários CNPJs? <a href="${link}" style="color:var(--indigo);font-weight:700">Veja todos os planos</a>.</div>
   ` : "";
   return `<div class="paywall">
     <div class="lock">🔒</div>

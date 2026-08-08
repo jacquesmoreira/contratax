@@ -1850,7 +1850,11 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
           regua: {
             onboard: [p._onboardEmail1Em, p._onboardEmail2Em, p._onboardEmail3Em].filter(Boolean).length,
             winback: [p._winbackEmail1Em, p._winbackEmail2Em, p._winbackEmail3Em].filter(Boolean).length,
-            boasVindas: Boolean(p._boasVindasEm),
+            // Lia _boasVindasEm, que NUNCA existiu: o e-mail de boas-vindas
+            // imediato marca _onboardEmail1Em (ver boasVindasImediato em
+            // onboardingEmails.mjs). Por isso o admin mostrava "false" pra todo
+            // mundo, dando a impressao de que o e-mail nao saia (saia normal).
+            boasVindas: Boolean(p._onboardEmail1Em),
           },
         };
       });
