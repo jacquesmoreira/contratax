@@ -460,6 +460,46 @@ const servidor = createServer(async (req, res) => {
       return res.end(pagina);
     }
 
+    // Feedback de SAIDA (churn): o clique de 1 botao do e-mail de "o que faltou?"
+    // cai aqui. GET pra funcionar direto do e-mail (sem JS). Registra e agradece.
+    if (rota === "/feedback-saida") {
+      const tk = url.searchParams.get("c") || "";
+      const razao = url.searchParams.get("r") || "";
+      const { registrarFeedbackSaida, RAZOES } = await import("../src/feedbackSaida.mjs");
+      let label = null;
+      try { const r = await registrarFeedbackSaida(tk, razao, ""); label = r.label; } catch {}
+      const ok = Boolean(label);
+      const voltar = tk ? `/painel?c=${encodeURIComponent(tk)}` : "/";
+      const pagina = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Obrigado | ContrataX</title>
+<style>body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f8fafc;color:#0f172a;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px}.card{max-width:480px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:34px 32px;text-align:center}h1{font-size:21px;margin:0 0 12px}p{color:#475569;line-height:1.6;font-size:15px;margin:0 0 10px}a{color:#4338ca;font-weight:700;text-decoration:none}.q{background:#f1f5f9;border-radius:10px;padding:10px 14px;font-size:14px;color:#334155;margin:14px 0}</style>
+</head><body><div class="card">
+${ok ? `<h1>Obrigado! 🙏</h1>
+<p>Sua resposta foi registrada:</p>
+<div class="q">"${label}"</div>
+<p>Isso ajuda a gente a melhorar a plataforma de verdade. Se quiser detalhar em uma frase, é só <a href="mailto:contato@contratax.com.br?subject=Feedback%20ContrataX">responder aqui</a>, a gente lê tudo.</p>
+<p style="margin-top:18px">Mudou de ideia e quer voltar? <a href="${voltar}">Reabrir meu painel</a></p>`
+: `<h1>Não consegui registrar</h1><p>O link pode ter expirado. Se quiser, escreve pra <a href="mailto:contato@contratax.com.br">contato@contratax.com.br</a>.</p>`}
+</div></body></html>`;
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(pagina);
+    }
+
+    // Admin: lista o feedback de saida agregado (por que os trials nao fecharam).
+    if (rota === "/api/admin/feedback-saida") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const { listarFeedbackSaida } = await import("../src/feedbackSaida.mjs");
+        const dados = await listarFeedbackSaida();
+        // Quantos e-mails de saida ja foram enviados (marca no perfil), pra a taxa.
+        let enviados = 0;
+        try { const perfis = await lerPerfis(); enviados = perfis.filter((p) => p._feedbackSaidaEnviadoEm).length; } catch {}
+        return json(res, 200, { ...dados, enviados, taxaResposta: enviados ? dados.total / enviados : 0 });
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
+
     // Admin: dispara a sequencia COMPLETA de e-mails de teste pra um endereco
     // (avaliacao interna de acentuacao/tom/layout). ?c=ADMIN&para=email.
     if (rota === "/api/admin/testar-emails") {
@@ -1863,6 +1903,18 @@ const servidor = createServer(async (req, res) => {
           heapMb: Math.round(mem.heapUsed / 1024 / 1024),
         });
         return json(res, 200, { ok: true, ...r });
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
+    // Dispara AGORA a pergunta de saida pros expirados que ainda nao receberam
+    // (pega o backlog sem esperar o horario do digest). body: { c: ADMIN }
+    if (rota === "/api/admin/feedback-saida/enviar" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const { disparosFeedbackSaida } = await import("../src/feedbackSaida.mjs");
+        const logs = [];
+        const enviados = await disparosFeedbackSaida({ log: (m) => logs.push(m), max: Number(corpo.max) || 20 });
+        return json(res, 200, { ok: true, enviados, logs });
       } catch (e) { return json(res, 500, { erro: e.message }); }
     }
     if (rota === "/api/admin/ativar" && req.method === "POST") {

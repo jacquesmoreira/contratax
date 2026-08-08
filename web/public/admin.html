@@ -146,7 +146,7 @@ async function limparRecadoAdmin(destino, btn) {
 async function carregar() {
   const cli = await api("/api/admin/clientes");
   if (!cli.ok) { $("conteudo").innerHTML = `<div class="erro">Acesso negado. Use o link com o token de admin: <code>/admin?c=SEU_TOKEN</code></div>`; return; }
-  const [stats, custos, rec] = await Promise.all([api("/api/admin/stats"), api("/api/custos"), api("/api/admin/recado")]);
+  const [stats, custos, rec, fbSaida] = await Promise.all([api("/api/admin/stats"), api("/api/custos"), api("/api/admin/recado"), api("/api/admin/feedback-saida")]);
   const r = cli.d.resumo, s = stats.d, cu = custos.d;
   const recadoGeral = rec.ok ? rec.d.geral : null;
   const recadosInd = rec.ok ? (rec.d.individuais || []) : [];
@@ -291,6 +291,31 @@ async function carregar() {
     </tr>`;
   }
   html += `</tbody></table>`;
+
+  // POR QUE OS TRIALS NAO FECHAM: agregado das respostas do e-mail de saida.
+  // A objecao real, na boca do cliente, em vez de inferencia. Barra por motivo.
+  const fsd = fbSaida.ok ? fbSaida.d : null;
+  if (fsd) {
+    const rotulos = { sem_editais: "Não achou editais do ramo", sem_valor: "Achou, não viu valor", preco: "Preço", avaliando: "Ainda avaliando / sem tempo", outro: "Outro motivo" };
+    const cores = { sem_editais: "#dc2626", sem_valor: "#b45309", preco: "#7c3aed", avaliando: "#0891b2", outro: "#64748b" };
+    const maxN = Math.max(1, ...Object.values(fsd.porRazao || {}));
+    const barras = Object.keys(rotulos).map(k => {
+      const n = (fsd.porRazao || {})[k] || 0;
+      const pct = Math.round((n / maxN) * 100);
+      return `<div style="display:flex;align-items:center;gap:10px;margin:6px 0">
+        <div style="width:190px;font-size:12.5px;color:#334155;flex-shrink:0">${rotulos[k]}</div>
+        <div style="flex:1;background:#f1f5f9;border-radius:6px;height:22px;position:relative;overflow:hidden">
+          <div style="width:${pct}%;background:${cores[k]};height:100%;border-radius:6px;min-width:${n?"3px":"0"}"></div>
+          <span style="position:absolute;left:8px;top:0;line-height:22px;font-size:12px;font-weight:800;color:${n && pct>12?'#fff':'#334155'}">${n}</span>
+        </div></div>`;
+    }).join("");
+    const tx = fsd.enviados ? Math.round((fsd.total / fsd.enviados) * 100) : 0;
+    html += `<h2 style="margin-top:26px">🎯 Por que os trials não fecham <span class="mut" style="font-size:13px;font-weight:600">(${fsd.total} de ${fsd.enviados} responderam · ${tx}%)</span></h2>
+      <div class="leads">
+        ${fsd.total ? barras : '<span class="mut">Ninguém respondeu ainda. O e-mail de saída dispara quando um teste expira (ou use o botão acima pra o backlog).</span>'}
+        ${fsd.itens && fsd.itens.length ? `<div style="margin-top:14px;border-top:1px solid var(--linha);padding-top:10px">${fsd.itens.slice(0,20).map(it => `<div style="padding:6px 0;font-size:12.5px"><b style="color:${cores[it.razao]||'#334155'}">${esc(it.label)}</b> <span class="mut">· ${esc(it.nome||'cliente')}${it.ramo? ' · '+esc(String(it.ramo).slice(0,40)):''} · ${dataBR(it.atualizadoEm)}</span>${it.texto?`<div style="color:#334155;margin-top:2px">"${esc(it.texto)}"</div>`:''}</div>`).join("")}</div>` : ""}
+      </div>`;
+  }
 
   const fbs = s.feedbacks || [];
   const naoLidos = fbs.filter(f => !f.lido).length;

@@ -111,6 +111,14 @@ export async function digestLoop({ horaBR = 8, log = console.log } = {}) {
     // Apos o digest, dispara avisos de renovacao (7d e 1d antes do vencimento).
     try { await enviarAvisosRenovacaoDoDia({ log }); }
     catch (e) { log(`[renov] erro no ciclo: ${e.message}`); }
+    // Feedback de saida (churn): pergunta "o que faltou?" 1x pra quem expirou.
+    // ANTES do reengajamento de proposito: quem recebe o feedback hoje ja fica
+    // marcado com _ultimoReengajamento=hoje, entao o reengajamento abaixo pula
+    // esse perfil no mesmo dia (evita 2 e-mails juntos).
+    try {
+      const { disparosFeedbackSaida } = await import("./feedbackSaida.mjs");
+      await disparosFeedbackSaida({ log });
+    } catch (e) { log(`[feedback-saida] erro no ciclo: ${e.message}`); }
     // Regua de reengajamento diario (leads que testaram e nao assinaram). Roda
     // aqui, 1x/dia no horario controlado, junto do digest (nao no loop de 6h).
     try {
