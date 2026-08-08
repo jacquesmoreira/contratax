@@ -537,12 +537,13 @@ function perfilHTML(p) {
       <div style="font-size:12.5px;opacity:.9;margin-top:13px">Ficou restrito demais? <a href="/conta?c=${encodeURIComponent(token)}" style="color:#fff;text-decoration:underline;font-weight:700">Ajuste as palavras do seu ramo</a> pra ampliar o que a gente encontra pra você.</div>
     </div>` : `
     <div style="background:linear-gradient(135deg,#4338ca,#6d28d9);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:20px;box-shadow:0 12px 30px rgba(67,56,202,.28)">
-      <div style="font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.85;margin-bottom:8px">✨ Comece por aqui</div>
-      <div style="font-size:19px;font-weight:800;margin-bottom:6px;line-height:1.3">Veja a ContrataX.IA ler um edital do seu ramo em segundos</div>
-      <div style="font-size:14px;opacity:.92;line-height:1.5;margin-bottom:12px">Escolhemos o mais urgente pra você. A IA resume o objeto, o prazo e as armadilhas, e diz se vale entrar. Grátis no teste.</div>
-      ${ahaBloco(topo.municipio, topo.uf, topo.orgao, topo.objeto)}
-      <button type="button" data-id="${esc(topo.id)}" onclick="abrirDrawer(this.dataset.id)" style="background:#fff;color:var(--indigo);border:none;border-radius:11px;padding:13px 26px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Ver a análise deste edital →</button>
-      <div style="font-size:12.5px;opacity:.9;margin-top:13px">Não precisa cadastrar nada antes: a leitura do edital sai na hora. Depois, <a href="/documentos?c=${encodeURIComponent(token)}" style="color:#fff;text-decoration:underline;font-weight:700">informe suas certidões</a> pra ficar ainda mais completo, com o veredito dizendo se <b>VOCÊ</b> está apto.</div>
+      <div style="font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.85;margin-bottom:8px">✨ A ContrataX.IA já leu o melhor edital do seu ramo</div>
+      <div style="font-size:12px;opacity:.85;font-weight:700;margin-bottom:10px">${esc(topo.municipio ?? "")}/${esc(topo.uf ?? "")} · ${esc(topo.orgao ?? "Órgão público")}</div>
+      <div id="aha-tldr" data-id="${esc(topo.id)}" style="background:#fff;color:#0f172a;border-radius:12px;padding:15px 16px;margin-bottom:16px;min-height:60px">
+        <div style="padding:6px 0;font-size:14px;color:#475569"><span class="spinner"></span> Lendo o edital pra você, alguns segundos...</div>
+      </div>
+      <button type="button" data-id="${esc(topo.id)}" onclick="abrirDrawer(this.dataset.id)" style="background:#fff;color:var(--indigo);border:none;border-radius:11px;padding:13px 26px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Ver a análise completa e se VOCÊ está apto →</button>
+      <div style="font-size:12.5px;opacity:.9;margin-top:13px">Grátis no teste. Pra o veredito dizer se <b>VOCÊ</b> está apto (não só o resumo), <a href="/documentos?c=${encodeURIComponent(token)}" style="color:#fff;text-decoration:underline;font-weight:700">informe suas certidões</a> depois.</div>
     </div>`) : "";
   // Card de VEREDITO (passo 2 da ativacao): aparece DEPOIS que ja analisou, se
   // ainda nao tem certidao. Captura as datas ali (merge via /api/certidoes) pra a
@@ -1055,6 +1056,11 @@ async function carregar() {
       // Colapsa o menu de ferramentas (continua acessivel por 1 clique).
       if (gridFerr) gridFerr.style.display = "none";
       if (tgFerr) tgFerr.textContent = "Mostrar ▾";
+      // MOSTRA a leitura da IA JA PRONTA no card (sem pedir clique). Diagnostico
+      // 08/08: ninguem rodava a analise, entao nunca via a IA funcionar (o unico
+      // momento que prova valor). Agora o "uau" aparece sozinho na 1a tela. O
+      // TL;DR do topo ja e pre-aquecido pra trial, entao costuma vir do cache (R$0).
+      preencherAhaTldr();
     }
   } catch (e) { c.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`; }
 }
@@ -1136,6 +1142,34 @@ function tldrHTML(t, id, msg) {
     ${exigencias ? `<div style="font-size:12px;font-weight:700;color:var(--cinza-c);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Exigências-chave</div><ul style="list-style:none;padding:0;margin:0 0 12px">${exigencias}</ul>` : ""}
     ${t.motivo ? `<div style="background:#fff;border:1px solid var(--linha);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--cinza);line-height:1.5"><b style="color:${cor}">Leitura do edital:</b> ${esc(t.motivo)}</div>` : ""}
   </div>`;
+}
+
+// Preenche a leitura da IA DENTRO do card de primeira sessao, sem clique. E o
+// "uau" servido de graca: objeto, valor, prazo e as exigencias-chave ja na tela.
+// Versao compacta de proposito (o completo mora no drawer, atras do botao).
+async function preencherAhaTldr() {
+  const box = document.getElementById("aha-tldr");
+  if (!box) return;
+  const id = box.dataset.id;
+  const falhou = () => { box.innerHTML = `<div style="font-size:13.5px;color:#475569">Abra o edital abaixo pra ver a leitura completa da ContrataX.IA.</div>`; };
+  try {
+    const r = await fetch("/api/tldr?id=" + encodeURIComponent(id) + "&c=" + encodeURIComponent(token), { method: "POST" });
+    const d = await r.json();
+    const t = d.tldr;
+    if (!t || typeof t !== "object") return falhou();
+    const cor = { apto: "#16A34A", apto_pendencias: "#b45309", nao_apto: "#dc2626" }[t.veredito] || "#475569";
+    const selo = { apto: "✓ Exigências padrão", apto_pendencias: "⚠ Exige requisitos específicos", nao_apto: "✕ Acesso restrito" }[t.veredito] || "";
+    const exi = (t.exigencias || []).slice(0, 3)
+      .map((e) => `<li style="padding:3px 0;font-size:13px;color:#334155"><span style="color:#94a3b8;margin-right:6px">•</span>${esc(e)}</li>`).join("");
+    box.innerHTML = `
+      ${selo ? `<div style="font-size:11px;font-weight:800;color:${cor};margin-bottom:7px;letter-spacing:.3px">${selo}</div>` : ""}
+      <div style="font-size:14.5px;font-weight:700;line-height:1.45;margin-bottom:9px">${esc(t.objeto || "")}</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#475569;margin-bottom:${exi ? "10px" : "0"}">
+        ${t.valor ? `<div>💰 <b style="color:#0f172a">${esc(t.valor)}</b></div>` : ""}
+        ${t.prazo ? `<div>📅 <b style="color:#0f172a">${esc(t.prazo)}</b></div>` : ""}
+      </div>
+      ${exi ? `<div style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">Exigências-chave</div><ul style="list-style:none;padding:0;margin:0">${exi}</ul>` : ""}`;
+  } catch { falhou(); }
 }
 
 function iniciarTldr(id) {
