@@ -1556,4 +1556,21 @@ Uma semana depois do fix #1, ainda ~1 trial/dia e 0 conversão nova (só 1 pagan
 
 **ERRO MEU, corrigido antes de codar (`04fe0b8`):** afirmei que "a landing não mostra a IA" e ia construir uma demo pública. **Testei antes: a demo JÁ EXISTIA e FUNCIONA** — botão "Ver resumo da ContrataX.IA · grátis" em cada resultado da busca pública, entregou veredito completo em 17s pra visitante anônimo, com rate limit de 3/dia por IP já pronto. O problema real, medido: a demo fica a **1,5 tela de scroll** e o hero **não a mencionava**. Consertado apontando pra ela (CTA "Ver a IA ler um edital do meu ramo, agora" + selo "sem cadastro e sem cartão" no hero; título da seção explicando onde clicar). **Lição pra próxima sessão: testar o que já existe antes de propor construir.**
 
+### 2026-08-09 — exclusão em lote no admin + auditoria completa dos e-mails
+
+**Exclusão em lote (`8918808`):** admin ganhou checkbox por linha + "selecionar todos os visíveis" + barra "Excluir N selecionados", pedido do Jacques pra limpar expirados sem clicar 1 a 1. `POST /api/admin/excluir-lote {c, tokens:[]}`. Testado local (fantasmas via SQLite direto) e no navegador (clique real com confirms). **Já usado em produção pelo Jacques**: 31→8 clientes, confirmado por ele mesmo (não foi bug, foi ele limpando os expirados de propósito).
+
+**Auditoria de e-mails, 2 rodadas (`bc31721` + `5a80cf3`):** Jacques mostrou um boletim recebido e achou "veredito" estranho. Pente fino nos 13 arquivos que mandam e-mail. Achados reais:
+- **4 arquivos inteiros sem acentuação** (bug antigo, não estilo): `avisoRenovacao.mjs`, `recuperarSenha.mjs`, `alertasContratos.mjs`, `alertasRecebiveis.mjs`. Saíam "Ola", "voce", "prorrogacao" pro cliente pagante.
+- **"Aos cuidados de X,"** no chassi Boletim (digest+winback) = endereçamento formal de correspondência, ninguém fala assim. Virou "Olá, X,".
+- **"veredito"** como substantivo solto em frase corrida (winback, campanha fria) trocado por "diz se você está apto". Mantido como RÓTULO de lista/seção (ex: "Veredito: apto..."), onde funciona.
+- **"1 editais abertos"** (concordância) corrigido com singular/plural em toda contagem do winback.
+- **Saudação com nome completo** em vez do primeiro nome (recibos/renovação/senha) padronizada.
+- **Overlap de e-mails**: o e-mail 3 do onboarding ("termina em 24h") podia disparar DEPOIS de expirar em trials curtos (reabertura admin), mentindo o prazo e empilhando com o feedback-saida no mesmo dia. Corrigido, agora exige `emTeste`.
+- **2ª rodada, achado testando ao vivo** (Jacques disparou os 7 e-mails de teste pro próprio inbox): `R$ 160.7 milhões` (ponto, padrão EUA) em vez de `R$ 160,7 milhões`. `valorTxt()` duplicada em `onboardingEmails.mjs` e `winbackEmails.mjs` usava `.toFixed(1)` cru sem converter pro separador decimal brasileiro. Corrigido nos 2 lugares (únicas ocorrências no sistema).
+
+**Verificado em produção:** todas as páginas principais respondem (`/`, `/painel`, `/assinar`, `/admin`, `/comparativo`); o redirect de `/painel?c=X` pra `/painel` é comportamento esperado (seta cookie de sessão `cx_tok`, não é bug).
+
+**Lição registrada:** testar o que já existe antes de propor construir (achei a demo pública da IA já pronta e funcionando quando ia recomendar criar uma nova) e sempre gerar o HTML de verdade (ou disparar o teste real) antes de considerar um texto "corrigido" — o bug do separador decimal só apareceu olhando o e-mail de teste renderizado, não teria pego só lendo o código.
+
 **Fim do handoff.** Boa sorte na próxima sessão.
