@@ -271,7 +271,12 @@ export async function disparosOnboarding({ log = console.log } = {}) {
         msg = { marca: "_onboardAtivacaoEm", tag: "ativacao", ...emailAtivacao(p, editaisDoRamo(p)) };
       } else if (dias >= 4 && !p._onboardEmail2Em) {
         msg = { marca: "_onboardEmail2Em", tag: "2-veredito", ...email2(p) };
-      } else if (faltam != null && faltam <= 2 && !p._onboardEmail3Em) {
+      } else if (faltam != null && faltam <= 2 && emTeste && !p._onboardEmail3Em) {
+        // CORRECAO 09/08/2026: faltava o "emTeste" aqui (so o ultimo e-mail tinha).
+        // Sem isso, um trial CURTO (ex: reabertura do admin com poucos dias) podia
+        // deixar esse marcador pendente ate DEPOIS de expirar, e o e-mail dispararia
+        // dizendo "seu teste termina em 24h" quando ja tinha terminado ha dias, no
+        // mesmo dia do feedback-saida/winback (que so mandam pra quem ja expirou).
         const d = editaisDoRamo(p);
         msg = { marca: "_onboardEmail3Em", tag: "3-planos", ...email3(p, d.total, d.soma) };
       } else if (faltam != null && faltam <= 1 && emTeste && !p._onboardUltimasHorasEm) {

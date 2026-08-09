@@ -135,7 +135,12 @@ function cardEmail(e) {
 // --- Formato "Boletim" (chassi institucional compartilhado por digest e
 // reengajamento). Detalhes que dao cara de empresa estabelecida: numero de
 // edicao, data de processamento, bloco de identificacao do cliente com vigencia
-// da assinatura, saudacao formal e politica de uso no rodape. ---
+// da assinatura, e politica de uso no rodape. ---
+//
+// CORRECAO 09/08/2026 (Jacques, olhando o proprio boletim recebido): a
+// saudacao usava "Aos cuidados de X," que e um endereçamento formal (tipo
+// "c/o" de correspondencia), ninguem fala assim numa conversa. Virou "Olá,
+// X,", que mantem o tom institucional do resto do card sem soar de robô.
 
 function formatarCNPJ(cnpj) {
   const d = String(cnpj || "").replace(/\D/g, "");
@@ -203,7 +208,7 @@ export function boletimLayout({ perfil, vigenciaTexto = "", intro = "", corpoHtm
         </td></tr></table>
       </td></tr>
       <tr><td style="padding:14px 26px 4px;">
-        <div style="font-size:15px;color:#0f172a;margin-bottom:14px;">Aos cuidados de <b>${nome}</b>,</div>
+        <div style="font-size:15px;color:#0f172a;margin-bottom:14px;">Olá, <b>${nome}</b>,</div>
         ${avisoTopo}
         ${intro}
         ${corpoHtml}

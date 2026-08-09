@@ -41,7 +41,7 @@ function template({ selo, seloCor, titulo, mensagem, perfil, linhas, link, ctaTx
 <div style="font-size:18px;color:${seloCor.tit};font-weight:800;margin-top:4px">${titulo}</div>
 </td></tr>
 <tr><td style="padding:24px 26px;color:#0f172a;font-size:15px;line-height:1.6">
-<p>Olá, ${perfil.nome || "cliente"}.</p>
+<p>Olá, ${(perfil.nome || "").split(" ")[0] || "cliente"}.</p>
 ${mensagem}
 <table cellpadding="0" cellspacing="0" style="width:100%;font-size:14px;margin:16px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
 ${linhasHtml}

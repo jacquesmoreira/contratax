@@ -10,7 +10,7 @@
 //
 // Cada e-mail sai no formato "Boletim" (mesmo chassi institucional do digest),
 // lidera com os editais REAIS do ramo (FOMO concreto) e traz um muro "reative pra
-// ver o veredito". Nao e "volta pfv" repetido, e valor diario.
+// ver se voce esta apto". Nao e "volta pfv" repetido, e valor diario.
 //
 // Protecoes obrigatorias pra volume diario:
 //   - respeita _descadastrado (opt-out de 1 clique)
@@ -78,20 +78,27 @@ function editaisDoRamo(perfil, desdeIso = null) {
   return { total: casaram.length, soma, exemplos, novos };
 }
 
-// E-mail de reengajamento no formato Boletim (muro "reative pra ver o veredito").
+// E-mail de reengajamento no formato Boletim (muro "reative pra ver se você
+// está apto"). CORRECAO 09/08/2026 (Jacques flagrou no proprio boletim): 2
+// problemas. (1) "N editais" no singular ("1 editais abertos") era erro de
+// concordancia, corrigido com singular/plural em todos os pontos de contagem.
+// (2) "veredito" usado como substantivo solto em frase corrida soa juridico/
+// formal; trocado por "diz se voce esta apto" (verbo, natural) tanto no muro
+// quanto no botao.
 export function gerarReengajamento(perfil, dados) {
   const nome = (perfil.nome || "").split(" ")[0] || "olá";
   const ramo = (perfil.filtro?.termos ?? [])[0] || "seu ramo";
   const link = `${BASE}/assinar?c=${perfil.token}`;
   const temNovos = dados.novos > 0;
+  const pluralEditais = (n) => `${n.toLocaleString("pt-BR")} ${n === 1 ? "edital" : "editais"}`;
   const assunto = temNovos
-    ? `${nome}, ${dados.novos.toLocaleString("pt-BR")} ${dados.novos === 1 ? "novo edital" : "novos editais"} de ${ramo} hoje`
-    : `${nome}, ${dados.total.toLocaleString("pt-BR")} editais de ${ramo} abertos agora`;
+    ? `${nome}, ${dados.novos === 1 ? "1 novo edital" : pluralEditais(dados.novos) + " novos"} de ${ramo} hoje`
+    : `${nome}, ${pluralEditais(dados.total)} de ${ramo} ${dados.total === 1 ? "aberto" : "abertos"} agora`;
   const vigenciaTexto = `Vigência da assinatura: <b>expirada em ${dataBR(perfil.assinatura?.expiraEm)}</b> (conta pausada)`;
-  const intro = `<div style="font-size:14.5px;color:#334155;margin-bottom:14px;">Seu teste terminou, mas a ContrataX não parou de monitorar o <b>${ramo}</b>. ${temNovos ? `Hoje entraram <b>${dados.novos.toLocaleString("pt-BR")} ${dados.novos === 1 ? "novo edital" : "novos editais"}</b>` : `Agora há <b>${dados.total.toLocaleString("pt-BR")} editais abertos</b>`}${dados.soma > 0 ? `, somando <b>${valorTxt(dados.soma)}</b>` : ""}:</div>`;
+  const intro = `<div style="font-size:14.5px;color:#334155;margin-bottom:14px;">Seu teste terminou, mas a ContrataX não parou de monitorar o <b>${ramo}</b>. ${temNovos ? `Hoje ${dados.novos === 1 ? "entrou" : "entraram"} <b>${dados.novos === 1 ? "1 novo edital" : pluralEditais(dados.novos) + " novos"}</b>` : `Agora há <b>${pluralEditais(dados.total)} ${dados.total === 1 ? "aberto" : "abertos"}</b>`}${dados.soma > 0 ? `, somando <b>${valorTxt(dados.soma)}</b>` : ""}:</div>`;
   const cards = `<table width="100%" cellpadding="0" cellspacing="0" style="margin:2px 0 12px">${dados.exemplos.map(cardEdital).join("")}</table>`;
-  const muro = `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 4px"><tr><td style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#92400e;line-height:1.5">🔒 O veredito de aptidão e os alertas diários estão pausados. Reative pra destravar e voltar a receber tudo isso no seu painel.</td></tr></table>`;
-  const html = boletimLayout({ perfil, vigenciaTexto, intro, corpoHtml: cards + muro, ctaLink: link, ctaTexto: "Reativar e ver o veredito" });
+  const muro = `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 4px"><tr><td style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#92400e;line-height:1.5">🔒 A leitura que diz se você está apto e os alertas diários estão pausados. Reative pra destravar e voltar a receber tudo isso no seu painel.</td></tr></table>`;
+  const html = boletimLayout({ perfil, vigenciaTexto, intro, corpoHtml: cards + muro, ctaLink: link, ctaTexto: "Reativar e ver se estou apto" });
   return { assunto, html };
 }
 

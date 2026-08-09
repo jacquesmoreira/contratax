@@ -191,7 +191,7 @@ Todo dia saem centenas de editais novos no PNCP. ${linhaEditais}
 
 A ContrataX separa automaticamente os que combinam com o que vocês vendem, sem vocês caçarem em portal nenhum: objeto, valor estimado e prazo já chegam prontos no seu email.
 
-Quando um edital chamar atenção, é só abrir no painel: aí a ContrataX.IA lê o PDF inteiro e mostra as exigências de habilitação e o veredito, se vocês estão aptos ou não.
+Quando um edital chamar atenção, é só abrir no painel: aí a ContrataX.IA lê o PDF inteiro e mostra as exigências de habilitação e se vocês estão aptos ou não.
 
 Vocês continuam ganhando as mesmas licitações, gastando menos tempo procurando.
 
