@@ -57,9 +57,13 @@ function editaisDoRamo(perfil) {
   return { total: casaram.length, soma, exemplos: casaram.slice(0, 3) };
 }
 
+// CORRECAO 09/08/2026: .toFixed(1) usa PONTO como separador decimal (padrao
+// JS/EUA), saindo "R$ 160.7 milhões" pro cliente brasileiro (deveria ser
+// "160,7"). Achado nos e-mails de teste do Jacques. .replace troca pro padrao
+// pt-BR sem precisar reescrever a formatacao toda.
 function valorTxt(soma) {
-  return soma > 1e9 ? `R$ ${(soma/1e9).toFixed(1)} bilhões`
-    : soma > 1e6 ? `R$ ${(soma/1e6).toFixed(1)} milhões`
+  return soma > 1e9 ? `R$ ${(soma/1e9).toFixed(1).replace(".", ",")} bilhões`
+    : soma > 1e6 ? `R$ ${(soma/1e6).toFixed(1).replace(".", ",")} milhões`
     : `R$ ${Math.round(soma/1e3)} mil`;
 }
 
