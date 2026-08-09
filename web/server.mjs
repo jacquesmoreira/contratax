@@ -2041,6 +2041,23 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
     // Admin: exclui (arquiva) um cliente. Soft-delete: marca como excluido e
     // tira do acesso, mas preserva os dados num arquivo separado por seguranca,
     // em vez de apagar de vez (recuperavel se for engano).
+    // DIAGNOSTICO TEMPORARIO (09/08/2026): investigar queda de 31->8 clientes.
+    // Le o arquivo de arquivamento de exclusoes. So leitura, admin-gated. Remover
+    // depois de identificada a causa.
+    if (rota === "/api/admin/_diag-excluidos") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const arq = resolve(process.env.LICITA_DATA_DIR || resolve(AQUI, "..", "data"), "perfis-excluidos.jsonl");
+        const { readFile } = await import("node:fs/promises");
+        const texto = await readFile(arq, "utf8").catch(() => "");
+        const linhas = texto.trim().split("\n").filter(Boolean).map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+        return json(res, 200, {
+          total: linhas.length,
+          itens: linhas.map((p) => ({ nome: p.nome, email: p.email, status_antes: p.assinatura?.status, excluidoEm: p._excluidoEm })),
+        });
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
+
     if (rota === "/api/admin/excluir" && req.method === "POST") {
       const corpo = await lerCorpo(req);
       if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
