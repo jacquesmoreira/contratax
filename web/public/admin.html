@@ -88,6 +88,7 @@ function toggleRamo(a) {
 // inativo) sao mostrados sob demanda, sem excluir nada (a regua de reengajamento
 // continua rodando pra eles mesmo fora da tela).
 let filtroStatus = "ativos"; // ativos | teste | expirados | todos
+let selecionados = new Set(); // tokens marcados pra exclusao em lote (zera a cada carregar())
 function grupoStatus(status) {
   if (status === "teste") return "teste";
   if (status === "ativo" || status === "atrasado" || status === "admin") return "ativos";
@@ -231,6 +232,10 @@ async function carregar() {
   const contTeste = cli.d.clientes.filter((c) => grupoStatus(c.status) === "teste").length;
   const contExpirados = cli.d.clientes.filter((c) => grupoStatus(c.status) === "expirados").length;
   const clientesView = filtroStatus === "todos" ? cli.d.clientes : cli.d.clientes.filter((c) => grupoStatus(c.status) === filtroStatus);
+  // Poda tokens selecionados que sumiram da base (ex: excluidos em outra aba
+  // aberta), pra a barra nunca contar fantasma.
+  const tokensValidos = new Set(cli.d.clientes.map((c) => c.token));
+  for (const tk of [...selecionados]) if (!tokensValidos.has(tk)) selecionados.delete(tk);
 
   html += `<div style="display:flex;align-items:center;gap:14px;margin:24px 0 12px;flex-wrap:wrap">
     <h2 style="margin:0">Clientes e cadastros</h2>
@@ -241,9 +246,18 @@ async function carregar() {
       <button class="${filtroStatus === "todos" ? "on" : ""}" onclick="filtrar('todos')">Todos (${cli.d.clientes.length})</button>
     </div>
   </div>
+  <!-- Barra de exclusao em lote: pedido do Jacques pra "limpar os expirados" sem
+       clicar Excluir + confirmar 2x por linha. Fica sempre visivel (nao so no
+       filtro "expirados") pra funcionar em qualquer aba. -->
+  <div id="barra-selecao" style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+    <span id="sel-contagem" class="mut" style="font-size:13px">Nenhum selecionado</span>
+    <button id="btn-excluir-lote" class="btn-excluir" style="background:var(--vermelho);padding:6px 14px;font-size:13px" disabled>Excluir selecionados</button>
+    <button id="btn-limpar-sel" class="sec" style="padding:6px 12px;font-size:13px;display:none">Limpar seleção</button>
+  </div>
   <table><thead><tr>
+    <th style="width:30px"><input type="checkbox" id="chk-todos" title="Selecionar todos os visíveis nesta aba"></th>
     <th>Empresa</th><th>Contato</th><th>Plano / Status</th><th>Análises</th><th>Custo IA</th><th>Equipe</th><th>Ações</th></tr></thead><tbody>`;
-  if (!clientesView.length) html += `<tr><td colspan="7" class="mut" style="text-align:center;padding:20px">Nenhum cliente nesse filtro.</td></tr>`;
+  if (!clientesView.length) html += `<tr><td colspan="8" class="mut" style="text-align:center;padding:20px">Nenhum cliente nesse filtro.</td></tr>`;
   for (const c of clientesView) {
     const venc = c.diasRestantes != null ? `${c.diasRestantes}d` : "";
     const ia = c.custoIA || { total: 0, mes: 0, chamadas: 0 };
@@ -254,6 +268,7 @@ async function carregar() {
     const receita = c.nivel === "starter" ? 59 : c.nivel === "essencial" ? 149 : c.nivel === "pro" ? 397 : c.nivel === "assessoria10" ? 697 : c.nivel === "assessoria25" ? 1297 : 247;
     const margem = c.status === "ativo" ? Math.round(100 * (1 - ia.mes / receita)) : null;
     html += `<tr>
+      <td><input type="checkbox" class="chk-linha" data-token="${esc(c.token)}" ${selecionados.has(c.token) ? "checked" : ""}></td>
       <td><b>${esc(c.razaoSocial || c.nome)}</b><br><span class="mut">${esc(c.cnpj || "sem CNPJ")} · ${esc(c.uf || "BR")}</span><br>${ramoCell(c.ramo)}</td>
       <td>${esc(c.email || "-")}<br><span class="mut">desde ${dataBR(c.criadoEm)}</span>${(() => {
         // Ultimo acesso REAL (login), nao so "desde quando e cliente". Motivo
@@ -362,6 +377,59 @@ async function carregar() {
   }
   $("cab-resumo").textContent = `${r.total} clientes · ${r.ativos} pagantes${filtroStatus !== "todos" ? ` · mostrando ${clientesView.length}` : ""}`;
   ligarAcoes();
+  ligarSelecao(clientesView.map((c) => c.token));
+}
+
+// Exclusao em lote: seleciona 1+ linhas (checkbox por linha ou "selecionar
+// todos os visiveis") e exclui de uma vez. `tokensVisiveis` e a lista da aba
+// atual, usada pelo "selecionar todos" e pra saber o estado do checkbox mestre.
+function ligarSelecao(tokensVisiveis) {
+  const chkTodos = $("chk-todos");
+  const linhas = [...document.querySelectorAll(".chk-linha")];
+  const barraTxt = $("sel-contagem");
+  const btnExcluir = $("btn-excluir-lote");
+  const btnLimpar = $("btn-limpar-sel");
+
+  function atualizarBarra() {
+    const n = selecionados.size;
+    barraTxt.textContent = n === 0 ? "Nenhum selecionado" : `${n} selecionado${n > 1 ? "s" : ""}`;
+    btnExcluir.disabled = n === 0;
+    btnExcluir.textContent = n > 0 ? `Excluir ${n} selecionado${n > 1 ? "s" : ""}` : "Excluir selecionados";
+    btnLimpar.style.display = n > 0 ? "inline-block" : "none";
+    const visiveisMarcados = tokensVisiveis.filter((tk) => selecionados.has(tk)).length;
+    chkTodos.checked = tokensVisiveis.length > 0 && visiveisMarcados === tokensVisiveis.length;
+    chkTodos.indeterminate = visiveisMarcados > 0 && visiveisMarcados < tokensVisiveis.length;
+  }
+
+  linhas.forEach((chk) => {
+    chk.onchange = () => {
+      const tk = chk.dataset.token;
+      if (chk.checked) selecionados.add(tk); else selecionados.delete(tk);
+      atualizarBarra();
+    };
+  });
+
+  chkTodos.onchange = () => {
+    if (chkTodos.checked) tokensVisiveis.forEach((tk) => selecionados.add(tk));
+    else tokensVisiveis.forEach((tk) => selecionados.delete(tk));
+    linhas.forEach((chk) => { chk.checked = selecionados.has(chk.dataset.token); });
+    atualizarBarra();
+  };
+
+  btnLimpar.onclick = () => { selecionados.clear(); linhas.forEach((chk) => chk.checked = false); atualizarBarra(); };
+
+  btnExcluir.onclick = async () => {
+    const n = selecionados.size;
+    if (!n) return;
+    if (!confirm(`EXCLUIR ${n} empresa${n > 1 ? "s" : ""} selecionada${n > 1 ? "s" : ""} da base? Os dados são arquivados (recuperáveis), mas o acesso é removido pra todas de uma vez. Confirma?`)) return;
+    if (!confirm(`Tem certeza mesmo? Isso remove ${n} empresa${n > 1 ? "s" : ""} da lista agora.`)) return;
+    btnExcluir.disabled = true; btnExcluir.textContent = "Excluindo...";
+    const r = await post("/api/admin/excluir-lote", { tokens: [...selecionados] });
+    if (r.ok) { selecionados.clear(); alert(`${r.d.excluidos} empresa(s) excluída(s).`); carregar(); }
+    else { alert("Erro: " + r.d.erro); btnExcluir.disabled = false; atualizarBarra(); }
+  };
+
+  atualizarBarra();
 }
 
 function ligarAcoes() {

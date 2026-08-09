@@ -2059,6 +2059,31 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
       return json(res, 200, { ok: true, excluido: removido.nome || removido.token });
     }
 
+    // Exclusao EM LOTE: mesmo efeito do /api/admin/excluir, repetido pra uma lista
+    // de tokens. Existe pro Jacques poder "limpar os expirados" de uma vez em vez
+    // de clicar Excluir + confirmar duas vezes por linha. Mesmo arquivamento
+    // (recuperavel via perfis-excluidos.jsonl), 1 unico salvamento no fim.
+    if (rota === "/api/admin/excluir-lote" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      const tokens = Array.isArray(corpo.tokens) ? corpo.tokens.filter(Boolean) : [];
+      if (!tokens.length) return json(res, 400, { erro: "Nenhum token informado" });
+      const perfis = await lerPerfis();
+      const alvo = new Set(tokens);
+      const removidos = perfis.filter((p) => alvo.has(p.token));
+      const restantes = perfis.filter((p) => !alvo.has(p.token));
+      if (!removidos.length) return json(res, 404, { erro: "Nenhuma conta encontrada" });
+      const agora = new Date().toISOString();
+      for (const p of removidos) p._excluidoEm = agora;
+      await salvarPerfis(restantes);
+      try {
+        const arq = resolve(process.env.LICITA_DATA_DIR || resolve(AQUI, "..", "data"), "perfis-excluidos.jsonl");
+        const linhas = removidos.map((p) => JSON.stringify(p)).join("\n") + "\n";
+        await import("node:fs/promises").then(({ appendFile }) => appendFile(arq, linhas, "utf8"));
+      } catch { /* arquivamento best-effort */ }
+      return json(res, 200, { ok: true, excluidos: removidos.length, nomes: removidos.map((p) => p.nome || p.token) });
+    }
+
     // Catalogo de planos e pacotes avulsos (para a pagina de assinar).
     if (rota === "/api/planos") {
       return json(res, 200, {
