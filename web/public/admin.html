@@ -255,7 +255,17 @@ async function carregar() {
     const margem = c.status === "ativo" ? Math.round(100 * (1 - ia.mes / receita)) : null;
     html += `<tr>
       <td><b>${esc(c.razaoSocial || c.nome)}</b><br><span class="mut">${esc(c.cnpj || "sem CNPJ")} · ${esc(c.uf || "BR")}</span><br>${ramoCell(c.ramo)}</td>
-      <td>${esc(c.email || "-")}<br><span class="mut">desde ${dataBR(c.criadoEm)}</span></td>
+      <td>${esc(c.email || "-")}<br><span class="mut">desde ${dataBR(c.criadoEm)}</span>${(() => {
+        // Ultimo acesso REAL (login), nao so "desde quando e cliente". Motivo
+        // (08/08/2026): Jacques temia que o Marcelo tivesse abandonado o
+        // sistema so pelo e-mail estar voltando; o dado real mostrou que ele
+        // seguia entrando sozinho. Sem isso na tabela, so dava pra ver via API.
+        if (!c.ultimoAcesso) return `<br><span class="mut" style="color:var(--vermelho)">nunca acessou</span>`;
+        const dias = Math.floor((Date.now() - new Date(c.ultimoAcesso)) / 864e5);
+        const cor = dias >= 14 ? "var(--vermelho)" : dias >= 5 ? "#b45309" : "var(--cinza)";
+        const txt = dias <= 0 ? "acessou hoje" : dias === 1 ? "acessou ontem" : `acessou há ${dias}d`;
+        return `<br><span class="mut" style="color:${cor}">${txt}</span>`;
+      })()}</td>
       <td><span class="pill ${c.status}">${esc(c.status)}</span> ${venc ? `<span class="mut">${venc}</span>` : ""}<br><span class="mut">${esc(c.planoNome)}${c.formaPagamento ? " · " + esc(c.formaPagamento) : ""}</span>${(() => {
         const r = c.regua || { onboard: 0, winback: 0 };
         const enviou = r.onboard + r.winback > 0;
