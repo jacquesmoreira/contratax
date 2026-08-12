@@ -1587,4 +1587,14 @@ Jacques mostrou os 3 trials ativos e perguntou se o sistema atende os nichos del
 
 **Ainda não perfeito:** o DONIZETE tem "reforma de escola" e "aquisição de veículos" no top 5 (casam por "manutenção"/"elétrica" legítimos no texto). Melhorou muito, mas dá pra afinar mais se voltar a incomodar.
 
+### 2026-08-12 (parte 2) — afinação fina de DONIZETE e DEVCONS
+
+Depois da correção de causa raiz, o Jacques pediu pra afinar cliente a cliente. Dois achados novos, ambos diagnosticados com a tela de termos (dado real, não simulação):
+
+**DONIZETE (`a09a945`, ranking v4):** o melhor match dele — "AQUISIÇÃO DE MATERIAIS ELÉTRICOS, incluindo postes, fios, cabos, fitas isolantes" — estava em 2º, perdendo pra uma reforma de escola. Densidade pura pune texto LONGO, e o objeto dele é longo justamente porque LISTA os produtos do ramo. O sinal certo é a POSIÇÃO do ramo no objeto: em português, objeto de licitação é "[AÇÃO] DE [O QUE SE COMPRA] PARA [FINALIDADE]". Duas descobertas: (1) posição bruta não separa (9,8,6,9) porque o melhor caso abre com 7 palavras de burocracia → criada `PALAVRAS_BOILERPLATE`; (2) palavras de AÇÃO não podem ancorar posição, senão o edital de VEÍCULOS casa em "manutenção" (palavra 4) e parece central, quando o ramo só aparece em "elétrica" (palavra 6) e o que se compra é veículo → criada `PALAVRAS_ACAO`. **Resultado real:** top 6 agora 100% elétrico; reforma de escola caiu de 1º→7º, veículos de 4º→8º.
+
+**DEVCONS (`5a5bb77`):** "CONTRATAÇÃO DE EMPRESA PARA CONSULTORIA E ASSESSORIA AMBIENTAL" no painel de uma empresa de TI. Causa: a IA gerou "consultoria it", e o matching ignora tokens de 2 letras sem número (`tokenSignificativo`), então "it" some e sobra **"consultoria" sozinha**, casando com consultoria de qualquer área. Regra nova: termo composto que perde palavra no filtro e fica com menos de 2 palavras significativas é descartado (na geração e no saneamento). Preserva "papel a4"/"software 3d" (token com dígito segue significativo). **Resultado real:** 71→64 editais, 11 dos 12 primeiros claramente de TI, o edital ambiental sumiu.
+
+**Padrão que se repetiu 3x hoje** (registro eletrônico → SM, consultoria it → DEVCONS): **os termos gerados pela IA no cadastro são a maior fonte de match ruim**, não o ranking. Ao investigar match estranho, olhar PRIMEIRO os termosIA pela tela de diagnóstico (botão "🔍 Termos" no admin).
+
 **Fim do handoff.** Boa sorte na próxima sessão.
