@@ -149,25 +149,33 @@ function palavraPresente(w, raizesObjeto, objetoNorm) {
   return grupo.some((s) => raizesObjeto.has(s));
 }
 
-// TERMO LONGO (4+ palavras) aceita faltar UMA. Caso real medido: o cliente
-// cadastrou "SOFTWARE DE GESTAO EM SAUDE PUBLICA" (4 palavras significativas) e
-// perdia "Contratacao de sistema de gestao em saude para a Secretaria Municipal"
-// -- que e exatamente o cliente dele -- so porque o edital nao repete a palavra
-// "publica". Quanto mais especifico o cliente escreve, menos ele recebia, o que
-// e o oposto do esperado. Exigir n-1 recupera esses casos e continua seguro: o
-// ruido ("sistema de esgoto", "sistema de ar condicionado") bate 1 de 4 e nao
-// passa. So vale de 4 palavras pra cima: em termo de 2-3 palavras, deixar cair
-// uma ja o transformaria em busca generica.
-const MIN_PALAVRAS_FLEX = 4;
+// QUALIFICADORES: adjetivos de contexto que o cliente escreve pra descrever o
+// mercado dele, mas que o edital raramente repete. Sao OPCIONAIS no match.
+// Caso real medido (12/08/2026): "SOFTWARE DE GESTAO EM SAUDE PUBLICA" (4
+// palavras, todas exigidas) perdia "Contratacao de sistema de gestao em saude
+// para a Secretaria Municipal" -- exatamente o cliente dele -- so porque o
+// edital nao repete "publica". Quanto mais especifico o cliente escrevia, MENOS
+// recebia. Tornar so o QUALIFICADOR opcional resolve com cirurgia; a tentativa
+// anterior (deixar cair QUALQUER palavra de termo longo) abriu demais e trouxe
+// medicamento e material de limpeza pro painel dele, porque "Sistema Unico de
+// Saude" aparece em quase todo edital de saude e cobria 3 das 4 palavras.
+const QUALIFICADORES = new Set([
+  "publica", "publico", "publicas", "publicos", "privada", "privado",
+  "privadas", "privados", "municipal", "estadual", "federal", "nacional",
+  "regional", "local", "geral", "gerais", "integrado", "integrada",
+  "informatizado", "informatizada", "especializada", "especializado",
+]);
 
 function subTermoCasa(sub, raizesObjeto, objetoNorm, exigirProximidade = false) {
   const palavras = sub.split(/[^a-z0-9]+/).filter(tokenSignificativo);
   if (!palavras.length) return contemPalavra(sub, objetoNorm);
-  const presentes = palavras.filter((w) => palavraPresente(w, raizesObjeto, objetoNorm));
-  const exigidas = palavras.length >= MIN_PALAVRAS_FLEX ? palavras.length - 1 : palavras.length;
-  if (presentes.length < exigidas) return false;
-  // Proximidade (so termos da IA) se aplica as palavras que realmente casaram.
-  if (exigirProximidade && presentes.length > 1) return palavrasProximas(presentes, objetoNorm);
+  // O NUCLEO (sem qualificadores) e obrigatorio; o qualificador e bonus. Se o
+  // termo for SO qualificador (raro), ele volta a ser obrigatorio pra nao virar
+  // match vazio.
+  const nucleo = palavras.filter((w) => !QUALIFICADORES.has(w));
+  const exigidas = nucleo.length ? nucleo : palavras;
+  if (!exigidas.every((w) => palavraPresente(w, raizesObjeto, objetoNorm))) return false;
+  if (exigirProximidade && exigidas.length > 1) return palavrasProximas(exigidas, objetoNorm);
   return true;
 }
 
