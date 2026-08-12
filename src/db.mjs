@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdirSync } from "node:fs";
-import { normalizar, aplicarFiltro, tokenSignificativo, contemPalavra, palavrasProximas, raiz, termoCasa } from "./filtro.mjs";
+import { normalizar, aplicarFiltro, tokenSignificativo, contemPalavra, palavrasProximas, raiz, termoCasa, posicaoNoConteudo, PALAVRAS_BOILERPLATE, PALAVRAS_ACAO } from "./filtro.mjs";
 import { expandirTermos, excluirTermos, expandirRamoCurado } from "./sinonimos.mjs";
 import { portalDeLink } from "./portais.mjs";
 
@@ -799,11 +799,46 @@ export function explicarMatch(edital, termos = [], termosIA = []) {
     densidade: Number((palavrasValidas / totalPalavras).toFixed(3)),
   };
 }
+// v4 (12/08/2026, afinando o caso do DONIZETE a pedido do Jacques): densidade
+// pura punia o objeto LONGO, e o objeto longo era justamente o melhor match
+// dele -- "AQUISICAO DE MATERIAIS ELETRICOS, incluindo postes, fios, cabos,
+// fitas isolantes..." perdia (densidade 0.111) pra uma reforma de escola
+// (0.154) que so cita "instalacoes eletricas" como sub-item. O sinal que
+// separa de verdade e a POSICAO do assunto no objeto, ignorando o preambulo
+// burocratico: em portugues o objeto e "[ACAO] DE [O QUE SE COMPRA] PARA
+// [FINALIDADE]", entao termo no comeco = nucleo da compra, termo no fim =
+// finalidade/acessorio. Medido nos 4 casos reais: 1, 3, 6, 7 -> ordem exata.
+// Densidade continua, agora como DESEMPATE dentro da mesma faixa de posicao.
+function prefixosDosTermos(todosTermos) {
+  // Raizes das palavras que IDENTIFICAM o ramo (fora boilerplate e palavras de
+  // acao), pra casar "eletricos" com "eletrica"/"eletricas" -- raiz() nao
+  // lematiza genero, por isso o startsWith no prefixo cortado.
+  const out = new Set();
+  for (const t of todosTermos) {
+    for (const w of normalizar(String(t).replace(/^"|"$/g, "")).split(/[^a-z0-9]+/).filter(tokenSignificativo)) {
+      if (PALAVRAS_BOILERPLATE.has(w) || PALAVRAS_ACAO.has(w)) continue;
+      const r = raiz(w);
+      // corta a desinencia de genero/plural pra "eletric" cobrir toda a familia
+      out.add(r.length > 5 ? r.slice(0, r.length - 1) : r);
+    }
+  }
+  // Se o ramo inteiro era so palavra de acao (raro), volta pro conjunto cheio
+  // pra nao perder a ancora completamente.
+  if (out.size) return [...out];
+  for (const t of todosTermos) {
+    for (const w of normalizar(String(t)).split(/[^a-z0-9]+/).filter(tokenSignificativo)) {
+      const r = raiz(w);
+      out.add(r.length > 5 ? r.slice(0, r.length - 1) : r);
+    }
+  }
+  return [...out];
+}
 function ordenarPorRelevancia(editais, termos, termosIA) {
   const todosTermos = [...termos, ...(termosIA || [])];
   if (!todosTermos.length) return editais;
+  const prefixos = prefixosDosTermos(todosTermos);
   const score = (e) => {
-    if (e._viaItem) return { tier: 0, densidade: 0 };
+    if (e._viaItem) return { tier: 0, faixa: 9, densidade: 0 };
     const objetoNorm = normalizar(e.objeto || "");
     const raizesObjeto = raizesObjetoDe(objetoNorm);
     const totalPalavras = objetoNorm.split(/[^a-z0-9]+/).filter(tokenSignificativo).length || 1;
@@ -812,12 +847,17 @@ function ordenarPorRelevancia(editais, termos, termosIA) {
       if (!termoCasa(t, raizesObjeto, objetoNorm)) continue;
       palavrasValidas += normalizar(String(t)).split(/[^a-z0-9]+/).filter(tokenSignificativo).length;
     }
-    return { tier: 1, densidade: palavrasValidas / totalPalavras };
+    // Faixas em vez de posicao crua: diferenca de 1-2 palavras e ruido de
+    // redacao, mas "nucleo" vs "periferia" e sinal real.
+    const pos = posicaoNoConteudo(objetoNorm, prefixos);
+    const faixa = pos <= 2 ? 0 : pos <= 5 ? 1 : pos <= 9 ? 2 : pos < Infinity ? 3 : 4;
+    return { tier: 1, faixa, densidade: palavrasValidas / totalPalavras };
   };
   return [...editais]
     .map((e) => ({ e, s: score(e) }))
     .sort((a, b) =>
       b.s.tier - a.s.tier ||
+      a.s.faixa - b.s.faixa ||
       b.s.densidade - a.s.densidade ||
       (a.e.encerramento || "").localeCompare(b.e.encerramento || "")
     )

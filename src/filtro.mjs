@@ -146,6 +146,68 @@ export function termoCasa(termo, raizesObjeto, objetoNorm, exigirProximidade = f
   return subTermos.some((sub) => subTermoCasa(sub, raizesObjeto, objetoNorm, exigirProximidade));
 }
 
+// BOILERPLATE do objeto de licitacao: o preambulo burocratico que abre quase
+// todo edital ("Formalizacao de registro de precos para futura e eventual
+// aquisicao de..."), mais os nomes de portal que vem grudados no comeco. NAO e
+// pra filtrar match (essas palavras podem existir legitimamente no meio); e pra
+// medir ONDE o assunto de verdade comeca. Ver posicaoNoConteudo abaixo.
+export const PALAVRAS_BOILERPLATE = new Set([
+  "formalizacao", "registro", "registros", "preco", "precos", "pregao",
+  "licitacao", "licitatorio", "edital", "ata", "certame", "aquisicao",
+  "contratacao", "fornecimento", "prestacao", "srp", "eletronico", "eletronica",
+  "presencial", "lote", "lotes", "item", "itens", "objeto", "proposta",
+  "habilitacao", "futura", "futuras", "futuro", "eventual", "eventuais",
+  "empresa", "empresas", "especializada", "especializado", "especializados",
+  "para", "portal", "compras", "publicas", "licitanet", "visando", "visanto",
+  "destinados", "destinadas", "destinada", "destinado", "atender", "atendimento",
+  "necessidades", "secretaria", "secretarias", "prefeitura", "municipal",
+  "municipio", "fundo", "presente", "referencia", "termo", "processo",
+  "modalidade", "menor", "maior", "percentual", "desconto", "selecao",
+]);
+
+// Palavras de ACAO/generico que aparecem em termos de ramo ("manutencao
+// eletrica", "instalacao eletrica", "servicos eletricos") mas NAO identificam o
+// ramo sozinhas: o que identifica e "eletrica". Nao podem ancorar a posicao,
+// senao um edital de "AQUISICAO DE VEICULOS ... PARA APOIO AS ATIVIDADES DE
+// MANUTENCAO DA REDE ELETRICA" e pontuado como se o assunto comecasse em
+// "manutencao" (palavra 4) quando na verdade o ramo so aparece em "eletrica"
+// (palavra 6) e o que esta sendo comprado e VEICULO. Caso real medido.
+export const PALAVRAS_ACAO = new Set([
+  "manutencao", "instalacao", "instalacoes", "reforma", "reparo", "reparos",
+  "conserto", "consertos", "servico", "servicos", "produto", "produtos",
+  "material", "materiais", "equipamento", "equipamentos", "sistema", "sistemas",
+  "insumo", "insumos", "peca", "pecas", "kit", "kits", "suprimento",
+  "suprimentos", "execucao", "implantacao", "montagem", "operacao",
+]);
+
+// Posicao (em palavras de CONTEUDO, ignorando o boilerplate) onde o assunto do
+// cliente aparece no objeto. Quanto MENOR, mais o termo e o nucleo do que esta
+// sendo comprado; quanto maior, mais ele e periferia (finalidade, sub-item de
+// uma obra, acessorio). Descoberto medindo 4 casos reais do painel de um
+// cliente de material eletrico (12/08/2026):
+//   "AQUISICAO DE MATERIAIS ELETRICOS, incluindo postes, fios, cabos"  -> pos 1  (e isso que ele vende)
+//   "Reforma das INSTALACOES ELETRICAS do CEI"                          -> pos 3  (servico do ramo dele)
+//   "REFORMA DA ESCOLA (cobertura, INSTALACOES ELETRICAS, SPDA, pintura)" -> pos 6 (obra, eletrica e sub-item)
+//   "AQUISICAO DE VEICULOS ... PARA APOIO A MANUTENCAO DA REDE ELETRICA" -> pos 7 (compra veiculo, nao eletrica)
+// A posicao BRUTA nao separava (9, 8, 6, 9) porque o 2o caso abre com 7
+// palavras de burocracia. Tirando o boilerplate, a ordem sai exata.
+export function posicaoNoConteudo(objetoNorm, prefixosTermo) {
+  // Tira boilerplate E palavras de acao: o que sobra e a lista do que esta
+  // realmente sendo comprado. Se a 1a coisa dessa lista ja e o ramo do cliente,
+  // o edital E sobre o ramo dele ("materiais ELETRICOS, postes, fios, cabos" ->
+  // pos 0). Se o ramo so aparece la no fim, e finalidade ou acessorio
+  // ("VEICULOS, apoio, atividades, rede, eletrica" -> pos 4).
+  const conteudo = objetoNorm.split(/[^a-z0-9]+/)
+    .filter(tokenSignificativo)
+    .filter((w) => !PALAVRAS_BOILERPLATE.has(w) && !PALAVRAS_ACAO.has(w));
+  for (let i = 0; i < conteudo.length; i++) {
+    const w = conteudo[i];
+    const r = raiz(w);
+    if (prefixosTermo.some((p) => r === p || w.startsWith(p))) return i;
+  }
+  return Infinity;
+}
+
 // Palavras genericas de licitacao que NAO identificam um ramo sozinhas. Num
 // termo de duas palavras, sao a parte "ruido"; a outra e a que importa.
 const GENERICOS = new Set([
