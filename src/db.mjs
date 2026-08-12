@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdirSync } from "node:fs";
-import { normalizar, aplicarFiltro, tokenSignificativo, contemPalavra, palavrasProximas, raiz } from "./filtro.mjs";
+import { normalizar, aplicarFiltro, tokenSignificativo, contemPalavra, palavrasProximas, raiz, termoCasa } from "./filtro.mjs";
 import { expandirTermos, excluirTermos, expandirRamoCurado } from "./sinonimos.mjs";
 import { portalDeLink } from "./portais.mjs";
 
@@ -754,39 +754,45 @@ function casarComExpansao(candidatos, termos, termo, expandido, excluirList, { p
 // que aparece mais CEDO no objeto (mais central ao assunto) primeiro; (3) prazo
 // como desempate final. Isso afeta TUDO que usa casarPerfil: painel, digest
 // diario, radar de ativacao, card "Comece por aqui".
-// DENSIDADE em vez de frase exata: testado com o caso real do DONIZETE
-// (matcher naive por "indexOf" de frase inteira nao achava NADA, porque o
-// objeto usa "eletrica" -- feminino -- e o termo do cliente e "eletricos",
-// e a funcao raiz() do proprio sistema nao lematiza genero, so plural). A
-// densidade conta, palavra por palavra (raiz), quantas das palavras do
-// OBJETO batem com alguma raiz dos termos do cliente (proprios + IA). Um
-// objeto curto e focado ("cabo flexivel de cobre") tem densidade alta; um
-// objeto de obra gigante que so cita "eletrica" uma vez entre 40 palavras de
-// outras disciplinas tem densidade baixa. Isso separa bem sem exigir frase
-// exata. _viaItem (edital que so bateu por um ITEM perdido, nao pelo objeto
-// principal) fica sempre no tier de baixo, e o prazo desempata dentro do
-// mesmo tier (mantem o util "mais urgente primeiro" quando a relevancia empata).
+// v2 (mesmo dia, corrigindo um furo achado testando com o 3o cliente real):
+// a 1a versao flat "conta palavra solta que bate" pontuava alto qualquer
+// objeto rico na palavra genérica de um termo composto, mesmo sem o resto do
+// termo. Caso real: ramo tem "prontuario eletronico" (prontuario = registro
+// medico), e um edital de "aquisicao de eletronicos, eletrodomesticos"
+// (TVs/geladeiras, nada a ver) subiu no ranking so por causa da palavra solta
+// "eletronico(s)", porque a palavra "prontuario" nao precisava aparecer junto.
+// Fix: reusa termoCasa() (o MESMO validador que decide inclusao) TERMO POR
+// TERMO, que ja exige TODAS as palavras significativas de um termo composto
+// (via subTermoCasa -> .every()), entao "prontuario eletronico" so conta se
+// as DUAS palavras estiverem no objeto, nao so uma. Densidade virou
+// "quantos termos distintos bateram" (mais conceitos do ramo presentes =
+// mais central), com o termo mais LONGO/especifico como desempate (termo de
+// 2+ palavras bate mais forte que 1 palavra generica sozinha).
+function raizesObjetoDe(objetoNorm) {
+  return new Set(objetoNorm.split(/[^a-z0-9]+/).filter(tokenSignificativo).map(raiz));
+}
 function ordenarPorRelevancia(editais, termos, termosIA) {
   const todosTermos = [...termos, ...(termosIA || [])];
   if (!todosTermos.length) return editais;
-  const raizesTermos = new Set();
-  for (const t of todosTermos) {
-    const limpo = normalizar(String(t).replace(/^"|"$/g, ""));
-    for (const w of limpo.split(/[^a-z0-9]+/).filter(tokenSignificativo)) raizesTermos.add(raiz(w));
-  }
   const score = (e) => {
-    if (e._viaItem) return { tier: 0, densidade: 0 };
-    const palavrasObjeto = normalizar(e.objeto || "").split(/[^a-z0-9]+/).filter(tokenSignificativo);
-    if (!palavrasObjeto.length) return { tier: 1, densidade: 0 };
-    let bateram = 0;
-    for (const w of palavrasObjeto) if (raizesTermos.has(raiz(w))) bateram++;
-    return { tier: 1, densidade: bateram / palavrasObjeto.length };
+    if (e._viaItem) return { tier: 0, termosBatidos: 0, maiorTermo: 0 };
+    const objetoNorm = normalizar(e.objeto || "");
+    const raizesObjeto = raizesObjetoDe(objetoNorm);
+    let termosBatidos = 0, maiorTermo = 0;
+    for (const t of todosTermos) {
+      if (!termoCasa(t, raizesObjeto, objetoNorm)) continue;
+      termosBatidos++;
+      const nPalavras = normalizar(String(t)).split(/[^a-z0-9]+/).filter(tokenSignificativo).length;
+      if (nPalavras > maiorTermo) maiorTermo = nPalavras;
+    }
+    return { tier: 1, termosBatidos, maiorTermo };
   };
   return [...editais]
     .map((e) => ({ e, s: score(e) }))
     .sort((a, b) =>
       b.s.tier - a.s.tier ||
-      b.s.densidade - a.s.densidade ||
+      b.s.termosBatidos - a.s.termosBatidos ||
+      b.s.maiorTermo - a.s.maiorTermo ||
       (a.e.encerramento || "").localeCompare(b.e.encerramento || "")
     )
     .map((x) => x.e);
