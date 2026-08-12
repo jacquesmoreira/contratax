@@ -776,6 +776,29 @@ function casarComExpansao(candidatos, termos, termo, expandido, excluirList, { p
 function raizesObjetoDe(objetoNorm) {
   return new Set(objetoNorm.split(/[^a-z0-9]+/).filter(tokenSignificativo).map(raiz));
 }
+
+// Diagnostico: pra 1 edital, devolve QUAIS termos (proprios + IA) realmente
+// bateram, mais a densidade calculada. Serve pra tela de admin "por que este
+// edital apareceu", em vez de adivinhar reproduzindo o caso manualmente (foi
+// assim que o caso da SM Assessoria ficou sem explicacao: eu tinha que
+// simular os termos dela, sem ver os reais). NAO reimplementa nada: chama o
+// mesmo termoCasa que decide inclusao e ranking.
+export function explicarMatch(edital, termos = [], termosIA = []) {
+  const objetoNorm = normalizar(edital.objeto || "");
+  const raizesObjeto = raizesObjetoDe(objetoNorm);
+  const bateuProprio = termos.filter((t) => termoCasa(t, raizesObjeto, objetoNorm));
+  const bateuIA = termosIA.filter((t) => termoCasa(t, raizesObjeto, objetoNorm));
+  const totalPalavras = objetoNorm.split(/[^a-z0-9]+/).filter(tokenSignificativo).length || 1;
+  const palavrasValidas = [...bateuProprio, ...bateuIA]
+    .reduce((s, t) => s + normalizar(String(t)).split(/[^a-z0-9]+/).filter(tokenSignificativo).length, 0);
+  return {
+    viaItem: Boolean(edital._viaItem),
+    itemCasado: edital._itemCasado || null,
+    termosProprioQueBateram: bateuProprio,
+    termosIAQueBateram: bateuIA,
+    densidade: Number((palavrasValidas / totalPalavras).toFixed(3)),
+  };
+}
 function ordenarPorRelevancia(editais, termos, termosIA) {
   const todosTermos = [...termos, ...(termosIA || [])];
   if (!todosTermos.length) return editais;

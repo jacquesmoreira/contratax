@@ -44,6 +44,18 @@
   .leads { background:#fff; border:1px solid var(--linha); border-radius:12px; padding:16px; font-size:13px; }
   .leads div { padding:5px 0; border-bottom:1px solid var(--linha); }
   .leads div:last-child { border-bottom:none; }
+  /* Diagnostico de termos: modal simples, sem lib externa. */
+  #modal-termos-ov { display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:50; padding:24px; overflow-y:auto; }
+  #modal-termos-ov.on { display:flex; align-items:flex-start; justify-content:center; }
+  #modal-termos { background:#fff; border-radius:14px; max-width:820px; width:100%; padding:24px 26px; margin:20px 0; }
+  #modal-termos h2 { margin:0 0 4px; font-size:18px; }
+  #modal-termos .fecha { float:right; background:none; border:none; font-size:20px; cursor:pointer; color:var(--cinza-c); line-height:1; }
+  .tag-termo { display:inline-block; background:#eef2ff; color:var(--indigo); font-size:12px; font-weight:700; padding:3px 9px; border-radius:99px; margin:2px 4px 2px 0; }
+  .tag-termo.ia { background:#f0fdf4; color:var(--verde); }
+  .tag-termo.excluir { background:var(--vermelho-bg); color:var(--vermelho); }
+  .edital-diag { border:1px solid var(--linha); border-radius:10px; padding:10px 13px; margin-bottom:8px; font-size:12.5px; }
+  .edital-diag .obj { color:var(--tinta); margin:4px 0; }
+  .edital-diag .semtermo { color:var(--vermelho); font-weight:700; }
 </style>
 </head>
 <body>
@@ -52,6 +64,13 @@
     <span id="cab-resumo" class="mut" style="margin-left:auto"></span>
   </header>
   <div class="wrap" id="conteudo"><p class="mut">Carregando...</p></div>
+
+  <div id="modal-termos-ov">
+    <div id="modal-termos">
+      <button class="fecha" onclick="fecharDiagTermos()">×</button>
+      <div id="modal-termos-corpo"><p class="mut">Carregando...</p></div>
+    </div>
+  </div>
 
 <script>
 const token = new URLSearchParams(location.search).get("c") || "";
@@ -309,6 +328,7 @@ async function carregar() {
         <input class="in-assentos" type="number" value="${c.equipe.assentos}" title="assentos" />
         <button class="btn-assentos sec">Assentos</button>
         <a href="/painel?c=${encodeURIComponent(c.token)}" target="_blank">Painel ↗</a>
+        <button class="btn-termos sec" data-token="${esc(c.token)}" title="Mostra os termos exatos (proprios + IA) e por que cada edital bateu">🔍 Termos</button>
         ${c.status === "teste_expirado" ? `<button class="btn-reabrir sec" title="Reabre o teste gratis por 7 dias e envia e-mail convidando a voltar (tom de novidades/melhorias)" style="color:var(--verde);border-color:var(--verde)">🔄 Reabrir teste 7d</button>` : ""}
         ${c.status === "inativo" ? `<button class="btn-suspender sec" data-congelar="false" style="color:var(--verde);border-color:var(--verde)">Reativar</button>` : `<button class="btn-suspender sec" data-congelar="true" style="color:var(--ambar);border-color:var(--ambar)">Congelar</button>`}
         <button class="btn-excluir" style="background:var(--vermelho)">Excluir</button>
@@ -472,7 +492,51 @@ function ligarAcoes() {
       const r = await post("/api/admin/excluir", { token: tk });
       alert(r.ok ? `Empresa excluída: ${r.d.excluido}.` : "Erro: " + r.d.erro); if (r.ok) carregar();
     };
+    box.querySelector(".btn-termos").onclick = () => abrirDiagTermos(tk);
   });
+}
+
+// Diagnostico de termos: mostra os termos EXATOS (proprios + IA) de 1 cliente
+// e, pra cada edital do painel dele, qual termo bateu. Construido 12/08/2026
+// pra parar de adivinhar (reproduzindo o cenario a mao) por que um match
+// ruim aparecia — agora e so olhar o dado real.
+function fecharDiagTermos() { $("modal-termos-ov").classList.remove("on"); }
+document.getElementById("modal-termos-ov").addEventListener("click", (e) => {
+  if (e.target.id === "modal-termos-ov") fecharDiagTermos();
+});
+
+async function abrirDiagTermos(tk) {
+  $("modal-termos-ov").classList.add("on");
+  $("modal-termos-corpo").innerHTML = `<p class="mut">Carregando...</p>`;
+  const r = await api(`/api/admin/diagnostico-termos?token=${encodeURIComponent(tk)}`);
+  if (!r.ok || !r.d.ok) { $("modal-termos-corpo").innerHTML = `<p class="erro">Erro: ${esc(r.d.erro || "falha ao carregar")}</p>`; return; }
+  const d = r.d;
+  const tagTermos = (lista, cls) => lista.length
+    ? lista.map((t) => `<span class="tag-termo ${cls}">${esc(t)}</span>`).join("")
+    : '<span class="mut">nenhum</span>';
+  let html = `
+    <h2>${esc(d.cliente.razaoSocial || d.cliente.nome)}</h2>
+    <p class="mut" style="margin:0 0 14px">UF(s): ${esc((d.ufs || []).join(", ") || "Brasil todo")} · ${d.totalCasados} de ${d.totalBruto} editais casaram${d.alargado ? " (alargado pro Brasil)" : ""}</p>
+    <div style="margin-bottom:10px"><b style="font-size:12.5px;color:var(--cinza)">TERMOS PRÓPRIOS (cadastrados pelo cliente)</b><br>${tagTermos(d.termos, "")}</div>
+    <div style="margin-bottom:10px"><b style="font-size:12.5px;color:var(--cinza)">TERMOS DA IA (expansão gerada no cadastro)</b><br>${tagTermos(d.termosIA, "ia")}</div>
+    ${d.termosExcluir.length ? `<div style="margin-bottom:14px"><b style="font-size:12.5px;color:var(--cinza)">EXCLUSÕES</b><br>${tagTermos(d.termosExcluir, "excluir")}</div>` : ""}
+    <h3 style="font-size:14px;margin:18px 0 8px">Editais no painel agora (ordem real, top ${Math.min(15, d.editais.length)})</h3>
+  `;
+  if (!d.editais.length) {
+    html += `<p class="mut">Nenhum edital casou com esses termos agora.</p>`;
+  } else {
+    html += d.editais.slice(0, 15).map((e) => {
+      const props = e.termosProprioQueBateram.map((t) => `<span class="tag-termo">${esc(t)}</span>`).join("");
+      const ias = e.termosIAQueBateram.map((t) => `<span class="tag-termo ia">${esc(t)}</span>`).join("");
+      const nenhum = !e.termosProprioQueBateram.length && !e.termosIAQueBateram.length;
+      return `<div class="edital-diag">
+        <div class="mut">${esc(e.municipio || "")}/${esc(e.uf || "")} · ${esc(e.orgao || "")}${e.viaItem ? ` · <span style="color:var(--ambar);font-weight:700">via item: ${esc(e.itemCasado || "")}</span>` : ""}</div>
+        <div class="obj">${esc((e.objeto || "").slice(0, 160))}</div>
+        <div>${props}${ias}${nenhum ? '<span class="semtermo">⚠ nenhum termo bateu no objeto (so via item, ou herdado do ramo ampliado)</span>' : ""} <span class="mut">· densidade ${e.densidade}</span></div>
+      </div>`;
+    }).join("");
+  }
+  $("modal-termos-corpo").innerHTML = html;
 }
 
 // Dispara a sequencia completa de e-mails de teste (7) pra um endereco.

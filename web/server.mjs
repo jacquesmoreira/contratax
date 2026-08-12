@@ -1767,6 +1767,42 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
     // serve como prova de visita real. Sem sessao nenhuma = nunca voltou depois
     // do cadastro. Ajuda a saber se o problema e ATIVACAO (nunca abriu) ou
     // ENGAJAMENTO (abriu mas nao usou a IA).
+    // Diagnostico de MATCH: pra 1 cliente, mostra os termos EXATOS que ele tem
+    // registrados (proprios + gerados pela IA no cadastro) e, pra cada edital
+    // que aparece no painel dele, QUAL termo bateu e a densidade calculada.
+    // Motivo (12/08/2026): investigando por que o painel de um cliente mostrava
+    // um match ruim (edital de "eletronicos/eletrodomesticos" pra quem vende
+    // "prontuario eletronico"), eu tive que ADIVINHAR os termos dele simulando
+    // um cenario, porque nenhuma tela mostrava os termosIA reais gerados no
+    // cadastro. Essa tela fecha esse buraco: mostra o dado real, sem simular.
+    if (rota === "/api/admin/diagnostico-termos") {
+      if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      const token = url.searchParams.get("token") || "";
+      if (!token) return json(res, 400, { erro: "Informe ?token=<token do cliente>" });
+      try {
+        const perfil = await perfilPorToken(token);
+        if (!perfil) return json(res, 404, { erro: "Cliente nao encontrado" });
+        const { explicarMatch } = await import("../src/db.mjs");
+        const r = await monitorar(perfil, { marcar: false, salvar: false });
+        const termos = perfil.filtro?.termos ?? [];
+        const termosIA = perfil.filtro?.termosIA ?? [];
+        const termosExcluir = perfil.filtro?.termosExcluir ?? [];
+        const editaisExplicados = r.filtrados.map((e) => ({
+          id: e.id, municipio: e.municipio, uf: e.uf, orgao: e.orgao,
+          objeto: e.objeto, valorEstimado: e.valorEstimado, encerramento: e.encerramento,
+          ...explicarMatch(e, termos, termosIA),
+        }));
+        return json(res, 200, {
+          ok: true,
+          cliente: { nome: perfil.nome, razaoSocial: perfil.razaoSocial, token: perfil.token },
+          ufs: perfil.ufs ?? (perfil.uf ? [perfil.uf] : []),
+          termos, termosIA, termosExcluir,
+          alargado: r.alargado, totalBruto: r.total, totalCasados: r.filtrados.length,
+          editais: editaisExplicados,
+        });
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
+
     if (rota === "/api/admin/diagnostico-ativacao") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       try {
