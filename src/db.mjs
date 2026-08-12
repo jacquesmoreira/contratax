@@ -761,13 +761,18 @@ function casarComExpansao(candidatos, termos, termo, expandido, excluirList, { p
 // medico), e um edital de "aquisicao de eletronicos, eletrodomesticos"
 // (TVs/geladeiras, nada a ver) subiu no ranking so por causa da palavra solta
 // "eletronico(s)", porque a palavra "prontuario" nao precisava aparecer junto.
-// Fix: reusa termoCasa() (o MESMO validador que decide inclusao) TERMO POR
-// TERMO, que ja exige TODAS as palavras significativas de um termo composto
-// (via subTermoCasa -> .every()), entao "prontuario eletronico" so conta se
-// as DUAS palavras estiverem no objeto, nao so uma. Densidade virou
-// "quantos termos distintos bateram" (mais conceitos do ramo presentes =
-// mais central), com o termo mais LONGO/especifico como desempate (termo de
-// 2+ palavras bate mais forte que 1 palavra generica sozinha).
+// Fix v2: reusa termoCasa() (o MESMO validador que decide inclusao) TERMO POR
+// TERMO, exigindo TODAS as palavras de um termo composto (subTermoCasa ->
+// .every()). Resolveu o falso-positivo, mas testando de novo AO VIVO abriu
+// outro furo: contar "quantos termos distintos bateram" sem levar o TAMANHO
+// do objeto em conta deixa a obra gigante (que cita eletrica/hidraulica/civil/
+// instalacao/manutencao, cada um batendo um termo DIFERENTE do cliente)
+// empatar ou ganhar de um objeto curto e focado que so bate 1-2 termos.
+// v3: combina os dois lados que funcionaram. Usa termoCasa (valido, sem
+// colisao de palavra solta) SO PRA DECIDIR quais termos realmente batem;
+// densidade = soma das palavras dos termos VALIDOS / total de palavras
+// significativas do objeto. Isso penaliza texto longo (obra) e premia texto
+// curto e focado (compra pontual), sem reabrir a colisao da v1.
 function raizesObjetoDe(objetoNorm) {
   return new Set(objetoNorm.split(/[^a-z0-9]+/).filter(tokenSignificativo).map(raiz));
 }
@@ -775,24 +780,22 @@ function ordenarPorRelevancia(editais, termos, termosIA) {
   const todosTermos = [...termos, ...(termosIA || [])];
   if (!todosTermos.length) return editais;
   const score = (e) => {
-    if (e._viaItem) return { tier: 0, termosBatidos: 0, maiorTermo: 0 };
+    if (e._viaItem) return { tier: 0, densidade: 0 };
     const objetoNorm = normalizar(e.objeto || "");
     const raizesObjeto = raizesObjetoDe(objetoNorm);
-    let termosBatidos = 0, maiorTermo = 0;
+    const totalPalavras = objetoNorm.split(/[^a-z0-9]+/).filter(tokenSignificativo).length || 1;
+    let palavrasValidas = 0;
     for (const t of todosTermos) {
       if (!termoCasa(t, raizesObjeto, objetoNorm)) continue;
-      termosBatidos++;
-      const nPalavras = normalizar(String(t)).split(/[^a-z0-9]+/).filter(tokenSignificativo).length;
-      if (nPalavras > maiorTermo) maiorTermo = nPalavras;
+      palavrasValidas += normalizar(String(t)).split(/[^a-z0-9]+/).filter(tokenSignificativo).length;
     }
-    return { tier: 1, termosBatidos, maiorTermo };
+    return { tier: 1, densidade: palavrasValidas / totalPalavras };
   };
   return [...editais]
     .map((e) => ({ e, s: score(e) }))
     .sort((a, b) =>
       b.s.tier - a.s.tier ||
-      b.s.termosBatidos - a.s.termosBatidos ||
-      b.s.maiorTermo - a.s.maiorTermo ||
+      b.s.densidade - a.s.densidade ||
       (a.e.encerramento || "").localeCompare(b.e.encerramento || "")
     )
     .map((x) => x.e);
