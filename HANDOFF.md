@@ -1573,4 +1573,18 @@ Uma semana depois do fix #1, ainda ~1 trial/dia e 0 conversão nova (só 1 pagan
 
 **Lição registrada:** testar o que já existe antes de propor construir (achei a demo pública da IA já pronta e funcionando quando ia recomendar criar uma nova) e sempre gerar o HTML de verdade (ou disparar o teste real) antes de considerar um texto "corrigido" — o bug do separador decimal só apareceu olhando o e-mail de teste renderizado, não teria pego só lendo o código.
 
+### 2026-08-12 — RELEVÂNCIA DO MATCH: causa raiz achada e corrigida
+
+Jacques mostrou os 3 trials ativos e perguntou se o sistema atende os nichos deles. Investigando os 3 ao vivo, achei **três problemas encadeados**, do sintoma à causa raiz:
+
+**1. Painel do cliente não tinha ranqueamento (commits `8b5ac65` → `59b9bc3` → `437bf81`, 3 iterações).** `casarPerfil`/`monitorar` (painel, digest, radar, card "Comece por aqui") só ordenava por `encerramento ASC` do SQL. A busca PÚBLICA da landing já tinha ranking por relevância; o painel do cliente pagante nunca ganhou. Cliente de material elétrico via uma **obra inteira de Estação de Tratamento de Água** como "melhor edital" só por ter o prazo mais perto. Precisou de 3 versões: v1 densidade por palavra solta (criou falso positivo), v2 match por termo completo via `termoCasa` (obra voltou ao topo por bater vários termos), **v3 = combina as duas** (valida por termo completo, pontua por densidade proporcional ao tamanho do objeto).
+
+**2. Tela de diagnóstico de termos (`6b888dc`).** Eu estava *adivinhando* os termos dos clientes pra reproduzir os casos. Construí `GET /api/admin/diagnostico-termos?token=X` + botão "🔍 Termos" em cada linha do admin: mostra termos próprios, termosIA, exclusões, e pra cada edital do painel dele QUAL termo bateu e a densidade. **Foi essa tela que revelou a causa raiz real.**
+
+**3. CAUSA RAIZ: jargão de licitação nos termos da IA (`fa009c4` + `23bdd64`).** Pro ramo "PRONTUÁRIO ELETRÔNICO", a IA gerou o sinônimo **"registro eletrônico"** — correto em português, desastroso aqui: **"PREGÃO ELETRÔNICO PARA REGISTRO DE PREÇOS"** é a frase mais comum do sistema de compras público brasileiro. O painel de uma empresa de software médico enchia de madeira, areia, brita, placa de sinalização. Tentei proximidade primeiro (`fa009c4`, ainda válido e útil: termos da IA agora exigem palavras próximas, termos do cliente não) mas **não bastou**, porque nessa frase as palavras estão coladas. Fix final: lista `JARGAO_LICITACAO` em `expandirRamo.mjs` descarta na origem qualquer termo gerado pela IA contendo registro/preço/pregão/edital/ata/aquisição/contratação/eletrônico/lote/item. Termos que o CLIENTE digita nunca passam por esse filtro. `POST /api/admin/limpar-termos-jargao` saneia os já cadastrados (rodado: 1 cliente afetado, removido exatamente "registro eletrônico").
+
+**Resultado medido (antes → depois):** SM Assessoria 87 editais de lixo → 7 relevantes (TI/software/saúde); DEVCONS 102 → 71, topo 100% TI (antes tinha "testes psicológicos" e "veículos"); DONIZETE 30 → 24, obra de saneamento saiu do topo, entraram reforma de instalações elétricas e engenharia elétrica.
+
+**Ainda não perfeito:** o DONIZETE tem "reforma de escola" e "aquisição de veículos" no top 5 (casam por "manutenção"/"elétrica" legítimos no texto). Melhorou muito, mas dá pra afinar mais se voltar a incomodar.
+
 **Fim do handoff.** Boa sorte na próxima sessão.
