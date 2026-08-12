@@ -109,10 +109,24 @@ export function palavrasProximas(palavras, textoNorm) {
 // Hospitalares") onde as palavras de uma compra legitima ficam a 8-10 palavras de
 // distancia. A proximidade so vale nos ITENS (texto curto), onde palavras
 // espalhadas indicam contextos sem relacao de verdade (ver editaisIdsPorItem).
-function subTermoCasa(sub, raizesObjeto, objetoNorm) {
+// exigirProximidade: usado SO pros termos gerados pela IA (ver aplicarFiltro).
+// Motivo (12/08/2026, caso real diagnosticado com a tela nova de termos): pra o
+// ramo "PRONTUARIO ELETRONICO" a IA gerou o sinonimo "registro eletronico", que
+// e legitimo em portugues, mas "registro" e a palavra de "REGISTRO DE PRECOS" —
+// a modalidade de compra mais comum do Brasil. Resultado: "Registro de precos
+// para aquisicao de eletronicos, eletrodomesticos" (TVs e geladeiras) casava e
+// ia pro TOPO do painel de uma empresa de software medico. As duas palavras
+// estavam la, mas a 6 palavras de distancia e sem nenhuma relacao. Exigir que
+// elas apareçam PROXIMAS mata esse falso positivo sem perder o caso legitimo
+// ("sistema de registro eletronico de saude", onde ficam coladas). Verificado
+// nos dois textos reais antes de aplicar.
+function subTermoCasa(sub, raizesObjeto, objetoNorm, exigirProximidade = false) {
   const palavras = sub.split(/[^a-z0-9]+/).filter(tokenSignificativo);
   if (!palavras.length) return contemPalavra(sub, objetoNorm);
-  return palavras.every((w) => raizesObjeto.has(raiz(w)) || contemPalavra(w, objetoNorm));
+  const todasPresentes = palavras.every((w) => raizesObjeto.has(raiz(w)) || contemPalavra(w, objetoNorm));
+  if (!todasPresentes) return false;
+  if (exigirProximidade && palavras.length > 1) return palavrasProximas(palavras, objetoNorm);
+  return true;
 }
 
 // Um termo casa tolerando plural e genero. Regras:
@@ -121,7 +135,7 @@ function subTermoCasa(sub, raizesObjeto, objetoNorm) {
 //   quebrada em sub-termos e casa se QUALQUER um casar. Assim o cliente que
 //   cola o nome inteiro de uma categoria ainda recebe editais de cada parte,
 //   em vez de exigir a frase completa (que quase nunca aparece num edital).
-export function termoCasa(termo, raizesObjeto, objetoNorm) {
+export function termoCasa(termo, raizesObjeto, objetoNorm, exigirProximidade = false) {
   const t = (termo ?? "").trim();
   if (/^".*"$/.test(t)) {
     const frase = normalizar(t.slice(1, -1)).replace(/\s+/g, " ").trim();
@@ -129,7 +143,7 @@ export function termoCasa(termo, raizesObjeto, objetoNorm) {
   }
   const subTermos = normalizar(t).split(CONECTIVOS).map((s) => s.trim()).filter(Boolean);
   if (!subTermos.length) return objetoNorm.includes(normalizar(t));
-  return subTermos.some((sub) => subTermoCasa(sub, raizesObjeto, objetoNorm));
+  return subTermos.some((sub) => subTermoCasa(sub, raizesObjeto, objetoNorm, exigirProximidade));
 }
 
 // Palavras genericas de licitacao que NAO identificam um ramo sozinhas. Num
@@ -172,13 +186,25 @@ export function aplicarFiltro(editais, filtro = {}) {
   // Termos do cliente + termos relacionados gerados pela ContrataX.IA (expansao
   // semantica do ramo). A busca casa se QUALQUER um deles casar. Os de exclusao
   // continuam valendo sobre o conjunto todo.
-  const termosBusca = [...termos, ...termosIA];
+  //
+  // PROXIMIDADE so nos termos da IA (12/08/2026): os termos que o CLIENTE
+  // digitou sao intencao explicita dele e seguem soltos (objeto e prosa longa,
+  // as palavras de uma compra legitima ficam distantes). Ja os da IA sao
+  // adivinhacao do sistema e podem colidir com jargao de licitacao — caso real:
+  // "registro eletronico" (sinonimo de prontuario) casando com "REGISTRO DE
+  // PRECOS ... eletronicos". Exigir proximidade neles corta o falso positivo e
+  // mantem o match legitimo. Ver subTermoCasa.
+  const temTermo = (t, raizes, objeto, daIA) => termoCasa(t, raizes, objeto, daIA);
 
   return editais.filter((e) => {
     const objeto = normalizar(e.objeto);
     const raizes = raizesDe(objeto);
 
-    if (termosBusca.length && !termosBusca.some((t) => termoCasa(t, raizes, objeto))) return false;
+    if (termos.length || termosIA.length) {
+      const casouProprio = termos.some((t) => temTermo(t, raizes, objeto, false));
+      const casouIA = !casouProprio && termosIA.some((t) => temTermo(t, raizes, objeto, true));
+      if (!casouProprio && !casouIA) return false;
+    }
     if (termosExcluir.length && termosExcluir.some((t) => termoCasa(t, raizes, objeto))) return false;
 
     const valor = e.valorEstimado;
