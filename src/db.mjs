@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdirSync } from "node:fs";
-import { normalizar, aplicarFiltro, tokenSignificativo, contemPalavra, palavrasProximas } from "./filtro.mjs";
+import { normalizar, aplicarFiltro, tokenSignificativo, contemPalavra, palavrasProximas, raiz } from "./filtro.mjs";
 import { expandirTermos, excluirTermos, expandirRamoCurado } from "./sinonimos.mjs";
 import { portalDeLink } from "./portais.mjs";
 
@@ -740,10 +740,63 @@ function casarComExpansao(candidatos, termos, termo, expandido, excluirList, { p
 // a busca livre achava dezenas — porque o produto mora nos ITENS, nao no objeto de
 // alto nivel ("material de consumo"). Marca _itemCasado nos que vieram por item
 // (o card do painel mostra "achado nos itens"). Dedup no fim.
+// CORRECAO 12/08/2026 (Jacques, olhando 3 trials reais): o painel do cliente
+// pagante nao tinha NENHUM ranqueamento por relevancia, so ORDER BY encerramento
+// ASC vindo do SQL (consultar()). Resultado medido: cliente de material ELETRICO
+// via como "melhor edital" uma obra INTEIRA de Estacao de Tratamento de Agua
+// (civil+hidraulica+eletrica) so porque tinha o prazo mais perto, enquanto tinha
+// 30 opcoes boas (cabo de cobre da Celesc, reforma de instalacao eletrica) mais
+// abaixo na lista. Outro cliente (TI) tinha "testes psicologicos" misturado no
+// topo dos matches. A busca PUBLICA da landing (buscaPublica, abaixo) ja resolvia
+// isso com um sort por precisao+posicao; o painel do cliente PAGANTE nunca ganhou
+// o mesmo tratamento. Agora casarPerfil ordena: (1) match no termo LITERAL do
+// cliente antes de match so via expansao de IA/item; (2) dentro disso, o termo
+// que aparece mais CEDO no objeto (mais central ao assunto) primeiro; (3) prazo
+// como desempate final. Isso afeta TUDO que usa casarPerfil: painel, digest
+// diario, radar de ativacao, card "Comece por aqui".
+// DENSIDADE em vez de frase exata: testado com o caso real do DONIZETE
+// (matcher naive por "indexOf" de frase inteira nao achava NADA, porque o
+// objeto usa "eletrica" -- feminino -- e o termo do cliente e "eletricos",
+// e a funcao raiz() do proprio sistema nao lematiza genero, so plural). A
+// densidade conta, palavra por palavra (raiz), quantas das palavras do
+// OBJETO batem com alguma raiz dos termos do cliente (proprios + IA). Um
+// objeto curto e focado ("cabo flexivel de cobre") tem densidade alta; um
+// objeto de obra gigante que so cita "eletrica" uma vez entre 40 palavras de
+// outras disciplinas tem densidade baixa. Isso separa bem sem exigir frase
+// exata. _viaItem (edital que so bateu por um ITEM perdido, nao pelo objeto
+// principal) fica sempre no tier de baixo, e o prazo desempata dentro do
+// mesmo tier (mantem o util "mais urgente primeiro" quando a relevancia empata).
+function ordenarPorRelevancia(editais, termos, termosIA) {
+  const todosTermos = [...termos, ...(termosIA || [])];
+  if (!todosTermos.length) return editais;
+  const raizesTermos = new Set();
+  for (const t of todosTermos) {
+    const limpo = normalizar(String(t).replace(/^"|"$/g, ""));
+    for (const w of limpo.split(/[^a-z0-9]+/).filter(tokenSignificativo)) raizesTermos.add(raiz(w));
+  }
+  const score = (e) => {
+    if (e._viaItem) return { tier: 0, densidade: 0 };
+    const palavrasObjeto = normalizar(e.objeto || "").split(/[^a-z0-9]+/).filter(tokenSignificativo);
+    if (!palavrasObjeto.length) return { tier: 1, densidade: 0 };
+    let bateram = 0;
+    for (const w of palavrasObjeto) if (raizesTermos.has(raiz(w))) bateram++;
+    return { tier: 1, densidade: bateram / palavrasObjeto.length };
+  };
+  return [...editais]
+    .map((e) => ({ e, s: score(e) }))
+    .sort((a, b) =>
+      b.s.tier - a.s.tier ||
+      b.s.densidade - a.s.densidade ||
+      (a.e.encerramento || "").localeCompare(b.e.encerramento || "")
+    )
+    .map((x) => x.e);
+}
+
 export function casarPerfil(candidatos, { termos = [], termosIA = [], termosExcluir = [] } = {}) {
   let casaram = aplicarFiltro(candidatos, { termos, termosIA, termosExcluir });
   for (const t of termos) casaram = unirPorItem(casaram, candidatos, t, termosExcluir);
-  return dedupEditais(casaram);
+  casaram = dedupEditais(casaram);
+  return ordenarPorRelevancia(casaram, termos, termosIA);
 }
 
 // Busca publica da landing page: por UF e termo livre, devolve o total, a soma
