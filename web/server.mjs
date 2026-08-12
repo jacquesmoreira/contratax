@@ -1803,6 +1803,33 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
       } catch (e) { return json(res, 500, { erro: e.message }); }
     }
 
+    // Limpa termosIA com jargao de licitacao dos clientes JA cadastrados (os
+    // termos foram gerados antes do filtro existir). Sem body = todos; com
+    // {token} = so um. Nao chama a IA de novo: so filtra o que ja esta salvo.
+    if (rota === "/api/admin/limpar-termos-jargao" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      try {
+        const { filtrarJargao } = await import("../src/expandirRamo.mjs");
+        const perfis = await lerPerfis();
+        const alvos = corpo.token ? perfis.filter((p) => p.token === corpo.token) : perfis;
+        const mudancas = [];
+        for (const p of alvos) {
+          const antes = p.filtro?.termosIA ?? [];
+          if (!antes.length) continue;
+          const depois = filtrarJargao(antes);
+          if (depois.length === antes.length) continue;
+          p.filtro.termosIA = depois;
+          mudancas.push({
+            cliente: p.razaoSocial || p.nome, token: p.token,
+            removidos: antes.filter((t) => !depois.includes(t)),
+          });
+        }
+        if (mudancas.length) await salvarPerfis(perfis);
+        return json(res, 200, { ok: true, clientesAfetados: mudancas.length, mudancas });
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
+
     if (rota === "/api/admin/diagnostico-ativacao") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       try {

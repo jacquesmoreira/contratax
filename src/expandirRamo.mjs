@@ -64,8 +64,34 @@ export async function expandirRamo(termos = []) {
 // Normaliza pra comparar/deduplicar (sem acento, minusculo, trim).
 const norm = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
+// JARGAO DE LICITACAO: palavras que aparecem no cabecalho/boilerplate de quase
+// TODO edital brasileiro, independente do ramo. Um termo da IA que contenha
+// qualquer uma delas casa com o vocabulario padrao e nao com o negocio do
+// cliente. Caso real (12/08/2026): pro ramo "PRONTUARIO ELETRONICO" a IA gerou
+// "registro eletronico" -- correto em portugues, desastroso aqui, porque
+// "PREGAO ELETRONICO PARA REGISTRO DE PRECOS" e a frase mais comum do sistema
+// de compras publicas. O painel de uma empresa de software medico enchia de
+// madeira, areia, brita e placa de sinalizacao. Exigir proximidade nao resolve
+// (nessa frase as palavras estao coladas): o termo tem que morrer na origem.
+const JARGAO_LICITACAO = new Set([
+  "registro", "registros", "preco", "precos", "pregao", "pregoes", "licitacao",
+  "licitacoes", "edital", "editais", "ata", "atas", "certame", "certames",
+  "aquisicao", "aquisicoes", "contratacao", "contratacoes", "fornecimento",
+  "prestacao", "srp", "eletronico", "eletronica", "presencial", "lote", "lotes",
+  "item", "itens", "objeto", "proposta", "propostas", "habilitacao",
+]);
+
+// Um termo e descartado se QUALQUER palavra dele for jargao. Conservador de
+// proposito: e melhor perder um sinonimo bom ("pregao de informatica") do que
+// deixar entrar um que casa com todo edital do pais. Os termos que o CLIENTE
+// digita nao passam por aqui (intencao explicita dele e sempre respeitada).
+function temJargaoLicitacao(termo) {
+  return norm(termo).split(/[^a-z0-9]+/).filter(Boolean).some((w) => JARGAO_LICITACAO.has(w));
+}
+
 // Limpa a saida da IA: separa por virgula, tira numeracao/lixo, remove termos
-// vazios, longos demais (> 3 palavras), duplicados e os que o cliente ja tem.
+// vazios, longos demais (> 3 palavras), duplicados, os que o cliente ja tem e
+// os que contem jargao de licitacao (ver acima).
 function limparExpandidos(texto, originais) {
   const jaTem = new Set(originais.map(norm));
   const vistos = new Set();
@@ -76,9 +102,18 @@ function limparExpandidos(texto, originais) {
     if (t.split(/\s+/).length > 3) continue; // muito longo, vira ruido
     const n = norm(t);
     if (n.length < 3 || jaTem.has(n) || vistos.has(n)) continue;
+    if (temJargaoLicitacao(t)) { console.log(`[expandir-ramo] descartado (jargao): ${t}`); continue; }
     vistos.add(n);
     out.push(t);
     if (out.length >= MAX_TERMOS_IA) break;
   }
   return out;
+}
+
+// Saneamento dos termos JA salvos: os clientes existentes tem termosIA gerados
+// antes deste filtro (a SM Assessoria tem "registro eletronico" gravado). Serve
+// pro endpoint de admin limpar sem precisar refazer a expansao (que custaria IA
+// e poderia gerar outros termos).
+export function filtrarJargao(termosIA = []) {
+  return (termosIA || []).filter((t) => !temJargaoLicitacao(t));
 }
