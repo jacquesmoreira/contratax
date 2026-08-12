@@ -89,6 +89,24 @@ function temJargaoLicitacao(termo) {
   return norm(termo).split(/[^a-z0-9]+/).filter(Boolean).some((w) => JARGAO_LICITACAO.has(w));
 }
 
+// TERMO DEGRADADO (12/08/2026, caso real do DEVCONS): o matching ignora tokens
+// de 2 letras sem numero (tokenSignificativo em filtro.mjs), entao a sigla some.
+// A IA gerou "consultoria it" pro ramo de Tecnologia da Informacao; na hora de
+// casar, "it" e descartado e sobra "consultoria" SOZINHA -- que casou com
+// "CONSULTORIA E ASSESSORIA AMBIENTAL" no painel dele. O termo prometia ser
+// especifico (2 palavras) e virou generico (1). Regra: se um termo composto
+// perde palavra no filtro e sobra so uma, ele nao entrega o que prometia e e
+// descartado. Termos com sigla+numero ("papel a4", "software 3d") nao caem
+// aqui, porque token com digito continua significativo.
+function ehTokenSignificativo(w) {
+  return w.length >= 3 || (w.length >= 2 && /\d/.test(w));
+}
+function termoDegradado(termo) {
+  const palavras = norm(termo).split(/[^a-z0-9]+/).filter(Boolean);
+  if (palavras.length < 2) return false; // termo de 1 palavra ja e o que e
+  return palavras.filter(ehTokenSignificativo).length < 2;
+}
+
 // Limpa a saida da IA: separa por virgula, tira numeracao/lixo, remove termos
 // vazios, longos demais (> 3 palavras), duplicados, os que o cliente ja tem e
 // os que contem jargao de licitacao (ver acima).
@@ -103,6 +121,7 @@ function limparExpandidos(texto, originais) {
     const n = norm(t);
     if (n.length < 3 || jaTem.has(n) || vistos.has(n)) continue;
     if (temJargaoLicitacao(t)) { console.log(`[expandir-ramo] descartado (jargao): ${t}`); continue; }
+    if (termoDegradado(t)) { console.log(`[expandir-ramo] descartado (vira palavra solta): ${t}`); continue; }
     vistos.add(n);
     out.push(t);
     if (out.length >= MAX_TERMOS_IA) break;
@@ -111,9 +130,9 @@ function limparExpandidos(texto, originais) {
 }
 
 // Saneamento dos termos JA salvos: os clientes existentes tem termosIA gerados
-// antes deste filtro (a SM Assessoria tem "registro eletronico" gravado). Serve
-// pro endpoint de admin limpar sem precisar refazer a expansao (que custaria IA
-// e poderia gerar outros termos).
+// antes destes filtros (a SM Assessoria tinha "registro eletronico"; o DEVCONS
+// tem "consultoria it"). Serve pro endpoint de admin limpar sem precisar
+// refazer a expansao (que custaria IA e poderia gerar outros termos).
 export function filtrarJargao(termosIA = []) {
-  return (termosIA || []).filter((t) => !temJargaoLicitacao(t));
+  return (termosIA || []).filter((t) => !temJargaoLicitacao(t) && !termoDegradado(t));
 }
