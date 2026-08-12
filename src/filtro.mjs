@@ -120,12 +120,54 @@ export function palavrasProximas(palavras, textoNorm) {
 // elas apareçam PROXIMAS mata esse falso positivo sem perder o caso legitimo
 // ("sistema de registro eletronico de saude", onde ficam coladas). Verificado
 // nos dois textos reais antes de aplicar.
+// SINONIMOS INTERCAMBIAVEIS em nivel de PALAVRA (diferente do sinonimos.mjs,
+// que mapeia produto -> ramo). Caso real medido em 12/08/2026: uma empresa de
+// software de saude cadastrou "SOFTWARE DE GESTAO EM SAUDE PUBLICA" e o painel
+// dela PERDIA "Contratacao de SISTEMA de gestao em saude" e "Aquisicao de
+// SISTEMA informatizado de gestao da saude" -- porque o edital usa "sistema"
+// onde ela escreveu "software". Sao a mesma coisa no vocabulario de compra
+// publica. Mercado real medido no acervo: 72 editais de "sistema de saude" e
+// 42 de "software de gestao"; ela via 7. O risco de ruido e baixo porque o
+// termo composto continua exigindo TODAS as outras palavras (gestao, saude).
+// Lista curta e conservadora de proposito: so grupos onde a troca e de fato
+// neutra em edital. Nao inclui "servico"/"produto" (genericos demais).
+const SINONIMOS_PALAVRA = new Map();
+function registrarGrupoSinonimos(palavras) {
+  for (const p of palavras) SINONIMOS_PALAVRA.set(raiz(p), palavras.map(raiz));
+}
+registrarGrupoSinonimos(["software", "sistema", "aplicativo", "plataforma", "solucao"]);
+registrarGrupoSinonimos(["veiculo", "automovel", "carro"]);
+registrarGrupoSinonimos(["medicamento", "farmaco", "remedio"]);
+registrarGrupoSinonimos(["computador", "microcomputador", "desktop"]);
+
+// Uma palavra do termo esta presente no objeto: direto, por raiz, ou por um
+// sinonimo do mesmo grupo.
+function palavraPresente(w, raizesObjeto, objetoNorm) {
+  if (raizesObjeto.has(raiz(w)) || contemPalavra(w, objetoNorm)) return true;
+  const grupo = SINONIMOS_PALAVRA.get(raiz(w));
+  if (!grupo) return false;
+  return grupo.some((s) => raizesObjeto.has(s));
+}
+
+// TERMO LONGO (4+ palavras) aceita faltar UMA. Caso real medido: o cliente
+// cadastrou "SOFTWARE DE GESTAO EM SAUDE PUBLICA" (4 palavras significativas) e
+// perdia "Contratacao de sistema de gestao em saude para a Secretaria Municipal"
+// -- que e exatamente o cliente dele -- so porque o edital nao repete a palavra
+// "publica". Quanto mais especifico o cliente escreve, menos ele recebia, o que
+// e o oposto do esperado. Exigir n-1 recupera esses casos e continua seguro: o
+// ruido ("sistema de esgoto", "sistema de ar condicionado") bate 1 de 4 e nao
+// passa. So vale de 4 palavras pra cima: em termo de 2-3 palavras, deixar cair
+// uma ja o transformaria em busca generica.
+const MIN_PALAVRAS_FLEX = 4;
+
 function subTermoCasa(sub, raizesObjeto, objetoNorm, exigirProximidade = false) {
   const palavras = sub.split(/[^a-z0-9]+/).filter(tokenSignificativo);
   if (!palavras.length) return contemPalavra(sub, objetoNorm);
-  const todasPresentes = palavras.every((w) => raizesObjeto.has(raiz(w)) || contemPalavra(w, objetoNorm));
-  if (!todasPresentes) return false;
-  if (exigirProximidade && palavras.length > 1) return palavrasProximas(palavras, objetoNorm);
+  const presentes = palavras.filter((w) => palavraPresente(w, raizesObjeto, objetoNorm));
+  const exigidas = palavras.length >= MIN_PALAVRAS_FLEX ? palavras.length - 1 : palavras.length;
+  if (presentes.length < exigidas) return false;
+  // Proximidade (so termos da IA) se aplica as palavras que realmente casaram.
+  if (exigirProximidade && presentes.length > 1) return palavrasProximas(presentes, objetoNorm);
   return true;
 }
 
