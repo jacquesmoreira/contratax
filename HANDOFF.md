@@ -1720,4 +1720,20 @@ Jacques: *"se eles entram e não acham o que procuram, o que estão fazendo aqui
 
 **Para checar o feedback de saída (a rotina morreu):** `GET /api/admin/feedback-saida?c=ADMIN`, ou simplesmente abrir o admin — a seção "🎯 Por que os trials não fecham" mostra o mesmo, ao vivo.
 
+### 2026-08-13 (parte 7) — LicitApp não é concorrente + achado do `usuarioNome` (ADIADO)
+
+**O "concorrente" LicitApp não é concorrente.** É um **sistema de pregão eletrônico** (marca da SH3): serve o ÓRGÃO que compra (publicar edital, receber proposta, gerenciar disputa). O ContrataX serve a EMPRESA que vende. Lados opostos do balcão — na prática ele é a mesma categoria de Portal de Compras Públicas / LICITANET / BLL, ou seja, **fonte de dados**, não rival. Jacques já excluiu a conta (decisão certa: nunca seria pagante e distorcia a taxa de conversão). **Parceria descartada por ora** — decisão dele: "não consigo oferecer nada para eles ainda", e a assimetria é real (empresa estabelecida vs. bootstrap com 2 pagantes).
+
+**Investigação dos 29% "Portal não informado":** o PNCP entrega `linkSistemaOrigem` **vazio na fonte** (verificado direto na API) — não é falha nossa, é o órgão que não informou. **O cliente NÃO fica bloqueado:** o código já cai pro link do PNCP quando falta o do portal, e a página real (verificada) tem edital em PDF, itens, valores e datas de proposta. É só rótulo faltando no filtro.
+
+**🔑 ACHADO GUARDADO PRA DEPOIS:** o PNCP tem o campo **`usuarioNome`** (mostrado na página como "Fonte"), que **não capturamos**. Testado em 8 editais sem link: **8 de 8 tinham** — IPM Sistemas, Betha, Equiplano, Elotech. São os **ERPs de gestão pública que a prefeitura usa**.
+
+**Por que ADIEI (recomendação minha, aceita pelo Jacques):**
+- Implementação é trivial (3 linhas + ALTER TABLE), mas o dado só entra em editais NOVOS (~30-60 dias pra cobrir tudo, ou backfill).
+- **Ajuda 1 cliente de 6.** É ouro pro SM Assessoria (vende software de gestão pública: saber o ERP instalado = saber o concorrente), algum valor pro DEVCONS, e **zero** pra elétrico/pintura/segurança.
+- **Risco de promessa quebrada:** `usuarioNome` é quem PUBLICOU, não o portal da disputa. Mostrar como "Portal" faria o cliente achar que dá lance lá. Mesmo erro do "Comprasnet trava" de 20/07.
+- Prioridade agora é os 6 testes converterem, não polir filtro.
+
+**Quando fazer:** se o SM Assessoria assinar. Aí vira feature de valor real, apresentada como "descubra qual sistema a prefeitura já usa" (inteligência competitiva), não como rótulo de portal.
+
 **Fim do handoff.** Boa sorte na próxima sessão.
