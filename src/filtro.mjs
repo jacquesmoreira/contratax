@@ -96,10 +96,24 @@ export function menorJanela(palavras, textoNorm) {
   return melhor;
 }
 
+// Folga maior pro OBJETO, que e prosa longa e formal ("Contratacao de empresa
+// especializada em software SaaS com modulo de gestao de saude"): as palavras
+// de uma compra legitima ficam a 4-7 posicoes. Nos ITENS (texto curto) a folga
+// apertada (JANELA_PROX) continua valendo. Calibrado com medicao real
+// (12/08/2026) em 5 objetos: legitimos deram janela 4, 5 e 7; os falsos
+// positivos deram 10 ("insumos hospitalares (...) SISTEMA unico de saude",
+// casando "plataforma hospitalar" por sinonimo) e 55 (medicamento, onde
+// "sistema" aparecia 500+ caracteres depois de "gestao"). Folga 6 poe o corte
+// entre 7 e 10, com margem dos dois lados.
+const JANELA_PROX_OBJETO = Number(process.env.LICITA_JANELA_PROX_OBJETO || 6);
+
 // Verdadeiro se todas as `palavras` significativas aparecem PROXIMAS no texto.
-export function palavrasProximas(palavras, textoNorm) {
+export function palavrasProximas(palavras, textoNorm, folga = JANELA_PROX) {
   if (palavras.length <= 1) return true;
-  return menorJanela(palavras, textoNorm) <= palavras.length + JANELA_PROX;
+  return menorJanela(palavras, textoNorm) <= palavras.length + folga;
+}
+export function palavrasProximasNoObjeto(palavras, textoNorm) {
+  return palavrasProximas(palavras, textoNorm, JANELA_PROX_OBJETO);
 }
 
 // Casa um sub-termo: TODAS as suas palavras (>= 3 letras) aparecem no objeto,
@@ -140,13 +154,34 @@ registrarGrupoSinonimos(["veiculo", "automovel", "carro"]);
 registrarGrupoSinonimos(["medicamento", "farmaco", "remedio"]);
 registrarGrupoSinonimos(["computador", "microcomputador", "desktop"]);
 
-// Uma palavra do termo esta presente no objeto: direto, por raiz, ou por um
-// sinonimo do mesmo grupo.
-function palavraPresente(w, raizesObjeto, objetoNorm) {
-  if (raizesObjeto.has(raiz(w)) || contemPalavra(w, objetoNorm)) return true;
-  const grupo = SINONIMOS_PALAVRA.get(raiz(w));
-  if (!grupo) return false;
-  return grupo.some((s) => raizesObjeto.has(s));
+// Devolve a palavra que EFETIVAMENTE casou no objeto (a propria ou o sinonimo
+// do grupo), ou null. Retornar a palavra encontrada -- e nao so true/false -- e
+// o que permite medir proximidade depois: menorJanela procura no texto, e o
+// texto tem "sistema", nao "software". Na 1a tentativa eu passava a palavra do
+// TERMO pra palavrasProximas, ela nunca achava e o filtro rejeitava tudo.
+// GENERO: raiz() trata plural ("materiais"->"material") mas NAO genero, entao
+// "eletricos" (raiz "eletrico") nunca casava com "eletrica" (raiz "eletrica").
+// Efeito real medido: o cliente de "servicos eletricos" nao casava com
+// "servicos de engenharia ELETRICA" -- o proprio ramo dele escrito no feminino.
+// Casa as duas formas cortando a vogal final. So pra palavra >= 6 letras: em
+// palavra curta ("casa"/"caso", "dado"/"dada") o corte junta coisas diferentes.
+const MIN_LETRAS_GENERO = 6;
+function baseSemGenero(r) {
+  return r.length >= MIN_LETRAS_GENERO ? r.replace(/[ao]$/, "") : r;
+}
+
+function palavraCasada(w, raizesObjeto, objetoNorm) {
+  const rw = raiz(w);
+  if (raizesObjeto.has(rw) || contemPalavra(w, objetoNorm)) return w;
+  // Mesma palavra no outro genero.
+  const base = baseSemGenero(rw);
+  if (base !== rw) {
+    for (const ro of raizesObjeto) if (baseSemGenero(ro) === base) return ro;
+  }
+  const grupo = SINONIMOS_PALAVRA.get(rw);
+  if (!grupo) return null;
+  for (const s of grupo) if (raizesObjeto.has(s)) return s;
+  return null;
 }
 
 // QUALIFICADORES: adjetivos de contexto que o cliente escreve pra descrever o
@@ -174,8 +209,29 @@ function subTermoCasa(sub, raizesObjeto, objetoNorm, exigirProximidade = false) 
   // match vazio.
   const nucleo = palavras.filter((w) => !QUALIFICADORES.has(w));
   const exigidas = nucleo.length ? nucleo : palavras;
-  if (!exigidas.every((w) => palavraPresente(w, raizesObjeto, objetoNorm))) return false;
-  if (exigirProximidade && exigidas.length > 1) return palavrasProximas(exigidas, objetoNorm);
+  const casadas = exigidas.map((w) => palavraCasada(w, raizesObjeto, objetoNorm));
+  if (casadas.some((c) => !c)) return false;
+
+  // MATCH FROUXO exige as palavras JUNTAS. Frouxo = usou sinonimo (inferencia
+  // nossa: "software" casou via "sistema") ou o cliente escreveu um
+  // qualificador que o edital nao tem. Nesses casos o match ja e uma aposta, e
+  // palavras espalhadas pelo texto quase sempre significam contextos sem
+  // relacao. Caso real medido (12/08/2026): "aquisicao de MEDICAMENTOS (...)
+  // unidades de SAUDE sob GESTAO desta Secretaria (...) SISTEMA" casava com
+  // "SOFTWARE DE GESTAO EM SAUDE PUBLICA" -- as 3 palavras existiam, mas
+  // "sistema" estava no caractere 716 e "gestao" no 198, 518 caracteres de
+  // distancia. Match literal e completo continua sem exigir proximidade (o
+  // objeto e prosa longa e palavras legitimas ficam distantes).
+  const usouSinonimo = casadas.some((c, i) => c !== exigidas[i]);
+  // So conta como "omitido" o qualificador que REALMENTE nao esta no texto. Ter
+  // qualificador no termo nao e problema quando o edital tambem tem: nesse caso
+  // o match e completo e nao precisa da trava de proximidade.
+  const qualificadorAusente = palavras
+    .filter((w) => QUALIFICADORES.has(w))
+    .some((w) => !palavraCasada(w, raizesObjeto, objetoNorm));
+  if ((exigirProximidade || usouSinonimo || qualificadorAusente) && casadas.length > 1) {
+    return palavrasProximasNoObjeto(casadas, objetoNorm);
+  }
   return true;
 }
 
