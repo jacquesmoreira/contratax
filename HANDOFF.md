@@ -1641,4 +1641,25 @@ Decisão estratégica tomada com dado: **não ampliar o filtro por conta própri
 
 **"SISTEMA FARMACEUTICO" (Jacques esclareceu: ele vende software PARA FARMÁCIA).** O termo é ambíguo e traz ruído (casou com hipoclorito de sódio). Alternativas medidas no acervo: `software farmacia` 0, `gestão de farmácia` 0, `sistema de dispensação` 2, `farmácia básica` 13, `dispensação de medicamentos` 132 **mas verificado: são COMPRA DE REMÉDIO, não software**. Conclusão: **não há vocabulário de edital bom para "software de farmácia"** — o mercado dele nesse item é realmente raro, e inventar termo só traria ruído. Deixar como está.
 
+### 2026-08-13 (parte 3) — 🔑 o método certo: pesquisar o vocabulário do PREGOEIRO
+
+**Insight do Jacques, e ele acertou onde eu errei:** em vez de a IA INVENTAR termos, pesquisar **como as prefeituras realmente escrevem** quando compram software. Engenharia reversa do vocabulário real do acervo, não do jargão do setor.
+
+**Medido no acervo (e verificado que são software de verdade):**
+| Como o pregoeiro escreve | Editais |
+|---|---|
+| **sistema informatizado** | **724** |
+| software de gestão | 77 |
+| locação de software | 70 |
+| sistema integrado de gestão | 67 |
+| licença de uso de software | 34 |
+
+Compare com o que a IA inventou para o mesmo cliente: "gestão de leitos" 0, "sistema de regulação" 0, "faturamento hospitalar" 0. **A hipótese que se confirmou: prefeitura não "compra" software, ela LICENCIA/LOCA/IMPLANTA "sistema informatizado".**
+
+**Testado no matching REAL do painel** (não na busca pública, que engana — ela quebra o termo e mostra ruído): adicionar `sistema informatizado` aos termos do SM captura **2 editais de software que ele perdia, com 0 dos 4 ruídos** testados (gás medicinal, veículo, fórmula infantil, material odontológico). **Ainda não aplicado** — decisão do Jacques.
+
+**⚠️ Cuidado registrado:** os números da `/api/busca-publica` NÃO são confiáveis para avaliar qualidade — "sistema informatizado de saúde" mostra 52 mas a amostra traz gás medicinal e veículo. Sempre validar no `aplicarFiltro` (o matching que o painel usa de verdade).
+
+**Cadastro sem CNPJ (pergunta do Jacques sobre o "Licita App"):** existem 2 caminhos de cadastro. `criarPerfil` (formulário) EXIGE CNPJ válido e único. `criarPerfilGoogle` (botão "entrar com Google") cria um perfil **stub** com `cnpj: ""`, `ufs: []`, `filtro.termos: []` e `precisaCompletarCadastro: true` — o cliente deveria completar em `/conta` no primeiro login. Quem não completa fica com **painel permanentemente vazio** (sem ramo, não casa nada). É o caso do Licita App. **Não é falha de segurança, é atrito de onboarding** — e vale medir quantos entram por aí e nunca completam.
+
 **Fim do handoff.** Boa sorte na próxima sessão.
