@@ -170,7 +170,17 @@ function baseSemGenero(r) {
   return r.length >= MIN_LETRAS_GENERO ? r.replace(/[ao]$/, "") : r;
 }
 
-function palavraCasada(w, raizesObjeto, objetoNorm) {
+// permitirSinonimo=false pros termos da IA. Motivo medido em producao
+// (12/08/2026): o termo IA "plataforma hospitalar" (ja uma inferencia sobre o
+// ramo do cliente) mais o sinonimo plataforma->sistema (outra inferencia) casou
+// com "MEDICAMENTOS para a Fundacao HOSPITALAR", "materiais de uso tecnico
+// HOSPITALAR (SISTEMA de coleta)" e mais 4 compras de equipamento medico, que
+// foram parar no topo do painel de uma empresa de SOFTWARE. "sistema" e palavra
+// onipresente em edital de saude ("Sistema Unico", "Sistema de Coleta"), entao
+// inferencia sobre inferencia vira ruido. O termo que o CLIENTE escreveu e
+// intencao explicita dele e continua ganhando sinonimo: e o que faz
+// "SOFTWARE de gestao em saude" achar "SISTEMA de gestao em saude".
+function palavraCasada(w, raizesObjeto, objetoNorm, permitirSinonimo = true) {
   const rw = raiz(w);
   if (raizesObjeto.has(rw) || contemPalavra(w, objetoNorm)) return w;
   // Mesma palavra no outro genero.
@@ -178,6 +188,7 @@ function palavraCasada(w, raizesObjeto, objetoNorm) {
   if (base !== rw) {
     for (const ro of raizesObjeto) if (baseSemGenero(ro) === base) return ro;
   }
+  if (!permitirSinonimo) return null;
   const grupo = SINONIMOS_PALAVRA.get(rw);
   if (!grupo) return null;
   for (const s of grupo) if (raizesObjeto.has(s)) return s;
@@ -209,7 +220,9 @@ function subTermoCasa(sub, raizesObjeto, objetoNorm, exigirProximidade = false) 
   // match vazio.
   const nucleo = palavras.filter((w) => !QUALIFICADORES.has(w));
   const exigidas = nucleo.length ? nucleo : palavras;
-  const casadas = exigidas.map((w) => palavraCasada(w, raizesObjeto, objetoNorm));
+  // exigirProximidade marca os termos da IA; neles o sinonimo fica desligado.
+  const permitirSinonimo = !exigirProximidade;
+  const casadas = exigidas.map((w) => palavraCasada(w, raizesObjeto, objetoNorm, permitirSinonimo));
   if (casadas.some((c) => !c)) return false;
 
   // MATCH FROUXO exige as palavras JUNTAS. Frouxo = usou sinonimo (inferencia
@@ -228,7 +241,7 @@ function subTermoCasa(sub, raizesObjeto, objetoNorm, exigirProximidade = false) 
   // o match e completo e nao precisa da trava de proximidade.
   const qualificadorAusente = palavras
     .filter((w) => QUALIFICADORES.has(w))
-    .some((w) => !palavraCasada(w, raizesObjeto, objetoNorm));
+    .some((w) => !palavraCasada(w, raizesObjeto, objetoNorm, permitirSinonimo));
   if ((exigirProximidade || usouSinonimo || qualificadorAusente) && casadas.length > 1) {
     return palavrasProximasNoObjeto(casadas, objetoNorm);
   }
