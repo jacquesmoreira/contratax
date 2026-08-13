@@ -387,6 +387,25 @@ const servidor = createServer(async (req, res) => {
       const tkGuard = url.searchParams.get("c") || lerCookie(req, "cx_tok") || "";
       if (tkGuard && tkGuard !== ADMIN) {
         const pGuard = await perfilPorToken(tkGuard);
+        // CNPJ OBRIGATORIO (13/08/2026, decisao do Jacques): o CNPJ e o que
+        // impede a mesma empresa de abrir varios testes gratis -- o cadastro
+        // por formulario ja exigia e bloqueava duplicado, mas o login com
+        // Google cria a conta so com e-mail e o cliente podia simplesmente
+        // fechar a aba sem completar. Ficava uma conta fantasma ocupando teste
+        // (caso real: "Licita App"). Agora a conta sem CNPJ nao usa NENHUMA
+        // ferramenta ate completar; sobra o caminho pra completar (/conta,
+        // /api/completar-cadastro) e o basico de sessao, que ficam de fora
+        // desta lista de propósito.
+        if (pGuard && !pGuard.cnpj) {
+          if (rota.startsWith("/api/")) {
+            return json(res, 403, {
+              erro: "Informe o CNPJ da sua empresa para liberar as ferramentas.",
+              precisaCompletarCadastro: true,
+            });
+          }
+          res.writeHead(302, { Location: `/conta?c=${encodeURIComponent(tkGuard)}&completar=1` });
+          return res.end();
+        }
         if (pGuard && !statusAtual(pGuard).temAcesso) {
           if (rota.startsWith("/api/")) {
             return json(res, 403, { erro: "Assinatura não ativa. Reative seu plano para usar esta ferramenta.", paywall: true });
