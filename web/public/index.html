@@ -502,9 +502,26 @@ function perfilHTML(p) {
   // Transparencia: quantos editais abertos existem no recorte do cliente (UF/modalidade/valor)
   // antes do filtro por palavra-chave do ramo. Mesmo espirito do "conferir no PNCP":
   // o cliente ve que nao estamos escondendo nada, so descartando o que nao e do ramo dele.
+  // AJUSTAR O RAMO em evidencia (12/08/2026). O link existia so no rodape de um
+  // card, em corpo 12px: quem tinha painel magro nao tinha como saber que dava
+  // pra ampliar sozinho. Decisao do Jacques de NAO afrouxar o filtro por conta
+  // propria (afrouxar traz medicamento pro painel de quem vende software e
+  // destroi a confianca) e sim dar o controle pra quem conhece o negocio: o
+  // cliente. Fica logo abaixo da linha "X batem, o resto foi descartado", que e
+  // exatamente onde ele pensa "sera que estou perdendo alguma coisa?".
+  // Quanto menos edital ele tem, mais forte o convite.
+  const linkRamo = `/conta?c=${encodeURIComponent(token)}`;
+  const poucos = editais.length <= 12;
+  const ajusteRamo = `<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:${poucos ? "#fffbeb" : "var(--fundo)"};border:1px solid ${poucos ? "#fde68a" : "var(--linha)"};border-radius:10px;padding:${poucos ? "11px 14px" : "9px 13px"};margin:-4px 0 16px">
+      <span style="font-size:15px">${poucos ? "💡" : "⚙️"}</span>
+      <span style="font-size:13px;color:${poucos ? "#92400e" : "var(--cinza)"};line-height:1.45">${poucos
+        ? "Está vendo poucos editais? Talvez falte uma palavra do seu ramo. Quem conhece o negócio é você:"
+        : "Falta algum tipo de licitação que você atende?"}</span>
+      <a href="${linkRamo}" style="font-size:13px;font-weight:800;color:var(--indigo);text-decoration:none;white-space:nowrap;border-bottom:2px solid var(--indigo)">Ajustar as palavras do meu ramo →</a>
+    </div>`;
   const transparencia = (p.totalBruto > editais.length)
-    ? `<div style="font-size:12.5px;color:var(--cinza);margin:-8px 0 14px">Encontramos <b>${p.totalBruto.toLocaleString("pt-BR")}</b> editais abertos ${p.alargado ? "no Brasil" : (p.uf ? `em ${esc(p.uf)}` : "no seu recorte")} agora. <b>${editais.length.toLocaleString("pt-BR")}</b> ${editais.length === 1 ? "bate" : "batem"} com o ramo cadastrado, o resto foi descartado por palavra-chave.</div>`
-    : "";
+    ? `<div style="font-size:12.5px;color:var(--cinza);margin:-8px 0 8px">Encontramos <b>${p.totalBruto.toLocaleString("pt-BR")}</b> editais abertos ${p.alargado ? "no Brasil" : (p.uf ? `em ${esc(p.uf)}` : "no seu recorte")} agora. <b>${editais.length.toLocaleString("pt-BR")}</b> ${editais.length === 1 ? "bate" : "batem"} com o ramo cadastrado, o resto foi descartado por palavra-chave.</div>${ajusteRamo}`
+    : ajusteRamo;
   // Pra os cards de aha e de melhor oportunidade, prefere editais do(s) estado(s)
   // do cliente; so cai no nacional (quando o painel alargou) se nao houver nenhum
   // no estado. Evita o card sugerir um edital de outro estado do nada.
