@@ -1689,4 +1689,25 @@ Jacques: *"se eles entram e não acham o que procuram, o que estão fazendo aqui
 
 **PLACAR FINAL dos 7 em teste:** DEVCONS 67 · TIGRES 62 (era 23) · ONSERV 46 · SM 35 (era 11) · DONIZETE 29 · CAUE 6 (era 15, limpo) · Licita App 0 + convite (era 7.666).
 
+### 2026-08-13 (parte 5) — CNPJ obrigatório + revisão final
+
+**Meta do Jacques:** pelo menos 2 dos 7 em teste fecharem plano pago.
+
+**CNPJ obrigatório (`99b004e`).** Verificado (não suposto) o estado anterior: cadastro por formulário JÁ exigia CNPJ e bloqueava duplicado; `/api/completar-cadastro` também valida os dois (testei com o CNPJ do DONIZETE em outra conta → recusado corretamente). **O furo era o login Google:** cria conta só com e-mail, redireciona pra completar, mas o cliente pode fechar a aba e fica conta fantasma ocupando teste grátis (caso "Licita App"). Agora conta sem CNPJ não usa NENHUMA ferramenta (API 403, página redireciona). Caminho de saída livre de propósito. **Risco testado antes de subir: loop de redirect** — `/conta` com cookie retorna 200, sem loop.
+
+**Estado dos 7 (verificado em produção após todas as mudanças):**
+| Cliente | Editais | Dias | Análises | E-mails |
+|---|---|---|---|---|
+| DEVCONS | 67 | 12 | **21** | 1/3 |
+| TIGRES | 62 | 14 | 2 | 1/3 |
+| ONSERV | 46 | 14 | 2 | 1/3 |
+| SM | 35 | 14 | 2 | 1/3 |
+| DONIZETE | 29 | 14 | 2 | 1/3 |
+| CAUE | 6 | 14 | 4 | 1/3 |
+| Licita App | 0 (sem CNPJ) | 14 | 0 | 0/3 |
+
+**Todos já rodaram análise** (o gargalo histórico de ativação), nenhum com bounce de e-mail, todos com 12-14 dias de teste pela frente. **DEVCONS é o mais quente: 21 análises.**
+
+**O que ainda pesa contra a meta, e não é código:** a régua de onboarding está em 1/3 — os e-mails 2 e 3 (que empurram pra conversão) ainda não dispararam porque são relativos ao fim do teste. Vão sair sozinhos. Nada a fazer além de esperar.
+
 **Fim do handoff.** Boa sorte na próxima sessão.
