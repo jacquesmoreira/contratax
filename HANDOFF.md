@@ -1613,4 +1613,18 @@ Afinação do 3º cliente. Aqui o problema era o **oposto** dos outros dois: nã
 
 **Padrão do dia, confirmado 4x:** a maior fonte de match ruim são os **termosIA**, não o ranking. Diagnóstico sempre pelo botão "🔍 Termos" no admin, com dado real, nunca simulando o cenário.
 
+### 2026-08-13 — controle nas mãos do Jacques (link do ramo + editor de termos)
+
+Decisão estratégica tomada com dado: **não ampliar o filtro por conta própria.** Medido: afrouxar levou o painel do SM de 7 → 90 editais com medicamento e material de limpeza no topo, para uma empresa de software. É o mesmo padrão que fez o vendedor de pneu militar receber "pneu de carro municipal" como "oportunidade forte" e ir embora. A conta é assimétrica: **mostrar 10 errados custa mais do que deixar de mostrar 1 certo** — o errado destrói confiança na hora, o ausente não é percebido.
+
+**Em vez disso, dar o controle a quem conhece o negócio:**
+
+1. **Cliente (`7f72222`):** "Ajustar as palavras do meu ramo" saiu do rodapé de um card (12px, só no caminho de match fraco) para logo abaixo da linha "X batem, o resto foi descartado" — exatamente onde ele pensa "será que estou perdendo algo?". Adapta: com ≤12 editais vira aviso âmbar; com painel cheio fica discreto. **Medir se alguém clica: se ninguém usar, a hipótese "eles querem ampliar" estava errada e para-se de investir aí.**
+
+2. **Jacques (`7ffca7d`):** editor de termos dentro do modal de diagnóstico. `POST /api/admin/salvar-termos` grava próprios/IA/exclusões, reusando `parseRamos`/`MAX_TERMOS` do cadastro. NÃO regenera pela IA (não gasta crédito, não troca termo bom por pior). Exige ≥1 termo próprio. Ao salvar, recarrega o diagnóstico no lugar para ver na hora o que entrou/saiu. **Isso tira o gargalo de eu ter que achar uma regra genérica + deploy para cada caso.**
+
+**Análise das 3 opções (a pedido dele):** (1) cliente amplia = feita, custo baixo, mas só funciona para quem PERCEBE que falta; (2) **consertar a geração de termos da IA = maior retorno, é a única que melhora alcance E precisão juntos** (todas as outras trocam um pelo outro) — o editor é o primeiro passo, falta melhorar o prompt de geração; (3) aceitar nicho pequeno e ser honesto = já no ar (card "🎯 Seu ramo é específico"), a mais barata e subestimada.
+
+**Onde ampliar de verdade: na AQUISIÇÃO, não no filtro.** Painel do SM é pequeno porque o nicho é estreito; nenhum ajuste técnico muda isso. SEO e campanha fria deveriam mirar ramos com volume real (merenda, limpeza, hospitalar, informática, construção).
+
 **Fim do handoff.** Boa sorte na próxima sessão.
