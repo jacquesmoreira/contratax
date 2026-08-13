@@ -1685,4 +1685,8 @@ Jacques: *"se eles entram e não acham o que procuram, o que estão fazendo aqui
 
 **Método que funcionou e deve ser repetido:** (1) medir o candidato no acervo; (2) simular com `aplicarFiltro` contra objetos reais bons e ruins; (3) só então aplicar; (4) medir o resultado real; (5) reverter se piorar. Foi assim que peguei o erro do "sistema informatizado" antes que virasse dano permanente.
 
+**"sistema informatizado" REAPLICADO no SM com sucesso (13/08, depois do fix `2ca199e`).** Simulação prévia contra os 5 objetos que explodiram o painel na 1ª tentativa: 3/3 bons, **0/5 ruído**. Resultado real: **SM 11 → 35 editais**, top 20 com apenas 2 ruídos, e ambos vêm do termo PRÓPRIO dele ("SISTEMA FARMACEUTICO", que casa com hipoclorito), não do termo novo. Nenhum outro cliente afetado (DEVCONS 67, TIGRES 62, DONIZETE 29, ONSERV 46, CAUE 6 — todos idênticos). **Confirma a tese do Jacques: pesquisar o vocabulário real do pregoeiro > deixar a IA inventar.**
+
+**PLACAR FINAL dos 7 em teste:** DEVCONS 67 · TIGRES 62 (era 23) · ONSERV 46 · SM 35 (era 11) · DONIZETE 29 · CAUE 6 (era 15, limpo) · Licita App 0 + convite (era 7.666).
+
 **Fim do handoff.** Boa sorte na próxima sessão.
