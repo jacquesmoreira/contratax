@@ -170,7 +170,7 @@ function baseSemGenero(r) {
   return r.length >= MIN_LETRAS_GENERO ? r.replace(/[ao]$/, "") : r;
 }
 
-// permitirSinonimo=false pros termos da IA. Motivo medido em producao
+// (comentario detalhado da regra fica em palavraCasada, logo abaixo.)
 // (12/08/2026): o termo IA "plataforma hospitalar" (ja uma inferencia sobre o
 // ramo do cliente) mais o sinonimo plataforma->sistema (outra inferencia) casou
 // com "MEDICAMENTOS para a Fundacao HOSPITALAR", "materiais de uso tecnico
@@ -180,15 +180,26 @@ function baseSemGenero(r) {
 // inferencia sobre inferencia vira ruido. O termo que o CLIENTE escreveu e
 // intencao explicita dele e continua ganhando sinonimo: e o que faz
 // "SOFTWARE de gestao em saude" achar "SISTEMA de gestao em saude".
-function palavraCasada(w, raizesObjeto, objetoNorm, permitirSinonimo = true) {
+// permitirInferencia=false pros termos da IA: nem sinonimo nem flexao de
+// genero. Os dois sao inferencia nossa, e aplicar inferencia sobre um termo que
+// JA e inferencia da IA multiplica o ruido. Medido em producao nos dois casos:
+//  - sinonimo: "plataforma hospitalar" + plataforma->sistema casou com 5
+//    compras de equipamento medico ("...HOSPITALAR (SISTEMA de coleta)").
+//  - genero: "informatica medica" + medica~medicos casou com "AQUISICAO DE
+//    EQUIPAMENTOS MEDICOS (...) E EQUIPAMENTOS DE INFORMATICA", que foi parar
+//    em 1o lugar no painel de uma empresa de software.
+// No termo que o CLIENTE escreveu os dois continuam ligados: e o que faz
+// "SOFTWARE de gestao" achar "SISTEMA de gestao" e "servicos eletricos" achar
+// "engenharia ELETRICA".
+function palavraCasada(w, raizesObjeto, objetoNorm, permitirInferencia = true) {
   const rw = raiz(w);
   if (raizesObjeto.has(rw) || contemPalavra(w, objetoNorm)) return w;
+  if (!permitirInferencia) return null;
   // Mesma palavra no outro genero.
   const base = baseSemGenero(rw);
   if (base !== rw) {
     for (const ro of raizesObjeto) if (baseSemGenero(ro) === base) return ro;
   }
-  if (!permitirSinonimo) return null;
   const grupo = SINONIMOS_PALAVRA.get(rw);
   if (!grupo) return null;
   for (const s of grupo) if (raizesObjeto.has(s)) return s;
@@ -220,9 +231,9 @@ function subTermoCasa(sub, raizesObjeto, objetoNorm, exigirProximidade = false) 
   // match vazio.
   const nucleo = palavras.filter((w) => !QUALIFICADORES.has(w));
   const exigidas = nucleo.length ? nucleo : palavras;
-  // exigirProximidade marca os termos da IA; neles o sinonimo fica desligado.
-  const permitirSinonimo = !exigirProximidade;
-  const casadas = exigidas.map((w) => palavraCasada(w, raizesObjeto, objetoNorm, permitirSinonimo));
+  // exigirProximidade marca os termos da IA; neles a inferencia fica desligada.
+  const permitirInferencia = !exigirProximidade;
+  const casadas = exigidas.map((w) => palavraCasada(w, raizesObjeto, objetoNorm, permitirInferencia));
   if (casadas.some((c) => !c)) return false;
 
   // MATCH FROUXO exige as palavras JUNTAS. Frouxo = usou sinonimo (inferencia
@@ -235,14 +246,14 @@ function subTermoCasa(sub, raizesObjeto, objetoNorm, exigirProximidade = false) 
   // "sistema" estava no caractere 716 e "gestao" no 198, 518 caracteres de
   // distancia. Match literal e completo continua sem exigir proximidade (o
   // objeto e prosa longa e palavras legitimas ficam distantes).
-  const usouSinonimo = casadas.some((c, i) => c !== exigidas[i]);
+  const usouInferencia = casadas.some((c, i) => c !== exigidas[i]);
   // So conta como "omitido" o qualificador que REALMENTE nao esta no texto. Ter
   // qualificador no termo nao e problema quando o edital tambem tem: nesse caso
   // o match e completo e nao precisa da trava de proximidade.
   const qualificadorAusente = palavras
     .filter((w) => QUALIFICADORES.has(w))
-    .some((w) => !palavraCasada(w, raizesObjeto, objetoNorm, permitirSinonimo));
-  if ((exigirProximidade || usouSinonimo || qualificadorAusente) && casadas.length > 1) {
+    .some((w) => !palavraCasada(w, raizesObjeto, objetoNorm, permitirInferencia));
+  if ((exigirProximidade || usouInferencia || qualificadorAusente) && casadas.length > 1) {
     return palavrasProximasNoObjeto(casadas, objetoNorm);
   }
   return true;
