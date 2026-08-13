@@ -1627,4 +1627,18 @@ Decisão estratégica tomada com dado: **não ampliar o filtro por conta própri
 
 **Onde ampliar de verdade: na AQUISIÇÃO, não no filtro.** Painel do SM é pequeno porque o nicho é estreito; nenhum ajuste técnico muda isso. SEO e campanha fria deveriam mirar ramos com volume real (merenda, limpeza, hospitalar, informática, construção).
 
+### 2026-08-13 (parte 2) — prompt v2, o erro que ele causou, e a validação contra o acervo
+
+**Prompt v2 (`d51a96d`)** reescrito a partir das 4 falhas reais. Descoberta: as 2 que nenhum filtro pegava ("plataforma hospitalar", "informática médica") tinham o padrão **GENÉRICO + SETOR** — dizem ONDE a empresa atua, não O QUE vende, então casam com o setor inteiro. Regra central nova: o termo tem que nomear o que é comprado, com teste explícito e exemplos bons/ruins dos 3 ramos reais. **Bug achado só porque rodei a API de verdade:** com ramo vago ("Tecnologia da Informação") o modelo devolvia PERGUNTAS em vez de lista, e o parser picava isso em termos como "escritório...)". Corrigido nos dois lados (prompt + rede de segurança no parser).
+
+**🔴 ERRO QUE COMETI, e a lição:** apliquei os termos novos no SM Assessoria e **piorou**. Painel 11 → 7, nada entrou. Motivo: os termos eram conceitualmente perfeitos e **inexistentes no vocabulário dos editais** — "gestão de leitos" = 0 editais no acervo, "sistema de regulação" = 0, "faturamento hospitalar" = 0. E a troca derrubou "telemedicina", que achava 4. **Revertido**, 11 editais restaurados. Precisão conceitual sem lastro na realidade não serve.
+
+**Correção (`7795c9f`): `contarNoAcervo()` / `filtrarPorAcervo()`** — todo termo sugerido é testado contra o acervo antes de ser oferecido; o que acha 0 é descartado na origem (vale para cadastro novo também, não só para o botão). O admin agora vê **a contagem real em cada chip**, sugerido e atual lado a lado, vermelho quando é 0.
+
+**Diagnóstico dos termos ATUAIS do SM, medido:** `sistema de farmácia` **0**, `software clínico` **0** (mortos); `saúde digital` 11, `plataforma hospitalar` 10, `sistema ambulatorial` 5, `telemedicina` 2, `gestão hospitalar` 2, `informática médica` 1.
+
+**⚠️ LIMITE CONHECIDO da validação:** ela mede QUANTIDADE, não QUALIDADE. "plataforma hospitalar" acha 10 editais e é justamente o que trazia equipamento médico. Volume alto não prova relevância — só o diagnóstico caso a caso prova.
+
+**"SISTEMA FARMACEUTICO" (Jacques esclareceu: ele vende software PARA FARMÁCIA).** O termo é ambíguo e traz ruído (casou com hipoclorito de sódio). Alternativas medidas no acervo: `software farmacia` 0, `gestão de farmácia` 0, `sistema de dispensação` 2, `farmácia básica` 13, `dispensação de medicamentos` 132 **mas verificado: são COMPRA DE REMÉDIO, não software**. Conclusão: **não há vocabulário de edital bom para "software de farmácia"** — o mercado dele nesse item é realmente raro, e inventar termo só traria ruído. Deixar como está.
+
 **Fim do handoff.** Boa sorte na próxima sessão.
