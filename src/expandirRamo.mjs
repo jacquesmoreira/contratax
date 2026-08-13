@@ -90,7 +90,10 @@ export async function expandirRamo(termos = []) {
     const j = await r.json();
     if (j.usage) { try { await registrarCusto({ usage: j.usage, modelo: MODELO, contexto: "expandir-ramo" }); } catch {} }
     const texto = j.content?.find((b) => b.type === "text")?.text || "";
-    return limparExpandidos(texto, limpos);
+    const candidatos = limparExpandidos(texto, limpos);
+    // Ultimo portao: termo que nao existe no acervo nao ajuda ninguem.
+    const { mantidos } = await filtrarPorAcervo(candidatos);
+    return mantidos;
   } catch (e) {
     console.error("[expandir-ramo]", e.message);
     return [];
@@ -178,4 +181,45 @@ function limparExpandidos(texto, originais) {
 // refazer a expansao (que custaria IA e poderia gerar outros termos).
 export function filtrarJargao(termosIA = []) {
   return (termosIA || []).filter((t) => !temJargaoLicitacao(t) && !termoDegradado(t));
+}
+
+// VALIDACAO CONTRA O ACERVO (13/08/2026). O prompt v2 passou a gerar termos
+// conceitualmente corretos, mas a IA nao tem como saber que VOCABULARIO os
+// pregoeiros usam de verdade. Medido ao aplicar no SM Assessoria: "gestao de
+// leitos", "sistema de regulacao" e "faturamento hospitalar" sao exatamente o
+// que a empresa vende e deram ZERO edital no acervo inteiro; ao mesmo tempo a
+// troca derrubou "telemedicina", que achava 4. O painel foi de 11 pra 7 sem
+// nada entrar. Precisao conceitual sem lastro na realidade nao serve.
+//
+// Agora todo termo sugerido e testado contra o acervo antes de ser oferecido:
+// termo que nao acha nada e descartado, e a contagem vai junto pro admin ver.
+// Roda 1 query e filtra em memoria (o custo esta no aplicarFiltro por termo,
+// nao no banco). So no cadastro e no botao de sugerir, nunca em hot path.
+export async function contarNoAcervo(termos = []) {
+  const lista = (termos || []).filter(Boolean);
+  if (!lista.length) return [];
+  try {
+    const { consultar } = await import("./db.mjs");
+    const { aplicarFiltro } = await import("./filtro.mjs");
+    const candidatos = consultar({ apenasAbertos: true });
+    return lista.map((t) => ({ termo: t, n: aplicarFiltro(candidatos, { termos: [t] }).length }));
+  } catch (e) {
+    // Sem banco (ex: script solto), devolve todos como "nao verificado" pra
+    // nunca descartar termo bom por falha de infra.
+    console.error("[expandir-ramo] validacao no acervo falhou:", e.message);
+    return lista.map((t) => ({ termo: t, n: null }));
+  }
+}
+
+// Mantem so os termos que aparecem no acervo. n === null = nao deu pra medir,
+// mantem (melhor um termo a mais do que perder por falha de leitura).
+export async function filtrarPorAcervo(termos = [], { minimo = 1 } = {}) {
+  const medidos = await contarNoAcervo(termos);
+  const mantidos = [], descartados = [];
+  for (const { termo, n } of medidos) {
+    if (n === null || n >= minimo) mantidos.push(termo);
+    else descartados.push(termo);
+  }
+  if (descartados.length) console.log(`[expandir-ramo] descartados (0 editais no acervo): ${descartados.join(", ")}`);
+  return { mantidos, descartados, medidos };
 }

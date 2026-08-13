@@ -1818,9 +1818,14 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
         // corrigir o ramo e regerar em cima do ramo corrigido, sem salvar antes.
         const base = corpo.termos != null ? parseRamos(corpo.termos) : (perfil.filtro?.termos ?? []);
         if (!base.length) return json(res, 400, { erro: "Sem termo proprio pra expandir" });
-        const { expandirRamo } = await import("../src/expandirRamo.mjs");
+        const { expandirRamo, contarNoAcervo } = await import("../src/expandirRamo.mjs");
         const sugeridos = await expandirRamo(base);
-        return json(res, 200, { ok: true, base, sugeridos, vazio: sugeridos.length === 0 });
+        // Manda a contagem junto: o admin decide vendo quantos editais cada
+        // termo traz de verdade, em vez de confiar no nome bonito. Tambem mede
+        // os termos que JA estao salvos, pra dar pra comparar lado a lado.
+        const contagem = await contarNoAcervo(sugeridos);
+        const atuais = await contarNoAcervo(perfil.filtro?.termosIA ?? []);
+        return json(res, 200, { ok: true, base, sugeridos, contagem, atuais, vazio: sugeridos.length === 0 });
       } catch (e) { return json(res, 500, { erro: e.message }); }
     }
 
