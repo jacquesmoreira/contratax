@@ -1662,4 +1662,22 @@ Compare com o que a IA inventou para o mesmo cliente: "gestão de leitos" 0, "si
 
 **Cadastro sem CNPJ (pergunta do Jacques sobre o "Licita App"):** existem 2 caminhos de cadastro. `criarPerfil` (formulário) EXIGE CNPJ válido e único. `criarPerfilGoogle` (botão "entrar com Google") cria um perfil **stub** com `cnpj: ""`, `ufs: []`, `filtro.termos: []` e `precisaCompletarCadastro: true` — o cliente deveria completar em `/conta` no primeiro login. Quem não completa fica com **painel permanentemente vazio** (sem ramo, não casa nada). É o caso do Licita App. **Não é falha de segurança, é atrito de onboarding** — e vale medir quantos entram por aí e nunca completam.
 
+### 2026-08-13 (parte 4) — PENTE FINO nos 7 clientes em teste
+
+Jacques: *"se eles entram e não acham o que procuram, o que estão fazendo aqui? Essa é a alma do sistema."* Diagnóstico cliente a cliente com dado real.
+
+**Estado final:** DEVCONS 67 ✓ · ONSERV 46 ✓ · DONIZETE 29 ✓ · TIGRES 23 ⚠ · CAUE 15 ⚠ · SM 11 ✓ · Licita App 0 (corrigido, ver abaixo)
+
+**🔴 BUG GRAVE corrigido (`c592c64`):** `aplicarFiltro` só filtra `if (termos.length || termosIA.length)` — quem **não tem ramo** passava por TODOS os editais. O "Licita App" (entrou pelo Google, que não pede CNPJ nem ramo, e nunca completou) via **7.666 editais aleatórios**: rastreamento veicular, hospedagem, caminhão. Pior que tela vazia — parece produto burro, não incompleto. Guard `semRamo` no `monitor.mjs` (não no `aplicarFiltro` genérico, que a busca pública usa sem termo legitimamente) + painel mostra "Falta 1 passo: diga o que a sua empresa vende" com botão.
+
+**🔴 BUG MEU corrigido (`2ca199e`):** ao aplicar "sistema informatizado" no SM, o painel foi de **11 → 546** com medicamento e luminária LED. Causa: eu tinha posto "informatizado", "integrado", "geral" e "especializado" na lista de QUALIFICADORES opcionais, então "sistema informatizado" virava **"sistema" solto**. Corrigido: qualificador agora é só ESFERA (pública, municipal, estadual...). Adjetivo que DISTINGUE volta a ser obrigatório. **Revertido no cliente** (11 editais de volta).
+
+**Experimento que FALHOU e foi revertido:** aplicar proximidade também aos termos próprios do cliente. Não resolveu o ruído do CAUE e quebrou um match bom do DONIZETE. Registrado para não tentar de novo.
+
+**Os 2 que continuam com ruído, e a causa NÃO é o sistema:**
+- **TIGRES:** o ramo cadastrado é um texto de marketing inteiro — *"Sistema de Segurança e monitoramento de alarmes completo com toda mão de obra inclusa nas instalações de sistema de CFTV IA DO MAIS ALTO PADRÃO MODERNO..."*. O matching quebra em pedaços e "Sistema de Segurança" casa com "Plano de Segurança de Barragem". **Termo mal formulado pelo cliente.**
+- **CAUE:** nicho ultra específico (máquina de pintar meio-fio). "pintura de guias" casa com "Porta automática... guias". Só 15 editais e o mercado dele é realmente raro.
+
+**Ambos são corrigíveis pelo editor de termos do admin** — é exatamente para isso que ele existe. Sugestão: TIGRES trocar o textão por `CFTV, videomonitoramento, alarme, controle de acesso`; CAUE remover `pintura de guias` e `caiação` (que casam com coisa errada).
+
 **Fim do handoff.** Boa sorte na próxima sessão.
