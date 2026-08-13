@@ -216,11 +216,21 @@ function palavraCasada(w, raizesObjeto, objetoNorm, permitirInferencia = true) {
 // anterior (deixar cair QUALQUER palavra de termo longo) abriu demais e trouxe
 // medicamento e material de limpeza pro painel dele, porque "Sistema Unico de
 // Saude" aparece em quase todo edital de saude e cobria 3 das 4 palavras.
+// So ESFERA/ABRANGENCIA. Correcao de 13/08/2026: a lista tinha tambem "geral",
+// "integrado", "informatizado" e "especializado", e isso furou o proprio
+// mecanismo. "sistema informatizado" (o vocabulario que os pregoeiros REALMENTE
+// usam pra comprar software, 724 editais) virava "sistema" sozinho, porque
+// "informatizado" era tratado como dispensavel -- e "sistema" casa com
+// "SISTEMA DE REGISTRO DE PRECOS", "sistema CFTV", "potencias do sistema".
+// Medido ao vivo: o painel do SM Assessoria foi de 11 pra 546 editais com
+// medicamento e luminaria LED dentro. Adjetivo que DISTINGUE o substantivo
+// generico ("informatizado", "integrado") nao e qualificador: e o que da
+// sentido ao termo. Aqui ficam so os que dizem a esfera do comprador, que o
+// edital de fato costuma omitir.
 const QUALIFICADORES = new Set([
   "publica", "publico", "publicas", "publicos", "privada", "privado",
-  "privadas", "privados", "municipal", "estadual", "federal", "nacional",
-  "regional", "local", "geral", "gerais", "integrado", "integrada",
-  "informatizado", "informatizada", "especializada", "especializado",
+  "privadas", "privados", "municipal", "municipais", "estadual", "estaduais",
+  "federal", "federais", "nacional", "regional", "local",
 ]);
 
 function subTermoCasa(sub, raizesObjeto, objetoNorm, exigirProximidade = false) {
