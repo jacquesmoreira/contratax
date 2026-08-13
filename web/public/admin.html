@@ -532,6 +532,7 @@ async function abrirDiagTermos(tk) {
       <label style="display:block;font-size:11.5px;font-weight:800;color:var(--vermelho);margin-bottom:3px">EXCLUSÕES (nunca mostrar editais com estas palavras)</label>
       <textarea id="ed-termos-ex" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--linha);border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:10px">${esc((d.termosExcluir || []).join(", "))}</textarea>
       <button id="btn-salvar-termos" data-token="${esc(d.cliente.token)}" style="background:var(--indigo);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">Salvar e recarregar</button>
+      <button id="btn-regerar-termos" data-token="${esc(d.cliente.token)}" title="Gera uma nova sugestão de termos da IA a partir dos termos próprios. Só preenche o campo: nada é salvo até você clicar em Salvar." style="background:#fff;color:var(--indigo);border:1px solid var(--indigo);border-radius:8px;padding:9px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;margin-left:6px">🔄 Sugerir termos da IA</button>
       <span id="ed-status" class="mut" style="margin-left:10px;font-size:12.5px"></span>
     </details>
 
@@ -569,6 +570,26 @@ async function abrirDiagTermos(tk) {
     });
     if (r.ok) { st.textContent = "Salvo. Recarregando..."; await abrirDiagTermos(tkCli); }
     else { st.textContent = "Erro: " + (r.d.erro || "falhou"); btnSalvar.disabled = false; }
+  };
+
+  // Sugerir termos da IA: só PREENCHE o campo, não salva. O admin compara com o
+  // que estava lá (mostrado ao lado) e decide. Regenerar direto no banco podia
+  // apagar um ajuste manual bom, e o prompt muda com o tempo.
+  const btnRegerar = $("btn-regerar-termos");
+  if (btnRegerar) btnRegerar.onclick = async () => {
+    const st = $("ed-status");
+    const campoIA = $("ed-termos-ia");
+    const anterior = campoIA.value;
+    btnRegerar.disabled = true; st.textContent = "Consultando a IA...";
+    const r = await post("/api/admin/regenerar-termos", {
+      token: btnRegerar.dataset.token,
+      termos: $("ed-termos").value, // usa o ramo do formulário (pode ter sido corrigido agora)
+    });
+    btnRegerar.disabled = false;
+    if (!r.ok) { st.textContent = "Erro: " + (r.d.erro || "falhou"); return; }
+    if (r.d.vazio) { st.textContent = "A IA não sugeriu nenhum termo (ramo muito específico ou sem chave)."; return; }
+    campoIA.value = r.d.sugeridos.join(", ");
+    st.innerHTML = `Sugestão preenchida (${r.d.sugeridos.length}). <b>Nada foi salvo ainda.</b> Antes era: <span class="mut">${esc(anterior || "vazio")}</span>`;
   };
 }
 

@@ -1803,6 +1803,27 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
       } catch (e) { return json(res, 500, { erro: e.message }); }
     }
 
+    // Regera os termos da IA com o prompt atual. NAO SALVA de proposito: devolve
+    // a sugestao pro admin ver antes. Regenerar as cegas poderia trocar um termo
+    // bom (ou um ajuste manual ja feito) por outro pior, e o prompt muda com o
+    // tempo. Aqui o Jacques compara com o que esta la e decide se aplica.
+    if (rota === "/api/admin/regenerar-termos" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      if (!corpo.token) return json(res, 400, { erro: "Token obrigatorio" });
+      try {
+        const perfil = await perfilPorToken(corpo.token);
+        if (!perfil) return json(res, 404, { erro: "Cliente nao encontrado" });
+        // Usa os termos que estao no formulario (se vierem), pra o admin poder
+        // corrigir o ramo e regerar em cima do ramo corrigido, sem salvar antes.
+        const base = corpo.termos != null ? parseRamos(corpo.termos) : (perfil.filtro?.termos ?? []);
+        if (!base.length) return json(res, 400, { erro: "Sem termo proprio pra expandir" });
+        const { expandirRamo } = await import("../src/expandirRamo.mjs");
+        const sugeridos = await expandirRamo(base);
+        return json(res, 200, { ok: true, base, sugeridos, vazio: sugeridos.length === 0 });
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
+
     if (rota === "/api/admin/diagnostico-termos") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       const token = url.searchParams.get("token") || "";
