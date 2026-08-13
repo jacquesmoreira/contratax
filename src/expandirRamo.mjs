@@ -12,16 +12,52 @@ const ENDPOINT = "https://api.anthropic.com/v1/messages";
 const MODELO = process.env.LICITA_MODELO_EXPANSAO || "claude-haiku-4-5-20251001";
 const MAX_TERMOS_IA = Number(process.env.LICITA_MAX_TERMOS_IA || 12);
 
-const INSTRUCAO = `Voce recebe os ramos de atuacao de uma empresa que vende para o governo brasileiro (licitacoes). Gere palavras-chave RELACIONADAS e SINONIMOS que apareceriam em editais do MESMO ramo, para ampliar a busca SEM fugir do dominio.
+// PROMPT v2 (13/08/2026), reescrito a partir de 4 falhas REAIS em producao. As
+// duas primeiras o codigo ja barra depois (jargao, sigla de 2 letras); as duas
+// ultimas passavam e foram parar no TOPO do painel de clientes pagantes:
+//   "registro eletronico"   -> casou com "REGISTRO DE PRECOS" (jargao)
+//   "consultoria it"        -> "it" some no matching, virou "consultoria" solta
+//   "plataforma hospitalar" -> trouxe medicamento e mesa cirurgica
+//   "informatica medica"    -> trouxe "equipamentos medicos e de informatica"
+// O padrao das duas ultimas: PALAVRA GENERICA + SETOR. "hospitalar"/"medica"
+// dizem ONDE se vende, nao O QUE se vende, entao o termo casa com o setor
+// inteiro (equipamento, medicamento, insumo) e nao com o produto do cliente.
+// Dai a regra central do prompt novo: o termo tem que nomear O QUE E COMPRADO.
+const INSTRUCAO = `Voce ajuda uma empresa que vende para o governo brasileiro a nao perder licitacoes do ramo dela. Recebe o que a empresa vende e gera palavras-chave que apareceriam no OBJETO de editais comprando exatamente isso.
+
+TESTE OBRIGATORIO para cada termo, antes de incluir:
+"Se eu ler este termo no objeto de um edital, tenho certeza de que o comprador quer O QUE ESTA EMPRESA VENDE?"
+Se a resposta for "talvez, depende do resto do edital", NAO inclua.
+
+O termo deve nomear O QUE E COMPRADO, nunca so o SETOR onde a empresa atua.
+- Empresa de SOFTWARE de saude: "prontuario eletronico", "gestao de leitos", "sistema de regulacao" SIM.
+  "plataforma hospitalar", "informatica medica", "solucao para saude" NAO: casam com compra de
+  maca, medicamento e equipamento, que a empresa nao vende.
+- Empresa de MATERIAL ELETRICO: "cabo de cobre", "disjuntor", "luminaria led" SIM.
+  "infraestrutura eletrica", "solucao energetica" NAO: casam com obra inteira.
+- Empresa de TI: "licenca de software", "servidor de rede", "switch gerenciavel" SIM.
+  "consultoria it", "transformacao digital", "solucao tecnologica" NAO: vagos demais.
 
 Regras rigidas:
-- 1 a 2 palavras por termo (ex: "material hospitalar", "seringa", "equipamento medico").
-- No maximo ${MAX_TERMOS_IA} termos.
-- Portugues do Brasil, minusculas, sem acento opcional.
-- NAO repita os termos originais que recebeu.
-- NAO use termos genericos demais que casariam com qualquer edital (ex: "aquisicao", "servico", "contratacao", "fornecimento", "material" sozinho, "produto", "equipamento" sozinho).
-- Foco no que IDENTIFICA o ramo. Se o ramo for amplo, escolha os sub-itens mais comuns.
-- Responda SO com a lista separada por virgula, nada mais. Sem numeracao, sem explicacao.`;
+- 1 a 3 palavras por termo. Prefira o nome concreto do produto ou servico.
+- No maximo ${MAX_TERMOS_IA} termos. Menos e melhor: 5 termos certeiros valem mais que 12 vagos.
+- Portugues do Brasil, minusculas.
+- NAO repita os termos que recebeu, nem variacao de plural deles.
+- NAO use sigla de 2 letras (it, ti, bi, rh): some no nosso buscador e sobra so a outra palavra.
+- NAO use palavra de processo de compra: registro, preco, pregao, licitacao, edital, ata, certame,
+  aquisicao, contratacao, fornecimento, prestacao, objeto, proposta, habilitacao, eletronico.
+  Elas aparecem em TODO edital do pais e destroem a busca.
+- NAO use palavra guarda-chuva sozinha nem colada em setor: solucao, plataforma, sistema, servico,
+  produto, material, equipamento, infraestrutura, gestao, tecnologia, consultoria, assessoria.
+  So valem quando vierem com o produto concreto ("sistema de folha de pagamento", nao "sistema de saude").
+- Se nao houver termo bom o suficiente, devolva MENOS termos. Lista curta e correta e o objetivo;
+  nunca complete a lista com termos vagos so pra chegar em ${MAX_TERMOS_IA}.
+- Se o ramo recebido for vago ou amplo demais ("tecnologia da informacao", "consultoria",
+  "servicos gerais"), NAO peca esclarecimento e NAO faca perguntas: escolha por conta propria os
+  itens mais comprados pelo governo dentro desse ramo e liste so eles.
+- Responda SO com a lista separada por virgula. Sem numeracao, sem explicacao, sem perguntas, sem
+  parenteses, sem reticencias, sem texto antes ou depois. Exemplo exato do formato esperado:
+  cabo de cobre, disjuntor, luminaria led`;
 
 // Recebe a lista de termos do cliente. Devolve array de termos relacionados
 // (pode ser vazio em falha/sem chave: o sistema segue com os termos do cliente).
@@ -117,6 +153,13 @@ function limparExpandidos(texto, originais) {
   for (let t of String(texto).split(/[,;\n]+/)) {
     t = t.replace(/^[\s\-*\d.)]+/, "").trim(); // tira bullet/numeracao no inicio
     if (!t) continue;
+    // FRAGMENTO DE PROSA (13/08/2026): com o ramo vago "Tecnologia da
+    // Informacao" o modelo devolveu perguntas em vez de lista ("Vende hardware?
+    // (servidores, switches...)"), e o split por virgula picou isso em pedacos
+    // como "escritorio...)" e "Faz consultoria?", que viravam termo de busca.
+    // O prompt agora proibe esse formato; isto e a rede de seguranca, porque
+    // termo legitimo nunca tem ?, (), reticencias ou dois-pontos.
+    if (/[?():]|\.\.\./.test(t)) { console.log(`[expandir-ramo] descartado (fragmento de prosa): ${t}`); continue; }
     if (t.split(/\s+/).length > 3) continue; // muito longo, vira ruido
     const n = norm(t);
     if (n.length < 3 || jaTem.has(n) || vistos.has(n)) continue;
