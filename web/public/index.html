@@ -592,6 +592,16 @@ function perfilHTML(p) {
       <div style="font-size:13px;opacity:.95;margin-bottom:14px">${esc(melhor.municipio ?? "")}/${esc(melhor.uf ?? "")} · ${esc(melhor.orgao ?? "")} · <b>${valMelhor}</b>${melhor.reputacao?.classificacao === "rapido" ? " · órgão paga rápido" : ""}${prazoMelhor}</div>
       <button type="button" data-id="${esc(melhor.id)}" onclick="abrirDrawer(this.dataset.id)" style="background:#fff;color:#16A34A;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">Abrir e disputar →</button>
     </div>` : "";
+  // SEM RAMO (entrou pelo Google e nao completou o cadastro): a causa da tela
+  // vazia é outra e a saida tambem. Dizer "nenhum edital do seu ramo esta
+  // aberto" seria mentira: nao ha ramo pra procurar. Convite direto e unico.
+  if (p.semRamo) {
+    return `<section class="perfil">${cabecalho}<div class="vazio" style="background:#eef2ff;border:1px solid #c7d2fe;text-align:left;padding:26px 28px">
+      <div style="font-size:19px;font-weight:800;color:var(--indigo);margin-bottom:8px">👋 Falta 1 passo: diga o que a sua empresa vende</div>
+      <div style="font-size:14.5px;color:var(--tinta);line-height:1.6;margin-bottom:16px">Sua conta foi criada, mas ainda não sabemos o seu ramo, então não temos como garimpar as licitações certas pra você. Leva menos de 1 minuto e o painel enche na hora.</div>
+      <a href="/conta?c=${encodeURIComponent(token)}" style="display:inline-block;background:var(--indigo);color:#fff;text-decoration:none;border-radius:10px;padding:12px 24px;font-size:15px;font-weight:800">Cadastrar o meu ramo →</a>
+    </div></section>`;
+  }
   const corpo = editais.length
     ? `<div class="cards-grid">${editais.map(cardHTML).join("")}</div>`
     : `<div class="vazio"><span class="emoji">🔭</span>Nenhum edital do seu ramo está aberto agora.<br>Assim que surgir, aparece aqui e você recebe por e-mail.<br><br><b>Dica:</b> termos mais amplos pegam mais oportunidades (ex: <b>"hospitalar"</b> em vez de "material hospitalar").</div>`;

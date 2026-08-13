@@ -45,6 +45,21 @@ export async function monitorar(perfil, { marcar = true, salvar = true } = {}) {
     termosExcluir: filtro.termosExcluir ?? [],
   };
 
+  // SEM RAMO CADASTRADO = painel vazio + aviso, NUNCA o acervo inteiro.
+  // Bug achado no pente fino de 13/08/2026: aplicarFiltro so filtra "if
+  // (termos.length || termosIA.length)", entao quem nao tem ramo nenhum passava
+  // por TODOS os editais. O cliente "Licita App", que entrou pelo Google (esse
+  // caminho nao pede CNPJ nem ramo) e nunca completou o cadastro, estava vendo
+  // 7.666 editais aleatorios: rastreamento veicular, hospedagem, caminhao. Isso
+  // e pior que tela vazia, porque parece que o produto e burro em vez de
+  // incompleto. Agora devolve vazio com semRamo=true e o painel explica o que
+  // fazer. NAO mexi no aplicarFiltro generico de proposito: a busca publica da
+  // landing usa "sem termo" legitimamente (contador nacional).
+  const semRamo = !(termosBusca.termos.length || termosBusca.termosIA.length);
+  if (semRamo) {
+    return { total: 0, filtrados: [], novos: [], alargado: false, semRamo: true };
+  }
+
   // casarPerfil casa no OBJETO (com a expansao de ramo) E nos ITENS do edital,
   // igual a busca livre. Sem os itens, ramo de produto especifico ("papel A4")
   // ficava raso no painel enquanto a busca achava dezenas (o produto mora nos itens).

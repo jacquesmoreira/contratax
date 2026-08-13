@@ -1042,9 +1042,11 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
       let editais = [];
       let alargado = false;
       let totalBruto = 0;
+      let semRamo = false;
       try {
         const r = await monitorar(perfil, { marcar: false, salvar: false });
         editais = r.filtrados; alargado = r.alargado; totalBruto = r.total;
+        semRamo = Boolean(r.semRamo);
       } catch (e) { console.error("[api/editais] monitorar:", e.message); }
       // Selo de reputacao de pagamento + oportunidade (forte/regular/avaliar), o
       // MESMO helper que a busca usa, pra o selo ser identico nos dois lugares.
@@ -1071,6 +1073,10 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
           editais,
           alargado,
           totalBruto,
+          // Cliente que entrou pelo Google e nunca completou o cadastro: sem
+          // ramo nao da pra casar nada, e o painel mostra o convite pra
+          // completar em vez de tela vazia sem explicacao.
+          semRamo,
           // Ativacao: se ainda nao rodou nenhuma analise, o painel mostra o card
           // "comece por aqui" que leva a 1a analise (momento "uau").
           analisou: (perfil.analises?.usados || 0) > 0,
