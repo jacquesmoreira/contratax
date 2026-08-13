@@ -1710,4 +1710,14 @@ Jacques: *"se eles entram e não acham o que procuram, o que estão fazendo aqui
 
 **O que ainda pesa contra a meta, e não é código:** a régua de onboarding está em 1/3 — os e-mails 2 e 3 (que empurram pra conversão) ainda não dispararam porque são relativos ao fim do teste. Vão sair sozinhos. Nada a fazer além de esperar.
 
+### 2026-08-13 (parte 6) — 🔴 as rotinas na nuvem NUNCA funcionaram
+
+**Erro meu, que durou dias.** Criei o monitoramento (feedback de saída em 09/08, acompanhamento de trials em 13/08) como **rotina externa na nuvem**. O ambiente onde elas rodam **bloqueia a rede pro contratax.com.br** (proxy responde 403 no CONNECT, tanto por curl quanto por WebFetch). A do feedback rodou **~20 vezes e falhou todas** — eu disse ao Jacques *"a rotina te avisa quando chegar resposta"* e isso nunca poderia acontecer. **As duas foram desativadas.**
+
+**Lição:** rotina externa não alcança o próprio sistema do cliente. Monitoramento de dados internos tem que rodar DENTRO do servidor, que já tem o banco e o e-mail.
+
+**Solução no ar (`5b1c8b1`):** o **heartbeat diário** (que já funciona há semanas e chega no e-mail dele às 7h) agora traz a seção **"🎯 Testes em andamento"**, ordenada por quem mais usou a IA (sinal mais forte de intenção de compra), com dias restantes, leituras de IA e análises. Marca 🔥 quem tem 10+ leituras, vermelho em quem expira em ≤3 dias e em quem está sem CNPJ — esses dois viram **alerta na lista amarela**, mudando o assunto do e-mail para "N pontos pra olhar", visível sem abrir.
+
+**Para checar o feedback de saída (a rotina morreu):** `GET /api/admin/feedback-saida?c=ADMIN`, ou simplesmente abrir o admin — a seção "🎯 Por que os trials não fecham" mostra o mesmo, ao vivo.
+
 **Fim do handoff.** Boa sorte na próxima sessão.
