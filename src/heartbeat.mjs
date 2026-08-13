@@ -41,19 +41,45 @@ async function lerCotaEmail() {
 export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {}) {
   const alertas = []; // linhas de atencao (amarelas); vazio = tudo verde
 
-  // Clientes por status.
+  // Clientes por status + RAIO-X DOS TESTES (13/08/2026). O acompanhamento
+  // diario dos trials nasceu como rotina externa na nuvem, mas o ambiente de la
+  // BLOQUEIA a rede pro contratax.com.br (proxy 403), entao ela nunca conseguiu
+  // nem consultar a API -- rodou ~20 vezes e falhou todas. Aqui funciona porque
+  // roda DENTRO do proprio servidor, lendo o banco direto, e sai no e-mail que
+  // o Jacques ja recebe. Meta dele: converter os testes em pagante, entao o
+  // heartbeat passa a mostrar quem esta quente, quem esfriou e quem expira.
   let ativos = 0, teste = 0, expirados = 0, bouncesHoje = 0;
+  let trials = [];
   try {
     const perfis = await lerPerfis();
     const hoje = hojeISO();
     for (const p of perfis) {
-      const st = statusAtual(p).status;
-      if (st === "ativo" || st === "atrasado") ativos++;
-      else if (st === "teste") teste++;
-      else if (["teste_expirado", "vencido", "inativo"].includes(st)) expirados++;
+      const st = statusAtual(p);
+      if (st.status === "ativo" || st.status === "atrasado") ativos++;
+      else if (st.status === "teste") {
+        teste++;
+        const ua = p._ultimoAcessoEm || null;
+        trials.push({
+          nome: (p.razaoSocial || p.nome || "?").slice(0, 22),
+          dias: st.diasRestantes,
+          leituras: p._resumos?.n || 0,
+          analises: p.analises?.usados || 0,
+          semCnpj: !p.cnpj,
+          ultimoAcesso: ua,
+        });
+      }
+      else if (["teste_expirado", "vencido", "inativo"].includes(st.status)) expirados++;
       if (p._emailBounce?.em && String(p._emailBounce.em).slice(0, 10) === hoje) bouncesHoje++;
     }
+    // Mais quente primeiro: quem mais usou a IA. Empate pelo teste mais curto.
+    trials.sort((a, b) => b.leituras - a.leituras || (a.dias ?? 99) - (b.dias ?? 99));
   } catch (e) { alertas.push(`Nao consegui ler os perfis: ${e.message}`); }
+
+  // Alertas acionaveis sobre os testes (entram na lista amarela do e-mail).
+  for (const t of trials) {
+    if (t.dias != null && t.dias <= 3) alertas.push(`Teste de ${t.nome} termina em ${t.dias} dia(s), ${t.leituras} leitura(s) de IA.`);
+    if (t.semCnpj) alertas.push(`${t.nome} nao informou CNPJ: o painel dele nao funciona.`);
+  }
 
   // Cota de e-mail (Resend).
   const cota = await lerCotaEmail();
@@ -111,6 +137,27 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
         ${linha("Bounces hoje", bouncesHoje === 0 ? "nenhum" : String(bouncesHoje))}
       </table>
     </div>
+    ${trials.length ? `<div style="margin-top:16px;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+      <div style="background:#eef2ff;padding:11px 14px;font-size:13px;font-weight:800;color:#3730a3">🎯 Testes em andamento (mais engajado primeiro)</div>
+      <table style="width:100%;border-collapse:collapse">
+        <tr style="background:#f8fafc">
+          <td style="padding:6px 12px;font-size:11px;color:#64748b;font-weight:700">EMPRESA</td>
+          <td style="padding:6px 12px;font-size:11px;color:#64748b;font-weight:700">DIAS</td>
+          <td style="padding:6px 12px;font-size:11px;color:#64748b;font-weight:700">LEITURAS IA</td>
+          <td style="padding:6px 12px;font-size:11px;color:#64748b;font-weight:700">ANALISES</td>
+        </tr>
+        ${trials.map((t) => {
+          const quente = t.leituras >= 10;
+          const acabando = t.dias != null && t.dias <= 3;
+          return `<tr>
+            <td style="padding:7px 12px;border-top:1px solid #e2e8f0;font-size:13px;${quente ? "font-weight:800" : ""}">${quente ? "🔥 " : ""}${t.nome}${t.semCnpj ? ' <span style="color:#dc2626;font-size:11px">sem CNPJ</span>' : ""}</td>
+            <td style="padding:7px 12px;border-top:1px solid #e2e8f0;font-size:13px;${acabando ? "color:#dc2626;font-weight:800" : ""}">${t.dias ?? "-"}</td>
+            <td style="padding:7px 12px;border-top:1px solid #e2e8f0;font-size:13px;${quente ? "font-weight:800;color:#059669" : ""}">${t.leituras}</td>
+            <td style="padding:7px 12px;border-top:1px solid #e2e8f0;font-size:13px">${t.analises}</td>
+          </tr>`;
+        }).join("")}
+      </table>
+    </div>` : ""}
     ${tudoVerde
       ? `<p style="font-size:13px;color:#475569;margin:16px 4px 0">Nenhum ponto de atencao. Este e-mail chega todo dia so pra confirmar que o monitoramento esta vivo, se ele parar de chegar, e sinal de que algo travou.</p>`
       : `<div style="margin:14px 0 0"><div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:6px">Pontos de atencao:</div>
