@@ -1678,6 +1678,11 @@ Jacques: *"se eles entram e não acham o que procuram, o que estão fazendo aqui
 - **TIGRES:** o ramo cadastrado é um texto de marketing inteiro — *"Sistema de Segurança e monitoramento de alarmes completo com toda mão de obra inclusa nas instalações de sistema de CFTV IA DO MAIS ALTO PADRÃO MODERNO..."*. O matching quebra em pedaços e "Sistema de Segurança" casa com "Plano de Segurança de Barragem". **Termo mal formulado pelo cliente.**
 - **CAUE:** nicho ultra específico (máquina de pintar meio-fio). "pintura de guias" casa com "Porta automática... guias". Só 15 editais e o mercado dele é realmente raro.
 
-**Ambos são corrigíveis pelo editor de termos do admin** — é exatamente para isso que ele existe. Sugestão: TIGRES trocar o textão por `CFTV, videomonitoramento, alarme, controle de acesso`; CAUE remover `pintura de guias` e `caiação` (que casam com coisa errada).
+**Ambos corrigidos pelo editor de termos** (13/08), medindo ANTES de aplicar (lição do erro do SM):
+
+- **TIGRES 23 → 62 editais.** Textão de marketing trocado por `CFTV, videomonitoramento, camera de seguranca, alarme, controle de acesso, seguranca eletronica` (todos medidos no acervo antes: 26, 23, 23, 90, 33, 19). Simulação prévia: de 1/5 para 5/5 bons, 0 ruído. Depois de aplicar, sobrou ruído dos termosIA antigos ("sistemas integrados" trazendo licença de software, "instalação de rede" trazendo lousa escolar) → removidos os 4 genéricos. **Top 8 final: 100% segurança eletrônica.**
+- **CAUE 15 → 6 editais.** Removidos `pintura de guias` (casava com "porta de enrolar com guias") e `caiação` (casava com recuperação de pavimento). Simulação: mantém 3/3 bons, elimina 2/2 ruídos. Menos volume, mas o que sobrou é do ramo — nicho de máquina de pintar meio-fio é raro mesmo.
+
+**Método que funcionou e deve ser repetido:** (1) medir o candidato no acervo; (2) simular com `aplicarFiltro` contra objetos reais bons e ruins; (3) só então aplicar; (4) medir o resultado real; (5) reverter se piorar. Foi assim que peguei o erro do "sistema informatizado" antes que virasse dano permanente.
 
 **Fim do handoff.** Boa sorte na próxima sessão.
