@@ -75,6 +75,10 @@ export function abrir() {
   try { db.exec("ALTER TABLE editais ADD COLUMN precos_em TEXT;"); } catch {}
   // Marca quando os ITENS deste edital ja foram indexados pra busca (item index).
   try { db.exec("ALTER TABLE editais ADD COLUMN itens_em TEXT;"); } catch {}
+  // Sistema que PUBLICOU o edital no PNCP (o ERP do orgao: IPM, Betha,
+  // Equiplano...). Nao e o portal da disputa; ver comentario em pncp.mjs.
+  // So vem preenchido nos editais coletados a partir de 13/08/2026.
+  try { db.exec("ALTER TABLE editais ADD COLUMN fonte TEXT;"); } catch {}
 
   // Pesquisa de Precos: precos HOMOLOGADOS (reais, do vencedor) colhidos item a
   // item das licitacoes que encerram. Base que CRESCE com o tempo (incremental).
@@ -465,15 +469,16 @@ export function upsertEditais(editais) {
     INSERT INTO editais
       (id, orgao, orgao_cnpj, unidade, uf, municipio, objeto, objeto_norm,
        modalidade, modalidade_id, valor, abertura, encerramento, situacao,
-       publicacao, link, srp, ano, sequencial, numero_compra, visto_em)
+       publicacao, link, srp, ano, sequencial, numero_compra, fonte, visto_em)
     VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       valor = excluded.valor,
       encerramento = excluded.encerramento,
       situacao = excluded.situacao,
       link = excluded.link,
-      numero_compra = COALESCE(excluded.numero_compra, editais.numero_compra)
+      numero_compra = COALESCE(excluded.numero_compra, editais.numero_compra),
+      fonte = COALESCE(excluded.fonte, editais.fonte)
   `);
 
   d.exec("BEGIN");
@@ -483,7 +488,8 @@ export function upsertEditais(editais) {
         e.id, e.orgao, e.orgaoCnpj, e.unidade, e.uf, e.municipio, e.objeto,
         normalizar(e.objeto), e.modalidade, e.modalidadeId, e.valorEstimado,
         e.abertura, e.encerramento, e.situacao, e.publicacao, e.link,
-        e.srp ? 1 : 0, e.ano, e.sequencial, e.numeroCompra ?? null, agora
+        e.srp ? 1 : 0, e.ano, e.sequencial, e.numeroCompra ?? null,
+        e.fonte ?? null, agora
       );
     }
     d.exec("COMMIT");
@@ -506,6 +512,10 @@ export function buscarPorId(id) {
     encerramento: l.encerramento, situacao: l.situacao, publicacao: l.publicacao,
     link: l.link, srp: Boolean(l.srp), ano: l.ano, sequencial: l.sequencial,
     numeroCompra: l.numero_compra,
+    // SO no detalhe, de proposito: quem publicou o edital no PNCP (o ERP do
+    // orgao). Interessa a quem vende software de gestao publica e e ruido pros
+    // outros ramos, entao nao vai no card da listagem nem no filtro de portal.
+    fonte: l.fonte || null,
     // Portal de origem tambem no DETALHE (a listagem ja devolvia, ver ~linha
     // 1006). O drawer usa pra NOMEAR o portal em vez de repetir um link "abrir"
     // generico que apontava pra mesma URL do botao principal.

@@ -1570,7 +1570,8 @@ async function abrirDrawer(id) {
     <div class="linha-info"><span>Modalidade</span><span>${esc(ed.modalidade)}</span></div>
     <div class="linha-info"><span>Valor estimado</span><span>${brl(ed.valorEstimado)}</span></div>
     <div class="linha-info"><span>Encerra</span><span>${dataBR(ed.encerramento)}</span></div>
-    ${ed.portalNome && ed.portal !== "sem" ? `<div class="linha-info"><span>Portal</span><span>${esc(ed.portalNome)}</span></div>` : ""}</div>`;
+    ${ed.portalNome && ed.portal !== "sem" ? `<div class="linha-info"><span>Portal</span><span>${esc(ed.portalNome)}</span></div>` : ""}
+    ${ed.fonte ? `<div class="linha-info" title="Sistema de gestão que o órgão usa para publicar no PNCP. NÃO é onde acontece a disputa — para isso veja o Portal acima."><span>Publicado via</span><span>${esc(ed.fonte)}</span></div>` : ""}</div>`;
   // Itens da licitacao: abre em PAGINA PROPRIA (nova aba) pra nao virar uma
   // "tripa" gigante no drawer (atas tem 80-200+ itens). La tem filtro de item.
   html += `<div class="bloco"><h3>📦 Itens da licitação</h3>

@@ -40,6 +40,15 @@ export function normalizarEdital(raw) {
     situacao: raw.situacaoCompraNome ?? null,
     publicacao: raw.dataPublicacaoPncp ?? null,
     link: raw.linkSistemaOrigem ?? null,
+    // FONTE DA PUBLICACAO (13/08/2026): quem enviou o edital ao PNCP. Na pratica
+    // e o ERP de gestao publica que a prefeitura usa (IPM, Betha, Equiplano,
+    // Elotech...). O PNCP mostra isso como "Fonte" na pagina do edital. Vale
+    // guardar porque, pra quem VENDE software de gestao publica, saber qual
+    // sistema o orgao ja usa e saber quem e o concorrente instalado. Medido:
+    // dos editais que vem SEM linkSistemaOrigem, 8 em 8 tinham este campo.
+    // ATENCAO: NAO e o portal onde acontece a disputa. Nunca exibir como
+    // "Portal" -- o cliente acharia que da lance ali. Campo proprio, separado.
+    fonte: raw.usuarioNome ?? null,
     srp: Boolean(raw.srp),
     ano: raw.anoCompra ?? null, // identificadores para a API de documentos
     sequencial: raw.sequencialCompra ?? null,
