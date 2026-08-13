@@ -1775,6 +1775,34 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
     // "prontuario eletronico"), eu tive que ADIVINHAR os termos dele simulando
     // um cenario, porque nenhuma tela mostrava os termosIA reais gerados no
     // cadastro. Essa tela fecha esse buraco: mostra o dado real, sem simular.
+    // Editor de termos: salva os termos PROPRIOS e os da IA de um cliente.
+    // Motivo (12/08/2026): os 4 matches ruins investigados hoje vieram todos de
+    // termo gerado pela IA ("registro eletronico" casando com REGISTRO DE
+    // PRECOS, "consultoria it" virando "consultoria" solta, "plataforma
+    // hospitalar" trazendo equipamento medico). Ate agora so dava pra remover em
+    // MASSA por regra nova no codigo, o que exige eu adivinhar a regra certa a
+    // cada caso. Com isto o Jacques corrige um cliente especifico na hora, sem
+    // deploy. Nao regenera nada pela IA (nao gasta credito e nao arrisca trocar
+    // um termo bom por outro pior): salva exatamente o que ele escrever.
+    if (rota === "/api/admin/salvar-termos" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      if (!corpo.token) return json(res, 400, { erro: "Token obrigatorio" });
+      try {
+        const termos = parseRamos(corpo.termos).slice(0, MAX_TERMOS);
+        const termosIA = parseRamos(corpo.termosIA).slice(0, MAX_TERMOS);
+        const termosExcluir = parseRamos(corpo.termosExcluir).slice(0, MAX_TERMOS);
+        if (!termos.length) return json(res, 400, { erro: "Precisa de ao menos 1 termo proprio (o ramo do cliente)" });
+        let achou = false;
+        await atualizarPerfil(corpo.token, (p) => {
+          achou = true;
+          p.filtro = { ...(p.filtro || {}), termos, termosIA, termosExcluir };
+        });
+        if (!achou) return json(res, 404, { erro: "Cliente nao encontrado" });
+        return json(res, 200, { ok: true, termos: termos.length, termosIA: termosIA.length, termosExcluir: termosExcluir.length });
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
+
     if (rota === "/api/admin/diagnostico-termos") {
       if ((url.searchParams.get("c") || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
       const token = url.searchParams.get("token") || "";

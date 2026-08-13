@@ -520,6 +520,21 @@ async function abrirDiagTermos(tk) {
     <div style="margin-bottom:10px"><b style="font-size:12.5px;color:var(--cinza)">TERMOS PRÓPRIOS (cadastrados pelo cliente)</b><br>${tagTermos(d.termos, "")}</div>
     <div style="margin-bottom:10px"><b style="font-size:12.5px;color:var(--cinza)">TERMOS DA IA (expansão gerada no cadastro)</b><br>${tagTermos(d.termosIA, "ia")}</div>
     ${d.termosExcluir.length ? `<div style="margin-bottom:14px"><b style="font-size:12.5px;color:var(--cinza)">EXCLUSÕES</b><br>${tagTermos(d.termosExcluir, "excluir")}</div>` : ""}
+
+    <details id="editor-termos" style="margin:14px 0 4px;border:1px solid var(--linha);border-radius:10px;padding:10px 13px">
+      <summary style="cursor:pointer;font-size:13px;font-weight:800;color:var(--indigo)">✏️ Editar termos deste cliente</summary>
+      <p class="mut" style="margin:10px 0 12px;font-size:12.5px;line-height:1.5">Separe por vírgula. Salvar não gasta IA nem regera nada: fica exatamente o que você escrever, e o painel do cliente muda na hora.<br>
+      <b>Termo da IA ruim</b> é a causa mais comum de match errado (ex.: "registro eletrônico" casa com REGISTRO DE PREÇOS). Na dúvida, apague o termo da IA em vez de mexer no do cliente.</p>
+      <label style="display:block;font-size:11.5px;font-weight:800;color:var(--cinza);margin-bottom:3px">TERMOS PRÓPRIOS (o que o cliente vende, obrigatório)</label>
+      <textarea id="ed-termos" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--linha);border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:10px">${esc(d.termos.join(", "))}</textarea>
+      <label style="display:block;font-size:11.5px;font-weight:800;color:var(--verde);margin-bottom:3px">TERMOS DA IA (expansão, pode esvaziar)</label>
+      <textarea id="ed-termos-ia" rows="3" style="width:100%;padding:8px 10px;border:1px solid var(--linha);border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:10px">${esc(d.termosIA.join(", "))}</textarea>
+      <label style="display:block;font-size:11.5px;font-weight:800;color:var(--vermelho);margin-bottom:3px">EXCLUSÕES (nunca mostrar editais com estas palavras)</label>
+      <textarea id="ed-termos-ex" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--linha);border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:10px">${esc((d.termosExcluir || []).join(", "))}</textarea>
+      <button id="btn-salvar-termos" data-token="${esc(d.cliente.token)}" style="background:var(--indigo);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">Salvar e recarregar</button>
+      <span id="ed-status" class="mut" style="margin-left:10px;font-size:12.5px"></span>
+    </details>
+
     <h3 style="font-size:14px;margin:18px 0 8px">Editais no painel agora (ordem real, top ${Math.min(15, d.editais.length)})</h3>
   `;
   if (!d.editais.length) {
@@ -537,6 +552,24 @@ async function abrirDiagTermos(tk) {
     }).join("");
   }
   $("modal-termos-corpo").innerHTML = html;
+
+  // Salvar termos: nao fecha o modal, recarrega o diagnostico no lugar. Assim o
+  // Jacques ve o efeito da edicao na hora (quais editais entraram/sairam e por
+  // que), que e o ciclo curto que faltava pra ajustar sem adivinhar.
+  const btnSalvar = $("btn-salvar-termos");
+  if (btnSalvar) btnSalvar.onclick = async () => {
+    const tkCli = btnSalvar.dataset.token;
+    const st = $("ed-status");
+    btnSalvar.disabled = true; st.textContent = "Salvando...";
+    const r = await post("/api/admin/salvar-termos", {
+      token: tkCli,
+      termos: $("ed-termos").value,
+      termosIA: $("ed-termos-ia").value,
+      termosExcluir: $("ed-termos-ex").value,
+    });
+    if (r.ok) { st.textContent = "Salvo. Recarregando..."; await abrirDiagTermos(tkCli); }
+    else { st.textContent = "Erro: " + (r.d.erro || "falhou"); btnSalvar.disabled = false; }
+  };
 }
 
 // Dispara a sequencia completa de e-mails de teste (7) pra um endereco.
