@@ -1597,4 +1597,20 @@ Depois da correção de causa raiz, o Jacques pediu pra afinar cliente a cliente
 
 **Padrão que se repetiu 3x hoje** (registro eletrônico → SM, consultoria it → DEVCONS): **os termos gerados pela IA no cadastro são a maior fonte de match ruim**, não o ranking. Ao investigar match estranho, olhar PRIMEIRO os termosIA pela tela de diagnóstico (botão "🔍 Termos" no admin).
 
+### 2026-08-12 (parte 3) — SM Assessoria e a LEI da inferência
+
+Afinação do 3º cliente. Aqui o problema era o **oposto** dos outros dois: não ruído, e sim **recall baixo** (7 editais, sendo 2 que não casavam com nada). Medido no acervo: existiam 72 editais de "sistema de saúde" e 42 de "software de gestão" abertos.
+
+**Duas causas de recall (`01bab91`, `eff9d60`):**
+1. **software ≡ sistema.** Ele escreveu "SOFTWARE de gestão", os editais dizem "SISTEMA de gestão". Criado `SINONIMOS_PALAVRA` (nível de palavra, diferente do `sinonimos.mjs` que mapeia produto→ramo).
+2. **Qualificador.** "SOFTWARE DE GESTÃO EM SAÚDE **PÚBLICA**" (4 palavras, todas exigidas) perdia "sistema de gestão em saúde para a Secretaria Municipal". Quanto mais específico ele escrevia, MENOS recebia. Criado `QUALIFICADORES` (pública, municipal, privada...) como opcionais; o núcleo continua obrigatório.
+
+**Bug de gênero achado no processo (`eff9d60`):** `raiz()` trata plural mas NÃO gênero, então "eletricos" nunca casava com "eletrica". O DONIZETE perdia "serviços de engenharia ELÉTRICA", o próprio ramo dele no feminino. Corrigido cortando a vogal final em palavras ≥6 letras (em palavra curta, "banco"/"banca" e "porta"/"porto" virariam a mesma coisa — testado).
+
+**🔴 A LEI QUE SAIU DAÍ (`51c7260`, `16be741`):** ao verificar em produção, o painel do SM abriu com **6 compras de equipamento médico no topo**. Causa: sinônimo (plataforma→sistema) e gênero (médica~médicos) aplicados sobre termos que **já eram inferência da IA** — inferência sobre inferência multiplica ruído, e "sistema" é onipresente em edital de saúde ("Sistema Único", "Sistema de Coleta"). **Regra: sinônimo e flexão de gênero só valem para o termo que o CLIENTE escreveu (intenção explícita), nunca para o gerado pela IA.** Os ganhos seguem, porque vêm de termo próprio.
+
+**Resultado final dos 3 (produção):** SM 9 editais (topo todo software/TI), DONIZETE 28 (topo todo elétrico), DEVCONS 72 (topo todo TI).
+
+**Padrão do dia, confirmado 4x:** a maior fonte de match ruim são os **termosIA**, não o ranking. Diagnóstico sempre pelo botão "🔍 Termos" no admin, com dado real, nunca simulando o cenário.
+
 **Fim do handoff.** Boa sorte na próxima sessão.
