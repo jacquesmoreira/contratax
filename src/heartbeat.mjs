@@ -35,20 +35,27 @@ async function custoDeHoje() {
   try {
     const texto = await readFile(resolve(DATA_DIR, "custos-ia.jsonl"), "utf8");
     const hoje = hojeISO();
-    let brl = 0, chamadas = 0;
+    const ontemISO = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+    let brl = 0, chamadas = 0, ontem = 0;
     const porEtapa = {};
     for (const linha of texto.split("\n")) {
       if (!linha.trim()) continue;
       let l; try { l = JSON.parse(linha); } catch { continue; }
-      if (String(l.ts || "").slice(0, 10) !== hoje) continue;
+      const dia = String(l.ts || "").slice(0, 10);
+      if (dia === ontemISO) { ontem += l.brl || 0; continue; }
+      if (dia !== hoje) continue;
       brl += l.brl || 0;
       chamadas++;
       const e = l.etapa || "ia";
       porEtapa[e] = (porEtapa[e] || 0) + (l.brl || 0);
     }
     const maior = Object.entries(porEtapa).sort((a, b) => b[1] - a[1])[0] || null;
-    return { brl, chamadas, maior };
-  } catch { return { brl: 0, chamadas: 0, maior: null }; }
+    // Variacao contra ONTEM: e o que responde "caiu?" direto no e-mail, sem
+    // precisar abrir a Anthropic nem comparar de cabeca. So calcula quando
+    // ontem teve movimento (senao a porcentagem nao significa nada).
+    const variacao = ontem > 0 ? Math.round(((brl - ontem) / ontem) * 100) : null;
+    return { brl, chamadas, maior, ontem, variacao };
+  } catch { return { brl: 0, chamadas: 0, maior: null, ontem: 0, variacao: null }; }
 }
 
 // Le o contador global de envios (mesmo arquivo que email.mjs escreve). So leitura.
@@ -168,6 +175,9 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
         ${linha("E-mails hoje", `${cota.dia} / ${TETO_DIARIO}`)}
         ${linha("E-mails no mes", `${cota.mes} / ${TETO_MENSAL}`)}
         ${linha("Custo de IA hoje", `R$ ${custo.brl.toFixed(2)} em ${custo.chamadas} chamada(s)${custo.maior ? ` · maior: ${custo.maior[0]}` : ""}`)}
+        ${linha("Comparado a ontem", custo.ontem > 0
+          ? `ontem R$ ${custo.ontem.toFixed(2)} · <span style="color:${custo.variacao <= 0 ? "#059669" : "#dc2626"};font-weight:800">${custo.variacao <= 0 ? "▼" : "▲"} ${Math.abs(custo.variacao)}%</span>`
+          : "sem gasto ontem pra comparar")}
         ${linha("Clientes", `${ativos} pagantes, ${teste} em teste, ${expirados} expirados`)}
         ${linha("Bounces hoje", bouncesHoje === 0 ? "nenhum" : String(bouncesHoje))}
       </table>
