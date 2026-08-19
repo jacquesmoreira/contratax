@@ -73,14 +73,14 @@ function linhasExemplos(exemplos) {
   ).join("");
 }
 
-function botao(link, texto) {
+export function botao(link, texto) {
   return `<table cellpadding="0" cellspacing="0" border="0" style="margin:24px auto"><tr>
     <td style="background:#4338ca;border-radius:11px;padding:14px 28px">
       <a href="${link}" style="color:#fff;font-weight:800;text-decoration:none;font-size:15px">${texto}</a>
     </td></tr></table>`;
 }
 
-function header() {
+export function header() {
   return `<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:24px 12px;font-family:Inter,sans-serif">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px">
@@ -94,7 +94,7 @@ function header() {
         <tr><td style="background:#fff;padding:28px 30px;color:#0f172a;font-size:15px;line-height:1.65">`;
 }
 
-function footer(token) {
+export function footer(token) {
   const desc = token
     ? `<div style="margin-top:8px;"><a href="${BASE}/descadastrar?c=${token}" style="color:#94a3b8;font-size:11px;text-decoration:underline;">Descadastrar destes e-mails</a></div>`
     : "";

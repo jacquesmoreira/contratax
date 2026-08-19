@@ -2068,6 +2068,37 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
     }
     // Dispara AGORA a pergunta de saida pros expirados que ainda nao receberam
     // (pega o backlog sem esperar o horario do digest). body: { c: ADMIN }
+    // E-MAIL AVULSO pra UM cliente. Criado em 13/08/2026: o Jacques quis falar
+    // com um trial especifico antes de expirar (DEVCONS, 21 leituras de IA e 9
+    // dias sem acessar) e nao havia caminho. O "recado" nao servia -- ele
+    // aparece DENTRO do painel, e justamente quem sumiu nao entra pra ver.
+    // Usa o mesmo chassi visual dos outros e-mails (logo, rodape, link de
+    // descadastro), entao nao parece mensagem solta de spam.
+    // body: { c, token, assunto, paragrafos: [], ctaTexto?, ctaLink? }
+    if (rota === "/api/admin/enviar-email" && req.method === "POST") {
+      const corpo = await lerCorpo(req);
+      if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
+      if (!corpo.token) return json(res, 400, { erro: "Token do cliente obrigatorio" });
+      const assunto = String(corpo.assunto || "").trim();
+      const paragrafos = Array.isArray(corpo.paragrafos) ? corpo.paragrafos.filter(Boolean) : [];
+      if (!assunto) return json(res, 400, { erro: "Assunto obrigatorio" });
+      if (!paragrafos.length) return json(res, 400, { erro: "Corpo do e-mail vazio" });
+      try {
+        const perfil = await perfilPorToken(corpo.token);
+        if (!perfil) return json(res, 404, { erro: "Cliente nao encontrado" });
+        if (!perfil.email) return json(res, 400, { erro: "Cliente sem e-mail cadastrado" });
+        if (perfil._descadastrado) return json(res, 409, { erro: "Cliente pediu pra sair da lista. Nao vou enviar." });
+        const { header, footer, botao } = await import("../src/onboardingEmails.mjs");
+        const linkCta = corpo.ctaLink || `${BASE_PUBLICA}/painel?c=${perfil.token}`;
+        const html = header()
+          + paragrafos.map((p) => `<p style="margin-bottom:14px">${p}</p>`).join("")
+          + (corpo.ctaTexto ? botao(linkCta, corpo.ctaTexto) : "")
+          + footer(perfil.token);
+        await enviar({ para: perfil.email, assunto, html, listaDescadastroUrl: `${BASE_PUBLICA}/descadastrar?c=${perfil.token}` });
+        return json(res, 200, { ok: true, para: perfil.email, assunto });
+      } catch (e) { return json(res, 500, { erro: e.message }); }
+    }
+
     if (rota === "/api/admin/feedback-saida/enviar" && req.method === "POST") {
       const corpo = await lerCorpo(req);
       if ((corpo.c || "") !== ADMIN) return json(res, 403, { erro: "Apenas admin" });
