@@ -23,6 +23,34 @@ const MEM_LIMITE_MB = Number(process.env.LICITA_MEM_LIMITE_MB || 450);
 
 const hojeISO = () => new Date().toISOString().slice(0, 10);
 
+// CUSTO DE IA DO DIA (13/08/2026). O Jacques teve prejuizo real: colocou US$10
+// de credito e precisou de mais US$10 dois dias depois, com receita de R$208/mes.
+// A causa era desperdicio nosso (78% dos resumos gerados nunca eram abertos),
+// ja cortado -- mas ele so descobriu olhando o saldo na Anthropic. Agora o
+// numero chega junto com o resto, todo dia, e vira ALERTA quando passa do teto.
+// Le o mesmo jsonl que custo.mjs escreve; so leitura, nunca derruba o heartbeat.
+const CUSTO_DIA_ALERTA = Number(process.env.LICITA_CUSTO_DIA_ALERTA_BRL || 12);
+
+async function custoDeHoje() {
+  try {
+    const texto = await readFile(resolve(DATA_DIR, "custos-ia.jsonl"), "utf8");
+    const hoje = hojeISO();
+    let brl = 0, chamadas = 0;
+    const porEtapa = {};
+    for (const linha of texto.split("\n")) {
+      if (!linha.trim()) continue;
+      let l; try { l = JSON.parse(linha); } catch { continue; }
+      if (String(l.ts || "").slice(0, 10) !== hoje) continue;
+      brl += l.brl || 0;
+      chamadas++;
+      const e = l.etapa || "ia";
+      porEtapa[e] = (porEtapa[e] || 0) + (l.brl || 0);
+    }
+    const maior = Object.entries(porEtapa).sort((a, b) => b[1] - a[1])[0] || null;
+    return { brl, chamadas, maior };
+  } catch { return { brl: 0, chamadas: 0, maior: null }; }
+}
+
 // Le o contador global de envios (mesmo arquivo que email.mjs escreve). So leitura.
 async function lerCotaEmail() {
   try {
@@ -83,6 +111,12 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
 
   // Cota de e-mail (Resend).
   const cota = await lerCotaEmail();
+
+  // Custo de IA do dia + alerta se estourar o teto.
+  const custo = await custoDeHoje();
+  if (custo.brl >= CUSTO_DIA_ALERTA) {
+    alertas.push(`IA custou R$ ${custo.brl.toFixed(2)} hoje (teto R$ ${CUSTO_DIA_ALERTA})${custo.maior ? `, maior parte em "${custo.maior[0]}"` : ""}.`);
+  }
   if (cota.dia >= TETO_DIARIO * 0.9) alertas.push(`E-mail perto do teto diario: ${cota.dia}/${TETO_DIARIO}.`);
   if (cota.mes >= TETO_MENSAL * 0.9) alertas.push(`E-mail perto do teto mensal: ${cota.mes}/${TETO_MENSAL}.`);
 
@@ -133,6 +167,7 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
         ${disco ? linha("Volume", `${disco.usado} / ${disco.total} (${disco.pctTexto})`) : ""}
         ${linha("E-mails hoje", `${cota.dia} / ${TETO_DIARIO}`)}
         ${linha("E-mails no mes", `${cota.mes} / ${TETO_MENSAL}`)}
+        ${linha("Custo de IA hoje", `R$ ${custo.brl.toFixed(2)} em ${custo.chamadas} chamada(s)${custo.maior ? ` · maior: ${custo.maior[0]}` : ""}`)}
         ${linha("Clientes", `${ativos} pagantes, ${teste} em teste, ${expirados} expirados`)}
         ${linha("Bounces hoje", bouncesHoje === 0 ? "nenhum" : String(bouncesHoje))}
       </table>
