@@ -2117,8 +2117,17 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
           + paragrafos.map((p) => `<p style="margin-bottom:14px">${p}</p>`).join("")
           + (corpo.ctaTexto ? botao(linkCta, corpo.ctaTexto) : "")
           + footer(perfil.token);
-        await enviar({ para: perfil.email, assunto, html, listaDescadastroUrl: `${BASE_PUBLICA}/descadastrar?c=${perfil.token}` });
-        return json(res, 200, { ok: true, para: perfil.email, assunto });
+        // apenasRegistrar: grava o contato SEM enviar. Serve pra registrar
+        // conversa que aconteceu por fora (telefone, WhatsApp) e pra marcar
+        // e-mails enviados antes deste campo existir.
+        if (!corpo.apenasRegistrar) {
+          await enviar({ para: perfil.email, assunto, html, listaDescadastroUrl: `${BASE_PUBLICA}/descadastrar?c=${perfil.token}` });
+        }
+        // Marca o contato pra o heartbeat conseguir responder a pergunta que
+        // importa depois de falar com um cliente: "ele VOLTOU?". Com a data do
+        // contato e a do ultimo acesso lado a lado, da pra ver quem reagiu.
+        await atualizarPerfil(perfil.token, (p) => { p._contatoManualEm = new Date().toISOString(); });
+        return json(res, 200, { ok: true, para: perfil.email, assunto, enviado: !corpo.apenasRegistrar });
       } catch (e) { return json(res, 500, { erro: e.message }); }
     }
 

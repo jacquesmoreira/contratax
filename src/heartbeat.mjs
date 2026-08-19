@@ -23,6 +23,14 @@ const MEM_LIMITE_MB = Number(process.env.LICITA_MEM_LIMITE_MB || 450);
 
 const hojeISO = () => new Date().toISOString().slice(0, 10);
 
+// "ha quantos dias" em texto curto pra tabela do e-mail.
+function diasDesdeTxt(iso) {
+  if (!iso) return "nunca";
+  const d = Math.floor((Date.now() - new Date(iso)) / 864e5);
+  if (Number.isNaN(d)) return "-";
+  return d <= 0 ? "hoje" : d === 1 ? "ontem" : `há ${d}d`;
+}
+
 // CUSTO DE IA DO DIA (13/08/2026). O Jacques teve prejuizo real: colocou US$10
 // de credito e precisou de mais US$10 dois dias depois, com receita de R$208/mes.
 // A causa era desperdicio nosso (78% dos resumos gerados nunca eram abertos),
@@ -85,6 +93,18 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
   // heartbeat passa a mostrar quem esta quente, quem esfriou e quem expira.
   let ativos = 0, teste = 0, expirados = 0, bouncesHoje = 0;
   let trials = [];
+  // ULTIMO ACESSO REAL vem da tabela de sessoes (MAX(visto_em)), igual faz o
+  // /api/admin/clientes. CORRECAO 19/08/2026: eu tinha usado um campo
+  // `_ultimoAcessoEm` no perfil que NAO EXISTE em lugar nenhum do sistema,
+  // entao a coluna de acesso do heartbeat vinha sempre vazia. Achado ao montar
+  // o acompanhamento de quem voltou depois de receber e-mail.
+  let acessoPorToken = {};
+  try {
+    const { abrir } = await import("./db.mjs");
+    for (const r of abrir().prepare("SELECT token, MAX(visto_em) AS ultimo FROM sessoes GROUP BY token").all()) {
+      acessoPorToken[r.token] = r.ultimo;
+    }
+  } catch { /* sem sessoes: a coluna mostra "-" e o resto do heartbeat segue */ }
   try {
     const perfis = await lerPerfis();
     const hoje = hojeISO();
@@ -93,7 +113,11 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
       if (st.status === "ativo" || st.status === "atrasado") ativos++;
       else if (st.status === "teste") {
         teste++;
-        const ua = p._ultimoAcessoEm || null;
+        const ua = acessoPorToken[p.token] || null;
+        const contato = p._contatoManualEm || null;
+        // "Voltou depois do contato" = acessou DEPOIS do e-mail que mandamos.
+        // E o sinal que responde se o contato funcionou.
+        const voltouAposContato = Boolean(ua && contato && ua > contato);
         trials.push({
           nome: (p.razaoSocial || p.nome || "?").slice(0, 22),
           dias: st.diasRestantes,
@@ -101,6 +125,8 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
           analises: p.analises?.usados || 0,
           semCnpj: !p.cnpj,
           ultimoAcesso: ua,
+          contato,
+          voltouAposContato,
         });
       }
       else if (["teste_expirado", "vencido", "inativo"].includes(st.status)) expirados++;
@@ -114,6 +140,13 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
   for (const t of trials) {
     if (t.dias != null && t.dias <= 3) alertas.push(`Teste de ${t.nome} termina em ${t.dias} dia(s), ${t.leituras} leitura(s) de IA.`);
     if (t.semCnpj) alertas.push(`${t.nome} nao informou CNPJ: o painel dele nao funciona.`);
+  }
+  // QUEM VOLTOU depois do contato: e o retorno do e-mail que o Jacques mandou.
+  // Entra como alerta (nao como problema) porque muda o assunto e ele ve na
+  // lista do Gmail que alguem reagiu, sem precisar abrir.
+  const voltaram = trials.filter((t) => t.voltouAposContato);
+  if (voltaram.length) {
+    alertas.push(`✔ ${voltaram.map((t) => t.nome).join(", ")} ${voltaram.length === 1 ? "voltou" : "voltaram"} ao painel depois do seu contato.`);
   }
 
   // Cota de e-mail (Resend).
@@ -189,7 +222,7 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
           <td style="padding:6px 12px;font-size:11px;color:#64748b;font-weight:700">EMPRESA</td>
           <td style="padding:6px 12px;font-size:11px;color:#64748b;font-weight:700">DIAS</td>
           <td style="padding:6px 12px;font-size:11px;color:#64748b;font-weight:700">LEITURAS IA</td>
-          <td style="padding:6px 12px;font-size:11px;color:#64748b;font-weight:700">ANALISES</td>
+          <td style="padding:6px 12px;font-size:11px;color:#64748b;font-weight:700">ACESSO</td>
         </tr>
         ${trials.map((t) => {
           const quente = t.leituras >= 10;
@@ -198,7 +231,7 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
             <td style="padding:7px 12px;border-top:1px solid #e2e8f0;font-size:13px;${quente ? "font-weight:800" : ""}">${quente ? "🔥 " : ""}${t.nome}${t.semCnpj ? ' <span style="color:#dc2626;font-size:11px">sem CNPJ</span>' : ""}</td>
             <td style="padding:7px 12px;border-top:1px solid #e2e8f0;font-size:13px;${acabando ? "color:#dc2626;font-weight:800" : ""}">${t.dias ?? "-"}</td>
             <td style="padding:7px 12px;border-top:1px solid #e2e8f0;font-size:13px;${quente ? "font-weight:800;color:#059669" : ""}">${t.leituras}</td>
-            <td style="padding:7px 12px;border-top:1px solid #e2e8f0;font-size:13px">${t.analises}</td>
+            <td style="padding:7px 12px;border-top:1px solid #e2e8f0;font-size:13px">${diasDesdeTxt(t.ultimoAcesso)}${t.voltouAposContato ? ' <span style="color:#059669;font-weight:800">✔ voltou após o contato</span>' : (t.contato ? ' <span style="color:#b45309;font-size:11px">contatado, sem retorno</span>' : "")}</td>
           </tr>`;
         }).join("")}
       </table>
