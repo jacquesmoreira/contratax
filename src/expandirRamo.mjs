@@ -140,6 +140,24 @@ function temJargaoLicitacao(termo) {
 function ehTokenSignificativo(w) {
   return w.length >= 3 || (w.length >= 2 && /\d/.test(w));
 }
+
+// FALA COM O USUARIO (13/08/2026, caso real): pro ramo generico "materiais" o
+// modelo respondeu conversando ("Por favor, especifique...") em vez de listar,
+// e o split por virgula transformou "Por favor" em TERMO DE BUSCA salvo no
+// perfil do cliente. O filtro de pontuacao nao pega, porque a frase e limpa.
+// Estas sao as aberturas tipicas de resposta conversacional; nenhuma delas
+// aparece como inicio de um termo de ramo legitimo.
+const INICIOS_CONVERSA = [
+  "por favor", "desculpe", "desculpa", "claro", "aqui estao", "aqui esta",
+  "segue", "seguem", "posso", "preciso", "voce pode", "nao consigo",
+  "nao posso", "entendi", "certo", "ok", "obrigado", "com base", "note que",
+  "observe", "lembre", "atencao", "importante", "vale destacar", "sugiro",
+  "recomendo", "para ajudar", "gostaria", "poderia", "informe", "especifique",
+];
+function ehConversa(termo) {
+  const n = norm(termo);
+  return INICIOS_CONVERSA.some((p) => n === p || n.startsWith(p + " "));
+}
 function termoDegradado(termo) {
   const palavras = norm(termo).split(/[^a-z0-9]+/).filter(Boolean);
   if (palavras.length < 2) return false; // termo de 1 palavra ja e o que e
@@ -163,6 +181,7 @@ function limparExpandidos(texto, originais) {
     // O prompt agora proibe esse formato; isto e a rede de seguranca, porque
     // termo legitimo nunca tem ?, (), reticencias ou dois-pontos.
     if (/[?():]|\.\.\./.test(t)) { console.log(`[expandir-ramo] descartado (fragmento de prosa): ${t}`); continue; }
+    if (ehConversa(t)) { console.log(`[expandir-ramo] descartado (fala com o usuario): ${t}`); continue; }
     if (t.split(/\s+/).length > 3) continue; // muito longo, vira ruido
     const n = norm(t);
     if (n.length < 3 || jaTem.has(n) || vistos.has(n)) continue;
@@ -180,7 +199,7 @@ function limparExpandidos(texto, originais) {
 // tem "consultoria it"). Serve pro endpoint de admin limpar sem precisar
 // refazer a expansao (que custaria IA e poderia gerar outros termos).
 export function filtrarJargao(termosIA = []) {
-  return (termosIA || []).filter((t) => !temJargaoLicitacao(t) && !termoDegradado(t));
+  return (termosIA || []).filter((t) => !temJargaoLicitacao(t) && !termoDegradado(t) && !ehConversa(t));
 }
 
 // VALIDACAO CONTRA O ACERVO (13/08/2026). O prompt v2 passou a gerar termos
