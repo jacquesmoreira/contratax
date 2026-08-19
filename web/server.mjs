@@ -1081,9 +1081,32 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
       // pre-aquece so o TOP 1 (o edital do card "Comece por aqui", pra o "uau" da
       // 1a sessao continuar instantaneo). O resto vira sob demanda no 1o clique.
       // Cache global: quando alguem abre, fica pronto pra todos mesmo assim.
+      // TETO DIARIO POR CLIENTE (13/08/2026). Medido: dos 459 TL;DRs gerados,
+      // os clientes so pediram 103 -- 356 (78%) foram pre-aquecimento que
+      // NINGUEM abriu, ~R$175 jogados fora. A causa: isto rodava a cada
+      // carregamento de painel, e como o topo da lista muda (edital novo entra,
+      // outro encerra), gerava um resumo diferente toda vez. Com 10 trials
+      // recarregando o painel varias vezes ao dia, virou o maior custo do
+      // sistema. Agora pre-aquece no maximo 1x por cliente por dia: o "uau" da
+      // primeira sessao continua (o card ja mostra "lendo o edital..." e resolve
+      // em ~17s quando falta), e o desperdicio cai junto.
+      // SO PAGANTE, e 1x por dia (13/08/2026). Medido: dos 459 TL;DRs gerados,
+      // os clientes pediram 103 -- 356 (78%) foram pre-aquecimento que NINGUEM
+      // abriu, ~R$175 fora. Rodava a cada carregamento de painel e, como o topo
+      // da lista muda (edital novo entra, outro encerra), gerava um resumo
+      // diferente toda vez; com 10 trials recarregando, virou o maior custo do
+      // sistema. Manter so o teto diario ainda deixaria ~R$74/mes, que e 35% da
+      // receita atual -- nao se paga. Trial agora ve "Lendo o edital pra
+      // voce..." e o resumo chega em ~17s no 1o clique, o que resolve o "uau"
+      // sem gastar antes de saber se ele vai abrir. Pagante segue com o painel
+      // instantaneo, porque ele custeia isso.
       const stPrewarm = statusAtual(perfil).status;
       const pagante = stPrewarm === "ativo" || stPrewarm === "atrasado";
-      preaquecerTldrs(editais, pagante ? PREWARM_N : 1).catch(() => {});
+      const hojePrewarm = new Date().toISOString().slice(0, 10);
+      if (pagante && perfil._prewarmDia !== hojePrewarm) {
+        preaquecerTldrs(editais, PREWARM_N).catch(() => {});
+        atualizarPerfil(perfil.token, (p) => { p._prewarmDia = hojePrewarm; }).catch(() => {});
+      }
       return json(res, 200, {
         [perfil.id]: {
           nome: perfil.nome,
@@ -3201,7 +3224,17 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
           return json(res, 403, { erro: "Assinatura nao ativa", paywall: true });
         }
         const planoAtual = planoDe(perfilT);
-        const TLDR_LIMITE_DIA = planoAtual.tldrLimiteDia || 30;
+        // TETO PROPRIO PRO TESTE GRATIS (13/08/2026). Quem esta em teste nao
+        // tem nivel de assinatura, entao caia no PLANO_PADRAO ("basico",
+        // 12/dia). Com 10 trials simultaneos isso e uma exposicao de ate
+        // R$59/dia (~R$1.770/mes) em cima de uma receita de R$208/mes: o teste
+        // gratis podia custar 8x o faturamento. O uso real medido e ~1,7
+        // resumo por cliente por dia, entao 5 da folga de 3x pra avaliar o
+        // produto e limita o pior caso a ~R$2,50/dia por conta.
+        const emTeste = statusAtual(perfilT).status === "teste";
+        const TLDR_LIMITE_DIA = emTeste
+          ? Number(process.env.LICITA_TLDR_TESTE || 5)
+          : (planoAtual.tldrLimiteDia || 30);
         // Contador diario de cache-miss por cliente
         const hoje = new Date().toISOString().slice(0, 10);
         const perfis = await lerPerfis();
@@ -3210,7 +3243,7 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
         if (p._tldrUso.n >= TLDR_LIMITE_DIA) {
           return json(res, 429, {
             erro: "Limite diario de resumos rapidos atingido",
-            mensagem: `Voce atingiu ${TLDR_LIMITE_DIA} resumos novos hoje (cota do plano ${planoAtual.nome}). O limite zera amanha. Editais ja lidos por voce ou outros clientes continuam aparecendo sem contar.`,
+            mensagem: `Você atingiu ${TLDR_LIMITE_DIA} resumos novos hoje (${emTeste ? "limite do teste grátis" : `cota do plano ${planoAtual.nome}`}). O limite zera amanhã. Editais já lidos por você ou por outros clientes continuam aparecendo sem contar.`,
             paywall: false,
           });
         }
