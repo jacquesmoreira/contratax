@@ -511,10 +511,20 @@ function perfilHTML(p) {
   // exatamente onde ele pensa "sera que estou perdendo alguma coisa?".
   // Quanto menos edital ele tem, mais forte o convite.
   const linkRamo = `/conta?c=${encodeURIComponent(token)}`;
+  // DOIS extremos atrapalham igual. Poucos editais = pode faltar palavra do
+  // ramo. Editais DEMAIS = o ramo esta generico demais e o painel vira ruido:
+  // caso real de 13/08/2026, um cliente cadastrou so a palavra "materiais" e
+  // recebeu 2.131 editais (material de construcao, de escritorio, de papelaria,
+  // tudo junto). 2.131 e tao inutil quanto 0 -- ele nao consegue escolher. O
+  // aviso de "poucos" ja existia; este fecha o outro lado.
   const poucos = editais.length <= 12;
-  const ajusteRamo = `<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:${poucos ? "#fffbeb" : "var(--fundo)"};border:1px solid ${poucos ? "#fde68a" : "var(--linha)"};border-radius:10px;padding:${poucos ? "11px 14px" : "9px 13px"};margin:-4px 0 16px">
-      <span style="font-size:15px">${poucos ? "💡" : "⚙️"}</span>
-      <span style="font-size:13px;color:${poucos ? "#92400e" : "var(--cinza)"};line-height:1.45">${poucos
+  const demais = editais.length >= 300;
+  const alerta = poucos || demais;
+  const ajusteRamo = `<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:${alerta ? "#fffbeb" : "var(--fundo)"};border:1px solid ${alerta ? "#fde68a" : "var(--linha)"};border-radius:10px;padding:${alerta ? "11px 14px" : "9px 13px"};margin:-4px 0 16px">
+      <span style="font-size:15px">${alerta ? "💡" : "⚙️"}</span>
+      <span style="font-size:13px;color:${alerta ? "#92400e" : "var(--cinza)"};line-height:1.45">${demais
+        ? `São <b>${editais.length.toLocaleString("pt-BR")} editais</b>, muita coisa pra garimpar. Seu ramo está amplo demais: com palavras mais específicas do que você vende, sobra só o que interessa.`
+        : poucos
         ? "Está vendo poucos editais? Talvez falte uma palavra do seu ramo. Quem conhece o negócio é você:"
         : "Falta algum tipo de licitação que você atende?"}</span>
       <a href="${linkRamo}" style="font-size:13px;font-weight:800;color:var(--indigo);text-decoration:none;white-space:nowrap;border-bottom:2px solid var(--indigo)">Ajustar as palavras do meu ramo →</a>
