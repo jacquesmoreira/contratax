@@ -3249,6 +3249,28 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
         const perfis = await lerPerfis();
         const p = perfis.find((x) => x.token === tokenT);
         if (!p._tldrUso || p._tldrUso.dia !== hoje) p._tldrUso = { dia: hoje, n: 0 };
+
+        // TETO TOTAL DO TESTE (19/08/2026). O teto DIARIO sozinho nao limita o
+        // teste inteiro: um trial usando 5/dia por 14 dias chega a 70 resumos,
+        // ~R$34, sem nunca pagar nada. Medido no EXTIMPLAS: R$11,64 em 3 dias,
+        // com projecao de R$38,71 (66% de uma mensalidade Starter) ate o fim do
+        // teste. Com 10 trials assim seriam ~R$387/mes contra R$208 de receita.
+        // 25 resumos no teste inteiro dao MUITA margem pra avaliar (o mais
+        // engajado da base leu 17 em 3 dias e ja tinha formado opiniao), e
+        // seguram o custo por trial em ~R$12, ~20% de uma mensalidade.
+        // Cache hit continua sem contar: so custa o edital INEDITO.
+        if (emTeste) {
+          const TLDR_TESTE_TOTAL = Number(process.env.LICITA_TLDR_TESTE_TOTAL || 25);
+          const usadosNoTeste = p._tldrTesteTotal || 0;
+          if (usadosNoTeste >= TLDR_TESTE_TOTAL) {
+            return json(res, 429, {
+              erro: "Limite de resumos do teste grátis atingido",
+              mensagem: `Você já leu ${usadosNoTeste} editais com a ContrataX.IA no teste grátis, o limite da avaliação. Assinando, o limite passa a ser diário e você volta a ler quantos precisar. Editais já lidos continuam abrindo normalmente.`,
+              paywall: true,
+            });
+          }
+        }
+
         if (p._tldrUso.n >= TLDR_LIMITE_DIA) {
           return json(res, 429, {
             erro: "Limite diario de resumos rapidos atingido",
@@ -3260,6 +3282,8 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
           const tldr = await gerarTldr(edital, { perfilToken: tokenT });
           await salvarTldr(id, tldr);
           p._tldrUso.n += 1;
+          // Acumulado do TESTE (nao zera por dia). Fica no mesmo write.
+          if (emTeste) p._tldrTesteTotal = (p._tldrTesteTotal || 0) + 1;
           // Engajamento: conta o resumo novo no mesmo write do contador diario.
           if (!p._resumos) p._resumos = { n: 0, ultimo: null };
           p._resumos.n += 1;
