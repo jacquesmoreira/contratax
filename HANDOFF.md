@@ -1736,4 +1736,27 @@ Jacques: *"se eles entram e não acham o que procuram, o que estão fazendo aqui
 
 **Quando fazer:** se o SM Assessoria assinar. Aí vira feature de valor real, apresentada como "descubra qual sistema a prefeitura já usa" (inteligência competitiva), não como rótulo de portal.
 
+### 2026-08-19 — custo de IA: onde estava vazando e os tetos que ficaram
+
+**Prejuízo real:** Jacques pôs US$10 de crédito em 13/08 e precisou de mais US$10 dois dias depois, com receita de R$208/mês. Investigado, a causa **não era uso do cliente**:
+
+| | |
+|---|---|
+| TL;DRs gerados | 459 (R$226, 87% do custo de IA) |
+| Pedidos por clientes | 103 |
+| **Desperdício** | **356 (78%) ≈ R$175** |
+
+O `preaquecerTldrs` rodava a CADA carregamento de painel, e como o topo da lista muda, gerava resumo novo toda vez. **Eu já tinha "corrigido" isso em 08/08** reduzindo de 8 para 1 por painel, mas não vi que o problema era a frequência, não a quantidade. Erro meu, custou dinheiro dele.
+
+**Três tetos que ficaram (todos ajustáveis por env, sem deploy):**
+1. **Pré-aquecimento só pra PAGANTE**, 1x/dia (`5c3b422`). Trial vê "Lendo o edital..." e recebe em ~17s no 1º clique.
+2. **`LICITA_TLDR_TESTE` = 5/dia** no teste grátis. Antes caía no PLANO_PADRAO ("básico", 12/dia) — exposição de até R$1.770/mês com 10 trials.
+3. **`LICITA_TLDR_TESTE_TOTAL` = 25** no teste inteiro (`85b139c`). O teto diário sozinho não segurava: 5/dia × 14 dias = 70 resumos = R$34/trial. Agora R$12 no pior caso.
+
+**📌 DECISÃO DO JACQUES (19/08):** manter **25** enquanto os trials atuais rodam (nenhum atingiu ainda; o mais engajado leu 23), e **reduzir para os próximos testes** quando esses expirarem. **Como fazer, sem código e sem deploy:** trocar a variável `LICITA_TLDR_TESTE_TOTAL` no Railway (Variables → editar → o serviço reinicia sozinho). Sugestão de valor: 15 (≈R$7,40/trial). **Atenção:** a variável vale para TODOS os trials, inclusive os em andamento — por isso a espera.
+
+**Números reais pra calibrar:** uso médio é **8,1 resumos por trial** (distribuição: 23, 17, 15, 11, 11, 2, 2, 2, 2, 2, 2). Custo real ≈ **R$3,98 por trial**, ~R$40/mês com 10 simultâneos. O teto existe para o caso extremo, não porque o uso normal esteja alto. **Custo por resumo: R$0,49** (Haiku, ~91k tokens de PDF por edital).
+
+**Regra que ficou:** ao mexer em qualquer coisa que gera custo de IA, medir **gerado contra pedido** antes de dizer que resolveu. Foi o que faltou em 08/08.
+
 **Fim do handoff.** Boa sorte na próxima sessão.
