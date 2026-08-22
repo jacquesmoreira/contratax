@@ -1124,7 +1124,7 @@ fundo.title = "Clique no X ou aperte ESC para fechar";
 const ICON = { atende: ['ok','✓'], valida: ['ok','✓'], nao_atende: ['no','✕'], vencida: ['no','✕'], ausente: ['no','✕'], confirmar: ['dd','?'] };
 function iconHTML(s){ const [cls,ch] = ICON[s] ?? ['dd','·']; return `<span class="ic ${cls}">${ch}</span>`; }
 
-function tldrHTML(t, id, msg) {
+function tldrHTML(t, id, msg, planos) {
   if (t === "limite-dia") {
     return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid #B45309;background:linear-gradient(135deg,#FEF3C7 0%,#fff 60%)">
       <h3>⚡ Resumo rápido do edital</h3>
@@ -1142,6 +1142,25 @@ function tldrHTML(t, id, msg) {
       <h3>⚡ Resumo rápido do edital</h3>
       <p style="font-size:13.5px;color:var(--cinza);margin:6px 0 12px">Objeto, valor, prazo e exigências em 5 a 10 segundos. Gere sob demanda para evitar consumo desnecessário da sua cota.</p>
       <button id="btn-tldr-on" onclick="iniciarTldr('${id}')" style="background:var(--indigo);color:#fff;border:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer">Gerar resumo rápido</button>
+    </div>`;
+  }
+  if (t === "teste-esgotado") {
+    const lista = (planos || []).map((pl, i) => `
+      <a href="/assinar?c=${encodeURIComponent(token)}&plano=${encodeURIComponent(pl.id)}"
+         style="display:flex;align-items:center;justify-content:space-between;gap:12px;text-decoration:none;
+                background:#fff;border:1.5px solid ${i === 0 ? "var(--indigo)" : "var(--cinza-c)33"};
+                border-radius:12px;padding:12px 14px;margin-bottom:8px">
+        <span>
+          <span style="display:block;font-weight:800;font-size:14.5px;color:var(--tinta)">${esc(pl.nome)}${i === 0 ? ' <span style="font-size:10px;font-weight:800;background:var(--indigo);color:#fff;padding:2px 7px;border-radius:99px;letter-spacing:.4px;vertical-align:2px">COMECE POR AQUI</span>' : ""}</span>
+          <span style="display:block;font-size:12.5px;color:var(--cinza);margin-top:2px">${pl.analises} análises completas por mês</span>
+        </span>
+        <span style="white-space:nowrap;font-weight:800;font-size:15px;color:var(--indigo)">R$ ${esc(pl.preco)}</span>
+      </a>`).join("");
+    return `<div class="bloco" id="tldr-bloco" style="border-left:4px solid var(--indigo);background:linear-gradient(135deg,#EEF0FF 0%,#fff 60%)">
+      <h3>⚡ Resumo rápido do edital</h3>
+      <p style="font-size:14px;color:var(--tinta);margin:6px 0 14px;line-height:1.55">${esc(msg || "Você chegou ao fim das leituras da ContrataX.IA incluídas no teste grátis.")}</p>
+      ${lista}
+      <p style="font-size:12px;color:var(--cinza-c);margin:10px 0 0">Sem fidelidade, cancela quando quiser.</p>
     </div>`;
   }
   if (t === "sem-cota") {
@@ -1241,6 +1260,7 @@ async function gerarTldrAsync(id) {
     const el = document.getElementById("tldr-bloco");
     if (!el || editalAtual !== id) return; // o cliente trocou de edital
     if (d.tldr) el.outerHTML = tldrHTML(d.tldr, id);
+    else if (d.testeEsgotado) el.outerHTML = tldrHTML("teste-esgotado", id, d.mensagem, d.planos);
     else if (d.paywall) el.outerHTML = tldrHTML("sem-cota", id);
     else if (r.status === 429) el.outerHTML = tldrHTML("limite-dia", id, d.mensagem);
     else el.outerHTML = tldrHTML("erro", id);

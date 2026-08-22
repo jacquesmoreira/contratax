@@ -205,6 +205,26 @@ async function carregar() {
     </div>`).join("");
 
   ligarBotoes();
+  destacarPlanoDaUrl(volume);
+}
+
+// Quem chega do painel clicando num plano especifico (?plano=basico) tem que
+// achar AQUELE card na tela. Como a pagina abre so com os 2 degraus de entrada,
+// um plano de volume exige expandir a lista antes, senao o cliente clica em Pro
+// e cai numa tela que nao mostra Pro.
+function destacarPlanoDaUrl(volume) {
+  const alvo = new URLSearchParams(location.search).get("plano");
+  if (!alvo) return;
+  const ehVolume = (volume || []).some((p) => p.id === alvo);
+  if (ehVolume && document.getElementById("btn-ver-todos")) {
+    document.getElementById("btn-ver-todos").click();
+  }
+  const btn = document.querySelector(`button[data-tipo="plano"][data-id="${CSS.escape(alvo)}"]`);
+  if (!btn) return;
+  const card = btn.closest(".card") || btn.parentNode;
+  card.style.outline = "2px solid var(--indigo)";
+  card.style.outlineOffset = "3px";
+  card.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 // Liga o clique de todo botao de compra. Vive fora do carregar() porque o

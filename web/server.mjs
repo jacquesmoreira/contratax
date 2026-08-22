@@ -3263,10 +3263,23 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
           const TLDR_TESTE_TOTAL = Number(process.env.LICITA_TLDR_TESTE_TOTAL || 25);
           const usadosNoTeste = p._tldrTesteTotal || 0;
           if (usadosNoTeste >= TLDR_TESTE_TOTAL) {
+            // Os precos saem de PLANOS (fonte unica), entao a tela nunca
+            // desalinha se o valor mudar.
+            const ofertas = ["starter", "essencial", "basico"]
+              .map((id) => PLANOS[id])
+              .filter(Boolean)
+              .map((pl) => ({
+                id: pl.id,
+                nome: pl.nome,
+                preco: pl.preco,
+                analises: pl.analises,
+              }));
             return json(res, 429, {
               erro: "Limite de resumos do teste grátis atingido",
-              mensagem: `Você já leu ${usadosNoTeste} editais com a ContrataX.IA no teste grátis, o limite da avaliação. Assinando, o limite passa a ser diário e você volta a ler quantos precisar. Editais já lidos continuam abrindo normalmente.`,
+              mensagem: `Você chegou ao fim das ${usadosNoTeste} leituras da ContrataX.IA incluídas no teste grátis. Para continuar lendo editais, escolha um plano abaixo. Os editais que você já leu continuam abrindo normalmente, e o monitoramento do seu ramo segue rodando até o fim do teste.`,
               paywall: true,
+              testeEsgotado: true,
+              planos: ofertas,
             });
           }
         }
