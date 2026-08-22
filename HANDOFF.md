@@ -1760,3 +1760,43 @@ O `preaquecerTldrs` rodava a CADA carregamento de painel, e como o topo da lista
 **Regra que ficou:** ao mexer em qualquer coisa que gera custo de IA, medir **gerado contra pedido** antes de dizer que resolveu. Foi o que faltou em 08/08.
 
 **Fim do handoff.** Boa sorte na próxima sessão.
+
+## Teto de IA no teste: tela de upgrade + quando baixar pra 15 (22/08/2026)
+
+**O que o cliente vê ao bater o teto.** Antes ele caía num aviso que dizia "sua
+assinatura está pausada", o que é falso: ele não tem assinatura, ele terminou o
+teste. Agora a tela diz que as leituras do teste acabaram e mostra os 3 planos de
+entrada (Starter R$59 / Básico R$149 / Pro R$247) com a cota de análises e link
+direto pro checkout já com o plano escolhido. Os preços saem de `PLANOS`
+(`src/planos.mjs`), então mexer em preço lá atualiza a tela sozinho.
+
+`/assinar` passa a honrar `?plano=`: se o plano pedido é de volume, a página
+expande a lista antes de destacar o card. Sem isso o cliente clicava em Pro e caía
+numa tela que só mostrava Starter e Básico.
+
+**O furo que quase passou.** O teto usava `_tldrTesteTotal`, um contador criado no
+deploy. Como nasceu zerado, quem já tinha lido 17 editais ganharia 25 leituras *a
+mais*, o oposto do que o teto existe pra fazer. Agora o teto lê `_resumos.n`, que
+conta desde que o perfil existe, e o contador duplicado foi apagado. Lição: teto
+novo em cima de base velha precisa herdar o histórico, senão zera a dívida de
+todo mundo.
+
+**Cuidado ao ler o admin:** a coluna de *chamadas* de IA (24 no EXTIMPLAS) não é o
+número de resumos (17). O teto conta RESUMO. Confundir os dois faz parecer que o
+cliente está no limite quando ainda tem margem.
+
+### Quando baixar `LICITA_TLDR_TESTE_TOTAL` de 25 pra 15
+
+Decisão do Jacques: **espera todo mundo que está em teste hoje terminar**. Medido em
+22/08 na base real (11 testes ativos): com teto 25 ninguém trava; com 15 travariam
+3 na hora (DEVCONS, ONSERV, EXTIMPLAS), que é mudar a regra no meio do jogo.
+
+O último teste atual vence em ~10 dias (EXTIMPLAS), então a janela segura é a
+partir de **01/09/2026**.
+
+Como mudar, sem deploy e sem IA: Railway → serviço → **Variables** →
+`LICITA_TLDR_TESTE_TOTAL` = `15`. O serviço reinicia sozinho. **A variável vale
+pra todos os testes, inclusive os em andamento.**
+
+O heartbeat das 7h avisa: `BATEU o teto` (esse é o pedido de upgrade mais quente
+que existe, vale ligar no mesmo dia) e `perto do teto` a 3 leituras de bater.
