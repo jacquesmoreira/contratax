@@ -3261,7 +3261,10 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
         // Cache hit continua sem contar: so custa o edital INEDITO.
         if (emTeste) {
           const TLDR_TESTE_TOTAL = Number(process.env.LICITA_TLDR_TESTE_TOTAL || 25);
-          const usadosNoTeste = p._tldrTesteTotal || 0;
+          // Usa _resumos.n (conta desde que o perfil existe) e NAO um contador
+          // proprio: um contador novo comeca do zero no dia do deploy e daria
+          // 25 leituras EXTRAS a quem ja tinha lido dezenas.
+          const usadosNoTeste = p._resumos?.n || 0;
           if (usadosNoTeste >= TLDR_TESTE_TOTAL) {
             // Os precos saem de PLANOS (fonte unica), entao a tela nunca
             // desalinha se o valor mudar.
@@ -3295,9 +3298,7 @@ ${ok ? `<h1>Obrigado! 🙏</h1>
           const tldr = await gerarTldr(edital, { perfilToken: tokenT });
           await salvarTldr(id, tldr);
           p._tldrUso.n += 1;
-          // Acumulado do TESTE (nao zera por dia). Fica no mesmo write.
-          if (emTeste) p._tldrTesteTotal = (p._tldrTesteTotal || 0) + 1;
-          // Engajamento: conta o resumo novo no mesmo write do contador diario.
+          // Engajamento E teto total do teste saem daqui (um contador so).
           if (!p._resumos) p._resumos = { n: 0, ultimo: null };
           p._resumos.n += 1;
           p._resumos.ultimo = new Date().toISOString();

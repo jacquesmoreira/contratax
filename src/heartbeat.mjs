@@ -137,7 +137,16 @@ export async function montarHeartbeat({ uptimeS = 0, rssMb = 0, heapMb = 0 } = {
   } catch (e) { alertas.push(`Nao consegui ler os perfis: ${e.message}`); }
 
   // Alertas acionaveis sobre os testes (entram na lista amarela do e-mail).
+  // Teto de leituras da IA no teste. Quem BATE viu a tela dos 3 planos, ou
+  // seja, e um pedido de upgrade que chegou sozinho: o alerta mais quente
+  // que existe aqui. Quem esta a 3 de bater avisa com antecedencia.
+  const TETO_TESTE = Number(process.env.LICITA_TLDR_TESTE_TOTAL || 25);
   for (const t of trials) {
+    if (t.leituras >= TETO_TESTE) {
+      alertas.push(`${t.nome} BATEU o teto de ${TETO_TESTE} leituras e viu a tela dos planos. Vale ligar hoje.`);
+    } else if (t.leituras >= TETO_TESTE - 3) {
+      alertas.push(`${t.nome} esta em ${t.leituras} de ${TETO_TESTE} leituras, perto do teto.`);
+    }
     if (t.dias != null && t.dias <= 3) alertas.push(`Teste de ${t.nome} termina em ${t.dias} dia(s), ${t.leituras} leitura(s) de IA.`);
     if (t.semCnpj) alertas.push(`${t.nome} nao informou CNPJ: o painel dele nao funciona.`);
   }
